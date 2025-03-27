@@ -57,6 +57,7 @@
         "valarray": "cpp",
         "chrono": "cpp",
         "text_encoding": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "thread": "cpp"
     }
 }

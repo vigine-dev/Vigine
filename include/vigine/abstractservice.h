@@ -2,10 +2,10 @@
 
 namespace vigine {
 
-class RenderSystem {
+class AbstractService
+{
 public:
-    RenderSystem();
-    void update();
+    virtual ~AbstractService() = 0;
 };
 
 } // namespace vigine

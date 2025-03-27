@@ -1,10 +1,10 @@
 #include "vigine/entity.h"
 #include <iostream>
 
-Entity::Entity() {
-    // Конструктор
-}
+namespace vigine {
 
 void Entity::update() {
     std::cout << "Updating entity" << std::endl;
 }
+
+} // namespace vigine

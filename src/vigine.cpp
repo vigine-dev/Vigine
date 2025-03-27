@@ -1,15 +1,25 @@
 #include "vigine/vigine.h"
+#include "vigine/statemachine.h"
 #include <iostream>
 
-// Реалізація функцій, оголошених у vigine.h
-Vigine::Vigine() {
-    // Конструктор
+namespace vigine {
+
+Engine::Engine()
+    : _stateMachine(std::make_unique<StateMachine>())
+{
 }
 
-void Vigine::exampleMethod() {
-    std::cout << "Example method called 2" << std::endl;
+void Engine::run()
+{
+    while (_stateMachine->hasStatesToRun())
+        _stateMachine->runCurrentState();
 }
 
-void exampleFunction() {
-    // ...код функції...
+StateMachine* Engine::state()
+{
+    return _stateMachine.get();
 }
+
+void exampleFunction() {}
+
+} // namespace vigine

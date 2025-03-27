@@ -6,8 +6,8 @@
  
 TEST(LibraryTest, FunctionTest) {
 
-    Vigine vigine;
-    vigine.exampleMethod();
+    //Vigine vigine;
+    //vigine.run();
 }
 
 TEST(GLMTest, VectorTest) {

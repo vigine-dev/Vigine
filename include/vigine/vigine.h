@@ -1,7 +1,19 @@
 #pragma once
 
-class Vigine {
+#include <memory>
+
+namespace vigine {
+
+class StateMachine;
+
+class Engine {
 public:
-    Vigine();
-    void exampleMethod();
+    Engine();
+    void run();
+    StateMachine* state();
+
+private:
+    std::unique_ptr<StateMachine> _stateMachine;
 };
+
+} // namespace vigine

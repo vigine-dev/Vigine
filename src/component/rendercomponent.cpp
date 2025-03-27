@@ -1,6 +1,8 @@
 #include "vigine/component/rendercomponent.h"
 #include <iostream>
 
+namespace vigine {
+
 RenderComponent::RenderComponent() {
     // Конструктор
 }
@@ -8,3 +10,5 @@ RenderComponent::RenderComponent() {
 void RenderComponent::render() {
     std::cout << "Rendering component" << std::endl;
 }
+
+} // namespace vigine
