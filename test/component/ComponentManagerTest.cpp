@@ -6,6 +6,8 @@
 
 #include <type_traits>
 
+using namespace vigine;
+
 class Component1Test {
 public:
   Component1Test(const std::string &name) : _name{name} {}
