@@ -1,12 +1,14 @@
 #pragma once
 
+#include "result.h"
+
 namespace vigine {
 
 class AbstractTask {
 
 public:
   virtual ~AbstractTask() = default;
-    virtual void execute() = 0;
+    virtual Result execute() = 0;
 
 protected:
   AbstractTask() = default;

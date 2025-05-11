@@ -1,24 +1,28 @@
 #include <gtest/gtest.h>
 
+#include "vigine/vigine.h"
 #include <vigine/abstractstate.h>
 #include <vigine/statemachine.h>
 #include <vigine/component/componentmanager.h>
 #include <vigine/entity.h>
 #include <vigine/vigine.h>
+#include <vigine/taskflow.h>
+#include <vigine/abstracttask.h>
+#include "concepts.h"
+#include "vigine/result.h"
 
 #include <functional>
 #include <memory>
+#include <concepts>
 
 using namespace vigine;
 
 class OpenState : public AbstractState {
 public:
-  OpenState(int &val) : _val{val} {}
   ~OpenState() override {}
 
   void enter() override {
     // Open state entry logic
-      ++_val;
     std::cout << "OpenState enter" << std::endl;
   }
     
@@ -26,21 +30,12 @@ public:
         // Open state exit logic
         return Result();
     }
-    
-    void update() override {
-        // Open state update logic
-    }
-
-private:
-    int &_val;
 };
 
 class WorkState : public AbstractState {
 public:
-    WorkState(int &val) : _val{val} {}
     void enter() override {
         // Work state entry logic
-        _val += 1;
         std::cout << "WorkState enter" << std::endl;
     }
     
@@ -48,13 +43,6 @@ public:
         // Work state exit logic
         return Result();
     }
-    
-    void update() override {
-        // Work state update logic
-    }
-
-private:
-    int &_val;
 };
 
 class ErrorState : public AbstractState {
@@ -67,18 +55,12 @@ public:
         // Error state exit logic
         return Result();
     }
-    
-    void update() override {
-        // Error state update logic
-    }
 };
 
 class CloseState : public AbstractState {
 public:
-    CloseState(int &val) : _val{val} {}
     void enter() override {
         // Close state entry logic
-        _val += 5;
         std::cout << "WorkState enter" << std::endl;
     }
     
@@ -86,10 +68,15 @@ public:
         // Close state exit logic
         return Result();
     }
-    
-    void update() override {
-        // Close state update logic
-    }
+};
+
+// Test task for TaskFlow
+class TestTask : public AbstractTask {
+public:
+    TestTask(int &val, int inc) : _val{val}{_val += inc;}
+
+protected:
+    Result execute() override { return Result(); }
 
 private:
     int &_val;
@@ -97,19 +84,52 @@ private:
 
 TEST(ArchitectureTest, Vigine_run_void)
 {
-  vigine::Engine vigine;
-  StateMachine *stateMch = vigine.state();
+    auto vigine = std::make_unique<vigine::Engine>();
+    StateMachine *stateMch = vigine->state();
+    
+    int result = 0;
 
-  int checkResult = 0;
-  auto *openState = stateMch->addState(std::make_unique<OpenState>(checkResult));
-  auto *workState = stateMch->addState(std::make_unique<WorkState>(checkResult));
-  auto *closeState = stateMch->addState(std::make_unique<CloseState>(checkResult));
-
-  stateMch->addTransition(openState, workState, Result::Code::Success);
-  stateMch->addTransition(workState, closeState, Result::Code::Success);
-  stateMch->changeStateTo(openState);
-
-  vigine.run();
-
-  ASSERT_EQ(checkResult, 7);
+    // Create states with TaskFlows
+    auto state1 = std::make_unique<OpenState>();
+    auto state2 = std::make_unique<WorkState>();
+    auto state3 = std::make_unique<CloseState>();
+    
+    // Create TaskFlows with tasks for each state
+    auto taskFlow1 = std::make_unique<TaskFlow>();
+    auto taskFlow2 = std::make_unique<TaskFlow>();
+    auto taskFlow3 = std::make_unique<TaskFlow>();
+    
+    // Add tasks to TaskFlows
+    auto task1 = std::make_unique<TestTask>(result, 1);
+    auto task2 = std::make_unique<TestTask>(result, 1);
+    auto task3 = std::make_unique<TestTask>(result, 5);
+    
+    taskFlow1->addTask(std::move(task1));
+    taskFlow2->addTask(std::move(task2));
+    taskFlow3->addTask(std::move(task3));
+    
+    // Set TaskFlows to states
+    state1->setTaskFlow(std::move(taskFlow1));
+    state2->setTaskFlow(std::move(taskFlow2));
+    state3->setTaskFlow(std::move(taskFlow3));
+    
+    // Add states to Vigine
+    auto state1Ptr = state1.get();
+    auto state2Ptr = state2.get();
+    auto state3Ptr = state3.get();
+    
+    stateMch->addState(std::move(state1));
+    stateMch->addState(std::move(state2));
+    stateMch->addState(std::move(state3));
+    
+    // Add transitions
+    stateMch->addTransition(state1Ptr, state2Ptr, Result::Code::Success);
+    stateMch->addTransition(state2Ptr, state3Ptr, Result::Code::Success);
+    
+    // Set initial state
+    stateMch->changeStateTo(state1Ptr);
+    
+    // Run Vigine
+    ASSERT_NO_THROW(vigine->run()) << "run() should not throw";
+    EXPECT_EQ(result, 7);
 }

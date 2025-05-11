@@ -1,6 +1,6 @@
 #pragma once
 
-#include "abstracttaskflow.h"
+#include "taskflow.h"
 #include "result.h"
 
 #include <memory>
@@ -12,23 +12,37 @@ class AbstractState
 public:
     virtual ~AbstractState() = default;
     
-    // State lifecycle methods
-    virtual void enter() = 0;
-    virtual Result exit() = 0;
-    virtual void update() = 0;
+    // Main state execution method
+    Result operator()()
+    {
+        if (!_taskFlow)
+            return Result(Result::Code::Error, "Task flow needed");
+
+        enter();
+
+        (*_taskFlow)();
+
+        return exit();
+    }
 
     // Task flow management methods
-    virtual void setTaskFlow(std::unique_ptr<AbstractTaskFlow> taskFlow) {
+    void setTaskFlow(std::unique_ptr<TaskFlow> taskFlow) {
         _taskFlow = std::move(taskFlow);
     }
 
-    virtual AbstractTaskFlow* getTaskFlow() const {
+    TaskFlow* getTaskFlow() const {
         return _taskFlow.get();
     }
 
 protected:
     AbstractState() = default;
-    std::unique_ptr<AbstractTaskFlow> _taskFlow;
+
+    // State lifecycle methods
+    virtual void enter() = 0;
+    virtual Result exit() = 0;
+
+protected:
+    std::unique_ptr<TaskFlow> _taskFlow;
     bool _isActive = true;
 };
 

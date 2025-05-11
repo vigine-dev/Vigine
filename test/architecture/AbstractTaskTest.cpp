@@ -8,18 +8,18 @@
 
 using namespace vigine;
 
-// Concept for checking doWork method
+// Concept for checking execute method
 template <typename T>
 concept MethodCheck_Execute = requires(T t)
 {
     t.execute();
-    { t.execute() } -> std::same_as<void>;
+    { t.execute() } -> std::same_as<Result>;
 };
 
 // Test class for AbstractTask
 class TestTask : public AbstractTask {
 public:
-    void execute() override {}
+    Result execute() override { return Result(); }
 };
 
 TEST(AbstractTaskTest, check_isAbstract)
@@ -36,7 +36,7 @@ TEST(AbstractTaskTest, method_destructor)
 
 TEST(AbstractTaskTest, method_execute)
 {
-    EXPECT_TRUE((HasMethod_execute<AbstractTask, void>))
+    EXPECT_TRUE((HasMethod_execute<AbstractTask, Result>))
         << "AbstractTask hasn't correct execute method";
 }
 
@@ -47,10 +47,11 @@ TEST(AbstractTaskTest, constructor_empty)
     ASSERT_NE(task, nullptr);
 }
 
-TEST(AbstractTaskTest, doWork_empty_void)
+TEST(AbstractTaskTest, execute_returns_result)
 {
-    EXPECT_TRUE(MethodCheck_Execute<AbstractTask>) << "AbstractTask hasn't expected void execute() method";
+    EXPECT_TRUE(MethodCheck_Execute<AbstractTask>) << "AbstractTask hasn't expected Result execute() method";
     
     auto task = std::make_unique<TestTask>();
-    ASSERT_NO_THROW(task->execute());
+    auto result = task->execute();
+    ASSERT_EQ(result.code(), Result::Code::Success);
 }
