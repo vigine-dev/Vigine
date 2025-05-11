@@ -63,11 +63,7 @@ void StateMachine::runCurrentState()
         return;
 
     // Execute current state
-    _currState->enter();
-    _currState->update();
-    
-    // Get execution status from exit
-    auto currStatus = _currState->exit();
+    auto currStatus = (*_currState)();
     
     // Check possible transitions
     auto transitions = _transitions.find(_currState);

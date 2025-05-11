@@ -19,7 +19,7 @@ add_executable(${PROJECT_TEST_NAME}
     EntityTest.cpp
     architecture/ArchitectureTest.cpp
     architecture/StateMachineTest.cpp
-    architecture/AbstractTaskFlowTest.cpp
+    architecture/TaskFlowTest.cpp
     architecture/AbstractTaskTest.cpp
     architecture/AbstractServiceTest.cpp
     architecture/AbstractStateTest.cpp
@@ -29,12 +29,24 @@ add_executable(${PROJECT_TEST_NAME}
 )
 
 # ====================== Add Include Directories =======================
-target_include_directories(${PROJECT_TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_TEST_NAME} 
+    PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-# ====================== Link Google Test Libraries =======================
+# ====================== Link Libraries =======================
 target_link_libraries(${PROJECT_TEST_NAME}
+    PRIVATE
     gtest
     gtest_main
     vigine
+    ${GLM_LIBRARIES}
+)
+
+# ====================== Set Output Directory =======================
+set_target_properties(${PROJECT_TEST_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 

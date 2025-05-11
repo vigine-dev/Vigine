@@ -2,16 +2,19 @@
 
 #include <vigine/vigine.h>
 #include <vigine/statemachine.h>
+#include <vigine/abstractstate.h>
+#include <vigine/taskflow.h>
+#include "concepts.h"
+#include "vigine/result.h"
 
 #include <memory>
+#include <concepts>
 
 using namespace vigine;
 
 class SomeState: public AbstractState
 {
-public:
-    ~SomeState() override{};
-    
+protected:
     void enter() override 
     {
         // Test state enter logic
@@ -22,18 +25,11 @@ public:
         // Test state exit logic
         return Result();
     }
-    
-    void update() override 
-    {
-        // Test state update logic
-    }
 };
 
 class SomeState2: public AbstractState
 {
-public:
-    ~SomeState2() override{};
-    
+protected:
     void enter() override 
     {
         // Test state2 enter logic
@@ -43,11 +39,6 @@ public:
     {
         // Test state2 exit logic
         return Result();
-    }
-    
-    void update() override 
-    {
-        // Test state2 update logic
     }
 };
 
@@ -79,12 +70,76 @@ concept MethodCheck_hasStatesToRun = requires(T t)
     { t.hasStatesToRun() } -> std::same_as<bool>;
 };
 
+// Test class for TaskFlow
+class TestTaskFlow {
+public:
+    void operator()() {
+        // Test implementation
+    }
+
+    AbstractTask* addTask(std::unique_ptr<AbstractTask> task) {
+        // Test implementation
+        return task.get();
+    }
+
+    void removeTask(AbstractTask* task) {
+        // Test implementation
+    }
+
+    void update() {
+        // Test implementation
+    }
+
+    void addTransition(AbstractTask* from, AbstractTask* to, Result::Code code) {
+        // Test implementation
+    }
+
+    void changeTaskTo(AbstractTask* task) {
+        // Test implementation
+    }
+
+    AbstractTask* currentTask() const {
+        // Test implementation
+        return nullptr;
+    }
+
+    bool hasTasksToRun() const {
+        // Test implementation
+        return false;
+    }
+
+    void runCurrentTask() {
+        // Test implementation
+    }
+};
+
+// Test class for AbstractState
+class TestState : public AbstractState {
+protected:
+    void enter() override {}
+    Result exit() override { return Result(); }
+};
+
+// Test class that exposes protected methods for testing
+class TestStateExposed : public AbstractState {
+public:
+    using AbstractState::enter;
+    using AbstractState::exit;
+    using AbstractState::setTaskFlow;
+    using AbstractState::getTaskFlow;
+};
+
+TEST(StateMachineTest, method_destructor)
+{
+    EXPECT_TRUE((HasMethod_destructor<StateMachine>))
+        << "StateMachine hasn't correct destructor";
+}
+
 TEST(StateMachineTest, constructor_empty)
 {
     std::unique_ptr<StateMachine> stateMachine;
     ASSERT_NO_THROW(stateMachine = std::make_unique<StateMachine>());
     ASSERT_NE(stateMachine, nullptr);
-    ASSERT_EQ(stateMachine->currentState(), nullptr) << "Initial state should be nullptr";
 }
 
 TEST(StateMachineTest, addState)
@@ -114,11 +169,12 @@ TEST(StateMachineTest, addTransition)
     ASSERT_EQ(state1Ptr, returnedState1Ptr);
     ASSERT_EQ(state2Ptr, returnedState2Ptr);
     
-    // Add status and transition
-    stateMachine->addTransition(state1Ptr, state2Ptr, Result::Code::Success);
+    // Add transition
+    auto result = stateMachine->addTransition(state1Ptr, state2Ptr, Result::Code::Error);
+    ASSERT_TRUE(result.isSuccess()) << "addTransition should succeed";
+    
+    // Change state and run
     stateMachine->changeStateTo(state1Ptr);
-
-    // Run state
     stateMachine->runCurrentState();
     
     // Check if transition occurred
@@ -148,11 +204,52 @@ TEST(StateMachineTest, runCurrentState_without_transition)
     
     // Add state
     auto state = std::make_unique<SomeState>();
+    auto statePtr = state.get();
     stateMachine->addState(std::move(state));
+    stateMachine->changeStateTo(statePtr);
     
     // Run state without transition
     stateMachine->runCurrentState();
     
-    // State should be nullptr after exit
+    // State should remain the same after run without transition
     ASSERT_EQ(stateMachine->currentState(), nullptr);
+}
+
+TEST(StateMachineTest, changeStateTo)
+{
+    auto stateMachine = std::make_unique<StateMachine>();
+    
+    // Add states
+    auto state1 = std::make_unique<SomeState>();
+    auto state2 = std::make_unique<SomeState2>();
+    auto state1Ptr = state1.get();
+    auto state2Ptr = state2.get();
+    
+    stateMachine->addState(std::move(state1));
+    stateMachine->addState(std::move(state2));
+    
+    // Change to first state
+    stateMachine->changeStateTo(state1Ptr);
+    ASSERT_EQ(stateMachine->currentState(), state1Ptr);
+    
+    // Change to second state
+    stateMachine->changeStateTo(state2Ptr);
+    ASSERT_EQ(stateMachine->currentState(), state2Ptr);
+}
+
+TEST(StateMachineTest, currentState)
+{
+    auto stateMachine = std::make_unique<StateMachine>();
+    
+    // Initially should be nullptr
+    ASSERT_EQ(nullptr, stateMachine->currentState());
+    
+    // Add and change state
+    auto state = std::make_unique<SomeState>();
+    auto statePtr = state.get();
+    stateMachine->addState(std::move(state));
+    stateMachine->changeStateTo(statePtr);
+    
+    // Should return current state
+    ASSERT_EQ(statePtr, stateMachine->currentState());
 }

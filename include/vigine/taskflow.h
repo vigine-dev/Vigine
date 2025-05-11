@@ -17,10 +17,14 @@ class TaskFlow {
     using TransitionMap = std::unordered_map<AbstractTask*, TransitionContainer>;
 
 public:
+    TaskFlow() = default;
     virtual ~TaskFlow() = default;
 
     // Add a task and return pointer to it
     AbstractTask* addTask(TaskUPtr task);
+
+    // Remove a task
+    void removeTask(AbstractTask* task);
 
     // Add a transition between tasks
     Result addTransition(AbstractTask* from, AbstractTask* to, Result::Code resultCode);
@@ -37,8 +41,8 @@ public:
     // Check if there are tasks to run
     bool hasTasksToRun() const;
 
-protected:
-    TaskFlow() = default;
+    // Run the task flow
+    void operator()();
 
 private:
     bool isTaskRegistered(AbstractTask* task) const;

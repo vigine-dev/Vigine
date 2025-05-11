@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
 #include <vigine/abstractstate.h>
-#include <vigine/abstracttaskflow.h>
+#include <vigine/taskflow.h>
+#include <vigine/abstracttask.h>
 #include "concepts.h"
 #include "vigine/result.h"
 
@@ -10,68 +11,26 @@
 
 using namespace vigine;
 
-// Test class for AbstractTaskFlow
-class TestTaskFlow : public AbstractTaskFlow {
-public:
-    void operator()() override {
-        // Test implementation
-    }
-
-    void addTask(AbstractTask* task, const RelationContainer& relations) override {
-        // Test implementation
-    }
-
-    void removeTask(AbstractTask* task) override {
-        // Test implementation
-    }
-
-    void update() override {
-        // Test implementation
-    }
-};
-
-// Concepts for checking AbstractState methods
-template <typename T>
-concept MethodCheck_Enter = requires(T t)
-{
-    t.enter();
-    { t.enter() } -> std::same_as<void>;
-};
-
-template <typename T>
-concept MethodCheck_Exit = requires(T t)
-{
-    t.exit();
-    { t.exit() } -> std::same_as<Result>;
-};
-
-template <typename T>
-concept MethodCheck_Update = requires(T t)
-{
-    t.update();
-    { t.update() } -> std::same_as<void>;
-};
-
-template <typename T>
-concept MethodCheck_SetTaskFlow = requires(T t)
-{
-    t.setTaskFlow(std::make_unique<TestTaskFlow>());
-    { t.setTaskFlow(std::make_unique<TestTaskFlow>()) } -> std::same_as<void>;
-};
-
-template <typename T>
-concept MethodCheck_GetTaskFlow = requires(T t)
-{
-    t.getTaskFlow();
-    { t.getTaskFlow() } -> std::same_as<AbstractTaskFlow*>;
-};
-
 // Test class for AbstractState
 class TestState : public AbstractState {
+protected:
+    void enter() override {}
+    Result exit() override { return Result(); }
+};
+
+// Test class that exposes protected methods for testing
+class TestStateExposed : public AbstractState {
 public:
     void enter() override {}
     Result exit() override { return Result(); }
-    void update() override {}
+
+    void setTaskFlow(std::unique_ptr<TaskFlow> taskFlow) {
+        AbstractState::setTaskFlow(std::move(taskFlow));
+    }
+
+    TaskFlow* getTaskFlow() const {
+        return AbstractState::getTaskFlow();
+    }
 };
 
 TEST(AbstractStateTest, check_isAbstract)
@@ -93,66 +52,44 @@ TEST(AbstractStateTest, constructor_empty)
     ASSERT_NE(state, nullptr);
 }
 
-TEST(AbstractStateTest, method_enter)
+TEST(AbstractStateTest, operator_execution)
 {
-    EXPECT_TRUE((HasMethod_enter<AbstractState, void>))
-        << "AbstractState hasn't correct enter method";
-}
-
-TEST(AbstractStateTest, method_exit)
-{
-    EXPECT_TRUE((HasMethod_exit<AbstractState, Result>))
-        << "AbstractState hasn't correct exit method";
-}
-
-TEST(AbstractStateTest, method_update)
-{
-    EXPECT_TRUE((HasMethod_update<AbstractState, void>))
-        << "AbstractState hasn't correct update method";
+    auto state = std::make_unique<TestStateExposed>();
+    auto taskFlow = std::make_unique<TaskFlow>();
+    state->setTaskFlow(std::move(taskFlow));
+    
+    // Test operator execution
+    ASSERT_NO_THROW((*state)()) << "operator() should not throw";
 }
 
 TEST(AbstractStateTest, enter_empty_void)
 {
-    EXPECT_TRUE(MethodCheck_Enter<AbstractState>) << "AbstractState hasn't expected void enter() method";
+    auto state = std::make_unique<TestStateExposed>();
+    ASSERT_NO_THROW(state->enter()) << "enter() should not throw";
 }
 
-TEST(AbstractStateTest, exit_empty_void)
+TEST(AbstractStateTest, exit_empty_Result)
 {
-    EXPECT_TRUE(MethodCheck_Exit<AbstractState>) << "AbstractState hasn't expected Result exit() method";
-}
-
-TEST(AbstractStateTest, update_empty_void)
-{
-    EXPECT_TRUE(MethodCheck_Update<AbstractState>) << "AbstractState hasn't expected void update() method";
+    auto state = std::make_unique<TestStateExposed>();
+    auto result = state->exit();
+    ASSERT_EQ(result.code(), Result::Code::Success) << "exit() should return Success";
 }
 
 TEST(AbstractStateTest, setTaskFlow_empty_void)
 {
-    EXPECT_TRUE(MethodCheck_SetTaskFlow<AbstractState>) << "AbstractState hasn't expected void setTaskFlow() method";
+    auto state = std::make_unique<TestStateExposed>();
+    auto taskFlow = std::make_unique<TaskFlow>();
+    ASSERT_NO_THROW(state->setTaskFlow(std::move(taskFlow))) << "setTaskFlow() should not throw";
 }
 
-TEST(AbstractStateTest, getTaskFlow_empty_AbstractTaskFlow_pointer)
+TEST(AbstractStateTest, getTaskFlow_empty_TaskFlow_pointer)
 {
-    EXPECT_TRUE(MethodCheck_GetTaskFlow<AbstractState>) << "AbstractState hasn't expected AbstractTaskFlow* getTaskFlow() method";
-}
-
-TEST(AbstractStateTest, task_flow_management)
-{
-    auto state = std::make_unique<TestState>();
+    auto state = std::make_unique<TestStateExposed>();
+    EXPECT_EQ(nullptr, state->getTaskFlow()) << "getTaskFlow() should return nullptr when no task flow is set";
     
-    // Test setting a task flow
-    auto taskFlow = std::make_unique<TestTaskFlow>();
-    AbstractTaskFlow* taskFlowPtr = taskFlow.get();
-    ASSERT_NO_THROW(state->setTaskFlow(std::move(taskFlow)));
-    
-    // Test getting the task flow
+    auto taskFlow = std::make_unique<TaskFlow>();
+    TaskFlow* taskFlowPtr = taskFlow.get();
+    state->setTaskFlow(std::move(taskFlow));
     EXPECT_EQ(taskFlowPtr, state->getTaskFlow()) << "getTaskFlow() should return the correct task flow";
-    
-    // Test updating with task flow
-    ASSERT_NO_THROW(state->update()) << "update() should not throw when task flow is set";
-    
-    // Test updating without task flow
-    state->setTaskFlow(nullptr);
-    ASSERT_NO_THROW(state->update()) << "update() should not throw when no task flow is set";
 }
 
