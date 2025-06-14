@@ -46,6 +46,8 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/taskflow.h
     ${INCLUDE_DIR}/vigine/abstracttask.h
     ${INCLUDE_DIR}/vigine/abstractservice.h
+    ${INCLUDE_DIR}/vigine/context.h
+    ${INCLUDE_DIR}/vigine/property.h
     ${INCLUDE_DIR}/vigine/ecs/abstractsystem.h
     ${INCLUDE_DIR}/vigine/ecs/abstractcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/abstractentity.h
@@ -60,6 +62,7 @@ set(SOURCES
     ${SRC_DIR}/entity.cpp
     ${SRC_DIR}/statemachine.cpp
     ${SRC_DIR}/taskflow.cpp
+    ${SRC_DIR}/context.cpp
     ${SRC_DIR}/system/rendersystem.cpp
     ${SRC_DIR}/component/componentmanager.cpp
     ${SRC_DIR}/component/rendercomponent.cpp
