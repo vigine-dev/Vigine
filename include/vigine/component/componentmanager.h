@@ -6,6 +6,8 @@
 #include <memory>
 #include <any>
 
+namespace vigine {
+
 template<typename T>
 using ComponentSPtr = std::shared_ptr<T>;
 template<typename T>
@@ -55,7 +57,6 @@ public:
         return getOrCreateEmptyContainer<T>().cend();
     }
 
-
     template <typename T>
     void removeComponents()
     {
@@ -83,7 +84,9 @@ private:
         return std::any_cast<ComponentContainer<T>&>(_empty[typeIndex]);
     }
 
-    private:
-        std::unordered_map<std::type_index, std::any> _components;
-        std::unordered_map<std::type_index, std::any> _empty;
+private:
+    std::unordered_map<std::type_index, std::any> _components;
+    std::unordered_map<std::type_index, std::any> _empty;
 };
+
+} // namespace vigine

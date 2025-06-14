@@ -1,7 +1,13 @@
 #pragma once
 
-class Entity {
+#include "ecs/abstractentity.h"
+
+namespace vigine {
+
+class Entity : public AbstractEntity {
 public:
-    Entity();
-    void update();
+    virtual ~Entity() = default;
+    virtual void update();
 };
+
+} // namespace vigine
