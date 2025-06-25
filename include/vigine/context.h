@@ -2,9 +2,9 @@
 
 #include <vigine/abstractservice.h>
 
-#include <unordered_map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace vigine {
@@ -21,7 +21,8 @@ public:
                            const Property property);
 
 private:
-  AbstractServiceUPtr createService(const ServiceId id, const ServiceName name);
+  AbstractServiceUPtr createService(const ServiceId &id,
+                                    const ServiceName &name);
 
 private:
   std::unordered_map<ServiceId, ServiceInstancesContainer> _services;

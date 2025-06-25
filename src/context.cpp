@@ -1,18 +1,10 @@
 #include <vigine/context.h>
 
 #include <vigine/property.h>
+#include <vigine/service/databaseservice.h>
 
 #include <algorithm>
 #include <utility>
-
-// TODO: move to another place
-class CppParser : public vigine::AbstractService {
-public:
-  using AbstractService::AbstractService;
-
-  ~CppParser() override {}
-  vigine::ServiceId id() override { return "CppParser"; }
-};
 
 vigine::AbstractService *vigine::Context::service(const ServiceId id,
                                                   const ServiceName name,
@@ -52,9 +44,10 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id,
 vigine::Context::Context() {}
 
 vigine::AbstractServiceUPtr
-vigine::Context::createService(const ServiceId id, const ServiceName name) {
-  if (id == "CppParser")
-    return std::make_unique<CppParser>(name);
+vigine::Context::createService(const ServiceId &id, const ServiceName &name)
+{
+  if (id == "Database")
+    return std::make_unique<DatabaseService>(name);
 
   return nullptr;
 }

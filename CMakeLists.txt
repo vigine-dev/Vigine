@@ -73,6 +73,7 @@ add_library(${PROJECT_NAME}
     STATIC
     ${HEADER}
     ${SOURCES}
+    include/vigine/service/databaseservice.h include/vigine/service/databaseservice.cpp
 )
 
 # Include directories
