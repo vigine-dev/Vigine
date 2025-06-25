@@ -1,14 +1,15 @@
 #include "vigine/system/rendersystem.h"
+
 #include <iostream>
 
-namespace vigine {
+namespace vigine
+{
 
-RenderSystem::RenderSystem() {
+RenderSystem::RenderSystem()
+{
     // Конструктор
 }
 
-void RenderSystem::update() {
-    std::cout << "Updating render system" << std::endl;
-}
+void RenderSystem::update() { std::cout << "Updating render system" << std::endl; }
 
 } // namespace vigine

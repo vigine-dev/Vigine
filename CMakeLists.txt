@@ -54,6 +54,8 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/system/rendersystem.h
     ${INCLUDE_DIR}/vigine/component/componentmanager.h
     ${INCLUDE_DIR}/vigine/component/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/contextholder.h
+    ${INCLUDE_DIR}/vigine/contextholder.cpp
 )
 
 set(SOURCES
@@ -66,6 +68,17 @@ set(SOURCES
     ${SRC_DIR}/system/rendersystem.cpp
     ${SRC_DIR}/component/componentmanager.cpp
     ${SRC_DIR}/component/rendercomponent.cpp
+    ${SRC_DIR}/abstracttask.cpp
+    ${SRC_DIR}/abstractservice.cpp
+)
+
+# Add source files
+set(HEADER_SERVICE
+    ${INCLUDE_DIR}/vigine/service/databaseservice.h
+)
+
+set(SOURCES_SERVICE
+    ${SRC_DIR}/service/databaseservice.cpp
 )
 
 # Add a library
@@ -73,7 +86,8 @@ add_library(${PROJECT_NAME}
     STATIC
     ${HEADER}
     ${SOURCES}
-    include/vigine/service/databaseservice.h include/vigine/service/databaseservice.cpp
+    ${HEADER_SERVICE}
+    ${SOURCES_SERVICE}
 )
 
 # Include directories
@@ -88,6 +102,8 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${GLM_LIBRARIES}
+    pqxx
+    pq
 )
 
 # Install the library and headers

@@ -1,13 +1,15 @@
 #pragma once
 
-namespace vigine {
+namespace vigine
+{
 
-class AbstractSystem {
-public:
-  virtual ~AbstractSystem() = 0;
+class AbstractSystem
+{
+  public:
+    virtual ~AbstractSystem() = 0;
 
-protected:
-  AbstractSystem() = default;
+  protected:
+    AbstractSystem() = default;
 };
 
 } // namespace vigine

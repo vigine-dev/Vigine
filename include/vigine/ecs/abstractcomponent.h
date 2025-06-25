@@ -1,13 +1,15 @@
 #pragma once
 
-namespace vigine {
+namespace vigine
+{
 
-class AbstractComponent {
-public:
-  virtual ~AbstractComponent() = 0;
+class AbstractComponent
+{
+  public:
+    virtual ~AbstractComponent() = 0;
 
-protected:
-  AbstractComponent() = default;
+  protected:
+    AbstractComponent() = default;
 };
 
 } // namespace vigine

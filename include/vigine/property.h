@@ -1,6 +1,13 @@
 #pragma once
 
-namespace vigine {
+namespace vigine
+{
 
-enum class Property { Exist, New, All, NewIfNotExist };
+enum class Property
+{
+    Exist,
+    New,
+    All,
+    NewIfNotExist
+};
 }

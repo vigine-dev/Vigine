@@ -2,8 +2,9 @@
 
 #include <vigine/abstracttask.h>
 
-class AddSomeDataTask : public vigine::AbstractTask {
-public:
-  AddSomeDataTask();
-  vigine::Result execute() override;
+class AddSomeDataTask : public vigine::AbstractTask
+{
+  public:
+    AddSomeDataTask();
+    vigine::Result execute() override;
 };

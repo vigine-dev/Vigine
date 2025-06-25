@@ -2,9 +2,10 @@
 
 #include <vigine/abstracttask.h>
 
-class CheckBDShecmeTask : public vigine::AbstractTask {
-public:
-  CheckBDShecmeTask();
+class CheckBDShecmeTask : public vigine::AbstractTask
+{
+  public:
+    CheckBDShecmeTask();
 
-  vigine::Result execute() override;
+    vigine::Result execute() override;
 };

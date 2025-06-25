@@ -4,8 +4,9 @@
 
 CheckBDShecmeTask::CheckBDShecmeTask() {}
 
-vigine::Result CheckBDShecmeTask::execute() {
-  std::println("-- CheckBDShecmeTask::execute()");
+vigine::Result CheckBDShecmeTask::execute()
+{
+    std::println("-- CheckBDShecmeTask::execute()");
 
-  return vigine::Result();
+    return vigine::Result();
 }

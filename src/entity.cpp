@@ -1,10 +1,10 @@
 #include "vigine/entity.h"
+
 #include <iostream>
 
-namespace vigine {
+namespace vigine
+{
 
-void Entity::update() {
-    std::cout << "Updating entity" << std::endl;
-}
+void Entity::update() { std::cout << "Updating entity" << std::endl; }
 
 } // namespace vigine

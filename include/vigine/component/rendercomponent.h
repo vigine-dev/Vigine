@@ -1,9 +1,11 @@
 #pragma once
 
-namespace vigine {
+namespace vigine
+{
 
-class RenderComponent {
-public:
+class RenderComponent
+{
+  public:
     RenderComponent();
     void render();
 };

@@ -2,10 +2,12 @@
 
 #include "ecs/abstractentity.h"
 
-namespace vigine {
+namespace vigine
+{
 
-class Entity : public AbstractEntity {
-public:
+class Entity : public AbstractEntity
+{
+  public:
     virtual ~Entity() = default;
     virtual void update();
 };

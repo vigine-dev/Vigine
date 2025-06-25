@@ -1,13 +1,20 @@
 #include "vigine/vigine.h"
+
 #include "vigine/statemachine.h"
+#include <vigine/context.h>
+
 #include <iostream>
 
-namespace vigine {
+namespace vigine
+{
 
 Engine::Engine()
-    : _stateMachine(std::make_unique<StateMachine>())
+    : _stateMachine{std::make_unique<StateMachine>()}, _context{std::make_unique<Context>()}
 {
+    _stateMachine->setContext(_context.get());
 }
+
+Engine::~Engine() {}
 
 void Engine::run()
 {
@@ -15,10 +22,9 @@ void Engine::run()
         _stateMachine->runCurrentState();
 }
 
-StateMachine* Engine::state()
-{
-    return _stateMachine.get();
-}
+StateMachine *Engine::state() { return _stateMachine.get(); }
+
+Context *Engine::context() { return _context.get(); }
 
 void exampleFunction() {}
 

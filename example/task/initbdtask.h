@@ -2,9 +2,19 @@
 
 #include <vigine/abstracttask.h>
 
-class InitBDTask : public vigine::AbstractTask {
-public:
-  InitBDTask();
+namespace vigine
+{
+class DatabaseService;
+}
 
-  vigine::Result execute() override;
+class InitBDTask : public vigine::AbstractTask
+{
+  public:
+    InitBDTask();
+
+    void contextChanged() override;
+    vigine::Result execute() override;
+
+  private:
+    vigine::DatabaseService *_dbService{nullptr};
 };

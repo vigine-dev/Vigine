@@ -1,17 +1,20 @@
 #pragma once
 
-#include "taskflow.h"
 #include "result.h"
+#include "taskflow.h"
 
 #include <memory>
 
-namespace vigine {
+namespace vigine
+{
+
+class Context;
 
 class AbstractState
 {
-public:
+  public:
     virtual ~AbstractState() = default;
-    
+
     // Main state execution method
     Result operator()()
     {
@@ -26,24 +29,38 @@ public:
     }
 
     // Task flow management methods
-    void setTaskFlow(std::unique_ptr<TaskFlow> taskFlow) {
+    void setTaskFlow(std::unique_ptr<TaskFlow> taskFlow)
+    {
+        if (!taskFlow)
+            return;
+
         _taskFlow = std::move(taskFlow);
+        _taskFlow->setContext(_context);
     }
 
-    TaskFlow* getTaskFlow() const {
-        return _taskFlow.get();
+    TaskFlow *getTaskFlow() const { return _taskFlow.get(); }
+
+    void setContext(Context *context)
+    {
+        _context = context;
+
+        if (_taskFlow)
+            _taskFlow->setContext(_context);
     }
 
-protected:
+  protected:
     AbstractState() = default;
 
     // State lifecycle methods
-    virtual void enter() = 0;
+    virtual void enter()  = 0;
     virtual Result exit() = 0;
 
-protected:
+    Context *context() { return _context; }
+
+  protected:
     std::unique_ptr<TaskFlow> _taskFlow;
     bool _isActive = true;
+    Context *_context{nullptr};
 };
 
 } // namespace vigine
