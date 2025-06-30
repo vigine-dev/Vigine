@@ -1,18 +1,18 @@
-#include <gtest/gtest.h>
-
 #include "concepts.h"
+
 #include "vigine/result.h"
 #include "vigine/vigine.h"
 #include <vigine/abstractstate.h>
 #include <vigine/abstracttask.h>
 #include <vigine/component/componentmanager.h>
-#include <vigine/entity.h>
+#include <vigine/ecs/entity.h>
 #include <vigine/statemachine.h>
 #include <vigine/taskflow.h>
 #include <vigine/vigine.h>
 
 #include <concepts>
 #include <functional>
+#include <gtest/gtest.h>
 #include <memory>
 
 using namespace vigine;
@@ -97,10 +97,10 @@ class TestTask : public AbstractTask
 
 TEST(ArchitectureTest, Vigine_run_void)
 {
-    auto vigine = std::make_unique<vigine::Engine>();
+    auto vigine            = std::make_unique<vigine::Engine>();
     StateMachine *stateMch = vigine->state();
 
-    int result = 0;
+    int result             = 0;
 
     // Create states with TaskFlows
     auto state1 = std::make_unique<OpenState>();

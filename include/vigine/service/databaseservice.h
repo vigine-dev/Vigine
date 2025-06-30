@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vigine/abstractservice.h>
-#include <vigine/entity.h>
+#include <vigine/ecs/entity.h>
 
 namespace vigine
 {

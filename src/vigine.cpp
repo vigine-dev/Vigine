@@ -1,7 +1,8 @@
 #include "vigine/vigine.h"
 
+#include "vigine/context.h"
+#include "vigine/ecs/entitymanager.h"
 #include "vigine/statemachine.h"
-#include <vigine/context.h>
 
 #include <iostream>
 
@@ -11,6 +12,7 @@ namespace vigine
 Engine::Engine()
     : _stateMachine{std::make_unique<StateMachine>()}, _context{std::make_unique<Context>()}
 {
+    _entityManager.reset(new EntityManager());
     _stateMachine->setContext(_context.get());
 }
 

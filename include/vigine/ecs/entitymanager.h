@@ -5,6 +5,7 @@
 
 namespace vigine
 {
+class Engine;
 class Entity;
 
 using EntityUPtr = std::unique_ptr<Entity>;
@@ -12,6 +13,7 @@ using EntityUPtr = std::unique_ptr<Entity>;
 class EntityManager
 {
   public:
+    ~EntityManager();
     Entity *createEntity();
     void removeEntity(Entity *entity);
 
@@ -19,6 +21,6 @@ class EntityManager
     EntityManager();
     std::vector<EntityUPtr> _entities;
 
-    friend class Vigine;
+    friend class Engine;
 };
 } // namespace vigine

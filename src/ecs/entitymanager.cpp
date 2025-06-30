@@ -1,12 +1,12 @@
 #include "vigine/ecs/entitymanager.h"
 
+#include "vigine/ecs/entity.h"
+
 #include <algorithm>
 
-vigine::Entity *vigine::EntityManager::createEntity() { return nullptr; }
-
-vigine::Entity *vigine::EntityManager::createEntity() {}
-
 vigine::Entity *vigine::EntityManager::createEntity() { return _entities.emplace_back().get(); }
+
+vigine::EntityManager::~EntityManager() {}
 
 void vigine::EntityManager::removeEntity(Entity *entity)
 {

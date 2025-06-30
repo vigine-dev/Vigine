@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <vigine/component/componentmanager.h>
-#include <vigine/entity.h>
+#include <vigine/ecs/entity.h>
 
 #include <string>
 
