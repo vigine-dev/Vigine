@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <utility>
 
+vigine::Context::Context(EntityManager *entityManager) { _entityManager = entityManager; }
+
+vigine::EntityManager *vigine::Context::entityManager() const { return _entityManager; }
+
 vigine::AbstractService *vigine::Context::service(const ServiceId id, const ServiceName name,
                                                   const Property property)
 {
@@ -42,8 +46,6 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Serv
 
     return retVal;
 }
-
-vigine::Context::Context() {}
 
 vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id,
                                                            const ServiceName &name)

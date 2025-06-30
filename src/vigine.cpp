@@ -9,10 +9,10 @@
 namespace vigine
 {
 
-Engine::Engine()
-    : _stateMachine{std::make_unique<StateMachine>()}, _context{std::make_unique<Context>()}
+Engine::Engine() : _stateMachine{std::make_unique<StateMachine>()}
 {
     _entityManager.reset(new EntityManager());
+    _context.reset(new Context(_entityManager.get()));
     _stateMachine->setContext(_context.get());
 }
 
