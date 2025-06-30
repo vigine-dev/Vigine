@@ -19,11 +19,11 @@ class Context
 {
   public:
     AbstractService *service(const ServiceId id, const ServiceName name, const Property property);
+    EntityManager *entityManager() const;
 
   private:
     Context(EntityManager *entityManager);
     AbstractServiceUPtr createService(const ServiceId &id, const ServiceName &name);
-    EntityManager *entityManager() const;
 
   private:
     std::unordered_map<ServiceId, ServiceInstancesContainer> _services;

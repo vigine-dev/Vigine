@@ -7,18 +7,9 @@
 #include <print>
 
 InitBDTask::InitBDTask() {}
-struct Point
-{
-    int x, y;
-};
+
 void InitBDTask::contextChanged()
 {
-    Point arr[] = {
-        {1,   2  },
-        {10,  20 },
-        {100, 200}
-    };
-
     if (!context())
         {
             _dbService = nullptr;

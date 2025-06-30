@@ -9,6 +9,7 @@
 
 namespace vigine
 {
+class Engine;
 
 class StateMachine
 {
@@ -19,8 +20,6 @@ class StateMachine
     using TransitionMap       = std::unordered_map<AbstractState *, TransitionContainer>;
 
   public:
-    StateMachine();
-
     // Add a state and return pointer to it
     AbstractState *addState(StateUPtr state);
 
@@ -39,9 +38,8 @@ class StateMachine
     // Check if there are states to run
     bool hasStatesToRun() const;
 
-    void setContext(Context *context);
-
   private:
+    StateMachine(Context *context);
     bool isStateRegistered(AbstractState *state) const;
 
   private:
@@ -49,6 +47,8 @@ class StateMachine
     TransitionMap _transitions;
     AbstractState *_currState;
     Context *_context;
+
+    friend class Engine;
 };
 
 } // namespace vigine

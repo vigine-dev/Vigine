@@ -6,7 +6,7 @@
 namespace vigine
 {
 
-StateMachine::StateMachine() : _currState(nullptr) {}
+StateMachine::StateMachine(Context *context) : _currState(nullptr), _context{context} {}
 
 AbstractState *StateMachine::addState(StateUPtr state)
 {
@@ -82,13 +82,4 @@ void StateMachine::runCurrentState()
 }
 
 bool StateMachine::hasStatesToRun() const { return _currState != nullptr; }
-
-void StateMachine::setContext(Context *context)
-{
-    _context = context;
-
-    std::ranges::for_each(
-        _states, [&context](const StateUPtr &stateUPtr) { stateUPtr->setContext(context); });
-}
-
 } // namespace vigine
