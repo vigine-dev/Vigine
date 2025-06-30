@@ -40,7 +40,6 @@ endif()
 set(HEADER
     ${INCLUDE_DIR}/vigine/vigine.h
     ${INCLUDE_DIR}/vigine/result.h
-    ${INCLUDE_DIR}/vigine/entity.h
     ${INCLUDE_DIR}/vigine/statemachine.h
     ${INCLUDE_DIR}/vigine/abstractstate.h
     ${INCLUDE_DIR}/vigine/taskflow.h
@@ -50,26 +49,28 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/property.h
     ${INCLUDE_DIR}/vigine/ecs/abstractsystem.h
     ${INCLUDE_DIR}/vigine/ecs/abstractcomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/abstractentity.h
+    ${INCLUDE_DIR}/vigine/ecs/entity.h
     ${INCLUDE_DIR}/vigine/system/rendersystem.h
     ${INCLUDE_DIR}/vigine/component/componentmanager.h
     ${INCLUDE_DIR}/vigine/component/rendercomponent.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
+    ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
 )
 
 set(SOURCES
     ${SRC_DIR}/vigine.cpp
     ${SRC_DIR}/result.cpp
-    ${SRC_DIR}/entity.cpp
     ${SRC_DIR}/statemachine.cpp
     ${SRC_DIR}/taskflow.cpp
     ${SRC_DIR}/context.cpp
     ${SRC_DIR}/system/rendersystem.cpp
     ${SRC_DIR}/component/componentmanager.cpp
     ${SRC_DIR}/component/rendercomponent.cpp
+    ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
+    ${SRC_DIR}/ecs/entitymanager.cpp
 )
 
 # Add source files
