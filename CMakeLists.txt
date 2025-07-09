@@ -56,6 +56,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
+    ${INCLUDE_DIR}/vigine/entitybindinghost.h
 )
 
 set(SOURCES
@@ -71,6 +72,7 @@ set(SOURCES
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
+    ${SRC_DIR}/entitybindinghost.cpp
 )
 
 # Add source files
