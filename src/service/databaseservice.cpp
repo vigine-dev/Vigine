@@ -1,7 +1,8 @@
 #include "vigine/service/databaseservice.h"
 
 #include "vigine/context.h"
-#include "vigine/entity.h"
+#include "vigine/ecs/entity.h"
+#include "vigine/ecs/entitymanager.h"
 #include "vigine/property.h"
 
 #include <iostream>
@@ -11,38 +12,45 @@ vigine::DatabaseService::DatabaseService(const ServiceName &name) : AbstractServ
 
 void vigine::DatabaseService::contextChanged()
 {
-    _postgress = context()->system("Postgres", "vigineBD", Property::NewIfNotExist);
+    //_postgress = context()->system("Postgres", "vigineBD", Property::NewIfNotExist);
 }
 
-vigine::Entity vigine::DatabaseService::connectToDb()
+void vigine::DatabaseService::entityBound()
 {
+    Entity *ent = getBoundEntity();
 
-    Entity ent;
+    if (!_postgress->hasComponents(ent))
+        _postgress->addComponentsTo(ent);
+}
 
-    _postgress->bindEntity(ent);
+vigine::Result vigine::DatabaseService::connectToDb()
+{
+    _postgress->bindEntity(getBoundEntity());
+    {
+        _postgress->connect("host=localhost port=5432 dbname=vigine user=vigine password=vigine");
+        _postgress->exec("SELECT version();");
+        auto result = _postgress->result();
 
-    _postgress->connect("host=localhost port=5432 dbname=vigine user=vigine password=vigine");
-    _postgress->exec(ent, "SELECT version();");
-    auto result = _postgress->result();
+        try
+            {
+                // Підключення до бази
+                pqxx::connection conn("host=localhost port=5432 dbname=vigine "
+                                      "user=vigine password=vigine");
 
-    try
-        {
-            // Підключення до бази
-            pqxx::connection conn("host=localhost port=5432 dbname=vigine "
-                                  "user=vigine password=vigine");
+                pqxx::work txn(conn);
+                pqxx::result res = txn.exec("SELECT version();");
 
-            pqxx::work txn(conn);
-            pqxx::result res = txn.exec("SELECT version();");
+                std::cout << "PostgreSQL: " << res[0][0].c_str() << "\n";
+                txn.commit();
+            }
+        catch (const std::exception &e)
+            {
+                std::cerr << "DB error: " << e.what() << '\n';
+            }
+    }
+    _postgress->unbindEntity();
 
-            std::cout << "PostgreSQL: " << res[0][0].c_str() << "\n";
-            txn.commit();
-        }
-    catch (const std::exception &e)
-        {
-            std::cerr << "DB error: " << e.what() << '\n';
-        }
-
-    return ent;
+    return Result();
 }
 
 vigine::ServiceId vigine::DatabaseService::id() const { return "Database"; }

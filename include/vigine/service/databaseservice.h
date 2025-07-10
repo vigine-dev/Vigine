@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vigine/result.h"
 #include <vigine/abstractservice.h>
 #include <vigine/ecs/entity.h>
 
@@ -16,7 +17,10 @@ class DatabaseService : public AbstractService
     void contextChanged() override;
 
     ServiceId id() const override;
-    Entity connectToDb();
+    Result connectToDb();
+
+  protected:
+    void entityBound() override;
 
   private:
     PostgreSQLSystem *_postgress{nullptr};
