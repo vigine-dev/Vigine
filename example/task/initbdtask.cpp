@@ -1,5 +1,7 @@
 #include "initbdtask.h"
 
+#include "vigine/ecs/entity.h"
+#include "vigine/ecs/entitymanager.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
 #include <vigine/service/databaseservice.h>
@@ -29,7 +31,17 @@ vigine::Result InitBDTask::execute()
 
     std::println("-- InitBDTask::execute(): {}", serviceName);
 
-    _dbService->connectToDb();
+    auto *entityManager = context()->entityManager();
+    vigine::Entity *ent = entityManager->createEntity();
+
+    entityManager->addAlias(ent, "PostgresBDLocal");
+    entityManager->addAlias(ent, "PostgresBDLocalCache");
+
+    _dbService->bindEntity(ent);
+    {
+        _dbService->connectToDb();
+    }
+    _dbService->unbindEntity();
 
     return vigine::Result();
 }
