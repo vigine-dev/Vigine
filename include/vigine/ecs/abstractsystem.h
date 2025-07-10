@@ -1,12 +1,14 @@
 #pragma once
 
+#include "vigine/entitybindinghost.h"
+
 namespace vigine
 {
 
-class AbstractSystem
+class AbstractSystem : public EntityBindingHost
 {
   public:
-    virtual ~AbstractSystem() = 0;
+    virtual ~AbstractSystem(){};
 
   protected:
     AbstractSystem() = default;
