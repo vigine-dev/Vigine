@@ -4,7 +4,12 @@
 
 #include <algorithm>
 
-vigine::Entity *vigine::EntityManager::createEntity() { return _entities.emplace_back().get(); }
+vigine::Entity *vigine::EntityManager::createEntity()
+{
+    _entities.push_back(std::make_unique<vigine::Entity>());
+
+    return _entities.back().get();
+}
 
 vigine::EntityManager::~EntityManager() {}
 
