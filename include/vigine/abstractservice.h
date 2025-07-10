@@ -1,6 +1,7 @@
 #pragma once
 
 #include "contextholder.h"
+#include "entitybindinghost.h"
 
 #include <memory>
 #include <string>
@@ -11,7 +12,9 @@ namespace vigine
 using ServiceId   = std::string;
 using ServiceName = std::string;
 
-class AbstractService : public ContextHolder
+class Entity;
+
+class AbstractService : public ContextHolder, public EntityBindingHost
 {
   public:
     virtual ~AbstractService();
