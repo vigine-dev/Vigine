@@ -2,15 +2,23 @@
 
 #include "vigine/ecs/abstractsystem.h"
 
+#include <pqxx/pqxx>
 #include <unordered_map>
 
 namespace vigine
 {
-struct PostgreSQLSystemComponents
-{
-};
+class PostgreSQLComponent;
 
-using PostgreSQLSystemComponentsUPtr = std::unique_ptr<PostgreSQLSystemComponents>;
+using PostgreSQLSystemComponentUPtr = std::unique_ptr<PostgreSQLComponent>;
+
+struct ConnectionData
+{
+    std::string host;
+    std::string port;
+    std::string dbName;
+    std::string dbUserName;
+    std::string password;
+};
 
 class PostgreSQLSystem : public AbstractSystem
 {
@@ -20,11 +28,22 @@ class PostgreSQLSystem : public AbstractSystem
 
     SystemId id() const override;
 
+    // interface implementation
     bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
 
+    // custom
+    void setConnectionData(const ConnectionData& connectionData);
+    void connect();
+    pqxx::result select(const std::string &query);
+
+  protected:
+    virtual void entityBound();
+    virtual void entityUnbound();
+
   private:
-    std::unordered_map<Entity *, PostgreSQLSystemComponentsUPtr> _entityComponents;
+    std::unordered_map<Entity *, PostgreSQLSystemComponentUPtr> _entityComponents;
+    PostgreSQLComponent *_boundEntityComponent;
 };
 }; // namespace vigine

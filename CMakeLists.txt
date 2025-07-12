@@ -73,7 +73,7 @@ set(SOURCES
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
-    ${SRC_DIR}/ecs/postgresqlsystem.cpp
+    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlsystem.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
 )
@@ -87,6 +87,16 @@ set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
 )
 
+# Add source files
+set(HEADER_POSTGRESQL
+    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.h
+)
+
+set(SOURCES_POSTGRESQL
+    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.cpp
+)
+
+
 # Add a library
 add_library(${PROJECT_NAME}
     STATIC
@@ -94,6 +104,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES}
     ${HEADER_SERVICE}
     ${SOURCES_SERVICE}
+    ${HEADER_POSTGRESQL}
+    ${SOURCES_POSTGRESQL}
 )
 
 # Include directories
