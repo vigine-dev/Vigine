@@ -39,10 +39,7 @@ void vigine::PostgreSQLSystem::setConnectionData(const ConnectionData &connectio
     _boundEntityComponent->setPassword(connectionData.password);
 }
 
-void vigine::PostgreSQLSystem::connect()
-{
-    _boundEntityComponent->connect();
-}
+void vigine::PostgreSQLSystem::connect() { _boundEntityComponent->connect(); }
 
 pqxx::result vigine::PostgreSQLSystem::select(const std::string &query)
 {

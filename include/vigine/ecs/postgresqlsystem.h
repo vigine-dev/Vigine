@@ -34,7 +34,7 @@ class PostgreSQLSystem : public AbstractSystem
     void destroyComponents(Entity *entity) override;
 
     // custom
-    void setConnectionData(const ConnectionData& connectionData);
+    void setConnectionData(const ConnectionData &connectionData);
     void connect();
     pqxx::result select(const std::string &query);
 
