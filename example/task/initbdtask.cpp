@@ -34,14 +34,13 @@ vigine::Result InitBDTask::execute()
     auto *entityManager = context()->entityManager();
     vigine::Entity *ent = entityManager->createEntity();
 
-    entityManager->addAlias(ent, "PostgresBDLocal");
-    entityManager->addAlias(ent, "PostgresBDLocalCache");
-
     _dbService->bindEntity(ent);
     {
         _dbService->connectToDb();
     }
     _dbService->unbindEntity();
+
+    entityManager->addAlias(ent, "PostgresBDLocal");
 
     return vigine::Result();
 }
