@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -16,10 +17,13 @@ class EntityManager
     ~EntityManager();
     Entity *createEntity();
     void removeEntity(Entity *entity);
+    void addAlias(Entity *entity, const std::string &alias);
+    Entity *getEntityByAlias(const std::string &alias) const;
 
   private:
     EntityManager();
     std::vector<EntityUPtr> _entities;
+    std::map<std::string, Entity *> _entityAliases;
 
     friend class Engine;
 };
