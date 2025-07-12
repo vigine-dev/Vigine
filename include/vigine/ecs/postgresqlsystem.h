@@ -37,6 +37,8 @@ class PostgreSQLSystem : public AbstractSystem
     void setConnectionData(const ConnectionData &connectionData);
     void connect();
     pqxx::result select(const std::string &query);
+    bool checkTableExist(const std::string &tableName, const std::vector<std::string> tableColumns);
+    void createTable(const std::string &tableName, const std::vector<std::string> tableColumns);
 
   protected:
     virtual void entityBound();

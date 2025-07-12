@@ -17,36 +17,61 @@ void vigine::DatabaseService::contextChanged()
         context()->system("PostgreSQL", "vigineBD", Property::New));
 }
 
+bool vigine::DatabaseService::checkTablesExist(const std::vector<Table> &tables) const
+{
+    bool result = false;
+    try
+        {
+            result = _postgressSystem->checkTableExist(tables[0].name, tables[0].columns);
+        }
+    catch (const std::exception &e)
+        {
+            std::cerr << "DB error: " << e.what() << '\n';
+        }
+
+    return result;
+}
+
+void vigine::DatabaseService::createTables(const std::vector<Table> &tables) const
+{
+    try
+        {
+            _postgressSystem->createTable(tables[0].name, tables[0].columns);
+        }
+    catch (const std::exception &e)
+        {
+            std::cerr << "DB error: " << e.what() << '\n';
+        }
+}
+
 void vigine::DatabaseService::entityBound()
 {
     Entity *ent = getBoundEntity();
 
     if (!_postgressSystem->hasComponents(ent))
         _postgressSystem->createComponents(ent);
+
+    _postgressSystem->bindEntity(getBoundEntity());
 }
 
 vigine::Result vigine::DatabaseService::connectToDb()
 {
-    _postgressSystem->bindEntity(getBoundEntity());
-    {
-        try
-            {
-                _postgressSystem->setConnectionData({.host       = "localhost",
-                                                     .port       = "5432",
-                                                     .dbName     = "vigine",
-                                                     .dbUserName = "vigine",
-                                                     .password   = "vigine"});
-                _postgressSystem->connect();
-                pqxx::result res = _postgressSystem->select("SELECT version();");
+    try
+        {
+            _postgressSystem->setConnectionData({.host       = "localhost",
+                                                 .port       = "5432",
+                                                 .dbName     = "vigine",
+                                                 .dbUserName = "vigine",
+                                                 .password   = "vigine"});
+            _postgressSystem->connect();
+            pqxx::result res = _postgressSystem->select("SELECT version();");
 
-                std::cout << "PostgreSQL: " << res[0][0].c_str() << "\n";
-            }
-        catch (const std::exception &e)
-            {
-                std::cerr << "DB error: " << e.what() << '\n';
-            }
-    }
-    _postgressSystem->unbindEntity();
+            std::cout << "PostgreSQL: " << res[0][0].c_str() << "\n";
+        }
+    catch (const std::exception &e)
+        {
+            std::cerr << "DB error: " << e.what() << '\n';
+        }
 
     return Result();
 }

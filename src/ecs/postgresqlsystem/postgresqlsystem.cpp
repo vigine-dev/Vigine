@@ -50,6 +50,63 @@ pqxx::result vigine::PostgreSQLSystem::select(const std::string &query)
     return result;
 }
 
+bool vigine::PostgreSQLSystem::checkTableExist(const std::string &tableName,
+                                               const std::vector<std::string> tableColumns)
+{
+    std::string query = "SELECT EXISTS (SELECT 1 FROM pg_catalog.pg_tables WHERE schemaname = "
+                        "'public' AND tablename = '" +
+                        tableName + "')";
+
+    _boundEntityComponent->setQuery(query);
+    auto result = _boundEntityComponent->exec();
+    _boundEntityComponent->commit();
+    auto resultAsBool = result[0][0].as<bool>();
+
+    if (resultAsBool)
+        {
+            std::string cols;
+            for (size_t i = 0; i < tableColumns.size(); ++i)
+                {
+                    cols += "'" + tableColumns[i] + "'";
+                    if (i + 1 < tableColumns.size())
+                        cols += ",";
+                }
+
+            std::string query = "SELECT COUNT(*) FROM information_schema.columns "
+                                "WHERE table_schema = 'public' "
+                                "AND table_name = '" +
+                                tableName +
+                                "' "
+                                "AND column_name IN (" +
+                                cols + ")";
+
+            _boundEntityComponent->setQuery(query);
+            result = _boundEntityComponent->exec();
+            _boundEntityComponent->commit();
+            resultAsBool = result[0][0].as<int>() == tableColumns.size();
+        }
+
+    return resultAsBool;
+}
+
+void vigine::PostgreSQLSystem::createTable(const std::string &tableName,
+                                           const std::vector<std::string> tableColumns)
+{
+    std::string cols;
+    for (size_t i = 0; i < tableColumns.size(); ++i)
+        {
+            cols += "" + tableColumns[i] + " TEXT";
+            if (i + 1 < tableColumns.size())
+                cols += ",";
+        }
+
+    std::string query = "CREATE TABLE IF NOT EXISTS public.\"" + tableName + "\" (" + cols + ")";
+
+    _boundEntityComponent->setQuery(query);
+    _boundEntityComponent->exec();
+    _boundEntityComponent->commit();
+}
+
 void vigine::PostgreSQLSystem::entityBound()
 {
     auto boundEntity      = getBoundEntity();
