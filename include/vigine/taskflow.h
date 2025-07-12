@@ -4,53 +4,58 @@
 #include "result.h"
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-namespace vigine {
+namespace vigine
+{
 
-class TaskFlow {
-    using TaskUPtr = std::unique_ptr<AbstractTask>;
-    using TaskContainer = std::vector<TaskUPtr>;
-    using Transition = std::pair<Result::Code, AbstractTask*>;
+class TaskFlow
+{
+    using TaskUPtr            = std::unique_ptr<AbstractTask>;
+    using TaskContainer       = std::vector<TaskUPtr>;
+    using Transition          = std::pair<Result::Code, AbstractTask *>;
     using TransitionContainer = std::vector<Transition>;
-    using TransitionMap = std::unordered_map<AbstractTask*, TransitionContainer>;
+    using TransitionMap       = std::unordered_map<AbstractTask *, TransitionContainer>;
 
-public:
-    TaskFlow() = default;
+  public:
+    TaskFlow()          = default;
     virtual ~TaskFlow() = default;
 
     // Add a task and return pointer to it
-    AbstractTask* addTask(TaskUPtr task);
+    AbstractTask *addTask(TaskUPtr task);
 
     // Remove a task
-    void removeTask(AbstractTask* task);
+    void removeTask(AbstractTask *task);
 
     // Add a transition between tasks
-    Result addTransition(AbstractTask* from, AbstractTask* to, Result::Code resultCode);
-    
+    Result addTransition(AbstractTask *from, AbstractTask *to, Result::Code resultCode);
+
     // Change current task
-    void changeTaskTo(AbstractTask* newTask);
-    
+    void changeCurrentTaskTo(AbstractTask *newTask);
+
     // Get current task
-    AbstractTask* currentTask() const;
-    
+    AbstractTask *currentTask() const;
+
     // Run current task
     void runCurrentTask();
-    
+
     // Check if there are tasks to run
     bool hasTasksToRun() const;
 
     // Run the task flow
     void operator()();
 
-private:
-    bool isTaskRegistered(AbstractTask* task) const;
+    void setContext(Context *context);
 
-private:
+  private:
+    bool isTaskRegistered(AbstractTask *task) const;
+
+  private:
     TaskContainer _tasks;
     TransitionMap _transitions;
-    AbstractTask* _currTask = nullptr;
+    AbstractTask *_currTask{nullptr};
+    Context *_context{nullptr};
 };
 
 } // namespace vigine

@@ -1,17 +1,21 @@
 #pragma once
 
+#include "contextholder.h"
 #include "result.h"
 
-namespace vigine {
+namespace vigine
+{
 
-class AbstractTask {
+class Context;
 
-public:
-  virtual ~AbstractTask() = default;
+class AbstractTask : public ContextHolder
+{
+  public:
+    virtual ~AbstractTask();
     virtual Result execute() = 0;
 
-protected:
-  AbstractTask() = default;
+  protected:
+    AbstractTask();
 };
 
 } // namespace vigine

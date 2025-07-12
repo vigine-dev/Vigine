@@ -2,11 +2,12 @@
 
 #include <string>
 
-namespace vigine {
+namespace vigine
+{
 
-class Result {
-public:
-
+class Result
+{
+  public:
     enum class Code
     {
         Success,
@@ -14,11 +15,11 @@ public:
     };
 
     Result();
-    Result(Code code, const std::string& message = "");
+    Result(Code code, const std::string &message = "");
 
     bool isSuccess() const;
     bool isError() const;
-    const std::string& message() const;
+    const std::string &message() const;
     Code code();
 
   private:
@@ -26,4 +27,4 @@ public:
     std::string _message;
 };
 
-} // namespace vigine 
+} // namespace vigine

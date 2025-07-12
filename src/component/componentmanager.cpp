@@ -1,11 +1,13 @@
 #include "vigine/component/componentmanager.h"
+
 #include <iostream>
 
-namespace vigine {
+namespace vigine
+{
 
-ComponentManager::ComponentManager() {
+ComponentManager::ComponentManager()
+{
     // Конструктор
 }
 
 } // namespace vigine
-
