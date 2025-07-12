@@ -23,6 +23,6 @@ class DatabaseService : public AbstractService
     void entityBound() override;
 
   private:
-    PostgreSQLSystem *_postgress{nullptr};
+    PostgreSQLSystem *_postgressSystem{nullptr};
 };
 } // namespace vigine

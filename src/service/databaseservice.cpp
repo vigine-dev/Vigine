@@ -3,6 +3,7 @@
 #include "vigine/context.h"
 #include "vigine/ecs/entity.h"
 #include "vigine/ecs/entitymanager.h"
+#include "vigine/ecs/postgresqlsystem.h"
 #include "vigine/property.h"
 
 #include <iostream>
@@ -12,43 +13,40 @@ vigine::DatabaseService::DatabaseService(const ServiceName &name) : AbstractServ
 
 void vigine::DatabaseService::contextChanged()
 {
-    //_postgress = context()->system("Postgres", "vigineBD", Property::NewIfNotExist);
+    _postgressSystem = dynamic_cast<vigine::PostgreSQLSystem *>(
+        context()->system("PostgreSQL", "vigineBD", Property::New));
 }
 
 void vigine::DatabaseService::entityBound()
 {
     Entity *ent = getBoundEntity();
 
-    if (!_postgress->hasComponents(ent))
-        _postgress->addComponentsTo(ent);
+    if (!_postgressSystem->hasComponents(ent))
+        _postgressSystem->createComponents(ent);
 }
 
 vigine::Result vigine::DatabaseService::connectToDb()
 {
-    _postgress->bindEntity(getBoundEntity());
+    _postgressSystem->bindEntity(getBoundEntity());
     {
-        _postgress->connect("host=localhost port=5432 dbname=vigine user=vigine password=vigine");
-        _postgress->exec("SELECT version();");
-        auto result = _postgress->result();
-
         try
             {
-                // Підключення до бази
-                pqxx::connection conn("host=localhost port=5432 dbname=vigine "
-                                      "user=vigine password=vigine");
-
-                pqxx::work txn(conn);
-                pqxx::result res = txn.exec("SELECT version();");
+                _postgressSystem->setConnectionData({.host       = "localhost",
+                                                     .port       = "5432",
+                                                     .dbName     = "vigine",
+                                                     .dbUserName = "vigine",
+                                                     .password   = "vigine"});
+                _postgressSystem->connect();
+                pqxx::result res = _postgressSystem->select("SELECT version();");
 
                 std::cout << "PostgreSQL: " << res[0][0].c_str() << "\n";
-                txn.commit();
             }
         catch (const std::exception &e)
             {
                 std::cerr << "DB error: " << e.what() << '\n';
             }
     }
-    _postgress->unbindEntity();
+    _postgressSystem->unbindEntity();
 
     return Result();
 }
