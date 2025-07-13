@@ -32,7 +32,10 @@ vigine::Result AddSomeDataTask::execute()
 
     _dbService->bindEntity(entity);
     {
-        _dbService->insertData("Test", {"testData1", "testData2", "testData3"});
+        for (int i = 0; i < 100; i += 3)
+            _dbService->insertData("Test", {"testData_" + std::to_string(i),
+                                            "testData_" + std::to_string(i + 1),
+                                            "testData_" + std::to_string(i + 2)});
     }
     _dbService->unbindEntity();
 
