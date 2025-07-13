@@ -69,6 +69,13 @@ vigine::DatabaseService::readData(const std::string &tableName) const
     return resultData;
 }
 
+void vigine::DatabaseService::clearTable(const std::string &tableName) const
+{
+    std::string query = "TRUNCATE TABLE public.\"" + tableName + "\"";
+
+    _postgressSystem->queryRequest(query);
+}
+
 void vigine::DatabaseService::insertData(const std::string &tableName,
                                          const std::vector<Column> columnsData)
 {

@@ -10,6 +10,7 @@
 #include "task/checkbdshecmetask.h"
 #include "task/initbdtask.h"
 #include "task/readsomedatatask.h"
+#include "task/removesomedatatask.h"
 
 #include <glm/glm.hpp>
 #include <iostream>
@@ -42,8 +43,10 @@ std::unique_ptr<TaskFlow> createWorkTaskFlow()
     auto taskFlow          = std::make_unique<TaskFlow>();
     auto *addSomeDataTask  = taskFlow->addTask(std::make_unique<AddSomeDataTask>());
     auto *readSomeDataTask = taskFlow->addTask(std::make_unique<ReadSomeDataTask>());
+    auto *removeSomeDataTask = taskFlow->addTask(std::make_unique<RemoveSomeDataTask>());
 
     taskFlow->addTransition(addSomeDataTask, readSomeDataTask, Result::Code::Success);
+    taskFlow->addTransition(readSomeDataTask, removeSomeDataTask, Result::Code::Success);
     taskFlow->changeCurrentTaskTo(addSomeDataTask);
 
     return std::move(taskFlow);

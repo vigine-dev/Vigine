@@ -32,6 +32,7 @@ class DatabaseService : public AbstractService
     void createTables(const std::vector<Table> &tables) const;
     void insertData(const std::string &tableName, const std::vector<vigine::Column> columnsData);
     std::vector<std::vector<std::string>> readData(const std::string &tableName) const;
+    void clearTable(const std::string &tableName) const;
 
   protected:
     void entityBound() override;

@@ -16,7 +16,8 @@ add_executable(${PROJECT_EXAMPLE_NAME} main.cpp
     task/initbdtask.h task/initbdtask.cpp
     task/checkbdshecmetask.h task/checkbdshecmetask.cpp
     task/addsomedatatask.h task/addsomedatatask.cpp
-    task/readsomedatatask.h task/readsomedatatask.cpp)
+    task/readsomedatatask.h task/readsomedatatask.cpp
+    task/removesomedatatask.h task/removesomedatatask.cpp)
 
 # Link the example executable with the library
 target_link_libraries(${PROJECT_EXAMPLE_NAME}
