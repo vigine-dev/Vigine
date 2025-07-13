@@ -44,6 +44,31 @@ void vigine::DatabaseService::createTables(const std::vector<Table> &tables) con
         }
 }
 
+std::vector<std::vector<std::string>>
+vigine::DatabaseService::readData(const std::string &tableName) const
+{
+    std::string query = "SELECT * FROM public.\"" + tableName + "\"";
+    std::vector<std::vector<std::string>> resultData;
+    auto result = _postgressSystem->select(query);
+
+    for (const auto &row : result)
+        {
+            std::vector<std::string> rowData;
+
+            for (pqxx::row::size_type i = 0; i < row.size(); ++i)
+                {
+                    if (row[i].is_null())
+                        rowData.emplace_back(""); // або "NULL"
+                    else
+                        rowData.emplace_back(row[i].c_str());
+                }
+
+            resultData.push_back(std::move(rowData));
+        }
+
+    return resultData;
+}
+
 void vigine::DatabaseService::insertData(const std::string &tableName,
                                          const std::vector<Column> columnsData)
 {
