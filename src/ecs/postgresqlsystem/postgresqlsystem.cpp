@@ -107,6 +107,13 @@ void vigine::PostgreSQLSystem::createTable(const std::string &tableName,
     _boundEntityComponent->commit();
 }
 
+void vigine::PostgreSQLSystem::queryRequest(const std::string &query)
+{
+    _boundEntityComponent->setQuery(query);
+    _boundEntityComponent->exec();
+    _boundEntityComponent->commit();
+}
+
 void vigine::PostgreSQLSystem::entityBound()
 {
     auto boundEntity      = getBoundEntity();

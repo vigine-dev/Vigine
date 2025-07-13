@@ -44,6 +44,16 @@ void vigine::DatabaseService::createTables(const std::vector<Table> &tables) con
         }
 }
 
+void vigine::DatabaseService::insertData(const std::string &tableName,
+                                         const std::vector<Column> columnsData)
+{
+    std::string query = "INSERT INTO public.\"" + tableName + "\"  (col1, col2, col3) VALUES ('" +
+                        columnsData.at(0) + "', '" + columnsData.at(1) + "', '" +
+                        columnsData.at(2) + "')";
+
+    _postgressSystem->queryRequest(query);
+}
+
 void vigine::DatabaseService::entityBound()
 {
     Entity *ent = getBoundEntity();

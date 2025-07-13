@@ -30,6 +30,7 @@ class DatabaseService : public AbstractService
     Result connectToDb();
     bool checkTablesExist(const std::vector<Table> &tables) const;
     void createTables(const std::vector<Table> &tables) const;
+    void insertData(const std::string &tableName, const std::vector<vigine::Column> columnsData);
 
   protected:
     void entityBound() override;
