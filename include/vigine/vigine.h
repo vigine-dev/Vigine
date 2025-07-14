@@ -23,5 +23,4 @@ class Engine
     std::unique_ptr<Context> _context;
     std::unique_ptr<EntityManager> _entityManager;
 };
-
 } // namespace vigine

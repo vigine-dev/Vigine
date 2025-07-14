@@ -1,6 +1,6 @@
 #include "vigine/context.h"
 
-#include "vigine/ecs/postgresqlsystem.h"
+#include "vigine/ecs/postgresql/postgresqlsystem.h"
 #include "vigine/property.h"
 #include "vigine/service/databaseservice.h"
 
@@ -51,7 +51,7 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 {
     if (id == "PostgreSQL")
         {
-            auto postgreSQLSystem = std::make_unique<vigine::PostgreSQLSystem>(name);
+            auto postgreSQLSystem = vigine::postgresql::make_PostgreSQLSystemUPtr(name);
 
             return std::move(postgreSQLSystem);
         }
@@ -61,7 +61,7 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 
 vigine::EntityManager *vigine::Context::entityManager() const { return _entityManager; }
 
-vigine::AbstractService *vigine::Context::service(const ServiceId id, const ServiceName name,
+vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name name,
                                                   const Property property)
 {
     AbstractService *retVal{nullptr};
@@ -99,13 +99,11 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Serv
     return retVal;
 }
 
-vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id,
-                                                           const ServiceName &name)
+vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, const Name &name)
 {
     if (id == "Database")
         {
-
-            auto dbServ = std::make_unique<DatabaseService>(name);
+            auto dbServ = make_DatabaseServiceUPtr(name);
             dbServ->setContext(this);
 
             return std::move(dbServ);

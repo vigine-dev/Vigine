@@ -20,7 +20,7 @@ void ReadSomeDataTask::contextChanged()
         }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
-        context()->service("Database", "TestDB", vigine::Property::Exist));
+        context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
 vigine::Result ReadSomeDataTask::execute()

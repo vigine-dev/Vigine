@@ -45,9 +45,9 @@ std::unique_ptr<TaskFlow> createWorkTaskFlow()
     auto *readSomeDataTask = taskFlow->addTask(std::make_unique<ReadSomeDataTask>());
     auto *removeSomeDataTask = taskFlow->addTask(std::make_unique<RemoveSomeDataTask>());
 
-    taskFlow->addTransition(addSomeDataTask, readSomeDataTask, Result::Code::Success);
-    taskFlow->addTransition(readSomeDataTask, removeSomeDataTask, Result::Code::Success);
-    taskFlow->changeCurrentTaskTo(addSomeDataTask);
+    // taskFlow->addTransition(addSomeDataTask, readSomeDataTask, Result::Code::Success);
+    // taskFlow->addTransition(readSomeDataTask, removeSomeDataTask, Result::Code::Success);
+    // taskFlow->changeCurrentTaskTo(addSomeDataTask);
 
     return std::move(taskFlow);
 }

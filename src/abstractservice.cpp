@@ -2,9 +2,9 @@
 
 vigine::AbstractService::~AbstractService() {}
 
-vigine::ServiceName vigine::AbstractService::name() { return _name; }
+vigine::Name vigine::AbstractService::name() { return _name; }
 
-vigine::AbstractService::AbstractService(const ServiceName &name)
+vigine::AbstractService::AbstractService(const Name &name)
     : ContextHolder(), EntityBindingHost(), _name{name}
 {
 }

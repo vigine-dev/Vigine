@@ -20,7 +20,7 @@ void AddSomeDataTask::contextChanged()
         }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
-        context()->service("Database", "TestDB", vigine::Property::Exist));
+        context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
 vigine::Result AddSomeDataTask::execute()
@@ -32,10 +32,10 @@ vigine::Result AddSomeDataTask::execute()
 
     _dbService->bindEntity(entity);
     {
-        for (int i = 0; i < 100; i += 3)
-            _dbService->insertData("Test", {"testData_" + std::to_string(i),
-                                            "testData_" + std::to_string(i + 1),
-                                            "testData_" + std::to_string(i + 2)});
+        // for (int i = 0; i < 100; i += 3)
+        //     _dbService->insertData("Test", {vigine::Name("testData_" + std::to_string(i)),
+        //                                     vigine::Name("testData_" + std::to_string(i + 1)),
+        //                                     vigine::Name("testData_" + std::to_string(i + 2))});
     }
     _dbService->unbindEntity();
 

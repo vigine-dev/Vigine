@@ -3,14 +3,15 @@
 #include "contextholder.h"
 #include "entitybindinghost.h"
 
+#include "vigine/base/name.h"
+
 #include <memory>
 #include <string>
 
 namespace vigine
 {
 
-using ServiceId   = std::string;
-using ServiceName = std::string;
+using ServiceId = std::string;
 
 class Entity;
 
@@ -23,13 +24,13 @@ class AbstractService : public ContextHolder, public EntityBindingHost
     virtual ServiceId id() const = 0;
 
     // This is instance name (like 'MyCustomService')
-    ServiceName name();
+    Name name();
 
   protected:
-    AbstractService(const ServiceName &name);
+    AbstractService(const Name &name);
 
   private:
-    ServiceName _name;
+    Name _name;
 };
 
 using AbstractServiceUPtr = std::unique_ptr<AbstractService>;

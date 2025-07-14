@@ -20,40 +20,51 @@ void CheckBDShecmeTask::contextChanged()
         }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
-        context()->service("Database", "TestDB", vigine::Property::Exist));
+        context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
 vigine::Result CheckBDShecmeTask::execute()
 {
-    std::println("-- CheckBDShecmeTask::execute()");
+    vigine::Result result;
+
+    using namespace vigine::postgresql;
+
+    Table table;
+    table.setName("Test");
+    table.setSchema(Table::Schema::Public);
+
+    Column idColumn, nameColumn, emailColumn;
+    idColumn.setName("id");
+    idColumn.setType(vigine::postgresql::DataType::Integer);
+    idColumn.setPrimary(true);
+
+    nameColumn.setName("name");
+    nameColumn.setType(vigine::postgresql::DataType::Text);
+
+    emailColumn.setName("email");
+    emailColumn.setType(vigine::postgresql::DataType::Text);
+
+    table.addColumn(idColumn);
+    table.addColumn(nameColumn);
+    table.addColumn(emailColumn);
 
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
 
     _dbService->bindEntity(entity);
     {
-        std::vector<vigine::Table> tables;
-        vigine::Table testTable{
-            .name = "Test", .columns = {"col1", "col2", "col3"}
-        };
-
-        tables.push_back(testTable);
-
-        if (_dbService->checkTablesExist(tables))
+        _dbService->databaseConfiguration()->setTables({table});
+        result = *_dbService->checkDatabaseScheme();
+        if (!result.isSuccess())
             {
-                std::println("Needed Tables exist");
-            }
-        else
-            {
-                std::println("Needed tables don't exist. Let's create them.");
-                _dbService->createTables(tables);
-                if (_dbService->checkTablesExist(tables))
-                    {
-                        std::println("Needed Table was created");
-                    }
+                std::println("Needed tables don't exist. Let's create them. Error message: {}",
+                             result.message());
+                result = *_dbService->createDatabaseScheme();
+                if (result.isSuccess())
+                    std::println("Needed Table was created");
             }
     }
     _dbService->unbindEntity();
 
-    return vigine::Result();
+    return result;
 }

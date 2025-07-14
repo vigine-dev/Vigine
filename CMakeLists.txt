@@ -23,6 +23,27 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 # Find and include glm
 find_package(GLM REQUIRED)
 
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release)
+
+set(BUILD_TYPE_DEBUG_VALUE 1)
+set(BUILD_TYPE_RELEASE_VALUE 2)
+
+add_compile_definitions(
+    DEBUG=${BUILD_TYPE_DEBUG_VALUE}
+    RELEASE=${BUILD_TYPE_RELEASE_VALUE}
+)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(BUILD_TYPE=${BUILD_TYPE_DEBUG_VALUE})
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(BUILD_TYPE=${BUILD_TYPE_RELEASE_VALUE})
+else()
+    message(FATAL_ERROR "Unsupported build type: ${CMAKE_BUILD_TYPE}")
+endif()
+
 # Option to build examples
 option(ENABLE_EXAMPLE "Build example projects" OFF)
 option(ENABLE_UNITTEST "Enable tests" OFF)
@@ -56,7 +77,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
-    ${INCLUDE_DIR}/vigine/ecs/postgresqlsystem.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
 )
 
@@ -73,7 +93,6 @@ set(SOURCES
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlsystem.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
 )
@@ -89,11 +108,17 @@ set(SOURCES_SERVICE
 
 # Add source files
 set(HEADER_POSTGRESQL
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/postgresqlsystem.h
+    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/table.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/column.h
 )
 
 set(SOURCES_POSTGRESQL
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.cpp
+    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.cpp
+    ${SRC_DIR}/ecs/postgresql/postgresqlsystem.cpp
+    ${SRC_DIR}/ecs/postgresql/table.cpp
+    ${SRC_DIR}/ecs/postgresql/column.cpp
 )
 
 
@@ -106,6 +131,19 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SERVICE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
+    include/vigine/ecs/postgresql/databaseconfiguration.h include/vigine/ecs/postgresql/databaseconfiguration.cpp
+    include/vigine/ecs/postgresql/connectiondata.h include/vigine/ecs/postgresql/connectiondata.cpp
+    include/vigine/base/name.h include/vigine/base/name.cpp
+    include/vigine/base/password.h include/vigine/base/password.cpp
+    include/vigine/base/macros.h
+    include/vigine/ecs/postgresql/data.h include/vigine/ecs/postgresql/data.cpp
+    include/vigine/ecs/postgresql/columntype.h
+    include/vigine/base/info.h
+    include/vigine/ecs/postgresql/postgresqlresult.h include/vigine/ecs/postgresql/postgresqlresult.cpp
+    include/vigine/ecs/postgresql/query/querybuilder.h include/vigine/ecs/postgresql/query/querybuilder.cpp
+    include/vigine/ecs/postgresql/tablerows.h include/vigine/ecs/postgresql/tablerows.cpp
+    include/vigine/ecs/postgresql/row.h include/vigine/ecs/postgresql/row.cpp
+    include/vigine/ecs/postgresql/postgresqltypeconverter.h include/vigine/ecs/postgresql/postgresqltypeconverter.cpp
 )
 
 # Include directories

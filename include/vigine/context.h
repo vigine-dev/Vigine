@@ -14,19 +14,19 @@ namespace vigine
 enum class Property;
 class EntityManager;
 
-using ServiceInstancesContainer = std::vector<std::pair<const ServiceName, AbstractServiceUPtr>>;
+using ServiceInstancesContainer = std::vector<std::pair<const Name, AbstractServiceUPtr>>;
 using SystemInstancesContainer  = std::vector<std::pair<const SystemId, AbstractSystemUPtr>>;
 
 class Context
 {
   public:
-    AbstractService *service(const ServiceId id, const ServiceName name, const Property property);
+    AbstractService *service(const ServiceId id, const Name name, const Property property);
     AbstractSystem *system(const SystemId id, const SystemName name, const Property property);
     EntityManager *entityManager() const;
 
   private:
     Context(EntityManager *entityManager);
-    AbstractServiceUPtr createService(const ServiceId &id, const ServiceName &name);
+    AbstractServiceUPtr createService(const ServiceId &id, const Name &name);
     AbstractSystemUPtr createSystem(const SystemId &id, const SystemName &name);
 
   private:

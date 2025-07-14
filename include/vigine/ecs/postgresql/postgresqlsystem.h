@@ -1,24 +1,19 @@
 #pragma once
 
+#include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
+#include "vigine/ecs/postgresql/postgresqlresult.h"
+#include "vigine/ecs/postgresql/postgresqltypeconverter.h"
 
 #include <pqxx/pqxx>
 #include <unordered_map>
 
 namespace vigine
 {
-class PostgreSQLComponent;
-
-using PostgreSQLSystemComponentUPtr = std::unique_ptr<PostgreSQLComponent>;
-
-struct ConnectionData
+namespace postgresql
 {
-    std::string host;
-    std::string port;
-    std::string dbName;
-    std::string dbUserName;
-    std::string password;
-};
+class PostgreSQLComponent;
+class DatabaseConfiguration;
 
 class PostgreSQLSystem : public AbstractSystem
 {
@@ -34,20 +29,28 @@ class PostgreSQLSystem : public AbstractSystem
     void destroyComponents(Entity *entity) override;
 
     // custom
-    void setConnectionData(const ConnectionData &connectionData);
-    void connect();
-    pqxx::result select(const std::string &query);
-    bool checkTableExist(const std::string &tableName, const std::vector<std::string> tableColumns);
+    DatabaseConfiguration *dbConfiguration();
+    PostgreSQLResultUPtr connect();
+    PostgreSQLResultUPtr checkTablesScheme() const;
+
     void createTable(const std::string &tableName, const std::vector<std::string> tableColumns);
     void queryRequest(const std::string &query);
-
 
   protected:
     virtual void entityBound();
     virtual void entityUnbound();
 
   private:
-    std::unordered_map<Entity *, PostgreSQLSystemComponentUPtr> _entityComponents;
+
+    std::vector<std::pair<BDInternalType, BDExternalType>> selectInternalPgTypes();
+    PostgreSQLResultUPtr makePgTypeConverter();
+
+  private:
+    std::unordered_map<Entity *, std::unique_ptr<PostgreSQLComponent>> _entityComponents;
     PostgreSQLComponent *_boundEntityComponent;
 };
+
+BUILD_SMART_PTR(PostgreSQLSystem);
+
+}; // namespace postgresql
 }; // namespace vigine
