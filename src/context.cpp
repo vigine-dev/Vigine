@@ -1,6 +1,6 @@
 #include "vigine/context.h"
 
-#include "vigine/ecs/postgresqlsystem.h"
+#include "vigine/ecs/postgresql/postgresqlsystem.h"
 #include "vigine/property.h"
 #include "vigine/service/databaseservice.h"
 

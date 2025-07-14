@@ -56,7 +56,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
-    ${INCLUDE_DIR}/vigine/ecs/postgresqlsystem.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
 )
 
@@ -73,7 +72,6 @@ set(SOURCES
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlsystem.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
 )
@@ -89,11 +87,17 @@ set(SOURCES_SERVICE
 
 # Add source files
 set(HEADER_POSTGRESQL
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/postgresqlsystem.h
+    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/table.h
+    ${INCLUDE_DIR}/vigine/ecs/postgresql/column.h
 )
 
 set(SOURCES_POSTGRESQL
-    ${SRC_DIR}/ecs/postgresqlsystem/postgresqlcomponent.cpp
+    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.cpp
+    ${SRC_DIR}/ecs/postgresql/postgresqlsystem.cpp
+    ${SRC_DIR}/ecs/postgresql/table.cpp
+    ${SRC_DIR}/ecs/postgresql/column.cpp
 )
 
 

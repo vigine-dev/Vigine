@@ -1,6 +1,6 @@
-#include "vigine/ecs/postgresqlsystem.h"
+#include "vigine/ecs/postgresql/postgresqlsystem.h"
 
-#include "ecs/postgresqlsystem/postgresqlcomponent.h"
+#include "ecs/postgresql/postgresqlcomponent.h"
 
 vigine::PostgreSQLSystem::PostgreSQLSystem(const SystemName &name) : AbstractSystem(name) {}
 
