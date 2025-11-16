@@ -74,9 +74,9 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/abstractsystem.h
     ${INCLUDE_DIR}/vigine/ecs/abstractcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/entity.h
-    ${INCLUDE_DIR}/vigine/system/rendersystem.h
-    ${INCLUDE_DIR}/vigine/component/componentmanager.h
-    ${INCLUDE_DIR}/vigine/component/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/componentmanager.h
+    ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
+    ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
@@ -89,9 +89,9 @@ set(SOURCES
     ${SRC_DIR}/statemachine.cpp
     ${SRC_DIR}/taskflow.cpp
     ${SRC_DIR}/context.cpp
-    ${SRC_DIR}/system/rendersystem.cpp
-    ${SRC_DIR}/component/componentmanager.cpp
-    ${SRC_DIR}/component/rendercomponent.cpp
+    ${SRC_DIR}/ecs/componentmanager.cpp
+    ${SRC_DIR}/ecs/render/rendersystem.cpp
+    ${SRC_DIR}/ecs/render/rendercomponent.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
@@ -103,10 +103,12 @@ set(SOURCES
 # Add source files
 set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/databaseservice.h
+    ${INCLUDE_DIR}/vigine/service/graphicsservice.h
 )
 
 set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
+    ${SRC_DIR}/service/graphicsservice.cpp
 )
 
 # Add source files

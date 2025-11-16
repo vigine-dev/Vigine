@@ -1,4 +1,4 @@
-#include "vigine/component/componentmanager.h"
+#include "vigine/ecs/componentmanager.h"
 
 #include <iostream>
 
