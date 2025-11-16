@@ -22,6 +22,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # Find and include glm
 find_package(GLM REQUIRED)
+find_package(Vulkan REQUIRED)
 
 if(NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
@@ -121,7 +122,7 @@ set(SOURCES_POSTGRESQL
     ${SRC_DIR}/ecs/postgresql/column.cpp
 )
 
-
+# add vulkan
 # Add a library
 add_library(${PROJECT_NAME}
     STATIC
@@ -145,7 +146,6 @@ add_library(${PROJECT_NAME}
     include/vigine/ecs/postgresql/row.h include/vigine/ecs/postgresql/row.cpp
     include/vigine/ecs/postgresql/postgresqltypeconverter.h include/vigine/ecs/postgresql/postgresqltypeconverter.cpp
 )
-
 # Include directories
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -154,12 +154,22 @@ target_include_directories(${PROJECT_NAME}
     ${GLM_INCLUDE_DIRS}
 )
 
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ${Vulkan_INCLUDE_DIRS}
+)
+
 # Link libraries
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${GLM_LIBRARIES}
     pqxx
     pq
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    ${Vulkan_LIBRARIES}
 )
 
 # Install the library and headers
