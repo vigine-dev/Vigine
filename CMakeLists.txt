@@ -23,6 +23,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 # Find and include glm
 find_package(GLM REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(VulkanHpp REQUIRED)
+#
 
 if(NOT DEFINED CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
@@ -170,6 +172,7 @@ target_link_libraries(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     ${Vulkan_LIBRARIES}
+    ${Vulkan_Hpp_LIBRARIES}
 )
 
 # Install the library and headers
