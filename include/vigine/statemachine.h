@@ -4,49 +4,51 @@
 #include "result.h"
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-namespace vigine {
+namespace vigine
+{
+class Engine;
 
 class StateMachine
 {
-    using StateUPtr = std::unique_ptr<AbstractState>;
-    using StateContainer = std::vector<StateUPtr>;
-    using Transition = std::pair<Result::Code, AbstractState*>;
+    using StateUPtr           = std::unique_ptr<AbstractState>;
+    using StateContainer      = std::vector<StateUPtr>;
+    using Transition          = std::pair<Result::Code, AbstractState *>;
     using TransitionContainer = std::vector<Transition>;
-    using TransitionMap = std::unordered_map<AbstractState*, TransitionContainer>;
+    using TransitionMap       = std::unordered_map<AbstractState *, TransitionContainer>;
 
-public:
-    StateMachine();
-    
+  public:
     // Add a state and return pointer to it
-    AbstractState* addState(StateUPtr state);
+    AbstractState *addState(StateUPtr state);
 
     // Add a transition between states
-    Result addTransition(AbstractState* from, AbstractState* to, Result::Code resultCode);
-    
+    Result addTransition(AbstractState *from, AbstractState *to, Result::Code resultCode);
+
     // Change current state
-    void changeStateTo(AbstractState* newState);
-    
+    void changeStateTo(AbstractState *newState);
+
     // Get current state
-    AbstractState* currentState() const;
-    
+    AbstractState *currentState() const;
+
     // Run current state
     void runCurrentState();
-    
+
     // Check if there are states to run
     bool hasStatesToRun() const;
 
-private:
-    bool isStateRegistered(AbstractState* state) const;
+  private:
+    StateMachine(Context *context);
+    bool isStateRegistered(AbstractState *state) const;
 
-private:
+  private:
     StateContainer _states;
     TransitionMap _transitions;
-    AbstractState* _currState;
+    AbstractState *_currState;
+    Context *_context;
+
+    friend class Engine;
 };
 
 } // namespace vigine
-
-

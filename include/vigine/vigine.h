@@ -2,18 +2,25 @@
 
 #include <memory>
 
-namespace vigine {
+namespace vigine
+{
 
 class StateMachine;
+class Context;
+class EntityManager;
 
-class Engine {
-public:
+class Engine
+{
+  public:
     Engine();
+    ~Engine();
     void run();
-    StateMachine* state();
+    StateMachine *state();
+    Context *context();
 
-private:
+  private:
     std::unique_ptr<StateMachine> _stateMachine;
+    std::unique_ptr<Context> _context;
+    std::unique_ptr<EntityManager> _entityManager;
 };
-
 } // namespace vigine

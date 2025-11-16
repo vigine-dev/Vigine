@@ -1,19 +1,24 @@
+#include <vigine/context.h>
 #include <vigine/taskflow.h>
+
 #include <algorithm>
 
-namespace vigine {
+namespace vigine
+{
 
-AbstractTask* TaskFlow::addTask(TaskUPtr task)
+AbstractTask *TaskFlow::addTask(TaskUPtr task)
 {
     if (!task)
         return nullptr;
+
+    task->setContext(_context);
 
     // Store the task
     _tasks.push_back(std::move(task));
     return _tasks.back().get();
 }
 
-void TaskFlow::removeTask(AbstractTask* task)
+void TaskFlow::removeTask(AbstractTask *task)
 {
     if (!task || !isTaskRegistered(task))
         return;
@@ -24,33 +29,31 @@ void TaskFlow::removeTask(AbstractTask* task)
 
     // Remove all transitions involving this task
     _transitions.erase(task);
-    for (auto& [_, transitions] : _transitions)
-    {
-        transitions.erase(
-            std::remove_if(transitions.begin(), transitions.end(),
-                [task](const auto& transition) { return transition.second == task; }),
-            transitions.end()
-        );
-    }
+    for (auto &[_, transitions] : _transitions)
+        {
+            transitions.erase(std::remove_if(transitions.begin(), transitions.end(),
+                                             [task](const auto &transition) {
+                                                 return transition.second == task;
+                                             }),
+                              transitions.end());
+        }
 
     // Remove the task itself
-    _tasks.erase(
-        std::remove_if(_tasks.begin(), _tasks.end(),
-            [task](const auto& t) { return t.get() == task; }),
-        _tasks.end()
-    );
+    _tasks.erase(std::remove_if(_tasks.begin(), _tasks.end(),
+                                [task](const auto &t) { return t.get() == task; }),
+                 _tasks.end());
 }
 
-bool TaskFlow::isTaskRegistered(AbstractTask* task) const
+bool TaskFlow::isTaskRegistered(AbstractTask *task) const
 {
     if (!task)
         return false;
 
     return std::find_if(_tasks.begin(), _tasks.end(),
-        [task](const auto& t) { return t.get() == task; }) != _tasks.end();
+                        [task](const auto &t) { return t.get() == task; }) != _tasks.end();
 }
 
-Result TaskFlow::addTransition(AbstractTask* from, AbstractTask* to, Result::Code resultCode)
+Result TaskFlow::addTransition(AbstractTask *from, AbstractTask *to, Result::Code resultCode)
 {
     if (!from || !to)
         return Result(Result::Code::Error, "Invalid pointer provided for transition");
@@ -66,7 +69,7 @@ Result TaskFlow::addTransition(AbstractTask* from, AbstractTask* to, Result::Cod
     return Result();
 }
 
-void TaskFlow::changeTaskTo(AbstractTask* newTask)
+void TaskFlow::changeCurrentTaskTo(AbstractTask *newTask)
 {
     if (!newTask)
         return;
@@ -75,10 +78,7 @@ void TaskFlow::changeTaskTo(AbstractTask* newTask)
     _currTask = newTask;
 }
 
-AbstractTask* TaskFlow::currentTask() const
-{
-    return _currTask;
-}
+AbstractTask *TaskFlow::currentTask() const { return _currTask; }
 
 void TaskFlow::runCurrentTask()
 {
@@ -90,33 +90,38 @@ void TaskFlow::runCurrentTask()
 
     // Check possible transitions
     auto transitions = _transitions.find(_currTask);
-    _currTask = nullptr;
+    _currTask        = nullptr;
 
     if (transitions == _transitions.end())
         return;
 
-    for (const auto& [relStatus, relTask] : transitions->second)
-    {
-        if (relStatus != currStatus.code())
-            continue;
+    for (const auto &[relStatus, relTask] : transitions->second)
+        {
+            if (relStatus != currStatus.code())
+                continue;
 
-        // Found matching transition
-        changeTaskTo(relTask);
-        break;
-    }
+            // Found matching transition
+            changeCurrentTaskTo(relTask);
+            break;
+        }
 }
 
-bool TaskFlow::hasTasksToRun() const
-{
-    return _currTask != nullptr;
-}
+bool TaskFlow::hasTasksToRun() const { return _currTask != nullptr; }
 
 void TaskFlow::operator()()
 {
     while (hasTasksToRun())
-    {
-        runCurrentTask();
-    }
+        {
+            runCurrentTask();
+        }
+}
+
+void TaskFlow::setContext(Context *context)
+{
+    _context = context;
+
+    std::ranges::for_each(_tasks,
+                          [&context](const TaskUPtr &taskUptr) { taskUptr->setContext(context); });
 }
 
 } // namespace vigine

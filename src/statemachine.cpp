@@ -1,33 +1,34 @@
-#include <vigine/statemachine.h>
+#include "vigine/statemachine.h"
+
+#include "vigine/context.h"
+
 #include <algorithm>
-
-namespace vigine {
-
-StateMachine::StateMachine() 
-    : _currState(nullptr)
+namespace vigine
 {
-}
 
-AbstractState* StateMachine::addState(StateUPtr state)
+StateMachine::StateMachine(Context *context) : _currState(nullptr), _context{context} {}
+
+AbstractState *StateMachine::addState(StateUPtr state)
 {
-    if (!state) 
+    if (!state)
         return nullptr;
 
+    state->setContext(_context);
     // Store the state
     _states.push_back(std::move(state));
     return _states.back().get();
 }
 
-bool StateMachine::isStateRegistered(AbstractState* state) const
+bool StateMachine::isStateRegistered(AbstractState *state) const
 {
     if (!state)
         return false;
 
     return std::find_if(_states.begin(), _states.end(),
-        [state](const auto& s) { return s.get() == state; }) != _states.end();
+                        [state](const auto &s) { return s.get() == state; }) != _states.end();
 }
 
-Result StateMachine::addTransition(AbstractState* from, AbstractState* to, Result::Code resultCode)
+Result StateMachine::addTransition(AbstractState *from, AbstractState *to, Result::Code resultCode)
 {
     if (!from || !to)
         return Result(Result::Code::Error, "Invalid pointer provided for transition");
@@ -43,19 +44,16 @@ Result StateMachine::addTransition(AbstractState* from, AbstractState* to, Resul
     return Result();
 }
 
-void StateMachine::changeStateTo(AbstractState* newState)
+void StateMachine::changeStateTo(AbstractState *newState)
 {
-    if (!newState) 
+    if (!newState)
         return;
 
     // Update current state
     _currState = newState;
 }
 
-AbstractState* StateMachine::currentState() const
-{
-    return _currState;
-}
+AbstractState *StateMachine::currentState() const { return _currState; }
 
 void StateMachine::runCurrentState()
 {
@@ -64,28 +62,24 @@ void StateMachine::runCurrentState()
 
     // Execute current state
     auto currStatus = (*_currState)();
-    
+
     // Check possible transitions
     auto transitions = _transitions.find(_currState);
-    _currState = nullptr;
+    _currState       = nullptr;
 
     if (transitions == _transitions.end())
         return;
 
-    for (const auto& [relStatus, relState] : transitions->second) 
-    {
-        if (relStatus != currStatus.code())
-            continue;
+    for (const auto &[relStatus, relState] : transitions->second)
+        {
+            if (relStatus != currStatus.code())
+                continue;
 
-        // Found matching transition
-        changeStateTo(relState);
-        break;
-    }
+            // Found matching transition
+            changeStateTo(relState);
+            break;
+        }
 }
 
-bool StateMachine::hasStatesToRun() const
-{
-    return _currState != nullptr;
-}
-
+bool StateMachine::hasStatesToRun() const { return _currState != nullptr; }
 } // namespace vigine

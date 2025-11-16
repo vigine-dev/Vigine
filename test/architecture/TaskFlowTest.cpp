@@ -42,7 +42,7 @@ TEST(TaskFlowTest, addTask_empty_AbstractTask_pointer)
     AbstractTask* taskPtr = task.get();
     ASSERT_NO_THROW(taskFlow->addTask(std::move(task))) << "addTask() should not throw";
 
-    taskFlow->changeTaskTo(taskPtr);
+    taskFlow->changeCurrentTaskTo(taskPtr);
     EXPECT_EQ(taskPtr, taskFlow->currentTask()) << "addTask() should set current task";
 }
 
@@ -74,7 +74,7 @@ TEST(TaskFlowTest, changeTaskTo_empty_void)
     auto task = std::make_unique<TestTask>();
     AbstractTask* taskPtr = task.get();
     taskFlow->addTask(std::move(task));
-    ASSERT_NO_THROW(taskFlow->changeTaskTo(taskPtr)) << "changeTaskTo() should not throw";
+    ASSERT_NO_THROW(taskFlow->changeCurrentTaskTo(taskPtr)) << "changeTaskTo() should not throw";
     EXPECT_EQ(taskPtr, taskFlow->currentTask()) << "changeTaskTo() should set current task";
 }
 
@@ -86,7 +86,7 @@ TEST(TaskFlowTest, currentTask_empty_AbstractTask_pointer)
     auto task = std::make_unique<TestTask>();
     AbstractTask* taskPtr = task.get();
     taskFlow->addTask(std::move(task));
-    taskFlow->changeTaskTo(taskPtr);
+    taskFlow->changeCurrentTaskTo(taskPtr);
     EXPECT_EQ(taskPtr, taskFlow->currentTask()) << "currentTask() should return the correct task";
 }
 
@@ -97,7 +97,7 @@ TEST(TaskFlowTest, hasTasksToRun_empty_bool)
     
     auto task = std::make_unique<TestTask>();
     auto taskPtr = taskFlow->addTask(std::move(task));
-    taskFlow->changeTaskTo(taskPtr);
+    taskFlow->changeCurrentTaskTo(taskPtr);
     EXPECT_TRUE(taskFlow->hasTasksToRun()) << "hasTasksToRun() should return true when tasks are set";
 }
 
