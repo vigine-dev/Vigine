@@ -1,4 +1,4 @@
-#include "vigine/component/rendercomponent.h"
+#include "vigine/ecs/render/rendercomponent.h"
 
 #include <iostream>
 
