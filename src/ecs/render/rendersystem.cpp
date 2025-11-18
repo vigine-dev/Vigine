@@ -2,14 +2,22 @@
 
 #include <iostream>
 
-namespace vigine
-{
+using namespace vigine::graphics;
 
-RenderSystem::RenderSystem()
-{
-    // Конструктор
-}
+RenderSystem::RenderSystem(const SystemName &name) : AbstractSystem(name) {}
+
+RenderSystem::~RenderSystem() {}
+
+bool RenderSystem::hasComponents(Entity *entity) const { return false; }
+
+void RenderSystem::createComponents(Entity *entity) {}
+
+void RenderSystem::destroyComponents(Entity *entity) {}
+
+vigine::SystemId RenderSystem::id() const { return "Render"; }
 
 void RenderSystem::update() { std::cout << "Updating render system" << std::endl; }
 
-} // namespace vigine
+void RenderSystem::entityBound() {}
+
+void RenderSystem::entityUnbound() {}
