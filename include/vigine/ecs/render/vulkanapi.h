@@ -7,15 +7,15 @@ namespace vigine
 {
 namespace graphics
 {
-class RenderComponent
+
+class VulkanAPI
 {
   public:
-    RenderComponent();
-    ~RenderComponent();
-    void render();
+    VulkanAPI();
+    ~VulkanAPI();
 };
 
-BUILD_SMART_PTR(RenderComponent);
+BUILD_SMART_PTR(VulkanAPI);
 
 } // namespace graphics
 } // namespace vigine
