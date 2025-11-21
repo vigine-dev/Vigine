@@ -1,5 +1,6 @@
 #include "vigine/ecs/render/rendersystem.h"
 
+#include "vigine/ecs/render/rendercomponent.h"
 #include "vigine/ecs/render/vulkanapi.h"
 
 #include <iostream>

@@ -2,14 +2,10 @@
 
 #include <iostream>
 
-namespace vigine
-{
+using namespace vigine::graphics;
 
-RenderComponent::RenderComponent()
-{
-    // Конструктор
-}
+RenderComponent::RenderComponent() {}
+
+RenderComponent::~RenderComponent() {};
 
 void RenderComponent::render() { std::cout << "Rendering component" << std::endl; }
-
-} // namespace vigine

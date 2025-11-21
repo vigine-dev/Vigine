@@ -35,9 +35,9 @@ class RenderSystem : public AbstractSystem
     virtual void entityUnbound();
 
   private:
-    // std::unordered_map<Entity *, std::unique_ptr<RenderComponent>> _entityComponents;
-    // RenderComponent *_boundEntityComponent;
     std::unique_ptr<VulkanAPI> _vulkanAPI;
+    std::unordered_map<Entity *, std::unique_ptr<RenderComponent>> _entityComponents;
+    RenderComponent *_boundEntityComponent;
 };
 
 BUILD_SMART_PTR(RenderSystem);
