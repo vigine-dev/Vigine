@@ -1,5 +1,7 @@
 #include "vigine/ecs/render/rendersystem.h"
 
+#include "vigine/ecs/render/vulkanapi.h"
+
 #include <iostream>
 
 using namespace vigine::graphics;

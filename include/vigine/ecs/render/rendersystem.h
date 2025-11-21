@@ -3,6 +3,7 @@
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 
+#include <memory>
 #include <unordered_map>
 
 namespace vigine
@@ -11,6 +12,7 @@ namespace graphics
 {
 
 class RenderComponent;
+class VulkanAPI;
 
 // TODO: create skeleton
 class RenderSystem : public AbstractSystem
@@ -35,6 +37,7 @@ class RenderSystem : public AbstractSystem
   private:
     // std::unordered_map<Entity *, std::unique_ptr<RenderComponent>> _entityComponents;
     // RenderComponent *_boundEntityComponent;
+    std::unique_ptr<VulkanAPI> _vulkanAPI;
 };
 
 BUILD_SMART_PTR(RenderSystem);

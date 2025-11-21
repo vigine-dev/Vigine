@@ -77,6 +77,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/componentmanager.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
@@ -92,6 +93,7 @@ set(SOURCES
     ${SRC_DIR}/ecs/componentmanager.cpp
     ${SRC_DIR}/ecs/render/rendersystem.cpp
     ${SRC_DIR}/ecs/render/rendercomponent.cpp
+    ${SRC_DIR}/ecs/render/vulkanapi.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
