@@ -8,6 +8,8 @@ class WindowComponent
 {
   public:
     WindowComponent();
+
+    //#
 };
 } // namespace platform
 } // namespace vigine
