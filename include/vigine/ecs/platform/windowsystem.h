@@ -3,23 +3,19 @@
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 
-#include <memory>
 #include <unordered_map>
 
 namespace vigine
 {
-namespace graphics
+namespace platform
 {
+class WindowComponent;
 
-class RenderComponent;
-class VulkanAPI;
-
-// TODO: create skeleton
-class RenderSystem : public AbstractSystem
+class WindowSystem : public AbstractSystem
 {
   public:
-    RenderSystem(const SystemName &name);
-    ~RenderSystem() override;
+    WindowSystem(const SystemName &name);
+    ~WindowSystem() override;
 
     SystemId id() const override;
 
@@ -28,19 +24,16 @@ class RenderSystem : public AbstractSystem
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
 
-    void update();
-
   protected:
     virtual void entityBound();
     virtual void entityUnbound();
 
   private:
-    std::unique_ptr<VulkanAPI> _vulkanAPI;
-    std::unordered_map<Entity *, std::unique_ptr<RenderComponent>> _entityComponents;
-    RenderComponent *_boundEntityComponent;
+    std::unordered_map<Entity *, std::unique_ptr<WindowComponent>> _entityComponents;
+    WindowComponent *_boundEntityComponent;
 };
 
-BUILD_SMART_PTR(RenderSystem);
+BUILD_SMART_PTR(WindowSystem);
 
-} // namespace graphics
+} // namespace platform
 } // namespace vigine

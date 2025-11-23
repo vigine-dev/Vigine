@@ -9,6 +9,8 @@ namespace vigine
 {
 namespace graphics
 {
+class RenderSystem;
+
 class GraphicsService : public AbstractService
 {
   public:
@@ -22,6 +24,9 @@ class GraphicsService : public AbstractService
 
     void entityBound() override;
     void entityUnbound() override;
+
+  private:
+    RenderSystem *_renderSystem{nullptr};
 };
 
 BUILD_SMART_PTR(GraphicsService);

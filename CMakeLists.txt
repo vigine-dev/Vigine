@@ -77,6 +77,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/componentmanager.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
@@ -92,6 +93,7 @@ set(SOURCES
     ${SRC_DIR}/ecs/componentmanager.cpp
     ${SRC_DIR}/ecs/render/rendersystem.cpp
     ${SRC_DIR}/ecs/render/rendercomponent.cpp
+    ${SRC_DIR}/ecs/render/vulkanapi.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
@@ -104,11 +106,13 @@ set(SOURCES
 set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/databaseservice.h
     ${INCLUDE_DIR}/vigine/service/graphicsservice.h
+    ${INCLUDE_DIR}/vigine/service/platformservice.h
 )
 
 set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
     ${SRC_DIR}/service/graphicsservice.cpp
+    ${SRC_DIR}/service/platformservice.cpp
 )
 
 # Add source files
@@ -126,6 +130,16 @@ set(SOURCES_POSTGRESQL
     ${SRC_DIR}/ecs/postgresql/column.cpp
 )
 
+set(HEADER_PLATFORM
+    ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
+    ${SRC_DIR}/ecs/platform/windowcomponent.h
+)
+
+set(SOURCES_PLATFORM
+    ${SRC_DIR}/ecs/platform/windowsystem.cpp
+    ${SRC_DIR}/ecs/platform/windowcomponent.cpp
+)
+
 # add vulkan
 # Add a library
 add_library(${PROJECT_NAME}
@@ -136,6 +150,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SERVICE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
+    ${HEADER_PLATFORM}
+    ${SOURCES_PLATFORM}
     include/vigine/ecs/postgresql/databaseconfiguration.h include/vigine/ecs/postgresql/databaseconfiguration.cpp
     include/vigine/ecs/postgresql/connectiondata.h include/vigine/ecs/postgresql/connectiondata.cpp
     include/vigine/base/name.h include/vigine/base/name.cpp
