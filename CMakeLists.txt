@@ -106,11 +106,13 @@ set(SOURCES
 set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/databaseservice.h
     ${INCLUDE_DIR}/vigine/service/graphicsservice.h
+    ${INCLUDE_DIR}/vigine/service/platformservice.h
 )
 
 set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
     ${SRC_DIR}/service/graphicsservice.cpp
+    ${SRC_DIR}/service/platformservice.cpp
 )
 
 # Add source files
