@@ -130,6 +130,14 @@ set(SOURCES_POSTGRESQL
     ${SRC_DIR}/ecs/postgresql/column.cpp
 )
 
+set(HEADER_PLATFORM
+    ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
+)
+
+set(SOURCES_PLATFORM
+    ${SRC_DIR}/ecs/platform/windowsystem.cpp
+)
+
 # add vulkan
 # Add a library
 add_library(${PROJECT_NAME}
@@ -140,6 +148,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SERVICE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
+    ${HEADER_PLATFORM}
+    ${SOURCES_PLATFORM}
     include/vigine/ecs/postgresql/databaseconfiguration.h include/vigine/ecs/postgresql/databaseconfiguration.cpp
     include/vigine/ecs/postgresql/connectiondata.h include/vigine/ecs/postgresql/connectiondata.cpp
     include/vigine/base/name.h include/vigine/base/name.cpp
