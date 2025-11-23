@@ -1,4 +1,7 @@
 #include <vigine/context.h>
+#include <vigine/signal/isignal.h>
+#include <vigine/signal/isignalbinder.h>
+#include <vigine/signal/isignalemiter.h>
 #include <vigine/taskflow.h>
 
 #include <algorithm>
@@ -30,13 +33,12 @@ void TaskFlow::removeTask(AbstractTask *task)
     // Remove all transitions involving this task
     _transitions.erase(task);
     for (auto &[_, transitions] : _transitions)
-        {
-            transitions.erase(std::remove_if(transitions.begin(), transitions.end(),
-                                             [task](const auto &transition) {
-                                                 return transition.second == task;
-                                             }),
-                              transitions.end());
-        }
+    {
+        transitions.erase(
+            std::remove_if(transitions.begin(), transitions.end(),
+                           [task](const auto &transition) { return transition.second == task; }),
+            transitions.end());
+    }
 
     // Remove the task itself
     _tasks.erase(std::remove_if(_tasks.begin(), _tasks.end(),
@@ -53,7 +55,7 @@ bool TaskFlow::isTaskRegistered(AbstractTask *task) const
                         [task](const auto &t) { return t.get() == task; }) != _tasks.end();
 }
 
-Result TaskFlow::addTransition(AbstractTask *from, AbstractTask *to, Result::Code resultCode)
+Result TaskFlow::route(AbstractTask *from, AbstractTask *to, Result::Code resultCode)
 {
     if (!from || !to)
         return Result(Result::Code::Error, "Invalid pointer provided for transition");
@@ -65,6 +67,27 @@ Result TaskFlow::addTransition(AbstractTask *from, AbstractTask *to, Result::Cod
         return Result(Result::Code::Error, "To task is not registered");
 
     _transitions[from].emplace_back(resultCode, to);
+
+    return Result();
+}
+
+// TODO: Add a mechanism if we add a new task when we process the signal. Need a new Class that
+// checks when we add a new task to process the signal if we are currently doing some signal.The
+// same mechanism is needed for the normal task flow.
+Result TaskFlow::signal(AbstractTask *from, AbstractTask *to, ISignalBinder *signal)
+{
+    if (!from || !to || !signal)
+        return Result(Result::Code::Error, "Invalid pointer provided for signal transition");
+
+    if (!isTaskRegistered(from))
+        return Result(Result::Code::Error, "From task is not registered");
+
+    if (!isTaskRegistered(to))
+        return Result(Result::Code::Error, "To task is not registered");
+
+    if (!signal->check(from, to))
+        return Result(Result::Code::Error,
+                      "Signal check failed: tasks do not satisfy signal interfaces");
 
     return Result();
 }
@@ -96,14 +119,14 @@ void TaskFlow::runCurrentTask()
         return;
 
     for (const auto &[relStatus, relTask] : transitions->second)
-        {
-            if (relStatus != currStatus.code())
-                continue;
+    {
+        if (relStatus != currStatus.code())
+            continue;
 
-            // Found matching transition
-            changeCurrentTaskTo(relTask);
-            break;
-        }
+        // Found matching transition
+        changeCurrentTaskTo(relTask);
+        break;
+    }
 }
 
 bool TaskFlow::hasTasksToRun() const { return _currTask != nullptr; }
@@ -111,9 +134,9 @@ bool TaskFlow::hasTasksToRun() const { return _currTask != nullptr; }
 void TaskFlow::operator()()
 {
     while (hasTasksToRun())
-        {
-            runCurrentTask();
-        }
+    {
+        runCurrentTask();
+    }
 }
 
 void TaskFlow::setContext(Context *context)

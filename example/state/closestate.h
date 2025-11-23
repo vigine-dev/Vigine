@@ -4,11 +4,10 @@
 
 class CloseState : public vigine::AbstractState
 {
-public:
+  public:
     CloseState();
 
-protected:
+  protected:
     virtual void enter();
     virtual vigine::Result exit();
 };
-

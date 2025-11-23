@@ -13,11 +13,11 @@ AddSomeDataTask::AddSomeDataTask() {}
 void AddSomeDataTask::contextChanged()
 {
     if (!context())
-        {
-            _dbService = nullptr;
+    {
+        _dbService = nullptr;
 
-            return;
-        }
+        return;
+    }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));

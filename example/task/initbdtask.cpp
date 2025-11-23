@@ -14,11 +14,11 @@ InitBDTask::InitBDTask() {}
 void InitBDTask::contextChanged()
 {
     if (!context())
-        {
-            _dbService = nullptr;
+    {
+        _dbService = nullptr;
 
-            return;
-        }
+        return;
+    }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::New));
@@ -26,17 +26,18 @@ void InitBDTask::contextChanged()
 
 vigine::Result InitBDTask::execute()
 {
-    auto *entityManager = context()->entityManager();
-    vigine::Entity *ent = entityManager->createEntity();
+    auto *entityManager       = context()->entityManager();
+    vigine::Entity *ent       = entityManager->createEntity();
+    vigine::Entity *entSignal = entityManager->createEntity();
 
     _dbService->bindEntity(ent);
     {
         auto connectionDataUPtr = vigine::postgresql::make_ConnectionDataUPtr();
         connectionDataUPtr->setHost("localhost");
         connectionDataUPtr->setPort("5432");
-        connectionDataUPtr->setDbName(vigine::Name("vigine"));
-        connectionDataUPtr->setDbUserName(vigine::Name("vigine"));
-        connectionDataUPtr->setPassword(vigine::Password("vigine"));
+        connectionDataUPtr->setDbName(vigine::Name("postgres"));
+        connectionDataUPtr->setDbUserName(vigine::Name("postgres"));
+        connectionDataUPtr->setPassword(vigine::Password("postgres"));
 
         _dbService->databaseConfiguration()->setConnectionData(std::move(connectionDataUPtr));
         _dbService->connectToDb();
@@ -44,6 +45,7 @@ vigine::Result InitBDTask::execute()
     _dbService->unbindEntity();
 
     entityManager->addAlias(ent, "PostgresBDLocal");
+    entityManager->addAlias(entSignal, "KeyRleaseEvent");
 
     return vigine::Result();
 }

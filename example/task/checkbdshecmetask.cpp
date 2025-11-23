@@ -13,11 +13,11 @@ CheckBDShecmeTask::CheckBDShecmeTask() {}
 void CheckBDShecmeTask::contextChanged()
 {
     if (!context())
-        {
-            _dbService = nullptr;
+    {
+        _dbService = nullptr;
 
-            return;
-        }
+        return;
+    }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
@@ -56,13 +56,13 @@ vigine::Result CheckBDShecmeTask::execute()
         _dbService->databaseConfiguration()->setTables({table});
         result = *_dbService->checkDatabaseScheme();
         if (!result.isSuccess())
-            {
-                std::println("Needed tables don't exist. Let's create them. Error message: {}",
-                             result.message());
-                result = *_dbService->createDatabaseScheme();
-                if (result.isSuccess())
-                    std::println("Needed Table was created");
-            }
+        {
+            std::println("Needed tables don't exist. Let's create them. Error message: {}",
+                         result.message());
+            result = *_dbService->createDatabaseScheme();
+            if (result.isSuccess())
+                std::println("Needed Table was created");
+        }
     }
     _dbService->unbindEntity();
 

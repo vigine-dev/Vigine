@@ -1,4 +1,4 @@
-#include "postgresqlresult.h"
+#include "vigine/ecs/postgresql/postgresqlresult.h"
 
 #include "vigine/ecs/postgresql/postgresqltypeconverter.h"
 #include "vigine/ecs/postgresql/row.h"
@@ -39,7 +39,7 @@ size_t vigine::postgresql::PostgreSQLResult::columns() const
     return _rows.front()->size();
 }
 
-vigine::postgresql::Row *vigine::postgresql::PostgreSQLResult::operator [](int i) const
+vigine::postgresql::Row *vigine::postgresql::PostgreSQLResult::operator[](int i) const
 {
     return _rows[i].get();
 }
@@ -68,37 +68,33 @@ const vigine::postgresql::RowUPtrVector &vigine::postgresql::PostgreSQLResult::r
 void vigine::postgresql::PostgreSQLResult::buildResultData(const pqxx::result &data)
 {
     try
+    {
+        for (auto const &rowData : data)
         {
-            for (auto const &rowData : data)
+            auto row = make_RowUPtr();
+            for (int i = 0; i < data.columns(); ++i)
+            {
+                auto colTypeOID = data.column_type(i);
+                auto columnName = data.column_name(i);
+
+                switch (_converter->toColumnType(colTypeOID).value_or(DataType::NotRcognized))
                 {
-                    auto row = make_RowUPtr();
-                    for (int i = 0; i < data.columns(); ++i)
-                        {
-                            auto colTypeOID = data.column_type(i);
-                            auto columnName = data.column_name(i);
-
-                            switch (_converter->toColumnType(colTypeOID)
-                                        .value_or(DataType::NotRcognized))
-                                {
-                                case DataType::Boolean:
-                                    row->set(columnName,
-                                             Data(rowData[i].as<bool>(), DataType::Boolean));
-                                    break;
-                                case DataType::Bigint:
-                                    row->set(columnName,
-                                             Data(rowData[i].as<int64_t>(), DataType::Bigint));
-                                    break;
-                                default:
-                                    break;
-                                }
-                        }
-
-                    if (row->size() > 0)
-                        _rows.push_back(std::move(row));
+                case DataType::Boolean:
+                    row->set(columnName, Data(rowData[i].as<bool>(), DataType::Boolean));
+                    break;
+                case DataType::Bigint:
+                    row->set(columnName, Data(rowData[i].as<int64_t>(), DataType::Bigint));
+                    break;
+                default:
+                    break;
                 }
+            }
+
+            if (row->size() > 0)
+                _rows.push_back(std::move(row));
         }
-    catch (const std::exception &e)
-        {
-            std::println("Exception: {}", e.what());
-        }
+    } catch (const std::exception &e)
+    {
+        std::println("Exception: {}", e.what());
+    }
 }

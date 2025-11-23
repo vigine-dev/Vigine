@@ -1,12 +1,11 @@
 #include "vigine/ecs/postgresql/row.h"
 
 #include <algorithm>
+#include <format>
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
-#include <ranges>
-#include <format>
-
 
 namespace vigine::postgresql
 {
@@ -17,11 +16,11 @@ void Row::set(const ColumnName &columnName, const Data &data)
     auto index = findIndexByColumnName(columnName);
 
     if (index == -1)
-        {
-            _columnsData.emplace_back(columnName, data);
+    {
+        _columnsData.emplace_back(columnName, data);
 
-            return;
-        }
+        return;
+    }
 
     _columnsData[index].second = data;
 }
@@ -32,8 +31,7 @@ const Data &Row::operator[](const ColumnName &name) const
 {
     namespace r = std::ranges;
 
-    auto it = std::ranges::find_if(_columnsData,
-                                   [&](auto const& cd) { return cd.first == name; });
+    auto it = std::ranges::find_if(_columnsData, [&](auto const &cd) { return cd.first == name; });
 
     if (it != _columnsData.end()) [[likely]]
         return it->second;
@@ -50,9 +48,9 @@ bool Row::empty() const noexcept { return _columnsData.empty(); }
 ColumnName Row::columnName(size_t index) const
 {
     if (index < _columnsData.size())
-        {
-            return _columnsData[index].first;
-        }
+    {
+        return _columnsData[index].first;
+    }
 
     return "";
 }
@@ -60,10 +58,10 @@ ColumnName Row::columnName(size_t index) const
 int Row::findIndexByColumnName(const std::string &name) const
 {
     for (size_t i = 0; i < _columnsData.size(); ++i)
-        {
-            if (_columnsData[i].first == name)
-                return i;
-        }
+    {
+        if (_columnsData[i].first == name)
+            return i;
+    }
 
     return -1;
 }
@@ -71,10 +69,10 @@ int Row::findIndexByColumnName(const std::string &name) const
 int Row::findIndexByColumn(const Column &column) const
 {
     for (size_t i = 0; i < _columnsData.size(); ++i)
-        {
-            if (_columnsData[i].first == column)
-                return i;
-        }
+    {
+        if (_columnsData[i].first == column)
+            return i;
+    }
 
     return -1;
 }

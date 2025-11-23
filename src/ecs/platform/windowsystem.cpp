@@ -7,7 +7,7 @@ WindowSystem::WindowSystem(const SystemName &name) : AbstractSystem(name) {}
 
 WindowSystem::~WindowSystem() = default;
 
-vigine::SystemId WindowSystem::id() const {}
+vigine::SystemId WindowSystem::id() const { return "Window"; }
 
 bool WindowSystem::hasComponents(Entity *entity) const { return false; }
 

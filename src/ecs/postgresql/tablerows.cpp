@@ -1,4 +1,4 @@
-#include "tablerows.h"
+#include "vigine/ecs/postgresql/tablerows.h"
 
 vigine::postgresql::TableRows::TableRows(const Table &table, const std::vector<Row> &rows)
     : _table(table), _rows(rows)

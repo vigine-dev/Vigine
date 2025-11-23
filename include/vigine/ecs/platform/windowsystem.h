@@ -17,12 +17,15 @@ class WindowSystem : public AbstractSystem
     WindowSystem(const SystemName &name);
     ~WindowSystem() override;
 
-    SystemId id() const override;
-
     // interface implementation
+    SystemId id() const override;
     bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
+
+    // custom methods
+    void showWindow();
+    // void setWindowEventHandler(IWindowEventHandler* handler);
 
   protected:
     virtual void entityBound();

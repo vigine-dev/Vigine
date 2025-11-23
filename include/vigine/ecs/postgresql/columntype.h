@@ -4,7 +4,7 @@
 
 #define VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST                                                    \
     VIGINE_POSTGRESQL_DATA_X(Integer, int)                                                         \
-    VIGINE_POSTGRESQL_DATA_X(Bigint, int64_t)                                                     \
+    VIGINE_POSTGRESQL_DATA_X(Bigint, int64_t)                                                      \
     VIGINE_POSTGRESQL_DATA_X(Text, std::string)                                                    \
     VIGINE_POSTGRESQL_DATA_X(Boolean, bool)                                                        \
     VIGINE_POSTGRESQL_DATA_X(Char, char)

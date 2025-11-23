@@ -16,7 +16,7 @@ class AbstractState
     virtual ~AbstractState() = default;
 
     // Main state execution method
-    Result operator()()
+    [[nodiscard]] Result operator()()
     {
         if (!_taskFlow)
             return Result(Result::Code::Error, "Task flow needed");
@@ -38,7 +38,7 @@ class AbstractState
         _taskFlow->setContext(_context);
     }
 
-    TaskFlow *getTaskFlow() const { return _taskFlow.get(); }
+    [[nodiscard]] TaskFlow *getTaskFlow() const { return _taskFlow.get(); }
 
     void setContext(Context *context)
     {
@@ -52,8 +52,8 @@ class AbstractState
     AbstractState() = default;
 
     // State lifecycle methods
-    virtual void enter()  = 0;
-    virtual Result exit() = 0;
+    virtual void enter()                = 0;
+    [[nodiscard]] virtual Result exit() = 0;
 
     Context *context() { return _context; }
 

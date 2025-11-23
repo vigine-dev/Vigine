@@ -9,7 +9,7 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
- // TODO: refactor. Check unbound entity
+// TODO: refactor. Check unbound entity
 
 vigine::DatabaseService::DatabaseService(const Name &name) : AbstractService(name) {}
 
@@ -36,7 +36,7 @@ vigine::postgresql::DatabaseConfiguration *vigine::DatabaseService::databaseConf
     return _postgressSystem->dbConfiguration();
 }
 
- // TODO: reimplement or remove
+// TODO: reimplement or remove
 std::vector<std::vector<std::string>>
 vigine::DatabaseService::readData(const std::string &tableName) const
 {
@@ -69,7 +69,7 @@ void vigine::DatabaseService::clearTable(const std::string &tableName) const
     _postgressSystem->queryRequest(query);
 }
 
- // TODO: remove or update
+// TODO: remove or update
 void vigine::DatabaseService::writeData(const std::string &tableName,
                                         const std::vector<postgresql::Column> columnsData)
 {
@@ -95,14 +95,13 @@ vigine::ResultUPtr vigine::DatabaseService::connectToDb()
     ResultUPtr result;
 
     try
-        {
-            result = _postgressSystem->connect();
-        }
-    catch (const std::exception &e)
-        {
-            std::cerr << "DB error: " << e.what() << '\n';
-            result = make_ResultUPtr(Result::Code::Error, e.what());
-        }
+    {
+        result = _postgressSystem->connect();
+    } catch (const std::exception &e)
+    {
+        std::cerr << "DB error: " << e.what() << '\n';
+        result = make_ResultUPtr(Result::Code::Error, e.what());
+    }
 
     return result;
 }

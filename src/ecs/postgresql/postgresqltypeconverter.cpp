@@ -1,4 +1,4 @@
-#include "postgresqltypeconverter.h"
+#include "vigine/ecs/postgresql/postgresqltypeconverter.h"
 
 #include <algorithm>
 #include <cctype>
@@ -49,10 +49,10 @@ std::optional<vigine::postgresql::DataType>
 vigine::postgresql::PostgreSQLTypeConverter::toColumnType(BDInternalType internalType) const
 {
     for (const auto &[intType, colType] : _typesContainer)
-        {
-            if (intType == internalType)
-                return colType;
-        }
+    {
+        if (intType == internalType)
+            return colType;
+    }
 
     return std::nullopt;
 }

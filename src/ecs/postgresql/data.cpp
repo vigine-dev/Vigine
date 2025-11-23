@@ -9,28 +9,28 @@ vigine::postgresql::Data::Data(Value val, DataType type) : _value(std::move(val)
     bool ok = false;
 
     if (!_value.valueless_by_exception())
+    {
+        switch (type)
         {
-            switch (type)
-                {
 #define VIGINE_POSTGRESQL_DATA_X(name, type)                                                       \
     case DataType::name:                                                                           \
         ok = std::holds_alternative<type>(_value);                                                 \
         break;
 
-                    VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST
+            VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST
 #undef VIGINE_POSTGRESQL_DATA_X
 
-                default:
-                    ok = false;
-                    break;
-                }
+        default:
+            ok = false;
+            break;
         }
+    }
 
     if (!ok)
-        {
-            throw std::invalid_argument(
-                "Data constructor: variant type does not match ColumnTypeMap type");
-        }
+    {
+        throw std::invalid_argument(
+            "Data constructor: variant type does not match ColumnTypeMap type");
+    }
 }
 
 vigine::postgresql::Data::~Data() {}

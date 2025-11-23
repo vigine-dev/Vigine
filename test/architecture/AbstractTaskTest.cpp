@@ -1,37 +1,35 @@
-#include <gtest/gtest.h>
+#include "concepts.h"
 
 #include <vigine/abstracttask.h>
 #include <vigine/vigine.h>
-#include "concepts.h"
 
+#include <gtest/gtest.h>
 #include <memory>
 
 using namespace vigine;
 
 // Concept for checking execute method
 template <typename T>
-concept MethodCheck_Execute = requires(T t)
-{
+concept MethodCheck_Execute = requires(T t) {
     t.execute();
     { t.execute() } -> std::same_as<Result>;
 };
 
 // Test class for AbstractTask
-class TestTask : public AbstractTask {
-public:
+class TestTask : public AbstractTask
+{
+  public:
     Result execute() override { return Result(); }
 };
 
 TEST(AbstractTaskTest, check_isAbstract)
 {
-    EXPECT_TRUE((IsAbstract<AbstractTask>))
-        << "AbstractTask isn't an abstract";
+    EXPECT_TRUE((IsAbstract<AbstractTask>)) << "AbstractTask isn't an abstract";
 }
 
 TEST(AbstractTaskTest, method_destructor)
 {
-    EXPECT_TRUE((HasMethod_destructor<AbstractTask>))
-        << "AbstractTask hasn't correct destructor";
+    EXPECT_TRUE((HasMethod_destructor<AbstractTask>)) << "AbstractTask hasn't correct destructor";
 }
 
 TEST(AbstractTaskTest, method_execute)
@@ -49,9 +47,10 @@ TEST(AbstractTaskTest, constructor_empty)
 
 TEST(AbstractTaskTest, execute_returns_result)
 {
-    EXPECT_TRUE(MethodCheck_Execute<AbstractTask>) << "AbstractTask hasn't expected Result execute() method";
-    
-    auto task = std::make_unique<TestTask>();
+    EXPECT_TRUE(MethodCheck_Execute<AbstractTask>)
+        << "AbstractTask hasn't expected Result execute() method";
+
+    auto task   = std::make_unique<TestTask>();
     auto result = task->execute();
     ASSERT_EQ(result.code(), Result::Code::Success);
 }

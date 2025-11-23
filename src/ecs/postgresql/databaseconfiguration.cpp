@@ -1,4 +1,4 @@
-#include "databaseconfiguration.h"
+#include "vigine/ecs/postgresql/databaseconfiguration.h"
 
 vigine::postgresql::DatabaseConfiguration::DatabaseConfiguration() {}
 

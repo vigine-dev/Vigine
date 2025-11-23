@@ -1,35 +1,36 @@
-#include <gtest/gtest.h>
 #include <vigine/component/componentmanager.h>
 #include <vigine/ecs/entity.h>
 
+#include <gtest/gtest.h>
 #include <string>
 
-class Component1Test {
-public:
+class Component1Test
+{
+  public:
     Component1Test(const std::string &name) : _name{name} {}
     std::string name() { return _name; }
 
-private:
+  private:
     std::string _name;
 };
 
-class  Component2Test
+class Component2Test
 {
-public:
+  public:
     Component2Test(const std::string &name) : _name{name} {}
     std::string name() { return _name; }
 
-private:
+  private:
     std::string _name;
 };
 
-class  Component3Test
+class Component3Test
 {
-public:
+  public:
     Component3Test(const std::string &name) : _name{name} {}
     std::string name() { return _name; }
 
-private:
+  private:
     std::string _name;
 };
 
@@ -58,11 +59,11 @@ TEST(EntityTest, entity_addComponent)
     // auto receivedComponent2 = ent.getComponent<TestedType2>();
     // auto receivedComponent3 = ent.getComponent<TestedType3>();
 
-
     // // Component1Test
     // {
     //     EXPECT_TRUE((std::is_same_v<TestedType1, std::remove_reference_t<decltype(*comp1)>>));
-    //     EXPECT_TRUE((std::is_same_v<TestedType1, std::remove_reference_t<decltype(*receivedComponent1)>>));
+    //     EXPECT_TRUE((std::is_same_v<TestedType1,
+    //     std::remove_reference_t<decltype(*receivedComponent1)>>));
 
     //     EXPECT_EQ(typeid(TestedType1).name(), typeid(decltype(*comp1)).name());
     //     EXPECT_EQ(typeid(TestedType1).name(), typeid(decltype(*receivedComponent1)).name());
@@ -75,7 +76,8 @@ TEST(EntityTest, entity_addComponent)
     // // Component2Test
     // {
     //     EXPECT_TRUE((std::is_same_v<TestedType2, std::remove_reference_t<decltype(*comp2)>>));
-    //     EXPECT_TRUE((std::is_same_v<TestedType2, std::remove_reference_t<decltype(*receivedComponent2)>>));
+    //     EXPECT_TRUE((std::is_same_v<TestedType2,
+    //     std::remove_reference_t<decltype(*receivedComponent2)>>));
 
     //     EXPECT_EQ(typeid(TestedType2).name(), typeid(decltype(*comp2)).name());
     //     EXPECT_EQ(typeid(TestedType2).name(), typeid(decltype(*receivedComponent2)).name());
@@ -88,7 +90,8 @@ TEST(EntityTest, entity_addComponent)
     // // Component3Test
     // {
     //     EXPECT_TRUE((std::is_same_v<TestedType3, std::remove_reference_t<decltype(*comp3)>>));
-    //     EXPECT_TRUE((std::is_same_v<TestedType3, std::remove_reference_t<decltype(*receivedComponent3)>>));
+    //     EXPECT_TRUE((std::is_same_v<TestedType3,
+    //     std::remove_reference_t<decltype(*receivedComponent3)>>));
 
     //     EXPECT_EQ(typeid(TestedType3).name(), typeid(decltype(*comp3)).name());
     //     EXPECT_EQ(typeid(TestedType3).name(), typeid(decltype(*receivedComponent3)).name());

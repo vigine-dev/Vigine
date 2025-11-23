@@ -21,22 +21,23 @@ class StateMachine
 
   public:
     // Add a state and return pointer to it
-    AbstractState *addState(StateUPtr state);
+    [[nodiscard]] AbstractState *addState(StateUPtr state);
 
     // Add a transition between states
-    Result addTransition(AbstractState *from, AbstractState *to, Result::Code resultCode);
+    [[nodiscard]] Result addTransition(AbstractState *from, AbstractState *to,
+                                       Result::Code resultCode);
 
     // Change current state
     void changeStateTo(AbstractState *newState);
 
     // Get current state
-    AbstractState *currentState() const;
+    [[nodiscard]] AbstractState *currentState() const;
 
     // Run current state
     void runCurrentState();
 
     // Check if there are states to run
-    bool hasStatesToRun() const;
+    [[nodiscard]] bool hasStatesToRun() const;
 
   private:
     StateMachine(Context *context);

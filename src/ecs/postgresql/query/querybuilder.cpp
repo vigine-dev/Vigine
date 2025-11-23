@@ -83,16 +83,16 @@ vigine::postgresql::query::QueryBuilder::INSERT_INTO(const std::string &table,
     vals << "(";
     bool first = true;
     for (const auto &[col, val] : values)
+    {
+        if (!first)
         {
-            if (!first)
-                {
-                    columns << ", ";
-                    vals << ", ";
-                }
-            columns << col;
-            vals << escape(val);
-            first = false;
+            columns << ", ";
+            vals << ", ";
         }
+        columns << col;
+        vals << escape(val);
+        first = false;
+    }
     columns << ")";
     vals << ")";
     _parts.push_back("INSERT INTO " + table + " " + columns.str() + " VALUES " + vals.str());
@@ -154,9 +154,9 @@ std::string vigine::postgresql::query::QueryBuilder::str() const
 {
     std::ostringstream result;
     for (const auto &part : _parts)
-        {
-            result << part << " ";
-        }
+    {
+        result << part << " ";
+    }
     std::string query = result.str();
     if (!query.empty())
         query.pop_back();
@@ -167,13 +167,12 @@ std::string vigine::postgresql::query::QueryBuilder::str() const
 vigine::postgresql::query::QueryBuilder::operator std::string() const
 {
     try
-        {
-            return str();
-        }
-    catch (...)
-        {
-            return "cast to string error";
-        }
+    {
+        return str();
+    } catch (...)
+    {
+        return "cast to string error";
+    }
 }
 
 void vigine::postgresql::query::QueryBuilder::reset() { _parts.clear(); }
@@ -183,20 +182,20 @@ bool vigine::postgresql::query::QueryBuilder::isQueryValid() const { return !str
 std::string vigine::postgresql::query::QueryBuilder::operationToString(Operation op) const
 {
     switch (op)
-        {
-        case Operation::equal:
-            return "=";
-        case Operation::not_equal:
-            return "!=";
-        case Operation::less:
-            return "<";
-        case Operation::greater:
-            return ">";
-        case Operation::less_equal:
-            return "<=";
-        case Operation::greater_equal:
-            return ">=";
-        }
+    {
+    case Operation::equal:
+        return "=";
+    case Operation::not_equal:
+        return "!=";
+    case Operation::less:
+        return "<";
+    case Operation::greater:
+        return ">";
+    case Operation::less_equal:
+        return "<=";
+    case Operation::greater_equal:
+        return ">=";
+    }
     return "=";
 }
 
@@ -221,37 +220,36 @@ std::string vigine::postgresql::query::QueryBuilder::format(std::string_view tem
     size_t pos = 0;
 
     while (pos < templateStr.size())
+    {
+        size_t braceOpen = templateStr.find('{', pos);
+        if (braceOpen == std::string_view::npos)
         {
-            size_t braceOpen = templateStr.find('{', pos);
-            if (braceOpen == std::string_view::npos)
-                {
-                    result.append(templateStr.substr(pos));
-                    break;
-                }
-
-            result.append(templateStr.substr(pos, braceOpen - pos));
-            size_t braceClose = templateStr.find('}', braceOpen);
-            if (braceClose == std::string_view::npos)
-                {
-                    throw std::invalid_argument("Tag is missing closing brace");
-
-                    break;
-                }
-
-            std::string_view tag = templateStr.substr(braceOpen + 1, braceClose - braceOpen - 1);
-            if (auto it = tagHandlers.find(tag); it != tagHandlers.end())
-                {
-                    result.append(it->second(param));
-                }
-            else
-                {
-                    throw std::invalid_argument("Tag is unknown");
-
-                    // result.append(templateStr.substr(braceOpen, braceClose - braceOpen + 1));
-                }
-
-            pos = braceClose + 1;
+            result.append(templateStr.substr(pos));
+            break;
         }
+
+        result.append(templateStr.substr(pos, braceOpen - pos));
+        size_t braceClose = templateStr.find('}', braceOpen);
+        if (braceClose == std::string_view::npos)
+        {
+            throw std::invalid_argument("Tag is missing closing brace");
+
+            break;
+        }
+
+        std::string_view tag = templateStr.substr(braceOpen + 1, braceClose - braceOpen - 1);
+        if (auto it = tagHandlers.find(tag); it != tagHandlers.end())
+        {
+            result.append(it->second(param));
+        } else
+        {
+            throw std::invalid_argument("Tag is unknown");
+
+            // result.append(templateStr.substr(braceOpen, braceClose - braceOpen + 1));
+        }
+
+        pos = braceClose + 1;
+    }
 
     return result;
 }
@@ -259,13 +257,12 @@ std::string vigine::postgresql::query::QueryBuilder::format(std::string_view tem
 std::string vigine::postgresql::query::QueryBuilder::escape(const Data &data) const
 {
     if (auto str = data.as<DataType::Text>())
-        {
-            return "'" + escapeString(*str) + "'";
-        }
-    else if (auto i = data.as<DataType::Integer>())
-        {
-            return std::to_string(*i);
-        }
+    {
+        return "'" + escapeString(*str) + "'";
+    } else if (auto i = data.as<DataType::Integer>())
+    {
+        return std::to_string(*i);
+    }
     return "NULL";
 }
 
@@ -273,11 +270,11 @@ std::string vigine::postgresql::query::QueryBuilder::escapeString(const std::str
 {
     std::string output;
     for (char c : input)
-        {
-            if (c == '\'' || c == '\\')
-                output += '\\';
-            output += c;
-        }
+    {
+        if (c == '\'' || c == '\\')
+            output += '\\';
+        output += c;
+    }
     return output;
 }
 

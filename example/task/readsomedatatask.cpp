@@ -13,11 +13,11 @@ ReadSomeDataTask::ReadSomeDataTask() {}
 void ReadSomeDataTask::contextChanged()
 {
     if (!context())
-        {
-            _dbService = nullptr;
+    {
+        _dbService = nullptr;
 
-            return;
-        }
+        return;
+    }
 
     _dbService = dynamic_cast<vigine::DatabaseService *>(
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
@@ -34,14 +34,14 @@ vigine::Result ReadSomeDataTask::execute()
     {
         std::vector<std::vector<std::string>> result = _dbService->readData("Test");
         for (int i = 0; i < result.size(); ++i)
-            {
-                auto item          = result[i];
-                std::string rowStr = "Row (" + std::to_string(i + 1) + ") data: ";
-                for (auto cell : item)
-                    rowStr += cell + " ";
+        {
+            auto item          = result[i];
+            std::string rowStr = "Row (" + std::to_string(i + 1) + ") data: ";
+            for (auto cell : item)
+                rowStr += cell + " ";
 
-                std::println("{}", rowStr);
-            }
+            std::println("{}", rowStr);
+        }
     }
     _dbService->unbindEntity();
 

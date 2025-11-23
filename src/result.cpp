@@ -1,7 +1,5 @@
 #include "vigine/result.h"
 
-#include <iostream>
-
 namespace vigine
 {
 
@@ -16,17 +14,17 @@ Result::Result(const Result &other) : _code(other._code), _message(other._messag
 Result &Result::operator=(const Result &other)
 {
     if (this != &other)
-        {
-            _code    = other._code;
-            _message = other._message;
-        }
+    {
+        _code    = other._code;
+        _message = other._message;
+    }
 
     return *this;
 }
 
 bool Result::isSuccess() const { return _code == Code::Success; }
 
-Result::Code Result::code() { return _code; }
+Result::Code Result::code() const { return _code; }
 
 bool Result::isError() const { return _code == Code::Error; }
 

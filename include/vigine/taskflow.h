@@ -9,6 +9,14 @@
 
 namespace vigine
 {
+class ISignalBinder;
+
+enum class RouteType
+{
+    MouseEvent,
+    KeyPressEvent,
+    KeyRleaseEvent
+};
 
 class TaskFlow
 {
@@ -23,25 +31,27 @@ class TaskFlow
     virtual ~TaskFlow() = default;
 
     // Add a task and return pointer to it
-    AbstractTask *addTask(TaskUPtr task);
+    [[nodiscard]] AbstractTask *addTask(TaskUPtr task);
 
     // Remove a task
     void removeTask(AbstractTask *task);
 
     // Add a transition between tasks
-    Result addTransition(AbstractTask *from, AbstractTask *to, Result::Code resultCode);
+    [[nodiscard]] Result route(AbstractTask *from, AbstractTask *to,
+                               Result::Code resultCode = Result::Code::Success);
+    [[nodiscard]] Result signal(AbstractTask *from, AbstractTask *to, ISignalBinder *signal);
 
     // Change current task
     void changeCurrentTaskTo(AbstractTask *newTask);
 
     // Get current task
-    AbstractTask *currentTask() const;
+    [[nodiscard]] AbstractTask *currentTask() const;
 
     // Run current task
     void runCurrentTask();
 
     // Check if there are tasks to run
-    bool hasTasksToRun() const;
+    [[nodiscard]] bool hasTasksToRun() const;
 
     // Run the task flow
     void operator()();

@@ -1,4 +1,4 @@
-#include "contextholder.h"
+#include "vigine/contextholder.h"
 
 #include "vigine/context.h"
 

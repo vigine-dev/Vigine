@@ -52,28 +52,28 @@ void vigine::postgresql::PostgreSQLSystem::destroyComponents(Entity *entity)
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::makePgTypeConverter()
 {
     if (auto res = selectInternalPgTypes(); res.size() > 0)
+    {
+        if (res.empty())
+            return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                             "Didn't select internal postgres types");
+
+        auto typeConverter = make_PostgreSQLTypeConverterUPtr();
+        if (!typeConverter)
+            return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                             "Didn't create postgres type converter");
+
+        for (const auto &item : res)
         {
-            if (res.empty())
-                return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                                 "Didn't select internal postgres types");
-
-            auto typeConverter = make_PostgreSQLTypeConverterUPtr();
-            if (!typeConverter)
-                return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                                 "Didn't create postgres type converter");
-
-            for (const auto &item : res)
-                {
-                    typeConverter->setTypeRelation(item.first, item.second);
-                    println("this is repchick: {}:{}", item.first, item.second);
-                }
-
-            if (typeConverter->empty())
-                return make_PostgreSQLResultUPtr(
-                    Result::Code::Error, "Type converter is empty. You can't continue working.");
-
-            _boundEntityComponent->setPgTypeConverter(std::move(typeConverter));
+            typeConverter->setTypeRelation(item.first, item.second);
+            println("this is repchick: {}:{}", item.first, item.second);
         }
+
+        if (typeConverter->empty())
+            return make_PostgreSQLResultUPtr(
+                Result::Code::Error, "Type converter is empty. You can't continue working.");
+
+        _boundEntityComponent->setPgTypeConverter(std::move(typeConverter));
+    }
 
     return make_PostgreSQLResultUPtr();
 }
@@ -87,89 +87,86 @@ vigine::postgresql::PostgreSQLSystem::checkTablesScheme() const
     std::string errorMessage;
 
     for (const auto &table : tables)
+    {
+        query::QueryBuilder mainQueryBuilder;
+        query::QueryBuilder subQueryBuilder;
+
         {
-            query::QueryBuilder mainQueryBuilder;
-            query::QueryBuilder subQueryBuilder;
+            subQueryBuilder.SELECT("1")
+                .FROM("pg_catalog.pg_tables")
+                .WHERE("schemaname = {table_name}", TextData(table.schemaName()))
+                .AND("tablename = {table_name}", TextData(table.name()));
 
-            {
-                subQueryBuilder.SELECT("1")
-                    .FROM("pg_catalog.pg_tables")
-                    .WHERE("schemaname = {table_name}", TextData(table.schemaName()))
-                    .AND("tablename = {table_name}", TextData(table.name()));
-
-                mainQueryBuilder.SELECT_EXISTS(subQueryBuilder);
-            }
-
-            auto result = _boundEntityComponent->exec(mainQueryBuilder);
-
-            if (result->empty())
-                {
-                    hasError      = true;
-                    errorMessage += "table: " + table.name() + " - has wrong schema or is absent. ";
-                    continue;
-                }
-
-            auto row = (*result)[0];
-            if (row && !row->empty())
-                {
-                    auto data     = row->operator[]("exists");
-                    auto dataType = data.type();
-
-                    if (dataType != DataType::Boolean)
-                        {
-                            hasError = true;
-                            errorMessage +=
-                                "table: " + table.name() + " - has wrong schema or is absent. ";
-                            continue;
-                        }
-
-                    auto value = data.as<DataType::Boolean>();
-                    if (!value)
-                        {
-                            hasError = true;
-                            errorMessage +=
-                                "table: " + table.name() + " - has wrong schema or is absent. ";
-                            continue;
-                        }
-
-                    // check the result
-                    {
-                        // build cols name sql query
-                    }
-                }
-
-            std::vector<std::string> cols =
-                table.columns() |
-                std::views::transform([](const auto &col) { return col.name(); }) |
-                std::ranges::to<std::vector<std::string>>();
-
-            std::string colsStr;
-            for (int i = 0; i < cols.size(); ++i)
-                {
-                    colsStr += "'" + cols[i] + "'";
-                    if ((i + 1) < cols.size())
-                        colsStr += ",";
-                }
-
-            {
-                subQueryBuilder.reset();
-                subQueryBuilder.SELECT("COUNT(*)")
-                    .FROM("information_schema.columns")
-                    .WHERE("table_schema = {table_name}", TextData(table.schemaName()))
-                    .AND("table_name = {table_name}", TextData(table.name()))
-                    .AND("column_name IN ({text})", TextData(colsStr));
-            }
-
-            result = _boundEntityComponent->exec(subQueryBuilder);
-
-            if (result->empty())
-                {
-                    hasError      = true;
-                    errorMessage += "table: " + table.name() +
-                                    " - invalid columns detected. Please verify them. ";
-                    continue;
-                }
+            mainQueryBuilder.SELECT_EXISTS(subQueryBuilder);
         }
+
+        auto result = _boundEntityComponent->exec(mainQueryBuilder);
+
+        if (result->empty())
+        {
+            hasError      = true;
+            errorMessage += "table: " + table.name() + " - has wrong schema or is absent. ";
+            continue;
+        }
+
+        auto row = (*result)[0];
+        if (row && !row->empty())
+        {
+            auto data     = row->operator[]("exists");
+            auto dataType = data.type();
+
+            if (dataType != DataType::Boolean)
+            {
+                hasError      = true;
+                errorMessage += "table: " + table.name() + " - has wrong schema or is absent. ";
+                continue;
+            }
+
+            auto value = data.as<DataType::Boolean>();
+            if (!value)
+            {
+                hasError      = true;
+                errorMessage += "table: " + table.name() + " - has wrong schema or is absent. ";
+                continue;
+            }
+
+            // check the result
+            {
+                // build cols name sql query
+            }
+        }
+
+        std::vector<std::string> cols =
+            table.columns() | std::views::transform([](const auto &col) { return col.name(); }) |
+            std::ranges::to<std::vector<std::string>>();
+
+        std::string colsStr;
+        for (int i = 0; i < cols.size(); ++i)
+        {
+            colsStr += "'" + cols[i] + "'";
+            if ((i + 1) < cols.size())
+                colsStr += ",";
+        }
+
+        {
+            subQueryBuilder.reset();
+            subQueryBuilder.SELECT("COUNT(*)")
+                .FROM("information_schema.columns")
+                .WHERE("table_schema = {table_name}", TextData(table.schemaName()))
+                .AND("table_name = {table_name}", TextData(table.name()))
+                .AND("column_name IN ({text})", TextData(colsStr));
+        }
+
+        result = _boundEntityComponent->exec(subQueryBuilder);
+
+        if (result->empty())
+        {
+            hasError = true;
+            errorMessage +=
+                "table: " + table.name() + " - invalid columns detected. Please verify them. ";
+            continue;
+        }
+    }
 
     const auto code = (hasError) ? vigine::Result::Code::Error : vigine::Result::Code::Success;
 
@@ -186,10 +183,10 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::c
     auto result = _boundEntityComponent->connect();
 
     if (result->isSuccess())
-        {
-            if (auto res = makePgTypeConverter(); res->isError())
-                return std::move(res);
-        }
+    {
+        if (auto res = makePgTypeConverter(); res->isError())
+            return std::move(res);
+    }
 
     return std::move(result);
 }
@@ -199,11 +196,11 @@ void vigine::postgresql::PostgreSQLSystem::createTable(const std::string &tableN
 {
     std::string cols;
     for (size_t i = 0; i < tableColumns.size(); ++i)
-        {
-            cols += "" + tableColumns[i] + " TEXT";
-            if (i + 1 < tableColumns.size())
-                cols += ",";
-        }
+    {
+        cols += "" + tableColumns[i] + " TEXT";
+        if (i + 1 < tableColumns.size())
+            cols += ",";
+    }
 
     std::string query = "CREATE TABLE IF NOT EXISTS public.\"" + tableName + "\" (" + cols + ")";
 
@@ -250,33 +247,31 @@ vigine::postgresql::PostgreSQLSystem::selectInternalPgTypes()
     auto result = _boundEntityComponent->exec_raw(mainQueryBuilder);
 
     if (!result.empty())
+    {
+        try
         {
-            try
-                {
-                    int rows = result.size();
-                    int y    = rows;
+            int rows = result.size();
+            int y    = rows;
 
-                    for (int row = 0; row < rows; ++row, --y)
-                        {
-                            if (result.empty() || result[row][0].is_null())
-                                continue;
+            for (int row = 0; row < rows; ++row, --y)
+            {
+                if (result.empty() || result[row][0].is_null())
+                    continue;
 
-                            auto internal = result[row][0].as<int>();
-                            auto external = result[row][1].as<std::string>();
+                auto internal = result[row][0].as<int>();
+                auto external = result[row][1].as<std::string>();
 
-                            types.emplace_back(internal, external);
-                        }
-                }
-            catch (const std::exception &e)
-                {
-                    std::println("Exception: {}", e.what());
-                }
-        }
-    else
+                types.emplace_back(internal, external);
+            }
+        } catch (const std::exception &e)
         {
-
-            std::println("result successfull {}", "false");
+            std::println("Exception: {}", e.what());
         }
+    } else
+    {
+
+        std::println("result successfull {}", "false");
+    }
 
     return types;
 }

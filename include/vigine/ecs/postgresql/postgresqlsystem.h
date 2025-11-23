@@ -41,7 +41,6 @@ class PostgreSQLSystem : public AbstractSystem
     virtual void entityUnbound();
 
   private:
-
     std::vector<std::pair<BDInternalType, BDExternalType>> selectInternalPgTypes();
     PostgreSQLResultUPtr makePgTypeConverter();
 

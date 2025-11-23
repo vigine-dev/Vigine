@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vigine/base/macros.h"
+
 #include <memory>
 
 namespace vigine

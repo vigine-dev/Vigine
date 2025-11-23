@@ -1,4 +1,4 @@
-#pragma conce
+#pragma once
 
 #include "vigine/ecs/abstractsystem.h"
 #include <vigine/abstractservice.h>

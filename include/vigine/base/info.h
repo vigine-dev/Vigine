@@ -14,17 +14,15 @@ enum class BuildType
 constexpr BuildType buildType()
 {
     if constexpr (BUILD_TYPE == DEBUG)
-        {
-            return BuildType::Debug;
-        }
-    else if constexpr (BUILD_TYPE == RELEASE)
-        {
-            return BuildType::Release;
-        }
-    else
-        {
-            return BuildType::Unknown;
-        }
+    {
+        return BuildType::Debug;
+    } else if constexpr (BUILD_TYPE == RELEASE)
+    {
+        return BuildType::Release;
+    } else
+    {
+        return BuildType::Unknown;
+    }
 }
 
 namespace platform
