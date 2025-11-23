@@ -13,6 +13,8 @@ class RenderComponent
     RenderComponent();
     ~RenderComponent();
     void render();
+
+    //#
 };
 
 BUILD_SMART_PTR(RenderComponent);
