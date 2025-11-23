@@ -1,4 +1,5 @@
 #include "vigine/ecs/platform/windowsystem.h"
+#include "windowcomponent.h"
 
 using namespace vigine::platform;
 

@@ -3,10 +3,13 @@
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 
+#include <unordered_map>
+
 namespace vigine
 {
 namespace platform
 {
+class WindowComponent;
 
 class WindowSystem : public AbstractSystem
 {
@@ -24,6 +27,10 @@ class WindowSystem : public AbstractSystem
   protected:
     virtual void entityBound();
     virtual void entityUnbound();
+
+  private:
+    std::unordered_map<Entity *, std::unique_ptr<WindowComponent>> _entityComponents;
+    WindowComponent *_boundEntityComponent;
 };
 
 BUILD_SMART_PTR(WindowSystem);
