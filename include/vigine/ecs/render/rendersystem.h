@@ -21,10 +21,10 @@ class RenderSystem : public AbstractSystem
     RenderSystem(const SystemName &name);
     ~RenderSystem() override;
 
-    SystemId id() const override;
+    [[nodiscard]] SystemId id() const override;
 
     // interface implementation
-    bool hasComponents(Entity *entity) const override;
+    [[nodiscard]] bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
 

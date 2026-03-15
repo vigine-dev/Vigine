@@ -152,6 +152,16 @@ set(SOURCES_PLATFORM
     ${SRC_DIR}/ecs/platform/windowcomponent.cpp
 )
 
+if(WIN32)
+    list(APPEND HEADER_PLATFORM
+        ${SRC_DIR}/ecs/platform/winapicomponent.h
+    )
+
+    list(APPEND SOURCES_PLATFORM
+        ${SRC_DIR}/ecs/platform/winapicomponent.cpp
+    )
+endif()
+
 # add vulkan
 # Add a library
 add_library(${PROJECT_NAME}

@@ -21,10 +21,10 @@ class AbstractService : public ContextHolder, public EntityBindingHost
     virtual ~AbstractService();
 
     // Each service need to return self id (name of the service like 'Http')
-    virtual ServiceId id() const = 0;
+    [[nodiscard]] virtual ServiceId id() const = 0;
 
     // This is instance name (like 'MyCustomService')
-    Name name();
+    [[nodiscard]] Name name();
 
   protected:
     AbstractService(const Name &name);

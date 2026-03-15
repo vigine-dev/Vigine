@@ -22,16 +22,17 @@ class DatabaseService : public AbstractService
   public:
     DatabaseService(const Name &name);
 
-    ServiceId id() const override;
+    [[nodiscard]] ServiceId id() const override;
 
-    postgresql::DatabaseConfiguration *databaseConfiguration();
+    [[nodiscard]] postgresql::DatabaseConfiguration *databaseConfiguration();
 
-    ResultUPtr connectToDb();
-    ResultUPtr checkDatabaseScheme();
-    ResultUPtr createDatabaseScheme();
+    [[nodiscard]] ResultUPtr connectToDb();
+    [[nodiscard]] ResultUPtr checkDatabaseScheme();
+    [[nodiscard]] ResultUPtr createDatabaseScheme();
 
     void writeData(const std::string &tableName, const std::vector<postgresql::Column> columnsData);
-    std::vector<std::vector<std::string>> readData(const std::string &tableName) const;
+    [[nodiscard]] std::vector<std::vector<std::string>>
+    readData(const std::string &tableName) const;
     void clearTable(const std::string &tableName) const;
 
   protected:

@@ -8,6 +8,9 @@ class WindowComponent
 {
   public:
     WindowComponent();
+    virtual ~WindowComponent();
+
+    virtual void show();
 
   private:
     // X11Window _window;

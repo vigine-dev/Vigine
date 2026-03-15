@@ -40,7 +40,9 @@ vigine::Result InitBDTask::execute()
         connectionDataUPtr->setPassword(vigine::Password("postgres"));
 
         _dbService->databaseConfiguration()->setConnectionData(std::move(connectionDataUPtr));
-        _dbService->connectToDb();
+        auto connectResult = _dbService->connectToDb();
+        if (connectResult && connectResult->isError())
+            std::println("DB connection failed: {}", connectResult->message());
     }
     _dbService->unbindEntity();
 

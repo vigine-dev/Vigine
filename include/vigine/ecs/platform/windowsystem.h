@@ -18,8 +18,8 @@ class WindowSystem : public AbstractSystem
     ~WindowSystem() override;
 
     // interface implementation
-    SystemId id() const override;
-    bool hasComponents(Entity *entity) const override;
+    [[nodiscard]] SystemId id() const override;
+    [[nodiscard]] bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
 
@@ -28,8 +28,8 @@ class WindowSystem : public AbstractSystem
     // void setWindowEventHandler(IWindowEventHandler* handler);
 
   protected:
-    virtual void entityBound();
-    virtual void entityUnbound();
+    void entityBound() override;
+    void entityUnbound() override;
 
   private:
     std::unordered_map<Entity *, std::unique_ptr<WindowComponent>> _entityComponents;
