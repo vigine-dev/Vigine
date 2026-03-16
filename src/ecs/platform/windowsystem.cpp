@@ -57,6 +57,13 @@ void WindowSystem::showWindow()
         _boundEntityComponent->show();
 }
 
+void WindowSystem::setWindowEventHandler(IWindowEventHandler *handler)
+{
+    _eventHandler = handler;
+    if (_boundEntityComponent)
+        _boundEntityComponent->setEventHandler(handler);
+}
+
 void WindowSystem::entityBound()
 {
     auto boundEntity      = getBoundEntity();

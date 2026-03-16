@@ -12,8 +12,10 @@ add_executable(${PROJECT_EXAMPLE_NAME} main.cpp
     state/workstate.h state/workstate.cpp
     state/errorstate.h state/errorstate.cpp
     state/closestate.h state/closestate.cpp
+    handler/windoweventhandler.h handler/windoweventhandler.cpp
     task/initbdtask.h task/initbdtask.cpp
     task/initwindowtask.h task/initwindowtask.cpp
+    task/runwindowtask.h task/runwindowtask.cpp
     task/checkbdshecmetask.h task/checkbdshecmetask.cpp
     task/addsomedatatask.h task/addsomedatatask.cpp
     task/readsomedatatask.h task/readsomedatatask.cpp

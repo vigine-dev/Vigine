@@ -16,6 +16,7 @@
 #include "task/initwindowtask.h"
 #include "task/readsomedatatask.h"
 #include "task/removesomedatatask.h"
+#include "task/runwindowtask.h"
 
 #include <functional>
 #include <glm/glm.hpp>
@@ -148,7 +149,8 @@ std::unique_ptr<TaskFlow> createInitTaskFlow()
     auto mouseEventTaskFlow        = std::make_unique<TaskFlow>();
     auto *initDBTask               = taskFlow->addTask(std::make_unique<InitBDTask>());
     auto *checkBDShecmeTask        = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
-    auto *runWindow                = taskFlow->addTask(std::make_unique<InitWindowTask>());
+    auto *initWindow               = taskFlow->addTask(std::make_unique<InitWindowTask>());
+    auto *runWindow                = taskFlow->addTask(std::make_unique<RunWindowTask>());
     auto *prcessMouseEventTask     = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
     auto *prcessKeyPressEventTask  = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
     auto *prcessKeyRleaseEventTask = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
@@ -157,7 +159,8 @@ std::unique_ptr<TaskFlow> createInitTaskFlow()
                                                 prcessKeyRleaseEventTask)); // SUCCESS by default
 
     static_cast<void>(taskFlow->route(initDBTask, checkBDShecmeTask));
-    static_cast<void>(taskFlow->route(checkBDShecmeTask, runWindow));
+    static_cast<void>(taskFlow->route(checkBDShecmeTask, initWindow));
+    static_cast<void>(taskFlow->route(initWindow, runWindow));
 
     // taskFlow->signal(runWindow, prcessMouseEventTask, new MouseEventSignalBinder());
 

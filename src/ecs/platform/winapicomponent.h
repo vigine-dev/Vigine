@@ -12,6 +12,12 @@ class WinAPIComponent : public WindowComponent
 {
   public:
     void show() override;
+    [[nodiscard]] bool isMouseTracking() const;
+    void setMouseTracking(bool value);
+
+  private:
+    static WinAPIComponent *_instance;
+    bool _isMouseTracking{false};
 };
 } // namespace platform
 } // namespace vigine

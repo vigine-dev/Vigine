@@ -1,9 +1,12 @@
 #pragma once
 
+#include "iwindoweventhandler.h"
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 
 #include <unordered_map>
+
 
 namespace vigine
 {
@@ -25,7 +28,7 @@ class WindowSystem : public AbstractSystem
 
     // custom methods
     void showWindow();
-    // void setWindowEventHandler(IWindowEventHandler* handler);
+    void setWindowEventHandler(IWindowEventHandler *handler);
 
   protected:
     void entityBound() override;
@@ -34,6 +37,7 @@ class WindowSystem : public AbstractSystem
   private:
     std::unordered_map<Entity *, std::unique_ptr<WindowComponent>> _entityComponents;
     WindowComponent *_boundEntityComponent;
+    IWindowEventHandler *_eventHandler{nullptr};
 };
 
 BUILD_SMART_PTR(WindowSystem);

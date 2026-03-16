@@ -29,6 +29,12 @@ void PlatformService::showWindow()
         _windowSystem->showWindow();
 }
 
+void PlatformService::setWindowEventHandler(IWindowEventHandler *handler)
+{
+    if (_windowSystem)
+        _windowSystem->setWindowEventHandler(handler);
+}
+
 void PlatformService::contextChanged()
 {
     if (!context())

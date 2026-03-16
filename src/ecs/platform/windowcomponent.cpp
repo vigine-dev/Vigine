@@ -7,3 +7,5 @@ WindowComponent::WindowComponent() {}
 WindowComponent::~WindowComponent() = default;
 
 void WindowComponent::show() {}
+
+void WindowComponent::setEventHandler(IWindowEventHandler *handler) { _eventHandler = handler; }

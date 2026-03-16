@@ -1,21 +1,17 @@
-#include "initwindowtask.h"
+#include "runwindowtask.h"
 
 #include "vigine/ecs/entitymanager.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
 #include <vigine/service/platformservice.h>
 
-#include "handler/windoweventhandler.h"
+RunWindowTask::RunWindowTask() {}
 
-
-InitWindowTask::InitWindowTask() {}
-
-void InitWindowTask::contextChanged()
+void RunWindowTask::contextChanged()
 {
     if (!context())
     {
         _platformService = nullptr;
-
         return;
     }
 
@@ -23,29 +19,21 @@ void InitWindowTask::contextChanged()
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
 }
 
-void InitWindowTask::createEventHandler()
-{
-    _eventHandler = std::make_unique<WindowEventHandler>();
-}
-
-vigine::Result InitWindowTask::execute()
+vigine::Result RunWindowTask::execute()
 {
     if (!_platformService)
         return vigine::Result(vigine::Result::Code::Error, "Platform service is unavailable");
 
     auto *entityManager = context()->entityManager();
-    auto *entity        = entityManager->createEntity();
-
-    createEventHandler();
+    auto *entity        = entityManager->getEntityByAlias("MainWindow");
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
 
     _platformService->bindEntity(entity);
     {
-        _platformService->setWindowEventHandler(_eventHandler.get());
-        _platformService->createWindow();
+        _platformService->showWindow();
     }
     _platformService->unbindEntity();
-
-    entityManager->addAlias(entity, "MainWindow");
 
     return vigine::Result();
 }

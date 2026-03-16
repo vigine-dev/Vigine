@@ -8,6 +8,7 @@ namespace vigine
 namespace platform
 {
 class WindowSystem;
+class IWindowEventHandler;
 
 class PlatformService : public AbstractService
 {
@@ -18,6 +19,7 @@ class PlatformService : public AbstractService
     [[nodiscard]] ServiceId id() const override;
     void createWindow();
     void showWindow();
+    void setWindowEventHandler(IWindowEventHandler *handler);
 
   protected:
     void contextChanged() override;
