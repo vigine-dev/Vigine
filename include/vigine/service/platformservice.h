@@ -16,10 +16,13 @@ class PlatformService : public AbstractService
     ~PlatformService() override;
 
     [[nodiscard]] ServiceId id() const override;
+    void createWindow();
+    void showWindow();
 
   protected:
     void contextChanged() override;
     void entityBound() override;
+    void entityUnbound() override;
 
   private:
     WindowSystem *_windowSystem{nullptr};

@@ -13,6 +13,7 @@
 #include "task/addsomedatatask.h"
 #include "task/checkbdshecmetask.h"
 #include "task/initbdtask.h"
+#include "task/initwindowtask.h"
 #include "task/readsomedatatask.h"
 #include "task/removesomedatatask.h"
 
@@ -147,7 +148,7 @@ std::unique_ptr<TaskFlow> createInitTaskFlow()
     auto mouseEventTaskFlow        = std::make_unique<TaskFlow>();
     auto *initDBTask               = taskFlow->addTask(std::make_unique<InitBDTask>());
     auto *checkBDShecmeTask        = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
-    auto *runWindow                = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
+    auto *runWindow                = taskFlow->addTask(std::make_unique<InitWindowTask>());
     auto *prcessMouseEventTask     = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
     auto *prcessKeyPressEventTask  = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
     auto *prcessKeyRleaseEventTask = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());

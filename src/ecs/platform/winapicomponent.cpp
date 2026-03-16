@@ -40,7 +40,7 @@ void vigine::platform::WinAPIComponent::show()
 
     HWND window =
         CreateWindowExA(0, kWindowClassName, "Vigine Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                        CW_USEDEFAULT, 960, 540, nullptr, nullptr, instance, nullptr);
+                        CW_USEDEFAULT, 940, 660, nullptr, nullptr, instance, nullptr);
     if (!window)
         return;
 

@@ -1,11 +1,14 @@
 #include "vigine/context.h"
 
+#include "vigine/ecs/platform/windowsystem.h"
 #include "vigine/ecs/postgresql/postgresqlsystem.h"
 #include "vigine/property.h"
 #include "vigine/service/databaseservice.h"
+#include "vigine/service/platformservice.h"
 
 #include <algorithm>
 #include <utility>
+
 
 vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemName name,
                                                 const Property property)
@@ -47,6 +50,13 @@ vigine::Context::Context(EntityManager *entityManager) { _entityManager = entity
 
 vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, const SystemName &name)
 {
+    if (id == "Window")
+    {
+        auto windowSystem = vigine::platform::make_WindowSystemUPtr(name);
+
+        return std::move(windowSystem);
+    }
+
     if (id == "PostgreSQL")
     {
         auto postgreSQLSystem = vigine::postgresql::make_PostgreSQLSystemUPtr(name);
@@ -97,6 +107,14 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name
 
 vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, const Name &name)
 {
+    if (id == "Platform")
+    {
+        auto platformService = vigine::platform::make_PlatformServiceUPtr(name);
+        platformService->setContext(this);
+
+        return std::move(platformService);
+    }
+
     if (id == "Database")
     {
         auto dbServ = make_DatabaseServiceUPtr(name);
