@@ -2,6 +2,7 @@
 
 #include "vigine/abstractservice.h"
 #include "vigine/base/macros.h"
+#include "vigine/ecs/platform/iwindoweventhandler.h"
 
 namespace vigine
 {
@@ -20,6 +21,7 @@ class PlatformService : public AbstractService
     void createWindow();
     void showWindow();
     void setWindowEventHandler(IWindowEventHandler *handler);
+    [[nodiscard]] IWindowEventHandler *windowEventHandler() const;
 
   protected:
     void contextChanged() override;
@@ -28,6 +30,7 @@ class PlatformService : public AbstractService
 
   private:
     WindowSystem *_windowSystem{nullptr};
+    IWindowEventHandler *_windowEventHandler{nullptr};
 };
 
 BUILD_SMART_PTR(PlatformService);
