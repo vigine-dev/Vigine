@@ -23,6 +23,8 @@ void ReadSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
+// COPILOT_TODO: Перевіряти entity/_dbService і повертати помилку, якщо DatabaseService::readData()
+// лишається недописаним; зараз сценарій маскує неготовий код як success.
 vigine::Result ReadSomeDataTask::execute()
 {
     std::println("-- ReadSomeDataTask::execute()");

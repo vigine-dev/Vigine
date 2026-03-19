@@ -11,6 +11,8 @@
 #include <print>
 #include <vector>
 
+// COPILOT_TODO: Ініціалізувати _boundEntityComponent в nullptr у initializer list, як це вже
+// зроблено в WindowSystem, щоб не покладатися на невизначений стан.
 vigine::postgresql::PostgreSQLSystem::PostgreSQLSystem(const SystemName &name)
     : AbstractSystem(name)
 {
@@ -49,6 +51,8 @@ void vigine::postgresql::PostgreSQLSystem::destroyComponents(Entity *entity)
     _entityComponents.erase(entity);
 }
 
+// COPILOT_TODO: Прибрати суперечливу перевірку res.size() > 0 / res.empty() і додати guard на
+// _boundEntityComponent перед setPgTypeConverter().
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::makePgTypeConverter()
 {
     if (auto res = selectInternalPgTypes(); res.size() > 0)
@@ -78,6 +82,8 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::m
     return make_PostgreSQLResultUPtr();
 }
 
+// COPILOT_TODO: Перевіряти _boundEntityComponent перед доступом до dbConfiguration()/exec(), інакше
+// перевірка схеми падає ще до повернення Result::Error.
 vigine::postgresql::PostgreSQLResultUPtr
 vigine::postgresql::PostgreSQLSystem::checkTablesScheme() const
 {
@@ -173,11 +179,15 @@ vigine::postgresql::PostgreSQLSystem::checkTablesScheme() const
     return make_PostgreSQLResultUPtr(code, errorMessage);
 }
 
+// COPILOT_TODO: Захистити цей accessor від nullptr або змінити контракт так, щоб без bindEntity()
+// його було неможливо викликати.
 vigine::postgresql::DatabaseConfiguration *vigine::postgresql::PostgreSQLSystem::dbConfiguration()
 {
     return _boundEntityComponent->dbConfiguration();
 }
 
+// COPILOT_TODO: Якщо система ще не прив'язана до entity, тут потрібно повертати помилку явно, а не
+// дереференсити _boundEntityComponent всліпу.
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::connect()
 {
     auto result = _boundEntityComponent->connect();
@@ -191,6 +201,8 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::c
     return std::move(result);
 }
 
+// COPILOT_TODO: Додати перевірку _boundEntityComponent перед setQuery/exec/commit, інакше
+// createTable аварійно падає при неправильному порядку викликів.
 void vigine::postgresql::PostgreSQLSystem::createTable(const std::string &tableName,
                                                        const std::vector<std::string> tableColumns)
 {
@@ -209,6 +221,8 @@ void vigine::postgresql::PostgreSQLSystem::createTable(const std::string &tableN
     _boundEntityComponent->commit();
 }
 
+// COPILOT_TODO: Додати guard на _boundEntityComponent і нормальний шлях повернення помилки;
+// void-API тут маскує критичні збої виконання запиту.
 void vigine::postgresql::PostgreSQLSystem::queryRequest(const std::string &query)
 {
     _boundEntityComponent->setQuery(query);

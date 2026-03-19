@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <utility>
 
-
 vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemName name,
                                                 const Property property)
 {
@@ -48,6 +47,8 @@ vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemN
 
 vigine::Context::Context(EntityManager *entityManager) { _entityManager = entityManager; }
 
+// COPILOT_TODO: Додати фабричні гілки для всіх систем, що вже оголошені в API, зокрема Render;
+// зараз частина запитів через Context приречена на nullptr.
 vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, const SystemName &name)
 {
     if (id == "Window")
@@ -105,6 +106,8 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name
     return retVal;
 }
 
+// COPILOT_TODO: Додати створення GraphicsService; зараз service("Graphics", ...) завжди повертає
+// nullptr, хоча сервіс присутній у публічному API.
 vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, const Name &name)
 {
     if (id == "Platform")

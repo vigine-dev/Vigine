@@ -23,6 +23,8 @@ void CheckBDShecmeTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
+// COPILOT_TODO: Перевіряти _dbService, entity і Result-вказівники перед dereference, а також явно
+// обробляти провал createDatabaseScheme().
 vigine::Result CheckBDShecmeTask::execute()
 {
     vigine::Result result;

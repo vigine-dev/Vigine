@@ -4,8 +4,12 @@
 
 vigine::graphics::GraphicsService::GraphicsService(const Name &name) : AbstractService(name) {}
 
+// COPILOT_TODO: Отримувати або створювати RenderSystem через Context, інакше GraphicsService
+// лишається нефункціональною оболонкою.
 void vigine::graphics::GraphicsService::contextChanged() {}
 
+// COPILOT_TODO: Прив'язка сутності має створювати/render-компоненти або явно делегувати це системі;
+// зараз bound entity ніяк не використовується.
 void vigine::graphics::GraphicsService::entityBound()
 {
     // Entity *ent = getBoundEntity();

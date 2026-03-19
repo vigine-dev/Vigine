@@ -145,11 +145,13 @@ set(SOURCES_POSTGRESQL
 set(HEADER_PLATFORM
     ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
     ${SRC_DIR}/ecs/platform/windowcomponent.h
+    ${SRC_DIR}/ecs/platform/windoweventdispatcher.h
 )
 
 set(SOURCES_PLATFORM
     ${SRC_DIR}/ecs/platform/windowsystem.cpp
     ${SRC_DIR}/ecs/platform/windowcomponent.cpp
+    ${SRC_DIR}/ecs/platform/windoweventdispatcher.cpp
 )
 
 if(WIN32)

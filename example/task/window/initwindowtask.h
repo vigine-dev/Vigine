@@ -4,6 +4,7 @@
 #include <vigine/ecs/platform/iwindoweventhandler.h>
 
 #include <memory>
+#include <vector>
 
 namespace vigine
 {
@@ -23,7 +24,7 @@ class InitWindowTask : public vigine::AbstractTask
 
   private:
     vigine::platform::PlatformService *_platformService{nullptr};
-    std::unique_ptr<vigine::platform::IWindowEventHandler> _eventHandler;
+    std::vector<std::unique_ptr<vigine::platform::IWindowEventHandlerComponent>> _eventHandlers;
 
-    void createEventHandler();
+    void createEventHandlers();
 };

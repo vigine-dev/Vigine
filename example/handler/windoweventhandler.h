@@ -3,12 +3,15 @@
 #include <vigine/ecs/platform/iwindoweventhandler.h>
 
 #include <functional>
+#include <string>
 
-class WindowEventHandler : public vigine::platform::IWindowEventHandler
+class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
 {
   public:
     using MouseButtonDownCallback = std::function<void(vigine::platform::MouseButton, int, int)>;
     using KeyDownCallback         = std::function<void(const vigine::platform::KeyEvent &)>;
+
+    explicit WindowEventHandler(std::string handlerId = "Handler");
 
     void setMouseButtonDownCallback(MouseButtonDownCallback callback);
     void setKeyDownCallback(KeyDownCallback callback);
@@ -34,6 +37,7 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandler
     void onDeadChar(const vigine::platform::TextEvent &event) override;
 
   private:
+    std::string _handlerId;
     MouseButtonDownCallback _onMouseButtonDown;
     KeyDownCallback _onKeyDown;
 };

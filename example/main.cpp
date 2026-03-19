@@ -24,6 +24,8 @@
 
 using namespace vigine;
 
+// COPILOT_TODO: Не покладатися на signal(...) у поточному вигляді TaskFlow, доки він не почне
+// реально dispatchити signal-переходи під час виконання.
 std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignalBinder,
                                              KeyEventSignalBinder &keySignalBinder)
 {
@@ -46,6 +48,8 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignal
     return taskFlow;
 }
 
+// COPILOT_TODO: Або відновити маршрути й стартову задачу, або прибрати цей TaskFlow; зараз
+// WorkState отримує порожній сценарій і нічого не робить.
 std::unique_ptr<TaskFlow> createWorkTaskFlow()
 {
     auto taskFlow            = std::make_unique<TaskFlow>();
@@ -60,6 +64,8 @@ std::unique_ptr<TaskFlow> createWorkTaskFlow()
     return taskFlow;
 }
 
+// COPILOT_TODO: Визначити явний сценарій помилки або прибрати стан; порожній error-flow зараз не
+// дає ні recovery, ні завершення.
 std::unique_ptr<TaskFlow> createErrorTaskFlow()
 {
     auto taskFlow = std::make_unique<TaskFlow>();
@@ -67,6 +73,8 @@ std::unique_ptr<TaskFlow> createErrorTaskFlow()
     return taskFlow;
 }
 
+// COPILOT_TODO: Додати фіналізацію ресурсів/сервісів у close-flow, інакше цей стан є лише
+// формальним переходом без корисної роботи.
 std::unique_ptr<TaskFlow> createCloseTaskFlow()
 {
     auto taskFlow = std::make_unique<TaskFlow>();
@@ -74,6 +82,8 @@ std::unique_ptr<TaskFlow> createCloseTaskFlow()
     return taskFlow;
 }
 
+// COPILOT_TODO: Перевіряти Result від addTransition/route/signal замість глушити його через
+// static_cast<void>, інакше конфігураційні помилки губляться на старті.
 int main()
 {
     Engine engine;

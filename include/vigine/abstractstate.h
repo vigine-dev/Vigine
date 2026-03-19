@@ -16,6 +16,8 @@ class AbstractState
     virtual ~AbstractState() = default;
 
     // Main state execution method
+    // COPILOT_TODO: Додати перевірку _context перед enter()/exit(), інакше стан може виконуватися
+    // без валідного Context.
     [[nodiscard]] Result operator()()
     {
         if (!_taskFlow)

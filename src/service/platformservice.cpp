@@ -10,34 +10,67 @@ PlatformService::PlatformService(const Name &name) : AbstractService(name) {}
 
 PlatformService::~PlatformService() = default;
 
-void PlatformService::createWindow()
+WindowComponent *PlatformService::createWindow()
+{
+    if (!_windowSystem)
+        return nullptr;
+
+    return _windowSystem->createWindowComponent();
+}
+
+vigine::Result PlatformService::showWindow(WindowComponent *window)
+{
+    if (!_windowSystem)
+        return vigine::Result(vigine::Result::Code::Error, "Window system is unavailable");
+
+    return _windowSystem->showWindow(window);
+}
+
+vigine::Result PlatformService::bindWindowEventHandler(WindowComponent *window,
+                                                       IWindowEventHandlerComponent *handler)
+{
+    auto *entity = getBoundEntity();
+
+    if (!_windowSystem || !entity || !window)
+        return vigine::Result(vigine::Result::Code::Error, "No bound entity or window system");
+
+    if (auto bindWindowResult = _windowSystem->bindWindowComponent(entity, window);
+        bindWindowResult.isError())
+        return bindWindowResult;
+
+    return _windowSystem->bindWindowEventHandler(entity, window, handler);
+}
+
+std::vector<WindowComponent *> PlatformService::windowComponents() const
 {
     auto *entity = getBoundEntity();
 
     if (!_windowSystem || !entity)
-        return;
+        return {};
 
-    if (!_windowSystem->hasComponents(entity))
-        _windowSystem->createComponents(entity);
-
-    _windowSystem->bindEntity(entity);
+    return _windowSystem->windowComponents(entity);
 }
 
-void PlatformService::showWindow()
+std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers() const
 {
-    if (_windowSystem)
-        _windowSystem->showWindow();
+    auto *entity = getBoundEntity();
+
+    if (!_windowSystem || !entity)
+        return {};
+
+    return _windowSystem->windowEventHandlers(entity, nullptr);
 }
 
-void PlatformService::setWindowEventHandler(IWindowEventHandler *handler)
+std::vector<IWindowEventHandlerComponent *>
+PlatformService::windowEventHandlers(WindowComponent *window) const
 {
-    _windowEventHandler = handler;
+    auto *entity = getBoundEntity();
 
-    if (_windowSystem)
-        _windowSystem->setWindowEventHandler(handler);
+    if (!_windowSystem || !entity || !window)
+        return {};
+
+    return _windowSystem->windowEventHandlers(entity, window);
 }
-
-IWindowEventHandler *PlatformService::windowEventHandler() const { return _windowEventHandler; }
 
 void PlatformService::contextChanged()
 {
@@ -58,7 +91,11 @@ void PlatformService::contextChanged()
         context()->system("Window", "MainWindow", vigine::Property::New));
 }
 
-void PlatformService::entityBound() { createWindow(); }
+void PlatformService::entityBound()
+{
+    if (_windowSystem)
+        _windowSystem->bindEntity(getBoundEntity());
+}
 
 void PlatformService::entityUnbound()
 {

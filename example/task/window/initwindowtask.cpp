@@ -7,7 +7,6 @@
 
 #include "handler/windoweventhandler.h"
 
-
 InitWindowTask::InitWindowTask() {}
 
 void InitWindowTask::contextChanged()
@@ -23,9 +22,11 @@ void InitWindowTask::contextChanged()
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
 }
 
-void InitWindowTask::createEventHandler()
+void InitWindowTask::createEventHandlers()
 {
-    _eventHandler = std::make_unique<WindowEventHandler>();
+    _eventHandlers.clear();
+    _eventHandlers.push_back(std::make_unique<WindowEventHandler>("Handler 1"));
+    _eventHandlers.push_back(std::make_unique<WindowEventHandler>("Handler 2"));
 }
 
 vigine::Result InitWindowTask::execute()
@@ -36,12 +37,26 @@ vigine::Result InitWindowTask::execute()
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->createEntity();
 
-    createEventHandler();
+    createEventHandlers();
 
     _platformService->bindEntity(entity);
     {
-        _platformService->setWindowEventHandler(_eventHandler.get());
-        _platformService->createWindow();
+        for (auto &handler : _eventHandlers)
+        {
+            auto *window = _platformService->createWindow();
+            if (!window)
+            {
+                _platformService->unbindEntity();
+                return vigine::Result(vigine::Result::Code::Error, "No window component created");
+            }
+
+            auto bindResult = _platformService->bindWindowEventHandler(window, handler.get());
+            if (bindResult.isError())
+            {
+                _platformService->unbindEntity();
+                return bindResult;
+            }
+        }
     }
     _platformService->unbindEntity();
 

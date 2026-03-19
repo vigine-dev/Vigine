@@ -24,6 +24,8 @@ void InitBDTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::New));
 }
 
+// COPILOT_TODO: Винести credentials у конфіг/env і повертати помилку при відсутньому _dbService або
+// невдалому connectToDb(), а не продовжувати сценарій як success.
 vigine::Result InitBDTask::execute()
 {
     auto *entityManager       = context()->entityManager();

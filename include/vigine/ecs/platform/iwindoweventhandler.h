@@ -40,10 +40,10 @@ struct TextEvent
     unsigned int repeatCount{0};
 };
 
-class IWindowEventHandler
+class IWindowEventHandlerComponent
 {
   public:
-    virtual ~IWindowEventHandler() = default;
+    virtual ~IWindowEventHandlerComponent() = default;
 
     // Window lifecycle
     virtual void onWindowClosed()                       = 0;

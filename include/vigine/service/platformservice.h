@@ -3,13 +3,17 @@
 #include "vigine/abstractservice.h"
 #include "vigine/base/macros.h"
 #include "vigine/ecs/platform/iwindoweventhandler.h"
+#include "vigine/result.h"
+
+#include <vector>
 
 namespace vigine
 {
 namespace platform
 {
 class WindowSystem;
-class IWindowEventHandler;
+class IWindowEventHandlerComponent;
+class WindowComponent;
 
 class PlatformService : public AbstractService
 {
@@ -18,10 +22,14 @@ class PlatformService : public AbstractService
     ~PlatformService() override;
 
     [[nodiscard]] ServiceId id() const override;
-    void createWindow();
-    void showWindow();
-    void setWindowEventHandler(IWindowEventHandler *handler);
-    [[nodiscard]] IWindowEventHandler *windowEventHandler() const;
+    WindowComponent *createWindow();
+    [[nodiscard]] vigine::Result showWindow(WindowComponent *window);
+    [[nodiscard]] vigine::Result bindWindowEventHandler(WindowComponent *window,
+                                                        IWindowEventHandlerComponent *handler);
+    [[nodiscard]] std::vector<WindowComponent *> windowComponents() const;
+    [[nodiscard]] std::vector<IWindowEventHandlerComponent *> windowEventHandlers() const;
+    [[nodiscard]] std::vector<IWindowEventHandlerComponent *>
+    windowEventHandlers(WindowComponent *window) const;
 
   protected:
     void contextChanged() override;
@@ -30,7 +38,6 @@ class PlatformService : public AbstractService
 
   private:
     WindowSystem *_windowSystem{nullptr};
-    IWindowEventHandler *_windowEventHandler{nullptr};
 };
 
 BUILD_SMART_PTR(PlatformService);

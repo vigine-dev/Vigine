@@ -4,7 +4,8 @@ namespace vigine
 {
 namespace platform
 {
-class IWindowEventHandler;
+class IWindowEventHandlerComponent;
+class WindowSystem;
 
 class WindowComponent
 {
@@ -12,9 +13,13 @@ class WindowComponent
     WindowComponent();
     virtual ~WindowComponent();
 
+    virtual void setEventHandler(IWindowEventHandlerComponent *handler);
+    IWindowEventHandlerComponent *_eventHandler{nullptr};
+
+  protected:
     virtual void show();
-    virtual void setEventHandler(IWindowEventHandler *handler);
-    IWindowEventHandler *_eventHandler{nullptr};
+
+    friend class WindowSystem;
 
   private:
     // X11Window _window;

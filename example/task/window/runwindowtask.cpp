@@ -23,6 +23,8 @@ void RunWindowTask::contextChanged()
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
 }
 
+// COPILOT_TODO: Гарантувати unbindEntity() на всіх ранніх виходах через RAII/guard, інакше
+// PlatformService може залишитися прив'язаним після помилки.
 vigine::Result RunWindowTask::execute()
 {
     if (!_platformService)
@@ -35,30 +37,54 @@ vigine::Result RunWindowTask::execute()
 
     _platformService->bindEntity(entity);
     {
-        auto *eventHandler = _platformService->windowEventHandler();
-        if (!eventHandler)
-            return vigine::Result(vigine::Result::Code::Error,
-                                  "Window event handler is unavailable");
+        auto windows = _platformService->windowComponents();
+        if (windows.empty())
+            return vigine::Result(vigine::Result::Code::Error, "Window component is unavailable");
 
-        auto *windowEventHandler = dynamic_cast<WindowEventHandler *>(eventHandler);
-        if (!windowEventHandler)
-            return vigine::Result(vigine::Result::Code::Error,
-                                  "Window event handler has unsupported type");
+        for (std::size_t windowIndex = 0; windowIndex < windows.size(); ++windowIndex)
+        {
+            auto *window = windows[windowIndex];
+            if (!window)
+                return vigine::Result(vigine::Result::Code::Error,
+                                      "Window component is unavailable");
 
-        windowEventHandler->setMouseButtonDownCallback(
-            [this](vigine::platform::MouseButton button, int x, int y) {
-                std::cout << "[RunWindowTask::execute::lambda] button=" << static_cast<int>(button)
-                          << ", x=" << x << ", y=" << y << std::endl;
-                onMouseButtonDown(button, x, y);
-            });
-        windowEventHandler->setKeyDownCallback([this](const vigine::platform::KeyEvent &event) {
-            std::cout << "[RunWindowTask::execute::lambda] keyCode=" << event.keyCode
-                      << ", scanCode=" << event.scanCode << ", modifiers=" << event.modifiers
-                      << ", repeatCount=" << event.repeatCount << ", isRepeat=" << event.isRepeat
+            auto eventHandlers = _platformService->windowEventHandlers(window);
+            if (eventHandlers.empty())
+                return vigine::Result(vigine::Result::Code::Error,
+                                      "Window event handler is unavailable");
+
+            for (auto *eventHandler : eventHandlers)
+            {
+                auto *windowEventHandler = dynamic_cast<WindowEventHandler *>(eventHandler);
+                if (!windowEventHandler)
+                    return vigine::Result(vigine::Result::Code::Error,
+                                          "Window event handler has unsupported type");
+
+                windowEventHandler->setMouseButtonDownCallback(
+                    [this](vigine::platform::MouseButton button, int x, int y) {
+                        std::cout << "[RunWindowTask::execute::lambda] button="
+                                  << static_cast<int>(button) << ", x=" << x << ", y=" << y
+                                  << std::endl;
+                        onMouseButtonDown(button, x, y);
+                    });
+                windowEventHandler->setKeyDownCallback(
+                    [this](const vigine::platform::KeyEvent &event) {
+                        std::cout << "[RunWindowTask::execute::lambda] keyCode=" << event.keyCode
+                                  << ", scanCode=" << event.scanCode
+                                  << ", modifiers=" << event.modifiers
+                                  << ", repeatCount=" << event.repeatCount
+                                  << ", isRepeat=" << event.isRepeat << std::endl;
+                        onKeyDown(event);
+                    });
+            }
+
+            std::cout << "[RunWindowTask] Showing window " << (windowIndex + 1) << std::endl;
+            auto showResult = _platformService->showWindow(window);
+            if (showResult.isError())
+                return showResult;
+            std::cout << "[RunWindowTask] Window " << (windowIndex + 1) << " closed, continuing"
                       << std::endl;
-            onKeyDown(event);
-        });
-        _platformService->showWindow();
+        }
     }
     _platformService->unbindEntity();
 

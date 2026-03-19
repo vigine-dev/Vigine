@@ -74,6 +74,8 @@ Result TaskFlow::route(AbstractTask *from, AbstractTask *to, Result::Code result
 // TODO: Add a mechanism if we add a new task when we process the signal. Need a new Class that
 // checks when we add a new task to process the signal if we are currently doing some signal.The
 // same mechanism is needed for the normal task flow.
+// COPILOT_TODO: Реалізувати збереження signal-переходів і їх dispatch під час виконання; зараз
+// метод лише валідовує binder і не підключає жодного маршруту.
 Result TaskFlow::signal(AbstractTask *from, AbstractTask *to, ISignalBinder *signal)
 {
     if (!from || !to || !signal)
@@ -92,6 +94,8 @@ Result TaskFlow::signal(AbstractTask *from, AbstractTask *to, ISignalBinder *sig
     return Result();
 }
 
+// COPILOT_TODO: Перевіряти, що newTask зареєстрований у цьому TaskFlow, інакше сюди можна передати
+// зовнішній або вже невалідний вказівник.
 void TaskFlow::changeCurrentTaskTo(AbstractTask *newTask)
 {
     if (!newTask)

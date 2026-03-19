@@ -11,9 +11,11 @@ namespace platform
 class WinAPIComponent : public WindowComponent
 {
   public:
-    void show() override;
     [[nodiscard]] bool isMouseTracking() const;
     void setMouseTracking(bool value);
+
+  protected:
+    void show() override;
 
   private:
     static WinAPIComponent *_instance;
