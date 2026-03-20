@@ -38,8 +38,15 @@
 
 ## Before Editing
 - Read the target file and immediate dependencies first.
+- Read the relevant documentation in `doc/` before changing architecture, class relationships, signals, or task flows.
+- If the task does not provide a folder structure, inspect the workspace and use `doc/README.md` as the current high-level engine map.
 - Confirm whether related files changed recently before patching.
 - Do not revert user changes unless explicitly requested.
+
+## Documentation Sync
+- When changing classes, inheritance, ownership, or interactions between engine parts, update the relevant documentation in `doc/` in the same task.
+- At minimum, keep `doc/README.md` and the affected Mermaid diagrams in sync with code changes.
+- If a new subsystem, folder, or architectural layer is introduced, document where it lives and how it relates to existing engine classes.
 
 ## Communication Style
 - Answer in Ukrainian unless user requests another language.

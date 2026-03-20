@@ -8,6 +8,7 @@ participant MB as MouseEventSignalBinder
 participant KB as KeyEventSignalBinder
 participant Run as RunWindowTask
 participant Handler as WindowEventHandler
+participant Disp as WindowEventDispatcher
 participant Proxy as ISignalEmiter::SignalEmiterProxy
 participant Proc as ProcessInputEventTask
 
@@ -21,16 +22,20 @@ TF->>KB: check(Run, Proc)
 KB->>Run: setProxyEmiter(lambda)
 KB-->>TF: true
 
+Note over TF,KB: TaskFlow::signal() currently validates binder compatibility and installs emitter proxies.
+
 Run->>Handler: setMouseButtonDownCallback(lambda)
 Run->>Handler: setKeyDownCallback(lambda)
 
-Handler-->>Run: onMouseButtonDown(button,x,y)
+Disp->>Handler: onMouseButtonDown(button,x,y)
+Handler-->>Run: callback(button,x,y)
 Run->>Run: emitMouseButtonDownSignal(...)
-Run->>Proxy: new MouseButtonDownSignal
+Run->>Proxy: proxyEmiter()(new MouseButtonDownSignal)
 Proxy->>Proc: onMouseButtonDownSignal(signal)
 
-Handler-->>Run: onKeyDown(event)
+Disp->>Handler: onKeyDown(event)
+Handler-->>Run: callback(event)
 Run->>Run: emitKeyDownSignal(event)
-Run->>Proxy: new KeyDownSignal
+Run->>Proxy: proxyEmiter()(new KeyDownSignal)
 Proxy->>Proc: onKeyDownSignal(signal)
 ```

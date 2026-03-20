@@ -9,6 +9,7 @@ participant Ctx as Context
 participant EM as EntityManager
 participant PS as PlatformService
 participant WH as WindowEventHandler
+participant W as WindowComponent
 
 Caller->>T: execute()
 alt PlatformService is null
@@ -23,19 +24,35 @@ else service exists
     T-->>Caller: Result(Error, MainWindow entity not found)
   else entity exists
     T->>PS: bindEntity(entity)
-    T->>PS: windowEventHandler()
-    PS-->>T: IWindowEventHandler*
+    T->>PS: windowComponents()
+    PS-->>T: vector<WindowComponent*>
 
-    alt handler is null
-      T-->>Caller: Result(Error, handler unavailable)
-    else handler exists
-      T->>T: dynamic_cast to WindowEventHandler
-      alt cast failed
-        T-->>Caller: Result(Error, unsupported handler type)
-      else cast success
-        T->>WH: setMouseButtonDownCallback(lambda)
-        T->>WH: setKeyDownCallback(lambda)
-        T->>PS: showWindow()
+    alt no windows
+      T-->>Caller: Result(Error, Window component is unavailable)
+    else windows exist
+      loop for each window
+        T->>PS: windowEventHandlers(W)
+        PS-->>T: vector<IWindowEventHandlerComponent*>
+
+        alt no handlers
+          T-->>Caller: Result(Error, Window event handler is unavailable)
+        else handlers exist
+          loop for each handler
+            T->>T: dynamic_cast to WindowEventHandler
+            alt cast failed
+              T-->>Caller: Result(Error, unsupported handler type)
+            else cast success
+              T->>WH: setMouseButtonDownCallback(lambda)
+              T->>WH: setKeyDownCallback(lambda)
+            end
+          end
+
+          T->>PS: showWindow(W)
+          PS-->>T: Result
+          alt show result is Error
+            T-->>Caller: showResult
+          end
+        end
       end
     end
 
