@@ -54,7 +54,7 @@ else()
 endif()
 
 # Option to build examples
-option(ENABLE_EXAMPLE "Build example projects" OFF)
+option(ENABLE_EXAMPLE "Build example projects" ON)
 option(ENABLE_UNITTEST "Enable tests" OFF)
 
 if(ENABLE_UNITTEST AND EXISTS "${CMAKE_SOURCE_DIR}/test/CMakeLists.txt")

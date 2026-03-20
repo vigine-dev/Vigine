@@ -14,7 +14,7 @@
 // COPILOT_TODO: Ініціалізувати _boundEntityComponent в nullptr у initializer list, як це вже
 // зроблено в WindowSystem, щоб не покладатися на невизначений стан.
 vigine::postgresql::PostgreSQLSystem::PostgreSQLSystem(const SystemName &name)
-    : AbstractSystem(name)
+    : AbstractSystem(name), _boundEntityComponent(nullptr)
 {
 }
 
@@ -183,6 +183,9 @@ vigine::postgresql::PostgreSQLSystem::checkTablesScheme() const
 // його було неможливо викликати.
 vigine::postgresql::DatabaseConfiguration *vigine::postgresql::PostgreSQLSystem::dbConfiguration()
 {
+    if (!_boundEntityComponent)
+        return nullptr;
+
     return _boundEntityComponent->dbConfiguration();
 }
 
@@ -190,6 +193,10 @@ vigine::postgresql::DatabaseConfiguration *vigine::postgresql::PostgreSQLSystem:
 // дереференсити _boundEntityComponent всліпу.
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::connect()
 {
+    if (!_boundEntityComponent)
+        return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                         "PostgreSQL entity component is not bound");
+
     auto result = _boundEntityComponent->connect();
 
     if (result->isSuccess())
@@ -206,6 +213,12 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::c
 void vigine::postgresql::PostgreSQLSystem::createTable(const std::string &tableName,
                                                        const std::vector<std::string> tableColumns)
 {
+    if (!_boundEntityComponent)
+    {
+        std::println("PostgreSQL createTable skipped: entity component is not bound");
+        return;
+    }
+
     std::string cols;
     for (size_t i = 0; i < tableColumns.size(); ++i)
     {
@@ -217,17 +230,27 @@ void vigine::postgresql::PostgreSQLSystem::createTable(const std::string &tableN
     std::string query = "CREATE TABLE IF NOT EXISTS public.\"" + tableName + "\" (" + cols + ")";
 
     _boundEntityComponent->setQuery(query);
-    _boundEntityComponent->exec();
-    _boundEntityComponent->commit();
+    auto result = _boundEntityComponent->exec();
+
+    if (result->isError())
+        std::println("PostgreSQL createTable failed: {}", result->message());
 }
 
 // COPILOT_TODO: Додати guard на _boundEntityComponent і нормальний шлях повернення помилки;
 // void-API тут маскує критичні збої виконання запиту.
 void vigine::postgresql::PostgreSQLSystem::queryRequest(const std::string &query)
 {
+    if (!_boundEntityComponent)
+    {
+        std::println("PostgreSQL query skipped: entity component is not bound");
+        return;
+    }
+
     _boundEntityComponent->setQuery(query);
-    _boundEntityComponent->exec();
-    _boundEntityComponent->commit();
+    auto result = _boundEntityComponent->exec();
+
+    if (result->isError())
+        std::println("PostgreSQL query failed: {}", result->message());
 }
 
 void vigine::postgresql::PostgreSQLSystem::entityBound()

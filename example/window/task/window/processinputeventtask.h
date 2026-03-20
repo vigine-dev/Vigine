@@ -4,7 +4,6 @@
 
 #include <vigine/abstracttask.h>
 
-
 class ProcessInputEventTask : public vigine::AbstractTask,
                               public IMouseEventSignalHandler,
                               public IKeyEventSignalHandler

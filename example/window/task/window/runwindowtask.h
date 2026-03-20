@@ -5,7 +5,6 @@
 #include <vigine/abstracttask.h>
 #include <vigine/ecs/platform/iwindoweventhandler.h>
 
-
 namespace vigine
 {
 namespace platform

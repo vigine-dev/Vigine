@@ -4,8 +4,8 @@
 
 ProcessInputEventTask::ProcessInputEventTask() = default;
 
-// COPILOT_TODO: Або обробляти накопичені події та скидати _hasMouseEvent/_hasKeyEvent, або прибрати
-// цю задачу; зараз execute() нічого не робить.
+// COPILOT_TODO: Або обробляти накопичені eventi та скидати _hasMouseEvent/_hasKeyEvent, або
+// прибрати цю задачу; зараз execute() нічого не робить.
 vigine::Result ProcessInputEventTask::execute() { return vigine::Result(); }
 
 void ProcessInputEventTask::onMouseButtonDownSignal(MouseButtonDownSignal *event)

@@ -5,7 +5,7 @@
 #include <vigine/property.h>
 #include <vigine/service/platformservice.h>
 
-#include "handler/windoweventhandler.h"
+#include "../../handler/windoweventhandler.h"
 
 InitWindowTask::InitWindowTask() {}
 

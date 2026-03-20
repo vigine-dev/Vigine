@@ -2,9 +2,40 @@
 
 #include "vigine/ecs/postgresql/query/querybuilder.h"
 
-#include <print>
-#include <ranges>
-#include <vector>
+#include <stdexcept>
+
+namespace
+{
+
+std::string buildConnectionString(const vigine::postgresql::ConnectionData &connectionData)
+{
+    std::string connectionString = "host=" + connectionData.host() + " ";
+
+    if (!connectionData.port().empty())
+        connectionString += "port=" + connectionData.port() + " ";
+
+    connectionString += "dbname=" + connectionData.dbName().str() + " ";
+    connectionString += "user=" + connectionData.dbUserName().str();
+
+    if (!connectionData.password().str().empty())
+        connectionString += " password=" + connectionData.password().str();
+
+    return connectionString;
+}
+
+void validateQueryExecution(const pqxx::connection *connection, const std::string &query)
+{
+    if (!connection)
+        throw std::runtime_error("PostgreSQL connection is not initialized");
+
+    if (!connection->is_open())
+        throw std::runtime_error("PostgreSQL connection is closed");
+
+    if (query.empty())
+        throw std::runtime_error("PostgreSQL query is empty");
+}
+
+} // namespace
 
 vigine::postgresql::PostgreSQLComponent::PostgreSQLComponent()
     : _dbConfig{make_DatabaseConfigurationUPtr()}
@@ -17,12 +48,20 @@ pqxx::result
 vigine::postgresql::PostgreSQLComponent::exec_raw(const query::QueryBuilder &queryBuilder)
 {
     setQuery(queryBuilder);
-    _work       = std::make_unique<pqxx::work>(*_connection);
+    validateQueryExecution(_connection.get(), _query);
 
-    auto result = _work->exec(_query);
-    commit();
+    try
+    {
+        _work       = std::make_unique<pqxx::work>(*_connection);
+        auto result = _work->exec(_query);
+        commit();
 
-    return result;
+        return result;
+    } catch (const std::exception &e)
+    {
+        _work.reset();
+        throw std::runtime_error(std::string("PostgreSQL query failed: ") + e.what());
+    }
 }
 
 vigine::postgresql::PostgreSQLResultUPtr
@@ -36,12 +75,24 @@ vigine::postgresql::PostgreSQLComponent::exec(const query::QueryBuilder &queryBu
 
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent::connect()
 {
-    std::string connectionString = "host=" + _dbConfig->connectionData()->host() + " " +
-                                   "dbname=" + _dbConfig->connectionData()->dbName().str() + " " +
-                                   "user=" + _dbConfig->connectionData()->dbUserName().str() + " " +
-                                   "password=" + _dbConfig->connectionData()->password().str();
+    if (!_dbConfig)
+        return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                         "database configuration is not initialized");
 
-    _connection = std::make_unique<pqxx::connection>(connectionString);
+    auto *connectionData = _dbConfig->connectionData();
+    if (!connectionData)
+        return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                         "database connection data is not configured");
+
+    try
+    {
+        _connection = std::make_unique<pqxx::connection>(buildConnectionString(*connectionData));
+    } catch (const std::exception &e)
+    {
+        _connection.reset();
+        return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                         std::string("PostgreSQL connect failed: ") + e.what());
+    }
 
     initTypeConverter();
 
@@ -54,16 +105,43 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent
 
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent::exec()
 {
-    _work           = std::make_unique<pqxx::work>(*_connection);
-    auto pgxxResult = _work->exec(_query);
-    commit();
+    try
+    {
+        validateQueryExecution(_connection.get(), _query);
 
-    auto pgResult = make_PostgreSQLResultUPtr(pgxxResult, pgTypeConverter());
+        _work           = std::make_unique<pqxx::work>(*_connection);
+        auto pgxxResult = _work->exec(_query);
+        commit();
 
-    return std::move(pgResult);
+        if (!pgTypeConverter())
+            return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                             "PostgreSQL type converter is not initialized");
+
+        return make_PostgreSQLResultUPtr(pgxxResult, pgTypeConverter());
+    } catch (const std::exception &e)
+    {
+        _work.reset();
+        return make_PostgreSQLResultUPtr(Result::Code::Error,
+                                         std::string("PostgreSQL query failed: ") + e.what());
+    }
 }
 
-void vigine::postgresql::PostgreSQLComponent::commit() { _work->commit(); }
+void vigine::postgresql::PostgreSQLComponent::commit()
+{
+    if (!_work)
+        return;
+
+    try
+    {
+        _work->commit();
+    } catch (...)
+    {
+        _work.reset();
+        throw;
+    }
+
+    _work.reset();
+}
 
 void vigine::postgresql::PostgreSQLComponent::setQuery(const std::string &query) { _query = query; }
 

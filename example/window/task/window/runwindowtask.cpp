@@ -5,7 +5,7 @@
 #include <vigine/property.h>
 #include <vigine/service/platformservice.h>
 
-#include "handler/windoweventhandler.h"
+#include "../../handler/windoweventhandler.h"
 
 #include <iostream>
 
@@ -101,8 +101,6 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
 void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
 {
     std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
-              << ", scanCode=" << event.scanCode << ", modifiers=" << event.modifiers
-              << ", repeatCount=" << event.repeatCount << ", isRepeat=" << event.isRepeat
-              << std::endl;
+              << ", scanCode=" << event.scanCode << std::endl;
     emitKeyDownSignal(event);
 }
