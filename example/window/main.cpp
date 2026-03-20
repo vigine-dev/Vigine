@@ -1,0 +1,76 @@
+#include <vigine/statemachine.h>
+#include <vigine/taskflow.h>
+#include <vigine/vigine.h>
+
+#include "state/closestate.h"
+#include "state/errorstate.h"
+#include "state/initstate.h"
+#include "state/workstate.h"
+#include "task/window/initwindowtask.h"
+#include "task/window/processinputeventtask.h"
+#include "task/window/runwindowtask.h"
+#include "task/window/windoweventsignal.h"
+
+#include <memory>
+
+using namespace vigine;
+
+std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignalBinder,
+                                             KeyEventSignalBinder &keySignalBinder)
+{
+    auto taskFlow               = std::make_unique<TaskFlow>();
+
+    auto *initWindow            = taskFlow->addTask(std::make_unique<InitWindowTask>());
+    auto *runWindow             = taskFlow->addTask(std::make_unique<RunWindowTask>());
+    auto *processInputEventTask = taskFlow->addTask(std::make_unique<ProcessInputEventTask>());
+
+    static_cast<void>(taskFlow->route(initWindow, runWindow));
+    static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &mouseSignalBinder));
+    static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &keySignalBinder));
+
+    taskFlow->changeCurrentTaskTo(initWindow);
+
+    return taskFlow;
+}
+
+std::unique_ptr<TaskFlow> createWorkTaskFlow() { return std::make_unique<TaskFlow>(); }
+
+std::unique_ptr<TaskFlow> createErrorTaskFlow() { return std::make_unique<TaskFlow>(); }
+
+std::unique_ptr<TaskFlow> createCloseTaskFlow() { return std::make_unique<TaskFlow>(); }
+
+int main()
+{
+    Engine engine;
+    StateMachine *stMachine = engine.state();
+
+    MouseEventSignalBinder mouseSignalBinder;
+    KeyEventSignalBinder keySignalBinder;
+
+    auto initState  = std::make_unique<InitState>();
+    auto workState  = std::make_unique<WorkState>();
+    auto errorState = std::make_unique<ErrorState>();
+    auto closeState = std::make_unique<CloseState>();
+
+    auto initPtr    = stMachine->addState(std::move(initState));
+    auto workPtr    = stMachine->addState(std::move(workState));
+    auto errorPtr   = stMachine->addState(std::move(errorState));
+    auto closePtr   = stMachine->addState(std::move(closeState));
+
+    initPtr->setTaskFlow(createInitTaskFlow(mouseSignalBinder, keySignalBinder));
+    workPtr->setTaskFlow(createWorkTaskFlow());
+    errorPtr->setTaskFlow(createErrorTaskFlow());
+    closePtr->setTaskFlow(createCloseTaskFlow());
+
+    static_cast<void>(stMachine->addTransition(initPtr, workPtr, Result::Code::Success));
+    static_cast<void>(stMachine->addTransition(initPtr, errorPtr, Result::Code::Error));
+    static_cast<void>(stMachine->addTransition(workPtr, closePtr, Result::Code::Success));
+    static_cast<void>(stMachine->addTransition(workPtr, errorPtr, Result::Code::Error));
+    static_cast<void>(stMachine->addTransition(errorPtr, workPtr, Result::Code::Success));
+    static_cast<void>(stMachine->addTransition(errorPtr, closePtr, Result::Code::Error));
+
+    stMachine->changeStateTo(initPtr);
+    engine.run();
+
+    return 0;
+}

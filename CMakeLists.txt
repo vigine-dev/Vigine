@@ -2,13 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 
 set(PROJECT_NAME vigine)
 
+set(VCPKG_INSTALLED_DIR "${CMAKE_BINARY_DIR}/vcpkg_installed")
+
 project(${PROJECT_NAME})
 #
 # Set C++23 standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(MSVC)
+    add_compile_options(/FS)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -24,6 +29,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 find_package(GLM REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanHpp REQUIRED)
+find_package(libpqxx CONFIG REQUIRED)
 #
 
 if(NOT DEFINED CMAKE_BUILD_TYPE)
@@ -48,7 +54,7 @@ else()
 endif()
 
 # Option to build examples
-option(ENABLE_EXAMPLE "Build example projects" OFF)
+option(ENABLE_EXAMPLE "Build example projects" ON)
 option(ENABLE_UNITTEST "Enable tests" OFF)
 
 if(ENABLE_UNITTEST AND EXISTS "${CMAKE_SOURCE_DIR}/test/CMakeLists.txt")
@@ -67,6 +73,9 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/statemachine.h
     ${INCLUDE_DIR}/vigine/abstractstate.h
     ${INCLUDE_DIR}/vigine/taskflow.h
+    ${INCLUDE_DIR}/vigine/signal/isignal.h
+    ${INCLUDE_DIR}/vigine/signal/isignalemiter.h
+    ${INCLUDE_DIR}/vigine/signal/isignalbinder.h
     ${INCLUDE_DIR}/vigine/abstracttask.h
     ${INCLUDE_DIR}/vigine/abstractservice.h
     ${INCLUDE_DIR}/vigine/context.h
@@ -79,9 +88,10 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/contextholder.h
-    ${INCLUDE_DIR}/vigine/contextholder.cpp
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
+    ${INCLUDE_DIR}/vigine/base/constant.h
+    ${INCLUDE_DIR}/vigine/base/function.h
 )
 
 set(SOURCES
@@ -97,6 +107,8 @@ set(SOURCES
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
+    ${SRC_DIR}/contextholder.cpp
+    ${SRC_DIR}/signal/isignalemiter.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
@@ -133,12 +145,24 @@ set(SOURCES_POSTGRESQL
 set(HEADER_PLATFORM
     ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
     ${SRC_DIR}/ecs/platform/windowcomponent.h
+    ${SRC_DIR}/ecs/platform/windoweventdispatcher.h
 )
 
 set(SOURCES_PLATFORM
     ${SRC_DIR}/ecs/platform/windowsystem.cpp
     ${SRC_DIR}/ecs/platform/windowcomponent.cpp
+    ${SRC_DIR}/ecs/platform/windoweventdispatcher.cpp
 )
+
+if(WIN32)
+    list(APPEND HEADER_PLATFORM
+        ${SRC_DIR}/ecs/platform/winapicomponent.h
+    )
+
+    list(APPEND SOURCES_PLATFORM
+        ${SRC_DIR}/ecs/platform/winapicomponent.cpp
+    )
+endif()
 
 # add vulkan
 # Add a library
@@ -152,19 +176,19 @@ add_library(${PROJECT_NAME}
     ${SOURCES_POSTGRESQL}
     ${HEADER_PLATFORM}
     ${SOURCES_PLATFORM}
-    include/vigine/ecs/postgresql/databaseconfiguration.h include/vigine/ecs/postgresql/databaseconfiguration.cpp
-    include/vigine/ecs/postgresql/connectiondata.h include/vigine/ecs/postgresql/connectiondata.cpp
-    include/vigine/base/name.h include/vigine/base/name.cpp
-    include/vigine/base/password.h include/vigine/base/password.cpp
+    include/vigine/ecs/postgresql/databaseconfiguration.h src/ecs/postgresql/databaseconfiguration.cpp
+    include/vigine/ecs/postgresql/connectiondata.h src/ecs/postgresql/connectiondata.cpp
+    include/vigine/base/name.h src/base/name.cpp
+    include/vigine/base/password.h src/base/password.cpp
     include/vigine/base/macros.h
-    include/vigine/ecs/postgresql/data.h include/vigine/ecs/postgresql/data.cpp
+    include/vigine/ecs/postgresql/data.h src/ecs/postgresql/data.cpp
     include/vigine/ecs/postgresql/columntype.h
     include/vigine/base/info.h
-    include/vigine/ecs/postgresql/postgresqlresult.h include/vigine/ecs/postgresql/postgresqlresult.cpp
-    include/vigine/ecs/postgresql/query/querybuilder.h include/vigine/ecs/postgresql/query/querybuilder.cpp
-    include/vigine/ecs/postgresql/tablerows.h include/vigine/ecs/postgresql/tablerows.cpp
-    include/vigine/ecs/postgresql/row.h include/vigine/ecs/postgresql/row.cpp
-    include/vigine/ecs/postgresql/postgresqltypeconverter.h include/vigine/ecs/postgresql/postgresqltypeconverter.cpp
+    include/vigine/ecs/postgresql/postgresqlresult.h src/ecs/postgresql/postgresqlresult.cpp
+    include/vigine/ecs/postgresql/query/querybuilder.h src/ecs/postgresql/query/querybuilder.cpp
+    include/vigine/ecs/postgresql/tablerows.h src/ecs/postgresql/tablerows.cpp
+    include/vigine/ecs/postgresql/row.h src/ecs/postgresql/row.cpp
+    include/vigine/ecs/postgresql/postgresqltypeconverter.h src/ecs/postgresql/postgresqltypeconverter.cpp
 )
 # Include directories
 target_include_directories(${PROJECT_NAME}
@@ -183,8 +207,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${GLM_LIBRARIES}
-    pqxx
-    pq
+    libpqxx::pqxx
 )
 
 target_link_libraries(${PROJECT_NAME}

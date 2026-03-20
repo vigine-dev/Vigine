@@ -21,17 +21,17 @@ class PostgreSQLSystem : public AbstractSystem
     PostgreSQLSystem(const SystemName &name);
     ~PostgreSQLSystem() override;
 
-    SystemId id() const override;
+    [[nodiscard]] SystemId id() const override;
 
     // interface implementation
-    bool hasComponents(Entity *entity) const override;
+    [[nodiscard]] bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
 
     // custom
-    DatabaseConfiguration *dbConfiguration();
-    PostgreSQLResultUPtr connect();
-    PostgreSQLResultUPtr checkTablesScheme() const;
+    [[nodiscard]] DatabaseConfiguration *dbConfiguration();
+    [[nodiscard]] PostgreSQLResultUPtr connect();
+    [[nodiscard]] PostgreSQLResultUPtr checkTablesScheme() const;
 
     void createTable(const std::string &tableName, const std::vector<std::string> tableColumns);
     void queryRequest(const std::string &query);
@@ -41,7 +41,6 @@ class PostgreSQLSystem : public AbstractSystem
     virtual void entityUnbound();
 
   private:
-
     std::vector<std::pair<BDInternalType, BDExternalType>> selectInternalPgTypes();
     PostgreSQLResultUPtr makePgTypeConverter();
 

@@ -17,7 +17,7 @@ class GraphicsService : public AbstractService
     GraphicsService(const Name &name);
     ~GraphicsService() override = default;
 
-    ServiceId id() const override;
+    [[nodiscard]] ServiceId id() const override;
 
   protected:
     void contextChanged() override;

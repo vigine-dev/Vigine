@@ -71,14 +71,14 @@ void StateMachine::runCurrentState()
         return;
 
     for (const auto &[relStatus, relState] : transitions->second)
-        {
-            if (relStatus != currStatus.code())
-                continue;
+    {
+        if (relStatus != currStatus.code())
+            continue;
 
-            // Found matching transition
-            changeStateTo(relState);
-            break;
-        }
+        // Found matching transition
+        changeStateTo(relState);
+        break;
+    }
 }
 
 bool StateMachine::hasStatesToRun() const { return _currState != nullptr; }

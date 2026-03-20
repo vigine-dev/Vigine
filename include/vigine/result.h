@@ -2,8 +2,8 @@
 
 #include "vigine/base/macros.h"
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace vigine
 {
@@ -26,10 +26,10 @@ class Result
     Result(Result &&other) noexcept            = default;
     Result &operator=(Result &&other) noexcept = default;
 
-    bool isSuccess() const;
-    bool isError() const;
-    const std::string &message() const;
-    Code code();
+    [[nodiscard]] bool isSuccess() const;
+    [[nodiscard]] bool isError() const;
+    [[nodiscard]] const std::string &message() const;
+    [[nodiscard]] Code code() const;
 
   protected:
     void setMessage(const std::string &text);

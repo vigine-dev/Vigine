@@ -55,11 +55,11 @@ class QueryBuilder
     QueryBuilder &COMMA();
     QueryBuilder &NAME(const std::string &name);
 
-    std::string str() const;
-    operator std::string() const;
+    [[nodiscard]] std::string str() const;
+    [[nodiscard]] operator std::string() const;
 
     void reset();
-    bool isQueryValid() const;
+    [[nodiscard]] bool isQueryValid() const;
 
   private:
     std::string escape(const Data &data) const;

@@ -2,8 +2,6 @@
 
 #include "vigine/ecs/entity.h"
 
-#include <algorithm>
-
 vigine::Entity *vigine::EntityManager::createEntity()
 {
     _entities.push_back(std::make_unique<vigine::Entity>());

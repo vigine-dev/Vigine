@@ -1,0 +1,8 @@
+{
+  "name": "vigine",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "libpqxx"
+  ],
+  "builtin-baseline": "47205630845bd49eaf16cdfb757cf9dfba144c52"
+}

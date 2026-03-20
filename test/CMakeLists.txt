@@ -7,7 +7,6 @@ project(${PROJECT_TEST_NAME})
 # Set C++23 standard for tests
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 
 # ====================== Add Google Test =======================
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/googletest ${CMAKE_BINARY_DIR}/googletest)

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
- // TODO: refactor. Check unbound entity
+// TODO: refactor. Check unbound entity
 
 vigine::DatabaseService::DatabaseService(const Name &name) : AbstractService(name) {}
 
@@ -19,6 +19,8 @@ void vigine::DatabaseService::contextChanged()
         context()->system("PostgreSQL", "vigineBD", Property::New));
 }
 
+// COPILOT_TODO: Додати guard на _postgressSystem і наявність bound entity; зараз тут можливий
+// nullptr dereference ще до будь-якої доменної перевірки.
 vigine::ResultUPtr vigine::DatabaseService::checkDatabaseScheme()
 {
     return _postgressSystem->checkTablesScheme();
@@ -31,12 +33,16 @@ vigine::ResultUPtr vigine::DatabaseService::createDatabaseScheme()
     return result;
 }
 
+// COPILOT_TODO: Повернення конфігурації без перевірки _postgressSystem робить API крихким; тут
+// потрібен хоча б захист від nullptr.
 vigine::postgresql::DatabaseConfiguration *vigine::DatabaseService::databaseConfiguration()
 {
     return _postgressSystem->dbConfiguration();
 }
 
- // TODO: reimplement or remove
+// TODO: reimplement or remove
+// COPILOT_TODO: Або дописати реальний SELECT, або прибрати метод; зараз він створює хибне враження,
+// що читання з БД працює.
 std::vector<std::vector<std::string>>
 vigine::DatabaseService::readData(const std::string &tableName) const
 {
@@ -69,7 +75,9 @@ void vigine::DatabaseService::clearTable(const std::string &tableName) const
     _postgressSystem->queryRequest(query);
 }
 
- // TODO: remove or update
+// TODO: remove or update
+// COPILOT_TODO: Прибрати hardcoded список колонок і конкатенацію SQL; тут потрібні параметризовані
+// запити та перевірка розміру columnsData.
 void vigine::DatabaseService::writeData(const std::string &tableName,
                                         const std::vector<postgresql::Column> columnsData)
 {
@@ -80,6 +88,8 @@ void vigine::DatabaseService::writeData(const std::string &tableName,
     _postgressSystem->queryRequest(query);
 }
 
+// COPILOT_TODO: Перевіряти getBoundEntity() і _postgressSystem перед bind/createComponents, інакше
+// сервіс падає на неповному життєвому циклі.
 void vigine::DatabaseService::entityBound()
 {
     Entity *ent = getBoundEntity();
@@ -90,19 +100,20 @@ void vigine::DatabaseService::entityBound()
     _postgressSystem->bindEntity(getBoundEntity());
 }
 
+// COPILOT_TODO: Якщо _postgressSystem ще не ініціалізований, треба повертати Result::Error замість
+// покладатися на виключення після nullptr dereference.
 vigine::ResultUPtr vigine::DatabaseService::connectToDb()
 {
     ResultUPtr result;
 
     try
-        {
-            result = _postgressSystem->connect();
-        }
-    catch (const std::exception &e)
-        {
-            std::cerr << "DB error: " << e.what() << '\n';
-            result = make_ResultUPtr(Result::Code::Error, e.what());
-        }
+    {
+        result = _postgressSystem->connect();
+    } catch (const std::exception &e)
+    {
+        std::cerr << "DB error: " << e.what() << '\n';
+        result = make_ResultUPtr(Result::Code::Error, e.what());
+    }
 
     return result;
 }

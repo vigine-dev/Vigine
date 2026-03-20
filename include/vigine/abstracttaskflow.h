@@ -4,49 +4,52 @@
 #include "result.h"
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-namespace vigine {
+namespace vigine
+{
 
-class TaskFlow {
-    using TaskUPtr = std::unique_ptr<AbstractTask>;
-    using TaskContainer = std::vector<TaskUPtr>;
-    using Transition = std::pair<Result::Code, AbstractTask*>;
+class TaskFlow
+{
+    using TaskUPtr            = std::unique_ptr<AbstractTask>;
+    using TaskContainer       = std::vector<TaskUPtr>;
+    using Transition          = std::pair<Result::Code, AbstractTask *>;
     using TransitionContainer = std::vector<Transition>;
-    using TransitionMap = std::unordered_map<AbstractTask*, TransitionContainer>;
+    using TransitionMap       = std::unordered_map<AbstractTask *, TransitionContainer>;
 
-public:
+  public:
     virtual ~TaskFlow() = default;
 
     // Add a task and return pointer to it
-    AbstractTask* addTask(TaskUPtr task);
+    [[nodiscard]] AbstractTask *addTask(TaskUPtr task);
 
     // Add a transition between tasks
-    Result addTransition(AbstractTask* from, AbstractTask* to, Result::Code resultCode);
-    
+    [[nodiscard]] Result addTransition(AbstractTask *from, AbstractTask *to,
+                                       Result::Code resultCode);
+
     // Change current task
-    void changeTaskTo(AbstractTask* newTask);
-    
+    void changeTaskTo(AbstractTask *newTask);
+
     // Get current task
-    AbstractTask* currentTask() const;
-    
+    [[nodiscard]] AbstractTask *currentTask() const;
+
     // Run current task
     void runCurrentTask();
-    
-    // Check if there are tasks to run
-    bool hasTasksToRun() const;
 
-protected:
+    // Check if there are tasks to run
+    [[nodiscard]] bool hasTasksToRun() const;
+
+  protected:
     TaskFlow() = default;
 
-private:
-    bool isTaskRegistered(AbstractTask* task) const;
+  private:
+    bool isTaskRegistered(AbstractTask *task) const;
 
-private:
+  private:
     TaskContainer _tasks;
     TransitionMap _transitions;
-    AbstractTask* _currTask = nullptr;
+    AbstractTask *_currTask = nullptr;
 };
 
 } // namespace vigine

@@ -59,5 +59,23 @@
         "text_encoding": "cpp",
         "any": "cpp",
         "thread": "cpp"
+    },
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.generator": "Ninja",
+    "cmake.buildTarget": "vigine",
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_MANIFEST_MODE": "ON",
+        "VCPKG_MANIFEST_DIR": "${workspaceFolder}"
+    },
+    "cmake.configureEnvironment": {
+        "VULKAN_SDK": "C:/VulkanSDK/1.4.341.1"
+    },
+    "editor.formatOnSave": true,
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_style": "file",
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     }
 }

@@ -9,15 +9,18 @@
 namespace vigine
 {
 
-template <typename T> using ComponentSPtr      = std::shared_ptr<T>;
-template <typename T> using ComponentContainer = std::vector<ComponentSPtr<T>>;
+template <typename T>
+using ComponentSPtr = std::shared_ptr<T>;
+template <typename T>
+using ComponentContainer = std::vector<ComponentSPtr<T>>;
 
 class ComponentManager
 {
   public:
     ComponentManager();
 
-    template <typename T, typename... Args> ComponentSPtr<T> createComponent(Args &&...args)
+    template <typename T, typename... Args>
+    ComponentSPtr<T> createComponent(Args &&...args)
     {
         auto component = std::make_shared<T>(std::forward<Args>(args)...);
         auto typeIndex = std::type_index(typeid(T));
@@ -31,7 +34,8 @@ class ComponentManager
         return container.back();
     }
 
-    template <typename T> auto cbegin()
+    template <typename T>
+    auto cbegin()
     {
         auto typeIndex = std::type_index(typeid(T));
 
@@ -42,7 +46,8 @@ class ComponentManager
         return getOrCreateEmptyContainer<T>().cbegin();
     }
 
-    template <typename T> auto cend()
+    template <typename T>
+    auto cend()
     {
         auto typeIndex = std::type_index(typeid(T));
 
@@ -53,7 +58,11 @@ class ComponentManager
         return getOrCreateEmptyContainer<T>().cend();
     }
 
-    template <typename T> void removeComponents() { _components.erase(typeid(T)); }
+    template <typename T>
+    void removeComponents()
+    {
+        _components.erase(typeid(T));
+    }
 
     void clear()
     {
@@ -62,7 +71,8 @@ class ComponentManager
     }
 
   private:
-    template <typename T> ComponentContainer<T> &getOrCreateEmptyContainer()
+    template <typename T>
+    ComponentContainer<T> &getOrCreateEmptyContainer()
     {
         auto typeIndex = std::type_index(typeid(T));
 

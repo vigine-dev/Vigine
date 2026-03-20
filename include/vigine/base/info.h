@@ -11,20 +11,18 @@ enum class BuildType
     Release
 };
 
-constexpr BuildType buildType()
+[[nodiscard]] constexpr BuildType buildType()
 {
     if constexpr (BUILD_TYPE == DEBUG)
-        {
-            return BuildType::Debug;
-        }
-    else if constexpr (BUILD_TYPE == RELEASE)
-        {
-            return BuildType::Release;
-        }
-    else
-        {
-            return BuildType::Unknown;
-        }
+    {
+        return BuildType::Debug;
+    } else if constexpr (BUILD_TYPE == RELEASE)
+    {
+        return BuildType::Release;
+    } else
+    {
+        return BuildType::Unknown;
+    }
 }
 
 namespace platform
@@ -37,7 +35,7 @@ enum class Type
     Unknown
 };
 
-constexpr Type currentPlatform()
+[[nodiscard]] constexpr Type currentPlatform()
 {
 #if defined(_WIN32) || defined(_WIN64)
     return Type::Windows;
@@ -50,11 +48,11 @@ constexpr Type currentPlatform()
 #endif
 }
 
-constexpr bool isWindows() { return currentPlatform() == Type::Windows; }
+[[nodiscard]] constexpr bool isWindows() { return currentPlatform() == Type::Windows; }
 
-constexpr bool isLinux() { return currentPlatform() == Type::Linux; }
+[[nodiscard]] constexpr bool isLinux() { return currentPlatform() == Type::Linux; }
 
-constexpr bool isMacOS() { return currentPlatform() == Type::MacOS; }
+[[nodiscard]] constexpr bool isMacOS() { return currentPlatform() == Type::MacOS; }
 
 } // namespace platform
 } // namespace info

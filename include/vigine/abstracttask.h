@@ -12,7 +12,7 @@ class AbstractTask : public ContextHolder
 {
   public:
     virtual ~AbstractTask();
-    virtual Result execute() = 0;
+    [[nodiscard]] virtual Result execute() = 0;
 
   protected:
     AbstractTask();

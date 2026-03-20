@@ -1,39 +1,38 @@
-#include <gtest/gtest.h>
-
 #include "vigine/component/componentmanager.h"
 
 #include <glm/glm.hpp>
-
+#include <gtest/gtest.h>
 #include <type_traits>
 
 using namespace vigine;
 
-class Component1Test {
-public:
-  Component1Test(const std::string &name) : _name{name} {}
-  std::string name() { return _name; }
-
-private:
-  std::string _name;
-};
-
-class  Component2Test
+class Component1Test
 {
-public:
-    Component2Test(const std::string &name) : _name{name} {}
+  public:
+    Component1Test(const std::string &name) : _name{name} {}
     std::string name() { return _name; }
 
-private:
+  private:
     std::string _name;
 };
 
-class  Component3Test
+class Component2Test
 {
-public:
+  public:
+    Component2Test(const std::string &name) : _name{name} {}
+    std::string name() { return _name; }
+
+  private:
+    std::string _name;
+};
+
+class Component3Test
+{
+  public:
     Component3Test(const std::string &name) : _name{name} {}
     std::string name() { return _name; }
 
-private:
+  private:
     std::string _name;
 };
 
@@ -45,8 +44,8 @@ TEST(ComponentManagerTest, addNewComponent_createComponent)
     {
         using TestedType = Component1Test;
         std::string name = "Component1Test";
-        auto comp1 = compManager.createComponent<TestedType>(name);
-        auto it = compManager.cbegin<TestedType>();
+        auto comp1       = compManager.createComponent<TestedType>(name);
+        auto it          = compManager.cbegin<TestedType>();
 
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*comp1)>>));
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*(*it))>>));
@@ -63,8 +62,8 @@ TEST(ComponentManagerTest, addNewComponent_createComponent)
     {
         using TestedType = Component2Test;
         std::string name = "Component2Test";
-        auto comp2 = compManager.createComponent<TestedType>(name);
-        auto it2 = compManager.cbegin<TestedType>();
+        auto comp2       = compManager.createComponent<TestedType>(name);
+        auto it2         = compManager.cbegin<TestedType>();
 
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*comp2)>>));
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*(*it2))>>));
@@ -81,8 +80,8 @@ TEST(ComponentManagerTest, addNewComponent_createComponent)
     {
         using TestedType = Component3Test;
         std::string name = "Component3Test";
-        auto comp3 = compManager.createComponent<TestedType>(name);
-        auto it3 = compManager.cbegin<TestedType>();
+        auto comp3       = compManager.createComponent<TestedType>(name);
+        auto it3         = compManager.cbegin<TestedType>();
 
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*comp3)>>));
         EXPECT_TRUE((std::is_same_v<TestedType, std::remove_reference_t<decltype(*(*it3))>>));

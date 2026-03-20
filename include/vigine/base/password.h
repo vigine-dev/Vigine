@@ -27,18 +27,18 @@ class Password
     Password &operator=(std::string &&pwd) noexcept;
 
     // cast to std::string
-    explicit operator const std::string &() const;
+    [[nodiscard]] explicit operator const std::string &() const;
 
     // equals operator
-    bool operator==(const Password &other) const;
-    bool operator!=(const Password &other) const;
+    [[nodiscard]] bool operator==(const Password &other) const;
+    [[nodiscard]] bool operator!=(const Password &other) const;
 
     // other
-    const std::string &str() const;
+    [[nodiscard]] const std::string &str() const;
 
     void setValidationRule(const std::string &regexPattern);
 
-    bool isValid() const;
+    [[nodiscard]] bool isValid() const;
 
   private:
     std::string _value;

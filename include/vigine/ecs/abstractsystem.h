@@ -17,12 +17,12 @@ class AbstractSystem : public EntityBindingHost
   public:
     ~AbstractSystem() override;
 
-    virtual SystemId id() const = 0;
-    SystemName name();
+    [[nodiscard]] virtual SystemId id() const = 0;
+    [[nodiscard]] SystemName name();
 
-    virtual bool hasComponents(Entity *entity) const = 0;
-    virtual void createComponents(Entity *entity)    = 0;
-    virtual void destroyComponents(Entity *entity)   = 0;
+    [[nodiscard]] virtual bool hasComponents(Entity *entity) const = 0;
+    virtual void createComponents(Entity *entity)                  = 0;
+    virtual void destroyComponents(Entity *entity)                 = 0;
 
   protected:
     AbstractSystem(const SystemName &name);

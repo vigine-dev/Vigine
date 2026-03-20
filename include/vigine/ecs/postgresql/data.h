@@ -20,17 +20,17 @@ struct DataTypeMap
 };
 
 #define VIGINE_POSTGRESQL_DATA_X(name, type)                                                       \
-template <>                                                                                    \
+    template <>                                                                                    \
     struct DataTypeMap<DataType::name>                                                             \
-{                                                                                              \
+    {                                                                                              \
         using Type = type;                                                                         \
-};
+    };
 
 VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST
 #undef VIGINE_POSTGRESQL_DATA_X
 
-    template <typename T, typename Variant>
-    struct isInVariant;
+template <typename T, typename Variant>
+struct isInVariant;
 
 template <typename T, typename... Ts>
 struct isInVariant<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts>...>
@@ -42,7 +42,7 @@ class Data
   public:
 #define VIGINE_POSTGRESQL_DATA_X(Name, Type) Type,
 
-        using Value = std::variant<VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST Void>;
+    using Value = std::variant<VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST Void>;
 #undef VIGINE_POSTGRESQL_DATA_X
 
     explicit Data(Value val, DataType type);
@@ -54,10 +54,10 @@ class Data
     std::optional<typename DataTypeMap<dataType>::Type> as() const
     {
         if constexpr (info::buildType() == info::BuildType::Debug)
-            {
-                static_assert(!std::is_same_v<typename DataTypeMap<dataType>::Type, std::nullptr_t>,
-                              "Unsupported columnType in ColumnTypeMap");
-            }
+        {
+            static_assert(!std::is_same_v<typename DataTypeMap<dataType>::Type, std::nullptr_t>,
+                          "Unsupported columnType in ColumnTypeMap");
+        }
 
         if constexpr (std::is_same_v<typename DataTypeMap<dataType>::Type, std::nullptr_t>)
             return std::nullopt;

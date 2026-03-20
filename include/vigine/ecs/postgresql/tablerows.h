@@ -4,8 +4,8 @@
 #include "vigine/ecs/postgresql/row.h"
 #include "vigine/ecs/postgresql/table.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace vigine
 {
