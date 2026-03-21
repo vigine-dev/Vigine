@@ -6,6 +6,14 @@
 - Preserve existing public APIs unless the task requires API changes.
 - After edits, check compile/lint errors for changed files.
 
+## Architecture Change Policy
+- Do not modify core engine architecture classes unless the user explicitly asks for it.
+- Core architecture classes include (at minimum): Context/ContextHolder, TaskFlow/AbstractTask, StateMachine, AbstractService/AbstractSystem contracts, EntityManager, and engine-level ownership/binding flow.
+- You may and should add new Components, Systems, and Services when needed to implement requested functionality.
+- Prefer extending behavior through existing extension points instead of rewriting engine foundations.
+- Do not introduce new global managers, lifecycle models, or cross-cutting ownership changes without explicit approval.
+- If a task seems to require edits in core architecture classes, first propose a minimal non-architectural option and ask for confirmation.
+
 ## C++ and CMake Conventions
 - Keep current coding style and formatting used in nearby files.
 - Prefer small, targeted patches over large rewrites.
