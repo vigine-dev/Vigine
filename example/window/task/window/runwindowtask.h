@@ -5,12 +5,21 @@
 #include <vigine/abstracttask.h>
 #include <vigine/ecs/platform/iwindoweventhandler.h>
 
+#include <chrono>
+#include <cstdint>
+
 namespace vigine
 {
 namespace platform
 {
 class PlatformService;
-}
+class WindowComponent;
+} // namespace platform
+namespace graphics
+{
+class GraphicsService;
+class RenderSystem;
+} // namespace graphics
 } // namespace vigine
 
 class RunWindowTask : public vigine::AbstractTask,
@@ -27,5 +36,17 @@ class RunWindowTask : public vigine::AbstractTask,
     void onKeyDown(const vigine::platform::KeyEvent &event);
 
   private:
+    void onWindowResized(vigine::platform::WindowComponent *window, int width, int height);
+
     vigine::platform::PlatformService *_platformService{nullptr};
+    vigine::graphics::GraphicsService *_graphicsService{nullptr};
+    vigine::graphics::RenderSystem *_renderSystem{nullptr};
+    vigine::platform::WindowComponent *_pendingResizeWindow{nullptr};
+    uint32_t _pendingResizeWidth{0};
+    uint32_t _pendingResizeHeight{0};
+    uint32_t _appliedResizeWidth{0};
+    uint32_t _appliedResizeHeight{0};
+    bool _resizePending{false};
+    std::chrono::steady_clock::time_point _lastResizeEvent{};
+    std::chrono::steady_clock::time_point _lastResizeApply{};
 };

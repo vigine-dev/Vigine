@@ -2,8 +2,10 @@
 
 #include "vigine/ecs/platform/windowsystem.h"
 #include "vigine/ecs/postgresql/postgresqlsystem.h"
+#include "vigine/ecs/render/rendersystem.h"
 #include "vigine/property.h"
 #include "vigine/service/databaseservice.h"
+#include "vigine/service/graphicsservice.h"
 #include "vigine/service/platformservice.h"
 
 #include <algorithm>
@@ -56,6 +58,13 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
         auto windowSystem = vigine::platform::make_WindowSystemUPtr(name);
 
         return std::move(windowSystem);
+    }
+
+    if (id == "Render")
+    {
+        auto renderSystem = vigine::graphics::make_RenderSystemUPtr(name);
+
+        return std::move(renderSystem);
     }
 
     if (id == "PostgreSQL")
@@ -116,6 +125,14 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
         platformService->setContext(this);
 
         return std::move(platformService);
+    }
+
+    if (id == "Graphics")
+    {
+        auto graphicsService = vigine::graphics::make_GraphicsServiceUPtr(name);
+        graphicsService->setContext(this);
+
+        return std::move(graphicsService);
     }
 
     if (id == "Database")

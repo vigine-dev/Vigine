@@ -26,6 +26,7 @@ class PlatformService : public AbstractService
     [[nodiscard]] vigine::Result showWindow(WindowComponent *window);
     [[nodiscard]] vigine::Result bindWindowEventHandler(WindowComponent *window,
                                                         IWindowEventHandlerComponent *handler);
+    [[nodiscard]] void *nativeWindowHandle(WindowComponent *window) const;
     [[nodiscard]] std::vector<WindowComponent *> windowComponents() const;
     [[nodiscard]] std::vector<IWindowEventHandlerComponent *> windowEventHandlers() const;
     [[nodiscard]] std::vector<IWindowEventHandlerComponent *>

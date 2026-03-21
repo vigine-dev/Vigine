@@ -8,4 +8,8 @@ RenderComponent::RenderComponent() {}
 
 RenderComponent::~RenderComponent() {};
 
-void RenderComponent::render() { std::cout << "Rendering component" << std::endl; }
+void RenderComponent::render() {}
+
+void RenderComponent::setMesh(const MeshComponent &mesh) { _mesh = mesh; }
+
+void RenderComponent::setTransform(const TransformComponent &transform) { _transform = transform; }

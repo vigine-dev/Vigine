@@ -3,6 +3,7 @@
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 
@@ -29,6 +30,9 @@ class RenderSystem : public AbstractSystem
     void destroyComponents(Entity *entity) override;
 
     void update();
+    [[nodiscard]] bool initializeWindowSurface(void *nativeWindowHandle, uint32_t width,
+                                               uint32_t height);
+    [[nodiscard]] bool resize(uint32_t width, uint32_t height);
 
   protected:
     virtual void entityBound();

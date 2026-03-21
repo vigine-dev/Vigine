@@ -10,11 +10,13 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
   public:
     using MouseButtonDownCallback = std::function<void(vigine::platform::MouseButton, int, int)>;
     using KeyDownCallback         = std::function<void(const vigine::platform::KeyEvent &)>;
+    using WindowResizedCallback   = std::function<void(int, int)>;
 
     explicit WindowEventHandler(std::string handlerId = "Handler");
 
     void setMouseButtonDownCallback(MouseButtonDownCallback callback);
     void setKeyDownCallback(KeyDownCallback callback);
+    void setWindowResizedCallback(WindowResizedCallback callback);
 
     void onWindowClosed() override;
     void onWindowResized(int width, int height) override;
@@ -40,4 +42,5 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     std::string _handlerId;
     MouseButtonDownCallback _onMouseButtonDown;
     KeyDownCallback _onKeyDown;
+    WindowResizedCallback _onWindowResized;
 };

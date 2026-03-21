@@ -14,6 +14,11 @@ void WindowEventHandler::setKeyDownCallback(KeyDownCallback callback)
     _onKeyDown = std::move(callback);
 }
 
+void WindowEventHandler::setWindowResizedCallback(WindowResizedCallback callback)
+{
+    _onWindowResized = std::move(callback);
+}
+
 void WindowEventHandler::onWindowClosed()
 {
     std::cout << "[" << _handlerId << "] Window closed event" << std::endl;
@@ -21,7 +26,8 @@ void WindowEventHandler::onWindowClosed()
 
 void WindowEventHandler::onWindowResized(int width, int height)
 {
-    std::cout << "[" << _handlerId << "] Window resized: " << width << "x" << height << std::endl;
+    if (_onWindowResized)
+        _onWindowResized(width, height);
 }
 
 void WindowEventHandler::onWindowMoved(int x, int y)
@@ -41,7 +47,8 @@ void WindowEventHandler::onWindowUnfocused()
 
 void WindowEventHandler::onMouseMove(int x, int y)
 {
-    std::cout << "[" << _handlerId << "] Mouse move: " << x << ", " << y << std::endl;
+    static_cast<void>(x);
+    static_cast<void>(y);
 }
 
 void WindowEventHandler::onMouseEnter()

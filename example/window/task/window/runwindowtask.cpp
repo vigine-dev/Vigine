@@ -1,11 +1,14 @@
 #include "runwindowtask.h"
 
 #include "vigine/ecs/entitymanager.h"
+#include "vigine/ecs/render/rendersystem.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
+#include <vigine/service/graphicsservice.h>
 #include <vigine/service/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
+#include "ecs/platform/windowcomponent.h"
 
 #include <iostream>
 
@@ -16,11 +19,18 @@ void RunWindowTask::contextChanged()
     if (!context())
     {
         _platformService = nullptr;
+        _graphicsService = nullptr;
+        _renderSystem    = nullptr;
         return;
     }
 
     _platformService = dynamic_cast<vigine::platform::PlatformService *>(
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
+
+    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
+    if (_graphicsService)
+        _renderSystem = _graphicsService->renderSystem();
 }
 
 // COPILOT_TODO: Гарантувати unbindEntity() на всіх ранніх виходах через RAII/guard, інакше
@@ -76,9 +86,48 @@ vigine::Result RunWindowTask::execute()
                                   << ", isRepeat=" << event.isRepeat << std::endl;
                         onKeyDown(event);
                     });
+                windowEventHandler->setWindowResizedCallback([this, window](int width, int height) {
+                    onWindowResized(window, width, height);
+                });
             }
 
             std::cout << "[RunWindowTask] Showing window " << (windowIndex + 1) << std::endl;
+            window->setFrameCallback([this]() {
+                bool resizedThisTick = false;
+
+                if (_resizePending && _renderSystem)
+                {
+                    const auto now    = std::chrono::steady_clock::now();
+                    const bool paused = now - _lastResizeEvent >= std::chrono::milliseconds(80);
+                    if (paused)
+                    {
+                        if (_pendingResizeWidth != _appliedResizeWidth ||
+                            _pendingResizeHeight != _appliedResizeHeight)
+                        {
+                            const bool resized =
+                                _renderSystem->resize(_pendingResizeWidth, _pendingResizeHeight);
+                            if (!resized)
+                            {
+                                std::cerr
+                                    << "[RunWindowTask] Failed to recreate swapchain on resize: "
+                                    << _pendingResizeWidth << "x" << _pendingResizeHeight
+                                    << std::endl;
+                            } else
+                            {
+                                _appliedResizeWidth  = _pendingResizeWidth;
+                                _appliedResizeHeight = _pendingResizeHeight;
+                                _lastResizeApply     = now;
+                                resizedThisTick      = true;
+                            }
+                        }
+
+                        _resizePending = false;
+                    }
+                }
+
+                if (_renderSystem && !resizedThisTick)
+                    _renderSystem->update();
+            });
             auto showResult = _platformService->showWindow(window);
             if (showResult.isError())
                 return showResult;
@@ -103,4 +152,20 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
               << ", scanCode=" << event.scanCode << std::endl;
     emitKeyDownSignal(event);
+}
+
+void RunWindowTask::onWindowResized(vigine::platform::WindowComponent *window, int width,
+                                    int height)
+{
+    if (!_renderSystem || !_platformService || !window)
+        return;
+
+    if (width <= 0 || height <= 0)
+        return;
+
+    _pendingResizeWindow = window;
+    _pendingResizeWidth  = static_cast<uint32_t>(width);
+    _pendingResizeHeight = static_cast<uint32_t>(height);
+    _resizePending       = true;
+    _lastResizeEvent     = std::chrono::steady_clock::now();
 }

@@ -1,20 +1,41 @@
 #include "vigine/service/graphicsservice.h"
 
+#include "vigine/context.h"
 #include "vigine/ecs/render/rendersystem.h"
+#include "vigine/property.h"
 
 vigine::graphics::GraphicsService::GraphicsService(const Name &name) : AbstractService(name) {}
 
-// COPILOT_TODO: Отримувати або створювати RenderSystem через Context, інакше GraphicsService
-// лишається нефункціональною оболонкою.
-void vigine::graphics::GraphicsService::contextChanged() {}
-
-// COPILOT_TODO: Прив'язка сутності має створювати/render-компоненти або явно делегувати це системі;
-// зараз bound entity ніяк не використовується.
-void vigine::graphics::GraphicsService::entityBound()
+void vigine::graphics::GraphicsService::contextChanged()
 {
-    // Entity *ent = getBoundEntity();
+    if (!context())
+    {
+        _renderSystem = nullptr;
+        return;
+    }
+
+    // Try to get existing RenderSystem
+    _renderSystem = dynamic_cast<RenderSystem *>(
+        context()->system("Render", "MainRender", vigine::Property::Exist));
+
+    if (_renderSystem)
+        return;
+
+    // Create RenderSystem if it doesn't exist
+    _renderSystem = dynamic_cast<RenderSystem *>(
+        context()->system("Render", "MainRender", vigine::Property::New));
 }
 
-void vigine::graphics::GraphicsService::entityUnbound() {}
+void vigine::graphics::GraphicsService::entityBound()
+{
+    if (_renderSystem)
+        _renderSystem->bindEntity(getBoundEntity());
+}
+
+void vigine::graphics::GraphicsService::entityUnbound()
+{
+    if (_renderSystem)
+        _renderSystem->unbindEntity();
+}
 
 vigine::ServiceId vigine::graphics::GraphicsService::id() const { return "Graphics"; }

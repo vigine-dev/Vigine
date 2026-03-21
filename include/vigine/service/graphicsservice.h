@@ -19,6 +19,8 @@ class GraphicsService : public AbstractService
 
     [[nodiscard]] ServiceId id() const override;
 
+    RenderSystem *renderSystem() const { return _renderSystem; }
+
   protected:
     void contextChanged() override;
 
