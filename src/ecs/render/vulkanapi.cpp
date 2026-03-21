@@ -97,9 +97,9 @@ void VulkanAPI::updateCameraDrag(int x, int y)
     const int deltaX  = x - _lastCameraPointerX;
     const int deltaY  = y - _lastCameraPointerY;
 
-    _cameraYaw       += static_cast<float>(deltaX) * kCameraControls.mouseLookSensitivity;
+    _cameraYaw       -= static_cast<float>(deltaX) * kCameraControls.mouseLookSensitivity;
     _cameraPitch =
-        std::clamp(_cameraPitch - static_cast<float>(deltaY) * kCameraControls.mouseLookSensitivity,
+        std::clamp(_cameraPitch + static_cast<float>(deltaY) * kCameraControls.mouseLookSensitivity,
                    -kCameraControls.pitchLimitRad, kCameraControls.pitchLimitRad);
 
     _lastCameraPointerX = x;
