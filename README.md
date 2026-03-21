@@ -49,3 +49,18 @@ How to update it later (optional):
 `vcpkg x-update-baseline`
 
 4. Keep `vcpkg.json` in the repository and configure CMake with the vcpkg toolchain so `find_package(libpqxx CONFIG REQUIRED)` works.
+
+## Example Window Controls
+
+For the `example-window` application:
+
+- `W/S/A/D`: move camera on horizontal plane.
+- `Q/E`: move camera down/up.
+- `Shift` (hold): sprint movement speed multiplier.
+- `Left Mouse Button + Move`: camera look (yaw/pitch).
+- `Mouse Wheel`: move camera forward/backward along current view direction.
+
+Detailed input flow and signal routing are documented in:
+
+- `doc/sequence-window-signal.md`
+- `doc/sequence/window/runwindowtask.md`

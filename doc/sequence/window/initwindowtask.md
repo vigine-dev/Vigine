@@ -9,6 +9,7 @@ participant Ctx as Context
 participant EM as EntityManager
 participant PS as PlatformService
 participant WH as WindowEventHandler
+participant W as WindowComponent
 
 Caller->>T: execute()
 alt PlatformService is null
@@ -19,12 +20,29 @@ else service exists
   T->>EM: createEntity()
   EM-->>T: entity
 
-  T->>T: createEventHandler()
-  T->>WH: construct
+  T->>T: createEventHandlers()
+  loop for each handler definition
+    T->>WH: construct
+  end
 
   T->>PS: bindEntity(entity)
-  T->>PS: setWindowEventHandler(WH)
-  T->>PS: createWindow()
+  loop for each WindowEventHandler
+    T->>PS: createWindow()
+    PS-->>T: WindowComponent*
+
+    alt window is null
+      T->>PS: unbindEntity()
+      T-->>Caller: Result(Error, No window component created)
+    else window exists
+      T->>PS: bindWindowEventHandler(W, WH)
+      PS-->>T: Result
+      alt bind result is Error
+        T->>PS: unbindEntity()
+        T-->>Caller: bindResult
+      end
+    end
+  end
+
   T->>PS: unbindEntity()
 
   T->>EM: addAlias(entity, MainWindow)

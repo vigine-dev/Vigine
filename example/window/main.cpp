@@ -6,6 +6,9 @@
 #include "state/errorstate.h"
 #include "state/initstate.h"
 #include "state/workstate.h"
+#include "task/vulkan/initvulkantask.h"
+#include "task/vulkan/rendercubetask.h"
+#include "task/vulkan/setupcubetask.h"
 #include "task/window/initwindowtask.h"
 #include "task/window/processinputeventtask.h"
 #include "task/window/runwindowtask.h"
@@ -21,10 +24,14 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignal
     auto taskFlow               = std::make_unique<TaskFlow>();
 
     auto *initWindow            = taskFlow->addTask(std::make_unique<InitWindowTask>());
+    auto *initVulkan            = taskFlow->addTask(std::make_unique<InitVulkanTask>());
+    auto *setupCube             = taskFlow->addTask(std::make_unique<SetupCubeTask>());
     auto *runWindow             = taskFlow->addTask(std::make_unique<RunWindowTask>());
     auto *processInputEventTask = taskFlow->addTask(std::make_unique<ProcessInputEventTask>());
 
-    static_cast<void>(taskFlow->route(initWindow, runWindow));
+    static_cast<void>(taskFlow->route(initWindow, initVulkan));
+    static_cast<void>(taskFlow->route(initVulkan, setupCube));
+    static_cast<void>(taskFlow->route(setupCube, runWindow));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &mouseSignalBinder));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &keySignalBinder));
 
@@ -33,7 +40,15 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignal
     return taskFlow;
 }
 
-std::unique_ptr<TaskFlow> createWorkTaskFlow() { return std::make_unique<TaskFlow>(); }
+std::unique_ptr<TaskFlow> createWorkTaskFlow()
+{
+    auto taskFlow    = std::make_unique<TaskFlow>();
+
+    auto *renderCube = taskFlow->addTask(std::make_unique<RenderCubeTask>());
+    taskFlow->changeCurrentTaskTo(renderCube);
+
+    return taskFlow;
+}
 
 std::unique_ptr<TaskFlow> createErrorTaskFlow() { return std::make_unique<TaskFlow>(); }
 

@@ -4,6 +4,9 @@
 #include "vigine/ecs/platform/windowsystem.h"
 #include "vigine/property.h"
 
+#include "ecs/platform/windowcomponent.h"
+
+
 using namespace vigine::platform;
 
 PlatformService::PlatformService(const Name &name) : AbstractService(name) {}
@@ -39,6 +42,14 @@ vigine::Result PlatformService::bindWindowEventHandler(WindowComponent *window,
         return bindWindowResult;
 
     return _windowSystem->bindWindowEventHandler(entity, window, handler);
+}
+
+void *PlatformService::nativeWindowHandle(WindowComponent *window) const
+{
+    if (!window)
+        return nullptr;
+
+    return window->nativeHandle();
 }
 
 std::vector<WindowComponent *> PlatformService::windowComponents() const

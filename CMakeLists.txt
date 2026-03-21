@@ -15,6 +15,10 @@ if(MSVC)
     add_compile_options(/FS)
 endif()
 
+if(WIN32)
+    add_compile_definitions(VK_USE_PLATFORM_WIN32_KHR)
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -87,6 +91,9 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
+    ${INCLUDE_DIR}/vigine/ecs/render/transformcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/meshcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/shadercomponent.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
@@ -104,6 +111,9 @@ set(SOURCES
     ${SRC_DIR}/ecs/render/rendersystem.cpp
     ${SRC_DIR}/ecs/render/rendercomponent.cpp
     ${SRC_DIR}/ecs/render/vulkanapi.cpp
+    ${SRC_DIR}/ecs/render/transformcomponent.cpp
+    ${SRC_DIR}/ecs/render/meshcomponent.cpp
+    ${SRC_DIR}/ecs/render/shadercomponent.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp

@@ -2,7 +2,7 @@
 
 ```mermaid
 sequenceDiagram
-participant Main as example/main.cpp
+participant Main as example/*/main.cpp
 participant Engine
 participant SM as StateMachine
 participant State as AbstractState

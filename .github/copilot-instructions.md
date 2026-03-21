@@ -6,6 +6,14 @@
 - Preserve existing public APIs unless the task requires API changes.
 - After edits, check compile/lint errors for changed files.
 
+## Architecture Change Policy
+- Do not modify core engine architecture classes unless the user explicitly asks for it.
+- Core architecture classes include (at minimum): Context/ContextHolder, TaskFlow/AbstractTask, StateMachine, AbstractService/AbstractSystem contracts, EntityManager, and engine-level ownership/binding flow.
+- You may and should add new Components, Systems, and Services when needed to implement requested functionality.
+- Prefer extending behavior through existing extension points instead of rewriting engine foundations.
+- Do not introduce new global managers, lifecycle models, or cross-cutting ownership changes without explicit approval.
+- If a task seems to require edits in core architecture classes, first propose a minimal non-architectural option and ask for confirmation.
+
 ## C++ and CMake Conventions
 - Keep current coding style and formatting used in nearby files.
 - Prefer small, targeted patches over large rewrites.
@@ -38,8 +46,15 @@
 
 ## Before Editing
 - Read the target file and immediate dependencies first.
+- Read the relevant documentation in `doc/` before changing architecture, class relationships, signals, or task flows.
+- If the task does not provide a folder structure, inspect the workspace and use `doc/README.md` as the current high-level engine map.
 - Confirm whether related files changed recently before patching.
 - Do not revert user changes unless explicitly requested.
+
+## Documentation Sync
+- When changing classes, inheritance, ownership, or interactions between engine parts, update the relevant documentation in `doc/` in the same task.
+- At minimum, keep `doc/README.md` and the affected Mermaid diagrams in sync with code changes.
+- If a new subsystem, folder, or architectural layer is introduced, document where it lives and how it relates to existing engine classes.
 
 ## Communication Style
 - Answer in Ukrainian unless user requests another language.
