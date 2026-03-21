@@ -20,7 +20,7 @@ void main()
     float ambient      = pushData.lightingParams.x;
     float diffuseMult  = pushData.lightingParams.y;
     float ndotl        = max(dot(normalize(inWorldNormal), -sunDir), 0.0);
-    float lightFactor  = clamp(ambient + diffuseMult * ndotl * sunIntensity, 0.0, 2.5);
+    float lightFactor  = clamp(ambient + diffuseMult * ndotl * sunIntensity, 0.0, 5.0);
 
     outFragColor = vec4(inColor * lightFactor, 1.0);
 }

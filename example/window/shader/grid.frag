@@ -25,7 +25,7 @@ void main()
     float diffuseMult  = pushData.lightingParams.y;
     vec3 gridNormal    = vec3(0.0, 1.0, 0.0);
     float ndotl        = max(dot(gridNormal, -sunDir), 0.0);
-    float lightFactor  = clamp(ambient + diffuseMult * ndotl * sunIntensity, 0.0, 2.5);
+    float lightFactor  = clamp(ambient + diffuseMult * ndotl * sunIntensity, 0.0, 5.0);
 
     vec2  gridCoord = inWorldPosition.xz;
     float minorLine = gridMask(gridCoord);
@@ -42,6 +42,6 @@ void main()
     vec3 color  = mix(baseColor, minorColor, minorLine * 0.55 * fade);
     color       = mix(color, majorColor, majorLine * 0.85 * fade);
     color       = mix(color, axisColor, max(axisX, axisZ) * fade);
-    color      *= lightFactor + pushData.lightingParams.z;
+    color      *= lightFactor;
     outFragColor = vec4(color, 1.0);
 }

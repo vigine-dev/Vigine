@@ -154,6 +154,7 @@ void VulkanAPI::cleanupSwapchainResources()
     _currentFrame = 0;
 
     _swapchainFramebuffers.clear();
+    _sunPipeline.reset();
     _gridPipeline.reset();
     _pyramidPipeline.reset();
     _graphicsPipeline.reset();
@@ -800,6 +801,50 @@ bool VulkanAPI::createSwapchain(uint32_t width, uint32_t height)
         }
         _gridPipeline = std::move(gridPipelineResult.value);
 
+        // --- Sun pipeline ---
+        auto sunVertCode = loadBinaryFile(
+            {"build/bin/shaders/sun.vert.spv", "bin/shaders/sun.vert.spv", "shaders/sun.vert.spv"});
+        auto sunFragCode = loadBinaryFile(
+            {"build/bin/shaders/sun.frag.spv", "bin/shaders/sun.frag.spv", "shaders/sun.frag.spv"});
+        if (sunVertCode.empty() || sunFragCode.empty())
+        {
+            std::cerr << "Failed to load sun shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo sunVertInfo;
+        sunVertInfo.codeSize = sunVertCode.size();
+        sunVertInfo.pCode    = reinterpret_cast<const uint32_t *>(sunVertCode.data());
+        auto sunVertModule   = _device->createShaderModuleUnique(sunVertInfo);
+
+        vk::ShaderModuleCreateInfo sunFragInfo;
+        sunFragInfo.codeSize = sunFragCode.size();
+        sunFragInfo.pCode    = reinterpret_cast<const uint32_t *>(sunFragCode.data());
+        auto sunFragModule   = _device->createShaderModuleUnique(sunFragInfo);
+
+        vk::PipelineShaderStageCreateInfo sunVertStage;
+        sunVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        sunVertStage.module = sunVertModule.get();
+        sunVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo sunFragStage;
+        sunFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        sunFragStage.module = sunFragModule.get();
+        sunFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> sunShaderStages = {sunVertStage,
+                                                                            sunFragStage};
+        pipelineInfo.pStages                                             = sunShaderStages.data();
+
+        auto sunPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (sunPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create sun graphics pipeline" << std::endl;
+            return false;
+        }
+        _sunPipeline = std::move(sunPipelineResult.value);
+
         _swapchainFramebuffers.clear();
         _swapchainFramebuffers.reserve(_swapchainImageViews.size());
         for (const auto &imageView : _swapchainImageViews)
@@ -1017,8 +1062,17 @@ bool VulkanAPI::drawFrame()
                                       vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, 0,
                                       nullptr, 0, nullptr, 1, &toColorAttachment);
 
+        // Динамічне небо: колір залежить від висоти сонця
+        const glm::vec3 sunlightDirection = glm::normalize(glm::vec3(-0.45f, -1.0f, -0.30f));
+        const float sunElevation          = glm::clamp(-sunlightDirection.y, 0.0f, 1.0f);
+        const glm::vec3 kSkyDay(0.36f, 0.56f, 0.90f);
+        const glm::vec3 kSkyNight(0.01f, 0.01f, 0.06f);
+        const glm::vec3 skyColor =
+            glm::mix(kSkyNight, kSkyDay, glm::clamp(sunElevation * 1.5f, 0.0f, 1.0f));
+
         std::array<vk::ClearValue, 2> clearValues{};
-        clearValues[0].color = vk::ClearColorValue(std::array<float, 4>{0.05f, 0.06f, 0.1f, 1.0f});
+        clearValues[0].color =
+            vk::ClearColorValue(std::array<float, 4>{skyColor.x, skyColor.y, skyColor.z, 1.0f});
         clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
 
         vk::RenderPassBeginInfo renderPassInfo;
@@ -1045,13 +1099,13 @@ bool VulkanAPI::drawFrame()
         pushConstants.viewProjection = projection * view;
         pushConstants.animationData =
             glm::vec4(_cubeRotationAngle, _pyramidRotationAngle, aspect, 0.0f);
-        const glm::vec3 sunlightDirection   = glm::normalize(glm::vec3(-0.45f, -1.0f, -0.30f));
-        pushConstants.sunDirectionIntensity = glm::vec4(sunlightDirection, 1.25f);
-        pushConstants.lightingParams        = glm::vec4(0.42f, // ambient
-                                                        1.05f, // diffuse multiplier
-                                                        0.20f, // grid brightness boost
-                                                        0.0f   // reserved
-               );
+        pushConstants.sunDirectionIntensity = glm::vec4(sunlightDirection, 4.5f);
+        pushConstants.lightingParams =
+            glm::vec4(0.06f, // ambient
+                      0.94f, // diffuse multiplier
+                      0.0f,  // grid brightness boost (не потрібен, сонце сильніше)
+                      0.0f   // reserved
+            );
 
         // Push constants are shared across all three pipelines (same layout).
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
@@ -1066,6 +1120,9 @@ bool VulkanAPI::drawFrame()
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _gridPipeline.get());
         commandBuffer.draw(6, 1, 0, 0);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _sunPipeline.get());
+        commandBuffer.draw(768, 1, 0, 0); // UV-сфера: 16 lon x 8 lat x 2 tri x 3 vert
 
         commandBuffer.endRenderPass();
 

@@ -96,6 +96,7 @@ class VulkanAPI
     vk::UniquePipeline _graphicsPipeline;
     vk::UniquePipeline _pyramidPipeline;
     vk::UniquePipeline _gridPipeline;
+    vk::UniquePipeline _sunPipeline;
     std::vector<vk::Image> _swapchainImages;
     std::vector<vk::CommandBuffer> _commandBuffers;
     std::vector<uint8_t> _imageInitialized;
