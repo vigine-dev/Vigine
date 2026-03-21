@@ -916,6 +916,11 @@ bool VulkanAPI::recreateSwapchain(uint32_t width, uint32_t height)
     return createSwapchain(width, height);
 }
 
+void VulkanAPI::setEntityModelMatrices(std::vector<glm::mat4> matrices)
+{
+    _entityModelMatrices = std::move(matrices);
+}
+
 bool VulkanAPI::drawFrame()
 {
     if (!_device || !_swapchain || _inFlightFences.empty() || _imageAvailableSemaphores.empty() ||
@@ -1100,28 +1105,45 @@ bool VulkanAPI::drawFrame()
         pushConstants.animationData =
             glm::vec4(_cubeRotationAngle, _pyramidRotationAngle, aspect, 0.0f);
         pushConstants.sunDirectionIntensity = glm::vec4(sunlightDirection, 4.5f);
-        pushConstants.lightingParams =
-            glm::vec4(0.06f, // ambient
-                      0.94f, // diffuse multiplier
-                      0.0f,  // grid brightness boost (не потрібен, сонце сильніше)
-                      0.0f   // reserved
-            );
+        pushConstants.lightingParams        = glm::vec4(0.06f, // ambient
+                                                        0.94f, // diffuse multiplier
+                                                        0.0f,  // grid brightness boost
+                                                        0.0f   // reserved
+               );
+        pushConstants.modelMatrix           = glm::mat4(1.0f);
 
-        // Push constants are shared across all three pipelines (same layout).
+        // Draw ECS entities with cube pipeline
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
+        for (const auto &modelMatrix : _entityModelMatrices)
+        {
+            pushConstants.modelMatrix = modelMatrix;
+            commandBuffer.pushConstants(_pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            commandBuffer.draw(36, 1, 0, 0);
+        }
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pyramidPipeline.get());
+        pushConstants.modelMatrix = glm::mat4(1.0f);
         commandBuffer.pushConstants(_pipelineLayout.get(),
                                     vk::ShaderStageFlagBits::eVertex |
                                         vk::ShaderStageFlagBits::eFragment,
                                     0, sizeof(PushConstants), &pushConstants);
-        commandBuffer.draw(36, 1, 0, 0);
-
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pyramidPipeline.get());
         commandBuffer.draw(18, 1, 0, 0);
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _gridPipeline.get());
+        commandBuffer.pushConstants(_pipelineLayout.get(),
+                                    vk::ShaderStageFlagBits::eVertex |
+                                        vk::ShaderStageFlagBits::eFragment,
+                                    0, sizeof(PushConstants), &pushConstants);
         commandBuffer.draw(6, 1, 0, 0);
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _sunPipeline.get());
+        commandBuffer.pushConstants(_pipelineLayout.get(),
+                                    vk::ShaderStageFlagBits::eVertex |
+                                        vk::ShaderStageFlagBits::eFragment,
+                                    0, sizeof(PushConstants), &pushConstants);
         commandBuffer.draw(768, 1, 0, 0); // UV-сфера: 16 lon x 8 lat x 2 tri x 3 vert
 
         commandBuffer.endRenderPass();

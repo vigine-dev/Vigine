@@ -37,11 +37,17 @@ RenderSystem::~RenderSystem()
 
 bool RenderSystem::hasComponents(Entity *entity) const
 {
+    if (!entity)
+        return false;
+
     return _entityComponents.find(entity) != _entityComponents.end();
 }
 
 void RenderSystem::createComponents(Entity *entity)
 {
+    if (!entity)
+        return;
+
     if (hasComponents(entity))
         return;
 
@@ -51,17 +57,37 @@ void RenderSystem::createComponents(Entity *entity)
 
 void RenderSystem::destroyComponents(Entity *entity)
 {
+    if (!entity)
+        return;
+
     auto it = _entityComponents.find(entity);
     if (it != _entityComponents.end())
     {
+        if (_boundEntityComponent == it->second.get())
+            _boundEntityComponent = nullptr;
+
         _entityComponents.erase(it);
     }
 }
+
+RenderComponent *RenderSystem::boundRenderComponent() const { return _boundEntityComponent; }
 
 vigine::SystemId RenderSystem::id() const { return "Render"; }
 
 void RenderSystem::update()
 {
+    std::vector<glm::mat4> modelMatrices;
+    modelMatrices.reserve(_entityComponents.size());
+
+    for (auto &pair : _entityComponents)
+    {
+        if (pair.second)
+            modelMatrices.push_back(pair.second->getTransform().getModelMatrix());
+    }
+
+    if (_vulkanAPI)
+        _vulkanAPI->setEntityModelMatrices(std::move(modelMatrices));
+
     if (_vulkanAPI && _vulkanAPI->hasSwapchain())
         static_cast<void>(_vulkanAPI->drawFrame());
 
@@ -162,11 +188,15 @@ void RenderSystem::setSprintActive(bool active)
 
 void RenderSystem::entityBound()
 {
-    // Find the first render component and set it as bound
-    if (!_entityComponents.empty())
-    {
-        _boundEntityComponent = _entityComponents.begin()->second.get();
-    }
+    auto *boundEntity     = getBoundEntity();
+    _boundEntityComponent = nullptr;
+
+    if (!boundEntity)
+        return;
+
+    auto it = _entityComponents.find(boundEntity);
+    if (it != _entityComponents.end())
+        _boundEntityComponent = it->second.get();
 }
 
 void RenderSystem::entityUnbound() { _boundEntityComponent = nullptr; }

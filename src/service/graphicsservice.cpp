@@ -1,6 +1,7 @@
 #include "vigine/service/graphicsservice.h"
 
 #include "vigine/context.h"
+#include "vigine/ecs/render/rendercomponent.h"
 #include "vigine/ecs/render/rendersystem.h"
 #include "vigine/property.h"
 
@@ -28,14 +29,28 @@ void vigine::graphics::GraphicsService::contextChanged()
 
 void vigine::graphics::GraphicsService::entityBound()
 {
-    if (_renderSystem)
-        _renderSystem->bindEntity(getBoundEntity());
+    auto *entity = getBoundEntity();
+    if (!_renderSystem || !entity)
+        return;
+
+    if (!_renderSystem->hasComponents(entity))
+        _renderSystem->createComponents(entity);
+
+    _renderSystem->bindEntity(entity);
 }
 
 void vigine::graphics::GraphicsService::entityUnbound()
 {
     if (_renderSystem)
         _renderSystem->unbindEntity();
+}
+
+vigine::graphics::RenderComponent *vigine::graphics::GraphicsService::renderComponent() const
+{
+    if (!_renderSystem)
+        return nullptr;
+
+    return _renderSystem->boundRenderComponent();
 }
 
 vigine::ServiceId vigine::graphics::GraphicsService::id() const { return "Graphics"; }

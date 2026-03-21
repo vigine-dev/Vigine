@@ -28,6 +28,7 @@ class RenderSystem : public AbstractSystem
     [[nodiscard]] bool hasComponents(Entity *entity) const override;
     void createComponents(Entity *entity) override;
     void destroyComponents(Entity *entity) override;
+    RenderComponent *boundRenderComponent() const;
 
     void update();
     [[nodiscard]] bool initializeWindowSurface(void *nativeWindowHandle, uint32_t width,

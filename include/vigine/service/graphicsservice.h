@@ -2,13 +2,12 @@
 
 #include "vigine/abstractservice.h"
 #include "vigine/base/macros.h"
-#include "vigine/ecs/entity.h"
-#include "vigine/result.h"
 
 namespace vigine
 {
 namespace graphics
 {
+class RenderComponent;
 class RenderSystem;
 
 class GraphicsService : public AbstractService
@@ -20,6 +19,7 @@ class GraphicsService : public AbstractService
     [[nodiscard]] ServiceId id() const override;
 
     RenderSystem *renderSystem() const { return _renderSystem; }
+    RenderComponent *renderComponent() const;
 
   protected:
     void contextChanged() override;

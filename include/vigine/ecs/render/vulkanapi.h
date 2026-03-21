@@ -31,6 +31,7 @@ class VulkanAPI
     bool createSwapchain(uint32_t width, uint32_t height);
     bool recreateSwapchain(uint32_t width, uint32_t height);
     bool drawFrame();
+    void setEntityModelMatrices(std::vector<glm::mat4> matrices);
     void beginCameraDrag(int x, int y);
     void updateCameraDrag(int x, int y);
     void endCameraDrag();
@@ -61,6 +62,7 @@ class VulkanAPI
         glm::vec4 animationData{0.0f};
         glm::vec4 sunDirectionIntensity{0.0f};
         glm::vec4 lightingParams{0.0f};
+        glm::mat4 modelMatrix{1.0f};
     };
 
     void cleanupSwapchainResources();
@@ -102,6 +104,7 @@ class VulkanAPI
     std::vector<uint8_t> _imageInitialized;
     float _cubeRotationAngle{0.0f};
     float _pyramidRotationAngle{0.0f};
+    std::vector<glm::mat4> _entityModelMatrices;
     float _cameraYaw{0.0f};
     float _cameraPitch{-0.2f};
     glm::vec3 _cameraPosition{0.0f, 1.6f, 4.5f};

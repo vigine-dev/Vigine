@@ -93,6 +93,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/ecs/render/transformcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/meshcomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/shadercomponent.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
@@ -112,6 +113,7 @@ set(SOURCES
     ${SRC_DIR}/ecs/render/vulkanapi.cpp
     ${SRC_DIR}/ecs/render/transformcomponent.cpp
     ${SRC_DIR}/ecs/render/meshcomponent.cpp
+    ${SRC_DIR}/ecs/render/shadercomponent.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
