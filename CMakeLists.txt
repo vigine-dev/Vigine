@@ -29,6 +29,16 @@ set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 # Set the CMake module path to include the cmake directory
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+# Build FreeType from external submodule.
+# Keep optional compression/shaping deps disabled for a predictable local build.
+set(FT_DISABLE_ZLIB TRUE CACHE BOOL "Disable zlib in bundled FreeType build")
+set(FT_DISABLE_BZIP2 TRUE CACHE BOOL "Disable bzip2 in bundled FreeType build")
+set(FT_DISABLE_PNG TRUE CACHE BOOL "Disable libpng in bundled FreeType build")
+set(FT_DISABLE_HARFBUZZ TRUE CACHE BOOL "Disable HarfBuzz in bundled FreeType build")
+set(FT_DISABLE_BROTLI TRUE CACHE BOOL "Disable Brotli in bundled FreeType build")
+set(SKIP_INSTALL_ALL TRUE CACHE BOOL "Disable install targets for bundled third-party libs")
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
+
 # Find and include glm
 find_package(GLM REQUIRED)
 find_package(Vulkan REQUIRED)
@@ -224,6 +234,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     ${Vulkan_LIBRARIES}
     ${Vulkan_Hpp_LIBRARIES}
+    freetype
 )
 
 # Install the library and headers
