@@ -39,11 +39,19 @@ endif()
 set(EXAMPLE_WINDOW_SHADER_SOURCES
     ${EXAMPLE_WINDOW_SHADER_DIR}/cube.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/grid.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/grid.frag
 )
 
 set(EXAMPLE_WINDOW_SHADER_OUTPUTS
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.frag.spv
 )
 
 add_custom_command(
@@ -59,6 +67,38 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
     COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.frag.spv
     DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/grid.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/grid.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/grid.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/grid.frag
     VERBATIM
 )
 

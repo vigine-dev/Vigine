@@ -13,12 +13,6 @@ layout(location = 1) in vec3 inWorldPosition;
 layout(location = 2) in vec3 inWorldNormal;
 layout(location = 0) out vec4 outFragColor;
 
-float gridMask(vec2 coord)
-{
-    vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);
-    return 1.0 - min(min(grid.x, grid.y), 1.0);
-}
-
 void main()
 {
     vec3 sunDir        = normalize(pushData.sunDirectionIntensity.xyz);

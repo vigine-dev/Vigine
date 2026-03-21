@@ -154,6 +154,8 @@ void VulkanAPI::cleanupSwapchainResources()
     _currentFrame = 0;
 
     _swapchainFramebuffers.clear();
+    _gridPipeline.reset();
+    _pyramidPipeline.reset();
     _graphicsPipeline.reset();
     _pipelineLayout.reset();
     _renderPass.reset();
@@ -708,6 +710,96 @@ bool VulkanAPI::createSwapchain(uint32_t width, uint32_t height)
         }
         _graphicsPipeline = std::move(pipelineResult.value);
 
+        // --- Pyramid pipeline ---
+        auto pyramidVertCode =
+            loadBinaryFile({"build/bin/shaders/pyramid.vert.spv", "bin/shaders/pyramid.vert.spv",
+                            "shaders/pyramid.vert.spv"});
+        auto pyramidFragCode =
+            loadBinaryFile({"build/bin/shaders/pyramid.frag.spv", "bin/shaders/pyramid.frag.spv",
+                            "shaders/pyramid.frag.spv"});
+        if (pyramidVertCode.empty() || pyramidFragCode.empty())
+        {
+            std::cerr << "Failed to load pyramid shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo pyramidVertInfo;
+        pyramidVertInfo.codeSize = pyramidVertCode.size();
+        pyramidVertInfo.pCode    = reinterpret_cast<const uint32_t *>(pyramidVertCode.data());
+        auto pyramidVertModule   = _device->createShaderModuleUnique(pyramidVertInfo);
+
+        vk::ShaderModuleCreateInfo pyramidFragInfo;
+        pyramidFragInfo.codeSize = pyramidFragCode.size();
+        pyramidFragInfo.pCode    = reinterpret_cast<const uint32_t *>(pyramidFragCode.data());
+        auto pyramidFragModule   = _device->createShaderModuleUnique(pyramidFragInfo);
+
+        vk::PipelineShaderStageCreateInfo pyramidVertStage;
+        pyramidVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        pyramidVertStage.module = pyramidVertModule.get();
+        pyramidVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo pyramidFragStage;
+        pyramidFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        pyramidFragStage.module = pyramidFragModule.get();
+        pyramidFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> pyramidShaderStages = {pyramidVertStage,
+                                                                                pyramidFragStage};
+        pipelineInfo.pStages = pyramidShaderStages.data();
+
+        auto pyramidPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (pyramidPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create pyramid graphics pipeline" << std::endl;
+            return false;
+        }
+        _pyramidPipeline = std::move(pyramidPipelineResult.value);
+
+        // --- Grid pipeline ---
+        auto gridVertCode = loadBinaryFile({"build/bin/shaders/grid.vert.spv",
+                                            "bin/shaders/grid.vert.spv", "shaders/grid.vert.spv"});
+        auto gridFragCode = loadBinaryFile({"build/bin/shaders/grid.frag.spv",
+                                            "bin/shaders/grid.frag.spv", "shaders/grid.frag.spv"});
+        if (gridVertCode.empty() || gridFragCode.empty())
+        {
+            std::cerr << "Failed to load grid shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo gridVertInfo;
+        gridVertInfo.codeSize = gridVertCode.size();
+        gridVertInfo.pCode    = reinterpret_cast<const uint32_t *>(gridVertCode.data());
+        auto gridVertModule   = _device->createShaderModuleUnique(gridVertInfo);
+
+        vk::ShaderModuleCreateInfo gridFragInfo;
+        gridFragInfo.codeSize = gridFragCode.size();
+        gridFragInfo.pCode    = reinterpret_cast<const uint32_t *>(gridFragCode.data());
+        auto gridFragModule   = _device->createShaderModuleUnique(gridFragInfo);
+
+        vk::PipelineShaderStageCreateInfo gridVertStage;
+        gridVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        gridVertStage.module = gridVertModule.get();
+        gridVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo gridFragStage;
+        gridFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        gridFragStage.module = gridFragModule.get();
+        gridFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> gridShaderStages = {gridVertStage,
+                                                                             gridFragStage};
+        pipelineInfo.pStages                                              = gridShaderStages.data();
+
+        auto gridPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (gridPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create grid graphics pipeline" << std::endl;
+            return false;
+        }
+        _gridPipeline = std::move(gridPipelineResult.value);
+
         _swapchainFramebuffers.clear();
         _swapchainFramebuffers.reserve(_swapchainImageViews.size());
         for (const auto &imageView : _swapchainImageViews)
@@ -939,7 +1031,6 @@ bool VulkanAPI::drawFrame()
         renderPassInfo.pClearValues        = clearValues.data();
 
         commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
 
         const float aspect = static_cast<float>(_swapchainExtent.width) /
                              static_cast<float>((std::max)(_swapchainExtent.height, 1u));
@@ -961,13 +1052,21 @@ bool VulkanAPI::drawFrame()
                                                         0.20f, // grid brightness boost
                                                         0.0f   // reserved
                );
+
+        // Push constants are shared across all three pipelines (same layout).
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
         commandBuffer.pushConstants(_pipelineLayout.get(),
                                     vk::ShaderStageFlagBits::eVertex |
                                         vk::ShaderStageFlagBits::eFragment,
                                     0, sizeof(PushConstants), &pushConstants);
         commandBuffer.draw(36, 1, 0, 0);
-        commandBuffer.draw(18, 1, 36, 0);
-        commandBuffer.draw(6, 1, 54, 0);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pyramidPipeline.get());
+        commandBuffer.draw(18, 1, 0, 0);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _gridPipeline.get());
+        commandBuffer.draw(6, 1, 0, 0);
+
         commandBuffer.endRenderPass();
 
         vk::ImageMemoryBarrier toPresent;
