@@ -4,7 +4,9 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstring>
 #include <fstream>
+#include <ft2build.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
@@ -12,6 +14,8 @@
 #include <limits>
 #include <string>
 #include <vector>
+
+#include FT_FREETYPE_H
 
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -129,9 +133,130 @@ void VulkanAPI::setMoveDownActive(bool active) { _moveDownActive = active; }
 
 void VulkanAPI::setSprintActive(bool active) { _sprintActive = active; }
 
+glm::vec3 VulkanAPI::cameraForwardDirection() const
+{
+    return cameraForward(_cameraYaw, _cameraPitch);
+}
+
+bool VulkanAPI::screenPointToRay(int x, int y, glm::vec3 &rayOrigin, glm::vec3 &rayDirection) const
+{
+    if (_swapchainExtent.width == 0 || _swapchainExtent.height == 0)
+        return false;
+
+    const float width     = static_cast<float>(_swapchainExtent.width);
+    const float height    = static_cast<float>((std::max)(_swapchainExtent.height, 1u));
+
+    const float pixelX    = static_cast<float>(x) + 0.5f;
+    const float pixelY    = static_cast<float>(y) + 0.5f;
+    const float ndcX      = (2.0f * pixelX) / width - 1.0f;
+    const float ndcY      = (2.0f * pixelY) / height - 1.0f;
+
+    const float aspect    = width / height;
+    glm::mat4 projection  = glm::perspective(glm::radians(60.0f), aspect, kCameraControls.nearPlane,
+                                             kCameraControls.farPlane);
+    projection[1][1]     *= -1.0f;
+
+    const glm::vec3 forward = cameraForward(_cameraYaw, _cameraPitch);
+    const glm::mat4 view =
+        glm::lookAt(_cameraPosition, _cameraPosition + forward, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    const glm::mat4 invProjection = glm::inverse(projection);
+    const glm::mat4 invView       = glm::inverse(view);
+
+    const glm::vec4 clip(ndcX, ndcY, -1.0f, 1.0f);
+    glm::vec4 eye = invProjection * clip;
+    eye           = glm::vec4(eye.x, eye.y, -1.0f, 0.0f);
+
+    rayDirection  = glm::normalize(glm::vec3(invView * eye));
+    rayOrigin     = _cameraPosition;
+    return true;
+}
+
+bool VulkanAPI::screenPointToRayFromNearPlane(int x, int y, glm::vec3 &rayOrigin,
+                                              glm::vec3 &rayDirection) const
+{
+    if (_swapchainExtent.width == 0 || _swapchainExtent.height == 0)
+        return false;
+
+    const float width     = static_cast<float>(_swapchainExtent.width);
+    const float height    = static_cast<float>((std::max)(_swapchainExtent.height, 1u));
+
+    const float pixelX    = static_cast<float>(x) + 0.5f;
+    const float pixelY    = static_cast<float>(y) + 0.5f;
+    const float ndcX      = (2.0f * pixelX) / width - 1.0f;
+    const float ndcY      = (2.0f * pixelY) / height - 1.0f;
+
+    const float aspect    = width / height;
+    glm::mat4 projection  = glm::perspective(glm::radians(60.0f), aspect, kCameraControls.nearPlane,
+                                             kCameraControls.farPlane);
+    projection[1][1]     *= -1.0f;
+
+    const glm::vec3 forward = cameraForward(_cameraYaw, _cameraPitch);
+    const glm::mat4 view =
+        glm::lookAt(_cameraPosition, _cameraPosition + forward, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    const glm::mat4 invProjection = glm::inverse(projection);
+    const glm::mat4 invView       = glm::inverse(view);
+
+    const glm::vec4 clipNear(ndcX, ndcY, -1.0f, 1.0f);
+    const glm::vec4 clipFar(ndcX, ndcY, 1.0f, 1.0f);
+
+    const glm::vec4 worldNear4 = invView * (invProjection * clipNear);
+    const glm::vec4 worldFar4  = invView * (invProjection * clipFar);
+
+    if (std::abs(worldNear4.w) < 1e-6f || std::abs(worldFar4.w) < 1e-6f)
+        return false;
+
+    const glm::vec3 worldNear = glm::vec3(worldNear4) / worldNear4.w;
+    const glm::vec3 worldFar  = glm::vec3(worldFar4) / worldFar4.w;
+    const glm::vec3 dir       = worldFar - worldNear;
+    const float dirLen        = glm::length(dir);
+    if (dirLen < 1e-6f)
+        return false;
+
+    rayOrigin    = worldNear;
+    rayDirection = dir / dirLen;
+    return true;
+}
+
+bool VulkanAPI::hitTextEditorPanel(int x, int y) const
+{
+    glm::vec3 rayOrigin(0.0f);
+    glm::vec3 rayDirection(0.0f);
+    if (!screenPointToRay(x, y, rayOrigin, rayDirection))
+        return false;
+
+    // Editor board is a plane centered at (0, 1.65, 1.2) with size 4.8 x 1.5 in XY.
+    if (std::abs(rayDirection.z) < 1e-6f)
+        return false;
+
+    const float t = (1.2f - rayOrigin.z) / rayDirection.z;
+    if (t <= 0.0f)
+        return false;
+
+    const glm::vec3 hitPoint   = rayOrigin + rayDirection * t;
+    constexpr float halfWidth  = 2.4f;
+    constexpr float halfHeight = 0.75f;
+    constexpr float centerY    = 1.65f;
+
+    return hitPoint.x >= -halfWidth && hitPoint.x <= halfWidth &&
+           hitPoint.y >= (centerY - halfHeight) && hitPoint.y <= (centerY + halfHeight);
+}
+
 VulkanAPI::~VulkanAPI()
 {
     cleanupSwapchainResources();
+
+    // Destroy persistent SDF atlas resources (not swapchain-dependent).
+    if (_device)
+    {
+        _sdfDescriptorPool.reset();
+        _sdfDescriptorSetLayout.reset();
+        _sdfAtlasSampler.reset();
+        _sdfAtlasImageView.reset();
+        _sdfAtlasImage.reset();
+        _sdfAtlasMemory.reset();
+    }
 
     if (_instance && _surface)
         _instance->destroySurfaceKHR(_surface);
@@ -157,6 +282,10 @@ void VulkanAPI::cleanupSwapchainResources()
     _sunPipeline.reset();
     _gridPipeline.reset();
     _pyramidPipeline.reset();
+    _textVoxelPipeline.reset();
+    _glyphPipeline.reset();
+    _panelPipeline.reset();
+    _spherePipeline.reset();
     _graphicsPipeline.reset();
     _pipelineLayout.reset();
     _renderPass.reset();
@@ -170,6 +299,21 @@ void VulkanAPI::cleanupSwapchainResources()
     _imageInitialized.clear();
     _swapchain.reset();
     _swapchainRecreateRequested = false;
+
+    _glyphInstanceBuffers.clear();
+    _glyphInstanceMemories.clear();
+    _glyphInstanceBufferCapacities.clear();
+    _glyphInstanceUploadNeeded.clear();
+
+    // SDF glyph vertex buffers (per-image).
+    _sdfGlyphVertexBuffers.clear();
+    _sdfGlyphVertexMemories.clear();
+    _sdfGlyphVertexCapacities.clear();
+    _sdfGlyphUploadNeeded.clear();
+
+    // SDF pipeline (depends on render pass + descriptor set layout).
+    _sdfGlyphPipeline.reset();
+    _sdfPipelineLayout.reset();
 }
 
 bool VulkanAPI::recreateSwapchainFromSurfaceExtent()
@@ -711,6 +855,169 @@ bool VulkanAPI::createSwapchain(uint32_t width, uint32_t height)
         }
         _graphicsPipeline = std::move(pipelineResult.value);
 
+        // --- Text-voxel pipeline ---
+        auto textVoxelVertCode =
+            loadBinaryFile({"build/bin/shaders/textvoxel.vert.spv",
+                            "bin/shaders/textvoxel.vert.spv", "shaders/textvoxel.vert.spv"});
+        auto textVoxelFragCode =
+            loadBinaryFile({"build/bin/shaders/textvoxel.frag.spv",
+                            "bin/shaders/textvoxel.frag.spv", "shaders/textvoxel.frag.spv"});
+        if (textVoxelVertCode.empty() || textVoxelFragCode.empty())
+        {
+            std::cerr << "Failed to load text-voxel shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo textVoxelVertInfo;
+        textVoxelVertInfo.codeSize = textVoxelVertCode.size();
+        textVoxelVertInfo.pCode    = reinterpret_cast<const uint32_t *>(textVoxelVertCode.data());
+        auto textVoxelVertModule   = _device->createShaderModuleUnique(textVoxelVertInfo);
+
+        vk::ShaderModuleCreateInfo textVoxelFragInfo;
+        textVoxelFragInfo.codeSize = textVoxelFragCode.size();
+        textVoxelFragInfo.pCode    = reinterpret_cast<const uint32_t *>(textVoxelFragCode.data());
+        auto textVoxelFragModule   = _device->createShaderModuleUnique(textVoxelFragInfo);
+
+        vk::PipelineShaderStageCreateInfo textVoxelVertStage;
+        textVoxelVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        textVoxelVertStage.module = textVoxelVertModule.get();
+        textVoxelVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo textVoxelFragStage;
+        textVoxelFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        textVoxelFragStage.module = textVoxelFragModule.get();
+        textVoxelFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> textVoxelShaderStages = {
+            textVoxelVertStage, textVoxelFragStage};
+        pipelineInfo.pStages = textVoxelShaderStages.data();
+
+        auto textVoxelPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (textVoxelPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create text-voxel graphics pipeline" << std::endl;
+            return false;
+        }
+        _textVoxelPipeline = std::move(textVoxelPipelineResult.value);
+
+        // --- Panel pipeline ---
+        auto panelVertCode =
+            loadBinaryFile({"build/bin/shaders/panel.vert.spv", "bin/shaders/panel.vert.spv",
+                            "shaders/panel.vert.spv"});
+        auto panelFragCode =
+            loadBinaryFile({"build/bin/shaders/panel.frag.spv", "bin/shaders/panel.frag.spv",
+                            "shaders/panel.frag.spv"});
+        if (panelVertCode.empty() || panelFragCode.empty())
+        {
+            std::cerr << "Failed to load panel shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo panelVertInfo;
+        panelVertInfo.codeSize = panelVertCode.size();
+        panelVertInfo.pCode    = reinterpret_cast<const uint32_t *>(panelVertCode.data());
+        auto panelVertModule   = _device->createShaderModuleUnique(panelVertInfo);
+
+        vk::ShaderModuleCreateInfo panelFragInfo;
+        panelFragInfo.codeSize = panelFragCode.size();
+        panelFragInfo.pCode    = reinterpret_cast<const uint32_t *>(panelFragCode.data());
+        auto panelFragModule   = _device->createShaderModuleUnique(panelFragInfo);
+
+        vk::PipelineShaderStageCreateInfo panelVertStage;
+        panelVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        panelVertStage.module = panelVertModule.get();
+        panelVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo panelFragStage;
+        panelFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        panelFragStage.module = panelFragModule.get();
+        panelFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> panelShaderStages = {panelVertStage,
+                                                                              panelFragStage};
+        pipelineInfo.pStages = panelShaderStages.data();
+
+        auto panelPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (panelPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create panel graphics pipeline" << std::endl;
+            return false;
+        }
+        _panelPipeline = std::move(panelPipelineResult.value);
+
+        // --- Glyph pipeline ---
+        auto glyphVertCode =
+            loadBinaryFile({"build/bin/shaders/glyph.vert.spv", "bin/shaders/glyph.vert.spv",
+                            "shaders/glyph.vert.spv"});
+        auto glyphFragCode =
+            loadBinaryFile({"build/bin/shaders/glyph.frag.spv", "bin/shaders/glyph.frag.spv",
+                            "shaders/glyph.frag.spv"});
+        if (glyphVertCode.empty() || glyphFragCode.empty())
+        {
+            std::cerr << "Failed to load glyph shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo glyphVertInfo;
+        glyphVertInfo.codeSize = glyphVertCode.size();
+        glyphVertInfo.pCode    = reinterpret_cast<const uint32_t *>(glyphVertCode.data());
+        auto glyphVertModule   = _device->createShaderModuleUnique(glyphVertInfo);
+
+        vk::ShaderModuleCreateInfo glyphFragInfo;
+        glyphFragInfo.codeSize = glyphFragCode.size();
+        glyphFragInfo.pCode    = reinterpret_cast<const uint32_t *>(glyphFragCode.data());
+        auto glyphFragModule   = _device->createShaderModuleUnique(glyphFragInfo);
+
+        vk::PipelineShaderStageCreateInfo glyphVertStage;
+        glyphVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        glyphVertStage.module = glyphVertModule.get();
+        glyphVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo glyphFragStage;
+        glyphFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        glyphFragStage.module = glyphFragModule.get();
+        glyphFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> glyphShaderStages = {glyphVertStage,
+                                                                              glyphFragStage};
+        pipelineInfo.pStages = glyphShaderStages.data();
+
+        // Glyph pipeline uses per-instance vertex buffer: mat4 = 4 x vec4 at binding 0.
+        vk::VertexInputBindingDescription glyphInstanceBinding;
+        glyphInstanceBinding.binding   = 0;
+        glyphInstanceBinding.stride    = sizeof(glm::mat4);
+        glyphInstanceBinding.inputRate = vk::VertexInputRate::eInstance;
+
+        std::array<vk::VertexInputAttributeDescription, 4> glyphInstanceAttribs;
+        for (uint32_t i = 0; i < 4; ++i)
+        {
+            glyphInstanceAttribs[i].binding  = 0;
+            glyphInstanceAttribs[i].location = i;
+            glyphInstanceAttribs[i].format   = vk::Format::eR32G32B32A32Sfloat;
+            glyphInstanceAttribs[i].offset   = i * 16u;
+        }
+
+        vk::PipelineVertexInputStateCreateInfo glyphVertexInputInfo;
+        glyphVertexInputInfo.vertexBindingDescriptionCount   = 1;
+        glyphVertexInputInfo.pVertexBindingDescriptions      = &glyphInstanceBinding;
+        glyphVertexInputInfo.vertexAttributeDescriptionCount = 4;
+        glyphVertexInputInfo.pVertexAttributeDescriptions    = glyphInstanceAttribs.data();
+
+        const auto *savedVertexInput                         = pipelineInfo.pVertexInputState;
+        pipelineInfo.pVertexInputState                       = &glyphVertexInputInfo;
+
+        auto glyphPipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (glyphPipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create glyph graphics pipeline" << std::endl;
+            return false;
+        }
+        _glyphPipeline                 = std::move(glyphPipelineResult.value);
+        pipelineInfo.pVertexInputState = savedVertexInput;
+
         // --- Pyramid pipeline ---
         auto pyramidVertCode =
             loadBinaryFile({"build/bin/shaders/pyramid.vert.spv", "bin/shaders/pyramid.vert.spv",
@@ -845,6 +1152,212 @@ bool VulkanAPI::createSwapchain(uint32_t width, uint32_t height)
         }
         _sunPipeline = std::move(sunPipelineResult.value);
 
+        // --- Sphere marker pipeline ---
+        auto sphereVertCode =
+            loadBinaryFile({"build/bin/shaders/sphere.vert.spv", "bin/shaders/sphere.vert.spv",
+                            "shaders/sphere.vert.spv"});
+        auto sphereFragCode =
+            loadBinaryFile({"build/bin/shaders/sphere.frag.spv", "bin/shaders/sphere.frag.spv",
+                            "shaders/sphere.frag.spv"});
+        if (sphereVertCode.empty() || sphereFragCode.empty())
+        {
+            std::cerr << "Failed to load sphere shader binaries" << std::endl;
+            return false;
+        }
+
+        vk::ShaderModuleCreateInfo sphereVertInfo;
+        sphereVertInfo.codeSize = sphereVertCode.size();
+        sphereVertInfo.pCode    = reinterpret_cast<const uint32_t *>(sphereVertCode.data());
+        auto sphereVertModule   = _device->createShaderModuleUnique(sphereVertInfo);
+
+        vk::ShaderModuleCreateInfo sphereFragInfo;
+        sphereFragInfo.codeSize = sphereFragCode.size();
+        sphereFragInfo.pCode    = reinterpret_cast<const uint32_t *>(sphereFragCode.data());
+        auto sphereFragModule   = _device->createShaderModuleUnique(sphereFragInfo);
+
+        vk::PipelineShaderStageCreateInfo sphereVertStage;
+        sphereVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+        sphereVertStage.module = sphereVertModule.get();
+        sphereVertStage.pName  = "main";
+
+        vk::PipelineShaderStageCreateInfo sphereFragStage;
+        sphereFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+        sphereFragStage.module = sphereFragModule.get();
+        sphereFragStage.pName  = "main";
+
+        std::array<vk::PipelineShaderStageCreateInfo, 2> sphereShaderStages = {sphereVertStage,
+                                                                               sphereFragStage};
+        pipelineInfo.pStages = sphereShaderStages.data();
+
+        auto spherePipelineResult =
+            _device->createGraphicsPipelineUnique(vk::PipelineCache{}, pipelineInfo);
+        if (spherePipelineResult.result != vk::Result::eSuccess)
+        {
+            std::cerr << "Failed to create sphere graphics pipeline" << std::endl;
+            return false;
+        }
+        _spherePipeline = std::move(spherePipelineResult.value);
+
+        // --- SDF Glyph pipeline (atlas texture + flat vertex buffer) ---
+        auto sdfGlyphVertCode =
+            loadBinaryFile({"build/bin/shaders/glyph_sdf.vert.spv",
+                            "bin/shaders/glyph_sdf.vert.spv", "shaders/glyph_sdf.vert.spv"});
+        auto sdfGlyphFragCode =
+            loadBinaryFile({"build/bin/shaders/glyph_sdf.frag.spv",
+                            "bin/shaders/glyph_sdf.frag.spv", "shaders/glyph_sdf.frag.spv"});
+        if (!sdfGlyphVertCode.empty() && !sdfGlyphFragCode.empty())
+        {
+            // Descriptor set layout: set 0, binding 0 = combined image sampler.
+            vk::DescriptorSetLayoutBinding sdfBinding;
+            sdfBinding.binding         = 0;
+            sdfBinding.descriptorType  = vk::DescriptorType::eCombinedImageSampler;
+            sdfBinding.descriptorCount = 1;
+            sdfBinding.stageFlags      = vk::ShaderStageFlagBits::eFragment;
+            vk::DescriptorSetLayoutCreateInfo sdfDslInfo;
+            sdfDslInfo.bindingCount = 1;
+            sdfDslInfo.pBindings    = &sdfBinding;
+            _sdfDescriptorSetLayout = _device->createDescriptorSetLayoutUnique(sdfDslInfo);
+
+            // Descriptor pool.
+            vk::DescriptorPoolSize poolSize;
+            poolSize.type            = vk::DescriptorType::eCombinedImageSampler;
+            poolSize.descriptorCount = 1;
+            vk::DescriptorPoolCreateInfo poolInfo;
+            poolInfo.maxSets       = 1;
+            poolInfo.poolSizeCount = 1;
+            poolInfo.pPoolSizes    = &poolSize;
+            _sdfDescriptorPool     = _device->createDescriptorPoolUnique(poolInfo);
+
+            // Allocate descriptor set.
+            vk::DescriptorSetAllocateInfo sdfAllocInfo;
+            sdfAllocInfo.descriptorPool     = _sdfDescriptorPool.get();
+            sdfAllocInfo.descriptorSetCount = 1;
+            auto sdfDsl                     = _sdfDescriptorSetLayout.get();
+            sdfAllocInfo.pSetLayouts        = &sdfDsl;
+            auto sdfSets                    = _device->allocateDescriptorSets(sdfAllocInfo);
+            _sdfDescriptorSet               = sdfSets[0];
+
+            // If atlas already uploaded — update descriptor set.
+            if (_sdfAtlasImageView && _sdfAtlasSampler)
+            {
+                vk::DescriptorImageInfo imgInfo;
+                imgInfo.sampler     = _sdfAtlasSampler.get();
+                imgInfo.imageView   = _sdfAtlasImageView.get();
+                imgInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+                vk::WriteDescriptorSet write;
+                write.dstSet          = _sdfDescriptorSet;
+                write.dstBinding      = 0;
+                write.descriptorCount = 1;
+                write.descriptorType  = vk::DescriptorType::eCombinedImageSampler;
+                write.pImageInfo      = &imgInfo;
+                _device->updateDescriptorSets(1, &write, 0, nullptr);
+                _sdfAtlasReady = true;
+            }
+
+            // Pipeline layout: push constants + 1 descriptor set.
+            vk::PipelineLayoutCreateInfo sdfLayoutInfo;
+            auto setLayout                       = _sdfDescriptorSetLayout.get();
+            sdfLayoutInfo.setLayoutCount         = 1;
+            sdfLayoutInfo.pSetLayouts            = &setLayout;
+            sdfLayoutInfo.pushConstantRangeCount = 1;
+            sdfLayoutInfo.pPushConstantRanges    = &pushConstantRange;
+            _sdfPipelineLayout = _device->createPipelineLayoutUnique(sdfLayoutInfo);
+
+            vk::ShaderModuleCreateInfo sdfVertModInfo;
+            sdfVertModInfo.codeSize = sdfGlyphVertCode.size();
+            sdfVertModInfo.pCode    = reinterpret_cast<const uint32_t *>(sdfGlyphVertCode.data());
+            auto sdfVertMod         = _device->createShaderModuleUnique(sdfVertModInfo);
+
+            vk::ShaderModuleCreateInfo sdfFragModInfo;
+            sdfFragModInfo.codeSize = sdfGlyphFragCode.size();
+            sdfFragModInfo.pCode    = reinterpret_cast<const uint32_t *>(sdfGlyphFragCode.data());
+            auto sdfFragMod         = _device->createShaderModuleUnique(sdfFragModInfo);
+
+            vk::PipelineShaderStageCreateInfo sdfVertStage;
+            sdfVertStage.stage  = vk::ShaderStageFlagBits::eVertex;
+            sdfVertStage.module = sdfVertMod.get();
+            sdfVertStage.pName  = "main";
+
+            vk::PipelineShaderStageCreateInfo sdfFragStage;
+            sdfFragStage.stage  = vk::ShaderStageFlagBits::eFragment;
+            sdfFragStage.module = sdfFragMod.get();
+            sdfFragStage.pName  = "main";
+
+            std::array<vk::PipelineShaderStageCreateInfo, 2> sdfStages = {sdfVertStage,
+                                                                          sdfFragStage};
+
+            // Vertex binding: binding 0, per-vertex, stride = sizeof(GlyphQuadVertex).
+            vk::VertexInputBindingDescription sdfVtxBinding;
+            sdfVtxBinding.binding   = 0;
+            sdfVtxBinding.stride    = sizeof(GlyphQuadVertex);
+            sdfVtxBinding.inputRate = vk::VertexInputRate::eVertex;
+
+            // Attribs: location 0 = vec3 pos, location 1 = vec2 uv.
+            std::array<vk::VertexInputAttributeDescription, 2> sdfAttribs;
+            sdfAttribs[0].binding  = 0;
+            sdfAttribs[0].location = 0;
+            sdfAttribs[0].format   = vk::Format::eR32G32B32Sfloat;
+            sdfAttribs[0].offset   = offsetof(GlyphQuadVertex, pos);
+            sdfAttribs[1].binding  = 0;
+            sdfAttribs[1].location = 1;
+            sdfAttribs[1].format   = vk::Format::eR32G32Sfloat;
+            sdfAttribs[1].offset   = offsetof(GlyphQuadVertex, uv);
+
+            vk::PipelineVertexInputStateCreateInfo sdfVtxInfo;
+            sdfVtxInfo.vertexBindingDescriptionCount   = 1;
+            sdfVtxInfo.pVertexBindingDescriptions      = &sdfVtxBinding;
+            sdfVtxInfo.vertexAttributeDescriptionCount = 2;
+            sdfVtxInfo.pVertexAttributeDescriptions    = sdfAttribs.data();
+
+            // Alpha blending for SDF text.
+            vk::PipelineColorBlendAttachmentState sdfBlend;
+            sdfBlend.colorWriteMask =
+                vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+            sdfBlend.blendEnable         = VK_TRUE;
+            sdfBlend.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+            sdfBlend.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+            sdfBlend.colorBlendOp        = vk::BlendOp::eAdd;
+            sdfBlend.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+            sdfBlend.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+            sdfBlend.alphaBlendOp        = vk::BlendOp::eAdd;
+
+            vk::PipelineColorBlendStateCreateInfo sdfBlendState;
+            sdfBlendState.logicOpEnable   = VK_FALSE;
+            sdfBlendState.attachmentCount = 1;
+            sdfBlendState.pAttachments    = &sdfBlend;
+
+            // No depth write for text overlay.
+            vk::PipelineDepthStencilStateCreateInfo sdfDepth;
+            sdfDepth.depthTestEnable  = VK_TRUE;
+            sdfDepth.depthWriteEnable = VK_FALSE;
+            sdfDepth.depthCompareOp   = vk::CompareOp::eLessOrEqual;
+
+            vk::GraphicsPipelineCreateInfo sdfPipeInfo;
+            sdfPipeInfo.stageCount          = static_cast<uint32_t>(sdfStages.size());
+            sdfPipeInfo.pStages             = sdfStages.data();
+            sdfPipeInfo.pVertexInputState   = &sdfVtxInfo;
+            sdfPipeInfo.pInputAssemblyState = &inputAssembly;
+            sdfPipeInfo.pViewportState      = &viewportState;
+            sdfPipeInfo.pRasterizationState = &rasterizer;
+            sdfPipeInfo.pMultisampleState   = &multisampling;
+            sdfPipeInfo.pDepthStencilState  = &sdfDepth;
+            sdfPipeInfo.pColorBlendState    = &sdfBlendState;
+            sdfPipeInfo.layout              = _sdfPipelineLayout.get();
+            sdfPipeInfo.renderPass          = _renderPass.get();
+            sdfPipeInfo.subpass             = 0;
+
+            auto sdfResult =
+                _device->createGraphicsPipelineUnique(vk::PipelineCache{}, sdfPipeInfo);
+            if (sdfResult.result == vk::Result::eSuccess)
+                _sdfGlyphPipeline = std::move(sdfResult.value);
+            else
+                std::cerr << "Failed to create SDF glyph pipeline" << std::endl;
+        } else
+        {
+            std::cerr << "glyph_sdf shaders not found, SDF text rendering disabled" << std::endl;
+        }
+
         _swapchainFramebuffers.clear();
         _swapchainFramebuffers.reserve(_swapchainImageViews.size());
         for (const auto &imageView : _swapchainImageViews)
@@ -916,9 +1429,205 @@ bool VulkanAPI::recreateSwapchain(uint32_t width, uint32_t height)
     return createSwapchain(width, height);
 }
 
-void VulkanAPI::setEntityModelMatrices(std::vector<glm::mat4> matrices)
+// ---------------------------------------------------------------------------
+// SDF Atlas GPU upload helpers
+// ---------------------------------------------------------------------------
+static constexpr uint32_t kSdfAtlasSize = 1024;
+
+void VulkanAPI::setSdfGlyphData(std::vector<GlyphQuadVertex> vertices,
+                                const std::vector<uint8_t> *atlasPixels, uint32_t atlasGeneration)
 {
-    _entityModelMatrices = std::move(matrices);
+    _sdfGlyphVertices = std::move(vertices);
+    std::fill(_sdfGlyphUploadNeeded.begin(), _sdfGlyphUploadNeeded.end(), true);
+
+    // Re-upload atlas only when new glyphs were added (generation changed).
+    if (_sdfAtlasReady && atlasGeneration == _sdfAtlasGeneration)
+        return;
+
+    if (!atlasPixels || atlasPixels->size() != kSdfAtlasSize * kSdfAtlasSize)
+        return;
+
+    if (!_device)
+        return;
+
+    _sdfAtlasGeneration = atlasGeneration;
+
+    // Upload atlas to a staging buffer then blit to optimal image.
+    // If atlas image not created yet — create it.
+    if (!_sdfAtlasImage)
+    {
+        vk::ImageCreateInfo imgInfo;
+        imgInfo.imageType   = vk::ImageType::e2D;
+        imgInfo.format      = vk::Format::eR8Unorm;
+        imgInfo.extent      = vk::Extent3D{kSdfAtlasSize, kSdfAtlasSize, 1};
+        imgInfo.mipLevels   = 1;
+        imgInfo.arrayLayers = 1;
+        imgInfo.samples     = vk::SampleCountFlagBits::e1;
+        imgInfo.tiling      = vk::ImageTiling::eOptimal;
+        imgInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+        imgInfo.sharingMode   = vk::SharingMode::eExclusive;
+        imgInfo.initialLayout = vk::ImageLayout::eUndefined;
+        _sdfAtlasImage        = _device->createImageUnique(imgInfo);
+
+        auto memReq           = _device->getImageMemoryRequirements(_sdfAtlasImage.get());
+        vk::MemoryAllocateInfo allocInfo;
+        allocInfo.allocationSize = memReq.size;
+        allocInfo.memoryTypeIndex =
+            findMemoryType(memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        _sdfAtlasMemory = _device->allocateMemoryUnique(allocInfo);
+        _device->bindImageMemory(_sdfAtlasImage.get(), _sdfAtlasMemory.get(), 0);
+
+        vk::ImageViewCreateInfo viewInfo;
+        viewInfo.image                           = _sdfAtlasImage.get();
+        viewInfo.viewType                        = vk::ImageViewType::e2D;
+        viewInfo.format                          = vk::Format::eR8Unorm;
+        viewInfo.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+        viewInfo.subresourceRange.baseMipLevel   = 0;
+        viewInfo.subresourceRange.levelCount     = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount     = 1;
+        _sdfAtlasImageView                       = _device->createImageViewUnique(viewInfo);
+
+        vk::SamplerCreateInfo sampInfo;
+        sampInfo.magFilter               = vk::Filter::eLinear;
+        sampInfo.minFilter               = vk::Filter::eLinear;
+        sampInfo.addressModeU            = vk::SamplerAddressMode::eClampToEdge;
+        sampInfo.addressModeV            = vk::SamplerAddressMode::eClampToEdge;
+        sampInfo.addressModeW            = vk::SamplerAddressMode::eClampToEdge;
+        sampInfo.anisotropyEnable        = VK_FALSE;
+        sampInfo.maxAnisotropy           = 1.0f;
+        sampInfo.borderColor             = vk::BorderColor::eFloatOpaqueBlack;
+        sampInfo.unnormalizedCoordinates = VK_FALSE;
+        sampInfo.compareEnable           = VK_FALSE;
+        sampInfo.mipmapMode              = vk::SamplerMipmapMode::eLinear;
+        _sdfAtlasSampler                 = _device->createSamplerUnique(sampInfo);
+    }
+
+    // Staging buffer upload.
+    const vk::DeviceSize dataSize = kSdfAtlasSize * kSdfAtlasSize;
+    vk::BufferCreateInfo stagingBufInfo;
+    stagingBufInfo.size        = dataSize;
+    stagingBufInfo.usage       = vk::BufferUsageFlagBits::eTransferSrc;
+    stagingBufInfo.sharingMode = vk::SharingMode::eExclusive;
+    auto stagingBuf            = _device->createBufferUnique(stagingBufInfo);
+
+    auto stageReq              = _device->getBufferMemoryRequirements(stagingBuf.get());
+    vk::MemoryAllocateInfo stageAlloc;
+    stageAlloc.allocationSize = stageReq.size;
+    stageAlloc.memoryTypeIndex =
+        findMemoryType(stageReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                                    vk::MemoryPropertyFlagBits::eHostCoherent);
+    auto stagingMem = _device->allocateMemoryUnique(stageAlloc);
+    _device->bindBufferMemory(stagingBuf.get(), stagingMem.get(), 0);
+
+    void *mapped = _device->mapMemory(stagingMem.get(), 0, dataSize);
+    std::memcpy(mapped, atlasPixels->data(), static_cast<std::size_t>(dataSize));
+    _device->unmapMemory(stagingMem.get());
+
+    // One-time command to transition + copy + transition back.
+    vk::CommandPoolCreateInfo tmpPoolInfo;
+    tmpPoolInfo.queueFamilyIndex = _graphicsQueueFamily;
+    tmpPoolInfo.flags            = vk::CommandPoolCreateFlagBits::eTransient;
+    auto tmpPool                 = _device->createCommandPoolUnique(tmpPoolInfo);
+
+    vk::CommandBufferAllocateInfo cmdAlloc;
+    cmdAlloc.commandPool        = tmpPool.get();
+    cmdAlloc.level              = vk::CommandBufferLevel::ePrimary;
+    cmdAlloc.commandBufferCount = 1;
+    auto cmds                   = _device->allocateCommandBuffers(cmdAlloc);
+    auto cmd                    = cmds[0];
+
+    vk::CommandBufferBeginInfo beginInfo;
+    beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    cmd.begin(beginInfo);
+
+    // Transition to transfer destination.
+    vk::ImageMemoryBarrier toTransfer;
+    toTransfer.oldLayout                   = vk::ImageLayout::eUndefined;
+    toTransfer.newLayout                   = vk::ImageLayout::eTransferDstOptimal;
+    toTransfer.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
+    toTransfer.dstQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
+    toTransfer.image                       = _sdfAtlasImage.get();
+    toTransfer.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    toTransfer.subresourceRange.levelCount = 1;
+    toTransfer.subresourceRange.layerCount = 1;
+    toTransfer.srcAccessMask               = {};
+    toTransfer.dstAccessMask               = vk::AccessFlagBits::eTransferWrite;
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer,
+                        {}, 0, nullptr, 0, nullptr, 1, &toTransfer);
+
+    vk::BufferImageCopy copyRegion;
+    copyRegion.bufferOffset                    = 0;
+    copyRegion.bufferRowLength                 = 0;
+    copyRegion.bufferImageHeight               = 0;
+    copyRegion.imageSubresource.aspectMask     = vk::ImageAspectFlagBits::eColor;
+    copyRegion.imageSubresource.mipLevel       = 0;
+    copyRegion.imageSubresource.baseArrayLayer = 0;
+    copyRegion.imageSubresource.layerCount     = 1;
+    copyRegion.imageOffset                     = vk::Offset3D{0, 0, 0};
+    copyRegion.imageExtent                     = vk::Extent3D{kSdfAtlasSize, kSdfAtlasSize, 1};
+    cmd.copyBufferToImage(stagingBuf.get(), _sdfAtlasImage.get(),
+                          vk::ImageLayout::eTransferDstOptimal, 1, &copyRegion);
+
+    // Transition to shader read.
+    vk::ImageMemoryBarrier toShaderRead;
+    toShaderRead.oldLayout                   = vk::ImageLayout::eTransferDstOptimal;
+    toShaderRead.newLayout                   = vk::ImageLayout::eShaderReadOnlyOptimal;
+    toShaderRead.srcQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
+    toShaderRead.dstQueueFamilyIndex         = VK_QUEUE_FAMILY_IGNORED;
+    toShaderRead.image                       = _sdfAtlasImage.get();
+    toShaderRead.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    toShaderRead.subresourceRange.levelCount = 1;
+    toShaderRead.subresourceRange.layerCount = 1;
+    toShaderRead.srcAccessMask               = vk::AccessFlagBits::eTransferWrite;
+    toShaderRead.dstAccessMask               = vk::AccessFlagBits::eShaderRead;
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                        vk::PipelineStageFlagBits::eFragmentShader, {}, 0, nullptr, 0, nullptr, 1,
+                        &toShaderRead);
+
+    cmd.end();
+
+    vk::SubmitInfo submitInfo;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers    = &cmd;
+    static_cast<void>(_graphicsQueue.submit(1, &submitInfo, {}));
+    static_cast<void>(_graphicsQueue.waitIdle());
+
+    // Allocate / update descriptor set if not done yet (needs _sdfDescriptorSetLayout).
+    if (_sdfDescriptorSetLayout && _sdfDescriptorPool)
+    {
+        vk::DescriptorImageInfo imageInfo;
+        imageInfo.sampler     = _sdfAtlasSampler.get();
+        imageInfo.imageView   = _sdfAtlasImageView.get();
+        imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+        vk::WriteDescriptorSet write;
+        write.dstSet          = _sdfDescriptorSet;
+        write.dstBinding      = 0;
+        write.descriptorCount = 1;
+        write.descriptorType  = vk::DescriptorType::eCombinedImageSampler;
+        write.pImageInfo      = &imageInfo;
+        _device->updateDescriptorSets(1, &write, 0, nullptr);
+        _sdfAtlasReady = true;
+    }
+}
+
+void VulkanAPI::setEntityModelMatrices(std::vector<glm::mat4> cubeMatrices,
+                                       std::vector<glm::mat4> textVoxelMatrices,
+                                       std::vector<glm::mat4> panelMatrices,
+                                       std::vector<glm::mat4> glyphMatrices,
+                                       std::vector<glm::mat4> sphereMatrices)
+{
+    _cubeEntityModelMatrices      = std::move(cubeMatrices);
+    _textVoxelEntityModelMatrices = std::move(textVoxelMatrices);
+    _panelEntityModelMatrices     = std::move(panelMatrices);
+    if (!glyphMatrices.empty())
+    {
+        _glyphEntityModelMatrices = std::move(glyphMatrices);
+        // Mark all per-image buffers as needing re-upload.
+        std::fill(_glyphInstanceUploadNeeded.begin(), _glyphInstanceUploadNeeded.end(), true);
+    }
+    _sphereEntityModelMatrices = std::move(sphereMatrices);
 }
 
 bool VulkanAPI::drawFrame()
@@ -1112,9 +1821,18 @@ bool VulkanAPI::drawFrame()
                );
         pushConstants.modelMatrix           = glm::mat4(1.0f);
 
-        // Draw ECS entities with cube pipeline
+        const uint64_t frameRenderedVertexCount =
+            static_cast<uint64_t>(_cubeEntityModelMatrices.size()) * 36ull +
+            static_cast<uint64_t>(_textVoxelEntityModelMatrices.size()) * 36ull +
+            static_cast<uint64_t>(_panelEntityModelMatrices.size()) * 6ull +
+            static_cast<uint64_t>(_glyphEntityModelMatrices.size()) * 6ull +
+            static_cast<uint64_t>(_sphereEntityModelMatrices.size()) * 768ull + 18ull + 6ull +
+            768ull;
+        _lastRenderedVertexCount = frameRenderedVertexCount;
+
+        // Draw ECS cube-profile entities.
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
-        for (const auto &modelMatrix : _entityModelMatrices)
+        for (const auto &modelMatrix : _cubeEntityModelMatrices)
         {
             pushConstants.modelMatrix = modelMatrix;
             commandBuffer.pushConstants(_pipelineLayout.get(),
@@ -1122,6 +1840,168 @@ bool VulkanAPI::drawFrame()
                                             vk::ShaderStageFlagBits::eFragment,
                                         0, sizeof(PushConstants), &pushConstants);
             commandBuffer.draw(36, 1, 0, 0);
+        }
+
+        // Draw ECS voxel-text-profile entities.
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _textVoxelPipeline.get());
+        for (const auto &modelMatrix : _textVoxelEntityModelMatrices)
+        {
+            pushConstants.modelMatrix = modelMatrix;
+            commandBuffer.pushConstants(_pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            commandBuffer.draw(36, 1, 0, 0);
+        }
+
+        // Draw ECS panel-profile entities.
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _panelPipeline.get());
+        for (const auto &modelMatrix : _panelEntityModelMatrices)
+        {
+            pushConstants.modelMatrix = modelMatrix;
+            commandBuffer.pushConstants(_pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            commandBuffer.draw(6, 1, 0, 0);
+        }
+
+        // Draw ECS glyph-profile entities (instanced: one draw call for all voxels).
+        const auto glyphCount = static_cast<uint32_t>(_glyphEntityModelMatrices.size());
+        if (glyphCount > 0)
+        {
+            // Ensure per-swapchain-image arrays are large enough.
+            if (_glyphInstanceBuffers.size() <= imageIndex)
+            {
+                _glyphInstanceBuffers.resize(imageIndex + 1);
+                _glyphInstanceMemories.resize(imageIndex + 1);
+                _glyphInstanceBufferCapacities.resize(imageIndex + 1, 0);
+                _glyphInstanceUploadNeeded.resize(imageIndex + 1, true);
+            }
+
+            const vk::DeviceSize needed = sizeof(glm::mat4) * glyphCount;
+            if (needed > _glyphInstanceBufferCapacities[imageIndex])
+            {
+                _glyphInstanceBuffers[imageIndex].reset();
+                _glyphInstanceMemories[imageIndex].reset();
+
+                vk::BufferCreateInfo bufInfo;
+                bufInfo.size                      = needed;
+                bufInfo.usage                     = vk::BufferUsageFlagBits::eVertexBuffer;
+                bufInfo.sharingMode               = vk::SharingMode::eExclusive;
+                _glyphInstanceBuffers[imageIndex] = _device->createBufferUnique(bufInfo);
+
+                const auto memReq =
+                    _device->getBufferMemoryRequirements(_glyphInstanceBuffers[imageIndex].get());
+                vk::MemoryAllocateInfo allocInfo;
+                allocInfo.allocationSize  = memReq.size;
+                allocInfo.memoryTypeIndex = findMemoryType(
+                    memReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                               vk::MemoryPropertyFlagBits::eHostCoherent);
+                _glyphInstanceMemories[imageIndex] = _device->allocateMemoryUnique(allocInfo);
+                _device->bindBufferMemory(_glyphInstanceBuffers[imageIndex].get(),
+                                          _glyphInstanceMemories[imageIndex].get(), 0);
+                _glyphInstanceBufferCapacities[imageIndex] = needed;
+                _glyphInstanceUploadNeeded[imageIndex]     = true;
+            }
+
+            // Only upload to GPU when data changed for this swapchain image.
+            if (_glyphInstanceUploadNeeded[imageIndex])
+            {
+                void *data =
+                    _device->mapMemory(_glyphInstanceMemories[imageIndex].get(), 0, needed);
+                std::memcpy(data, _glyphEntityModelMatrices.data(),
+                            static_cast<std::size_t>(needed));
+                _device->unmapMemory(_glyphInstanceMemories[imageIndex].get());
+                _glyphInstanceUploadNeeded[imageIndex] = false;
+            }
+
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _glyphPipeline.get());
+            commandBuffer.pushConstants(_pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            const vk::DeviceSize offset = 0;
+            commandBuffer.bindVertexBuffers(0, {_glyphInstanceBuffers[imageIndex].get()}, {offset});
+            commandBuffer.draw(6, glyphCount, 0, 0);
+        }
+
+        // Draw SDF glyph quads (flat vertex buffer, atlas sampler).
+        const auto sdfVertCount = static_cast<uint32_t>(_sdfGlyphVertices.size());
+        if (sdfVertCount > 0 && _sdfGlyphPipeline && _sdfAtlasReady)
+        {
+            if (_sdfGlyphVertexBuffers.size() <= imageIndex)
+            {
+                _sdfGlyphVertexBuffers.resize(imageIndex + 1);
+                _sdfGlyphVertexMemories.resize(imageIndex + 1);
+                _sdfGlyphVertexCapacities.resize(imageIndex + 1, 0);
+                _sdfGlyphUploadNeeded.resize(imageIndex + 1, true);
+            }
+
+            const vk::DeviceSize sdfNeeded = sizeof(GlyphQuadVertex) * sdfVertCount;
+            if (sdfNeeded > _sdfGlyphVertexCapacities[imageIndex])
+            {
+                _sdfGlyphVertexBuffers[imageIndex].reset();
+                _sdfGlyphVertexMemories[imageIndex].reset();
+
+                vk::BufferCreateInfo sdfBufInfo;
+                sdfBufInfo.size                    = sdfNeeded;
+                sdfBufInfo.usage                   = vk::BufferUsageFlagBits::eVertexBuffer;
+                sdfBufInfo.sharingMode             = vk::SharingMode::eExclusive;
+                _sdfGlyphVertexBuffers[imageIndex] = _device->createBufferUnique(sdfBufInfo);
+
+                auto sdfMemReq =
+                    _device->getBufferMemoryRequirements(_sdfGlyphVertexBuffers[imageIndex].get());
+                vk::MemoryAllocateInfo sdfAllocInfo;
+                sdfAllocInfo.allocationSize  = sdfMemReq.size;
+                sdfAllocInfo.memoryTypeIndex = findMemoryType(
+                    sdfMemReq.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible |
+                                                  vk::MemoryPropertyFlagBits::eHostCoherent);
+                _sdfGlyphVertexMemories[imageIndex] = _device->allocateMemoryUnique(sdfAllocInfo);
+                _device->bindBufferMemory(_sdfGlyphVertexBuffers[imageIndex].get(),
+                                          _sdfGlyphVertexMemories[imageIndex].get(), 0);
+                _sdfGlyphVertexCapacities[imageIndex] = sdfNeeded;
+                _sdfGlyphUploadNeeded[imageIndex]     = true;
+            }
+
+            if (_sdfGlyphUploadNeeded[imageIndex])
+            {
+                void *sdfPtr =
+                    _device->mapMemory(_sdfGlyphVertexMemories[imageIndex].get(), 0, sdfNeeded);
+                std::memcpy(sdfPtr, _sdfGlyphVertices.data(), static_cast<std::size_t>(sdfNeeded));
+                _device->unmapMemory(_sdfGlyphVertexMemories[imageIndex].get());
+                _sdfGlyphUploadNeeded[imageIndex] = false;
+            }
+
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _sdfGlyphPipeline.get());
+            pushConstants.modelMatrix = glm::mat4(1.0f);
+            // animationData.z/w = clipYMin/clipYMax in world Y (0 disables clip).
+            pushConstants.animationData.z = _sdfClipYMin;
+            pushConstants.animationData.w = _sdfClipYMax;
+            commandBuffer.pushConstants(_sdfPipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            auto sdfDescSet = _sdfDescriptorSet;
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                             _sdfPipelineLayout.get(), 0, 1, &sdfDescSet, 0,
+                                             nullptr);
+            const vk::DeviceSize sdfOffset = 0;
+            commandBuffer.bindVertexBuffers(0, {_sdfGlyphVertexBuffers[imageIndex].get()},
+                                            {sdfOffset});
+            commandBuffer.draw(sdfVertCount, 1, 0, 0);
+        }
+
+        // Draw ECS sphere-profile entities.
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _spherePipeline.get());
+        for (const auto &modelMatrix : _sphereEntityModelMatrices)
+        {
+            pushConstants.modelMatrix = modelMatrix;
+            commandBuffer.pushConstants(_pipelineLayout.get(),
+                                        vk::ShaderStageFlagBits::eVertex |
+                                            vk::ShaderStageFlagBits::eFragment,
+                                        0, sizeof(PushConstants), &pushConstants);
+            commandBuffer.draw(768, 1, 0, 0);
         }
 
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _pyramidPipeline.get());

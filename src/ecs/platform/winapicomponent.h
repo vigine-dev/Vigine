@@ -6,6 +6,7 @@
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <windows.h>
 
 namespace vigine
@@ -21,6 +22,7 @@ class WinAPIComponent : public WindowComponent
     void runFrame();
     void updateFpsOverlayPosition();
     void toggleOverlayVisibility();
+    void setRenderedVertexCount(uint64_t vertexCount);
 
   protected:
     void show() override;
@@ -39,6 +41,7 @@ class WinAPIComponent : public WindowComponent
     std::array<char, 64> _fpsText{"FPS: --"};
     std::array<char, 256> _gpuName{"Unknown"};
     std::array<char, 512> _overlayText{"FPS: --"};
+    uint64_t _renderedVertexCount{0};
     bool _overlayVisible{true};
 };
 } // namespace platform

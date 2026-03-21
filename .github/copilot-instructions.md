@@ -19,6 +19,12 @@
 - Prefer small, targeted patches over large rewrites.
 - Avoid adding platform-specific logic to cross-platform interfaces.
 
+## Geometry and Shader Isolation Rule
+- When implementing a new geometric UI/scene element (for example: cube, pyramid, board/panel, focus frame, gizmo, or helper shape), keep it independent from unrelated elements.
+- Each new element must have its own geometry definition and its own dedicated shader pair (vertex + fragment), even if another existing shader appears similar.
+- Do not reuse a text/editor shader for non-text elements and do not reuse panel/editor shaders for focus-frame effects.
+- Keep visual behavior and animation parameters local to that element's shader pipeline to avoid cross-feature coupling and accidental regressions.
+
 ## Cross-Platform Architecture Rule
 - Design new features with future multi-OS support in mind (Windows/Linux/macOS).
 - Keep core behavior platform-agnostic and expressed via interfaces/abstractions.

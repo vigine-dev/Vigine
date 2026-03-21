@@ -12,6 +12,9 @@ class AbstractState
 
 class InitWindowTask
 class RunWindowTask
+class SetupTextEditTask
+class TextEditorSystem
+class TextEditState
 class ProcessInputEventTask
 class InitBDTask
 class CheckBDShecmeTask
@@ -56,6 +59,9 @@ WindowEventHandler --|> IWindowEventHandler
 InitWindowTask --> PlatformService
 InitWindowTask --> IWindowEventHandler : creates and sets
 RunWindowTask --> PlatformService
+RunWindowTask --> TextEditorSystem : uses
+SetupTextEditTask --> TextEditorSystem : configures
+TextEditorSystem --> TextEditState : owns/updates
 
 RunWindowTask --|> IMouseEventSignalEmiter
 RunWindowTask --|> IKeyEventSignalEmiter

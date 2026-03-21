@@ -15,12 +15,8 @@ layout(location = 0) out vec4 outFragColor;
 
 void main()
 {
-    vec3 sunDir        = normalize(pushData.sunDirectionIntensity.xyz);
-    float sunIntensity = max(pushData.sunDirectionIntensity.w, 0.0);
-    float ambient      = pushData.lightingParams.x;
-    float diffuseMult  = pushData.lightingParams.y;
-    float ndotl        = max(dot(normalize(inWorldNormal), -sunDir), 0.0);
-    float lightFactor  = clamp(ambient + diffuseMult * ndotl * sunIntensity, 0.0, 5.0);
-
-    outFragColor = vec4(inColor * lightFactor, 1.0);
+    vec3 sunDir       = normalize(pushData.sunDirectionIntensity.xyz);
+    float ndotl       = max(dot(normalize(inWorldNormal), -sunDir), 0.0);
+    float lightFactor = 0.55 + 0.45 * ndotl;
+    outFragColor      = vec4(inColor * lightFactor, 1.0);
 }
