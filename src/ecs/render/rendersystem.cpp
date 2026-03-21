@@ -94,6 +94,72 @@ bool RenderSystem::resize(uint32_t width, uint32_t height)
     return _vulkanAPI->recreateSwapchain(width, height);
 }
 
+void RenderSystem::beginCameraDrag(int x, int y)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->beginCameraDrag(x, y);
+}
+
+void RenderSystem::updateCameraDrag(int x, int y)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->updateCameraDrag(x, y);
+}
+
+void RenderSystem::endCameraDrag()
+{
+    if (_vulkanAPI)
+        _vulkanAPI->endCameraDrag();
+}
+
+void RenderSystem::zoomCamera(int delta)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->zoomCamera(delta);
+}
+
+void RenderSystem::setMoveForwardActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveForwardActive(active);
+}
+
+void RenderSystem::setMoveBackwardActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveBackwardActive(active);
+}
+
+void RenderSystem::setMoveLeftActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveLeftActive(active);
+}
+
+void RenderSystem::setMoveRightActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveRightActive(active);
+}
+
+void RenderSystem::setMoveUpActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveUpActive(active);
+}
+
+void RenderSystem::setMoveDownActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setMoveDownActive(active);
+}
+
+void RenderSystem::setSprintActive(bool active)
+{
+    if (_vulkanAPI)
+        _vulkanAPI->setSprintActive(active);
+}
+
 void RenderSystem::entityBound()
 {
     // Find the first render component and set it as bound

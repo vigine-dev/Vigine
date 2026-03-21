@@ -3,7 +3,11 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <fstream>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/geometric.hpp>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -27,12 +31,32 @@ using namespace vigine::graphics;
 
 namespace
 {
-struct PushConstants
+struct CameraControlsConfig
 {
-    float cubeAngle;
-    float pyramidAngle;
-    float aspect;
+    float mouseLookSensitivity{0.01f};
+    float pitchLimitRad{1.45f};
+    float moveSpeedUnitsPerSec{3.5f};
+    float sprintMultiplier{2.1f};
+    float wheelStep{120.0f};
+    float wheelMovePerStep{0.8f};
+    float acceleration{12.0f};
+    float stopVelocityEpsilon{0.01f};
+    float nearPlane{0.1f};
+    float farPlane{250.0f};
 };
+
+constexpr CameraControlsConfig kCameraControls{};
+
+glm::vec3 cameraForward(float yaw, float pitch)
+{
+    return glm::normalize(glm::vec3(std::cos(pitch) * std::sin(yaw), std::sin(pitch),
+                                    -std::cos(pitch) * std::cos(yaw)));
+}
+
+glm::vec3 flatForward(float yaw)
+{
+    return glm::normalize(glm::vec3(std::sin(yaw), 0.0f, -std::cos(yaw)));
+}
 
 std::vector<char> loadBinaryFile(const std::vector<std::string> &candidates)
 {
@@ -57,6 +81,53 @@ std::vector<char> loadBinaryFile(const std::vector<std::string> &candidates)
 } // namespace
 
 VulkanAPI::VulkanAPI() { _validationLayers.push_back("VK_LAYER_KHRONOS_validation"); }
+
+void VulkanAPI::beginCameraDrag(int x, int y)
+{
+    _cameraDragActive   = true;
+    _lastCameraPointerX = x;
+    _lastCameraPointerY = y;
+}
+
+void VulkanAPI::updateCameraDrag(int x, int y)
+{
+    if (!_cameraDragActive)
+        return;
+
+    const int deltaX  = x - _lastCameraPointerX;
+    const int deltaY  = y - _lastCameraPointerY;
+
+    _cameraYaw       += static_cast<float>(deltaX) * kCameraControls.mouseLookSensitivity;
+    _cameraPitch =
+        std::clamp(_cameraPitch - static_cast<float>(deltaY) * kCameraControls.mouseLookSensitivity,
+                   -kCameraControls.pitchLimitRad, kCameraControls.pitchLimitRad);
+
+    _lastCameraPointerX = x;
+    _lastCameraPointerY = y;
+}
+
+void VulkanAPI::endCameraDrag() { _cameraDragActive = false; }
+
+void VulkanAPI::zoomCamera(int delta)
+{
+    _cameraPosition += cameraForward(_cameraYaw, _cameraPitch) *
+                       ((static_cast<float>(delta) / kCameraControls.wheelStep) *
+                        kCameraControls.wheelMovePerStep);
+}
+
+void VulkanAPI::setMoveForwardActive(bool active) { _moveForwardActive = active; }
+
+void VulkanAPI::setMoveBackwardActive(bool active) { _moveBackwardActive = active; }
+
+void VulkanAPI::setMoveLeftActive(bool active) { _moveLeftActive = active; }
+
+void VulkanAPI::setMoveRightActive(bool active) { _moveRightActive = active; }
+
+void VulkanAPI::setMoveUpActive(bool active) { _moveUpActive = active; }
+
+void VulkanAPI::setMoveDownActive(bool active) { _moveDownActive = active; }
+
+void VulkanAPI::setSprintActive(bool active) { _sprintActive = active; }
 
 VulkanAPI::~VulkanAPI()
 {
@@ -603,9 +674,10 @@ bool VulkanAPI::createSwapchain(uint32_t width, uint32_t height)
         colorBlending.pAttachments    = &colorBlendAttachment;
 
         vk::PushConstantRange pushConstantRange;
-        pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
-        pushConstantRange.offset     = 0;
-        pushConstantRange.size       = sizeof(PushConstants);
+        pushConstantRange.stageFlags =
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size   = sizeof(VulkanAPI::PushConstants);
 
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
         pipelineLayoutInfo.setLayoutCount         = 0;
@@ -731,6 +803,41 @@ bool VulkanAPI::drawFrame()
         _cubeRotationAngle    += kCubeRotationSpeedRadPerSec * deltaSeconds;
         _pyramidRotationAngle -= kPyramidRotationSpeedRadPerSec * deltaSeconds;
 
+        glm::vec3 desiredDirection(0.0f);
+        const glm::vec3 forwardPlanar = flatForward(_cameraYaw);
+        const glm::vec3 rightPlanar =
+            glm::normalize(glm::cross(forwardPlanar, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+        if (_moveForwardActive)
+            desiredDirection += forwardPlanar;
+        if (_moveBackwardActive)
+            desiredDirection -= forwardPlanar;
+        if (_moveRightActive)
+            desiredDirection += rightPlanar;
+        if (_moveLeftActive)
+            desiredDirection -= rightPlanar;
+        if (_moveUpActive)
+            desiredDirection += glm::vec3(0.0f, 1.0f, 0.0f);
+        if (_moveDownActive)
+            desiredDirection -= glm::vec3(0.0f, 1.0f, 0.0f);
+
+        glm::vec3 desiredVelocity(0.0f);
+        if (glm::dot(desiredDirection, desiredDirection) > 0.0f)
+        {
+            const float sprintFactor = _sprintActive ? kCameraControls.sprintMultiplier : 1.0f;
+            desiredVelocity          = glm::normalize(desiredDirection) *
+                              (kCameraControls.moveSpeedUnitsPerSec * sprintFactor);
+        }
+
+        const float response  = 1.0f - std::exp(-kCameraControls.acceleration * deltaSeconds);
+        _cameraVelocity      += (desiredVelocity - _cameraVelocity) * response;
+
+        if (glm::dot(_cameraVelocity, _cameraVelocity) <
+            kCameraControls.stopVelocityEpsilon * kCameraControls.stopVelocityEpsilon)
+            _cameraVelocity = glm::vec3(0.0f);
+
+        _cameraPosition += _cameraVelocity * deltaSeconds;
+
         if (_swapchainRecreateRequested)
         {
             if (!recreateSwapchainFromSurfaceExtent())
@@ -834,15 +941,33 @@ bool VulkanAPI::drawFrame()
         commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, _graphicsPipeline.get());
 
-        PushConstants pushConstants{};
-        pushConstants.cubeAngle    = _cubeRotationAngle;
-        pushConstants.pyramidAngle = _pyramidRotationAngle;
-        pushConstants.aspect       = static_cast<float>(_swapchainExtent.width) /
-                               static_cast<float>((std::max)(_swapchainExtent.height, 1u));
-        commandBuffer.pushConstants(_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0,
-                                    sizeof(PushConstants), &pushConstants);
+        const float aspect = static_cast<float>(_swapchainExtent.width) /
+                             static_cast<float>((std::max)(_swapchainExtent.height, 1u));
+        const glm::vec3 forward = cameraForward(_cameraYaw, _cameraPitch);
+        const glm::mat4 view =
+            glm::lookAt(_cameraPosition, _cameraPosition + forward, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 projection = glm::perspective(
+            glm::radians(60.0f), aspect, kCameraControls.nearPlane, kCameraControls.farPlane);
+        projection[1][1] *= -1.0f;
+
+        VulkanAPI::PushConstants pushConstants{};
+        pushConstants.viewProjection = projection * view;
+        pushConstants.animationData =
+            glm::vec4(_cubeRotationAngle, _pyramidRotationAngle, aspect, 0.0f);
+        const glm::vec3 sunlightDirection   = glm::normalize(glm::vec3(-0.45f, -1.0f, -0.30f));
+        pushConstants.sunDirectionIntensity = glm::vec4(sunlightDirection, 1.25f);
+        pushConstants.lightingParams        = glm::vec4(0.42f, // ambient
+                                                        1.05f, // diffuse multiplier
+                                                        0.20f, // grid brightness boost
+                                                        0.0f   // reserved
+               );
+        commandBuffer.pushConstants(_pipelineLayout.get(),
+                                    vk::ShaderStageFlagBits::eVertex |
+                                        vk::ShaderStageFlagBits::eFragment,
+                                    0, sizeof(PushConstants), &pushConstants);
         commandBuffer.draw(36, 1, 0, 0);
         commandBuffer.draw(18, 1, 36, 0);
+        commandBuffer.draw(6, 1, 54, 0);
         commandBuffer.endRenderPass();
 
         vk::ImageMemoryBarrier toPresent;

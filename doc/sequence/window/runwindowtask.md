@@ -43,7 +43,11 @@ else service exists
               T-->>Caller: Result(Error, unsupported handler type)
             else cast success
               T->>WH: setMouseButtonDownCallback(lambda)
+              T->>WH: setMouseButtonUpCallback(lambda)
+              T->>WH: setMouseMoveCallback(lambda)
+              T->>WH: setMouseWheelCallback(lambda)
               T->>WH: setKeyDownCallback(lambda)
+              T->>WH: setKeyUpCallback(lambda)
             end
           end
 
@@ -61,3 +65,11 @@ else service exists
   end
 end
 ```
+
+## Input Mappings
+
+- `W/S/A/D` horizontal movement of camera.
+- `Q/E` vertical movement of camera.
+- `Shift` sprint while held.
+- `LMB + Mouse Move` camera look.
+- `Mouse Wheel` forward/backward movement along view direction.

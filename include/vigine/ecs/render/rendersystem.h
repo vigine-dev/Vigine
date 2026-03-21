@@ -33,10 +33,21 @@ class RenderSystem : public AbstractSystem
     [[nodiscard]] bool initializeWindowSurface(void *nativeWindowHandle, uint32_t width,
                                                uint32_t height);
     [[nodiscard]] bool resize(uint32_t width, uint32_t height);
+    void beginCameraDrag(int x, int y);
+    void updateCameraDrag(int x, int y);
+    void endCameraDrag();
+    void zoomCamera(int delta);
+    void setMoveForwardActive(bool active);
+    void setMoveBackwardActive(bool active);
+    void setMoveLeftActive(bool active);
+    void setMoveRightActive(bool active);
+    void setMoveUpActive(bool active);
+    void setMoveDownActive(bool active);
+    void setSprintActive(bool active);
 
   protected:
-    virtual void entityBound();
-    virtual void entityUnbound();
+    void entityBound() override;
+    void entityUnbound() override;
 
   private:
     std::unique_ptr<VulkanAPI> _vulkanAPI;

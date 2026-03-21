@@ -9,9 +9,29 @@ void WindowEventHandler::setMouseButtonDownCallback(MouseButtonDownCallback call
     _onMouseButtonDown = std::move(callback);
 }
 
+void WindowEventHandler::setMouseButtonUpCallback(MouseButtonUpCallback callback)
+{
+    _onMouseButtonUp = std::move(callback);
+}
+
+void WindowEventHandler::setMouseMoveCallback(MouseMoveCallback callback)
+{
+    _onMouseMove = std::move(callback);
+}
+
+void WindowEventHandler::setMouseWheelCallback(MouseWheelCallback callback)
+{
+    _onMouseWheel = std::move(callback);
+}
+
 void WindowEventHandler::setKeyDownCallback(KeyDownCallback callback)
 {
     _onKeyDown = std::move(callback);
+}
+
+void WindowEventHandler::setKeyUpCallback(KeyUpCallback callback)
+{
+    _onKeyUp = std::move(callback);
 }
 
 void WindowEventHandler::setWindowResizedCallback(WindowResizedCallback callback)
@@ -47,8 +67,8 @@ void WindowEventHandler::onWindowUnfocused()
 
 void WindowEventHandler::onMouseMove(int x, int y)
 {
-    static_cast<void>(x);
-    static_cast<void>(y);
+    if (_onMouseMove)
+        _onMouseMove(x, y);
 }
 
 void WindowEventHandler::onMouseEnter()
@@ -63,8 +83,8 @@ void WindowEventHandler::onMouseLeave()
 
 void WindowEventHandler::onMouseWheel(int delta, int x, int y)
 {
-    std::cout << "[" << _handlerId << "] Mouse wheel: delta=" << delta << " at " << x << ", " << y
-              << std::endl;
+    if (_onMouseWheel)
+        _onMouseWheel(delta, x, y);
 }
 
 void WindowEventHandler::onMouseHorizontalWheel(int delta, int x, int y)
@@ -86,6 +106,9 @@ void WindowEventHandler::onMouseButtonUp(vigine::platform::MouseButton button, i
 {
     std::cout << "[" << _handlerId << "] WindowEventHandler::onMouseButtonUp: Mouse button up: "
               << static_cast<int>(button) << " at " << x << ", " << y << std::endl;
+
+    if (_onMouseButtonUp)
+        _onMouseButtonUp(button, x, y);
 }
 
 void WindowEventHandler::onMouseButtonDoubleClick(vigine::platform::MouseButton button, int x,
@@ -108,8 +131,6 @@ void WindowEventHandler::onKeyDown(const vigine::platform::KeyEvent &event)
         _onKeyDown(event);
 }
 
-// COPILOT_TODO: Якщо key-up потрібен бізнес-логіці, додай окремий callback/сигнал; зараз ця подія
-// лише логується і далі губиться.
 void WindowEventHandler::onKeyUp(const vigine::platform::KeyEvent &event)
 {
     std::cout << "[" << _handlerId
@@ -117,6 +138,9 @@ void WindowEventHandler::onKeyUp(const vigine::platform::KeyEvent &event)
               << ", scan=" << event.scanCode << ", mods=" << event.modifiers
               << ", repeatCount=" << event.repeatCount << ", isRepeat=" << event.isRepeat
               << std::endl;
+
+    if (_onKeyUp)
+        _onKeyUp(event);
 }
 
 // COPILOT_TODO: Або прокинути text input далі через callback, або явно зафіксувати, що текстові

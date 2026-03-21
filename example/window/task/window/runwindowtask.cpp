@@ -12,6 +12,19 @@
 
 #include <iostream>
 
+namespace
+{
+constexpr unsigned int kKeyW          = 'W';
+constexpr unsigned int kKeyA          = 'A';
+constexpr unsigned int kKeyS          = 'S';
+constexpr unsigned int kKeyD          = 'D';
+constexpr unsigned int kKeyQ          = 'Q';
+constexpr unsigned int kKeyE          = 'E';
+constexpr unsigned int kKeyShift      = 0x10;
+constexpr unsigned int kKeyLeftShift  = 0xA0;
+constexpr unsigned int kKeyRightShift = 0xA1;
+} // namespace
+
 RunWindowTask::RunWindowTask() {}
 
 void RunWindowTask::contextChanged()
@@ -77,6 +90,14 @@ vigine::Result RunWindowTask::execute()
                                   << std::endl;
                         onMouseButtonDown(button, x, y);
                     });
+                windowEventHandler->setMouseButtonUpCallback(
+                    [this](vigine::platform::MouseButton button, int x, int y) {
+                        onMouseButtonUp(button, x, y);
+                    });
+                windowEventHandler->setMouseMoveCallback(
+                    [this](int x, int y) { onMouseMove(x, y); });
+                windowEventHandler->setMouseWheelCallback(
+                    [this](int delta, int x, int y) { onMouseWheel(delta, x, y); });
                 windowEventHandler->setKeyDownCallback(
                     [this](const vigine::platform::KeyEvent &event) {
                         std::cout << "[RunWindowTask::execute::lambda] keyCode=" << event.keyCode
@@ -86,6 +107,8 @@ vigine::Result RunWindowTask::execute()
                                   << ", isRepeat=" << event.isRepeat << std::endl;
                         onKeyDown(event);
                     });
+                windowEventHandler->setKeyUpCallback(
+                    [this](const vigine::platform::KeyEvent &event) { onKeyUp(event); });
                 windowEventHandler->setWindowResizedCallback([this, window](int width, int height) {
                     onWindowResized(window, width, height);
                 });
@@ -142,16 +165,85 @@ vigine::Result RunWindowTask::execute()
 
 void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int x, int y)
 {
+    if (_renderSystem && button == vigine::platform::MouseButton::Left)
+        _renderSystem->beginCameraDrag(x, y);
+
     std::cout << "[RunWindowTask::onMouseButtonDown] button=" << static_cast<int>(button)
               << ", x=" << x << ", y=" << y << std::endl;
     emitMouseButtonDownSignal(button, x, y);
 }
 
+void RunWindowTask::onMouseButtonUp(vigine::platform::MouseButton button, int x, int y)
+{
+    static_cast<void>(x);
+    static_cast<void>(y);
+
+    if (_renderSystem && button == vigine::platform::MouseButton::Left)
+        _renderSystem->endCameraDrag();
+}
+
+void RunWindowTask::onMouseMove(int x, int y)
+{
+    if (_renderSystem)
+        _renderSystem->updateCameraDrag(x, y);
+}
+
+void RunWindowTask::onMouseWheel(int delta, int x, int y)
+{
+    static_cast<void>(x);
+    static_cast<void>(y);
+
+    if (_renderSystem)
+        _renderSystem->zoomCamera(delta);
+}
+
 void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
 {
+    updateCameraMovementKey(event.keyCode, true);
+
     std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
               << ", scanCode=" << event.scanCode << std::endl;
     emitKeyDownSignal(event);
+}
+
+void RunWindowTask::onKeyUp(const vigine::platform::KeyEvent &event)
+{
+    updateCameraMovementKey(event.keyCode, false);
+}
+
+void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
+{
+    if (!_renderSystem)
+        return;
+
+    switch (keyCode)
+    {
+    case kKeyW:
+        _renderSystem->setMoveForwardActive(pressed);
+        break;
+    case kKeyS:
+        _renderSystem->setMoveBackwardActive(pressed);
+        break;
+    case kKeyA:
+        _renderSystem->setMoveLeftActive(pressed);
+        break;
+    case kKeyD:
+        _renderSystem->setMoveRightActive(pressed);
+        break;
+    case kKeyQ:
+        _renderSystem->setMoveDownActive(pressed);
+        break;
+    case kKeyE:
+        _renderSystem->setMoveUpActive(pressed);
+        break;
+    case kKeyShift:
+    case kKeyLeftShift:
+    case kKeyRightShift:
+        _renderSystem->setSprintActive(pressed);
+        break;
+    default:
+        break;
+    }
 }
 
 void RunWindowTask::onWindowResized(vigine::platform::WindowComponent *window, int width,

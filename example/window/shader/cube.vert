@@ -2,16 +2,23 @@
 
 layout(push_constant) uniform Push
 {
-    float cubeAngle;
-    float pyramidAngle;
-    float aspect;
+    mat4 viewProjection;
+    vec4 animationData;
+    vec4 sunDirectionIntensity;
+    vec4 lightingParams;
 } pushData;
 
 layout(location = 0) out vec3 outColor;
+layout(location = 1) out vec3 outWorldPosition;
+layout(location = 2) flat out int outSurfaceKind;
+layout(location = 3) out vec3 outWorldNormal;
 
 const int cubeVertexCount = 36;
+const int pyramidVertexCount = 18;
+const int gridVertexCount = 6;
+const int gridStartVertex = cubeVertexCount + pyramidVertexCount;
 
-const vec3 positions[54] = vec3[](
+const vec3 positions[60] = vec3[](
     vec3(-0.5, -0.5,  0.5), vec3( 0.5, -0.5,  0.5), vec3( 0.5,  0.5,  0.5),
     vec3(-0.5, -0.5,  0.5), vec3( 0.5,  0.5,  0.5), vec3(-0.5,  0.5,  0.5),
 
@@ -36,7 +43,10 @@ const vec3 positions[54] = vec3[](
     vec3( 0.4, -0.5, -0.4), vec3(-0.4, -0.5, -0.4), vec3( 0.0,  0.5,  0.0),
     vec3(-0.4, -0.5, -0.4), vec3(-0.4, -0.5,  0.4), vec3( 0.0,  0.5,  0.0),
     vec3(-0.4, -0.5, -0.4), vec3( 0.4, -0.5, -0.4), vec3( 0.4, -0.5,  0.4),
-    vec3(-0.4, -0.5, -0.4), vec3( 0.4, -0.5,  0.4), vec3(-0.4, -0.5,  0.4)
+    vec3(-0.4, -0.5, -0.4), vec3( 0.4, -0.5,  0.4), vec3(-0.4, -0.5,  0.4),
+
+    vec3(-24.0, -0.75, -26.0), vec3( 24.0, -0.75, -26.0), vec3( 24.0, -0.75,  18.0),
+    vec3(-24.0, -0.75, -26.0), vec3( 24.0, -0.75,  18.0), vec3(-24.0, -0.75,  18.0)
 );
 
 const vec3 cubeColors[6] = vec3[](
@@ -80,40 +90,55 @@ mat4 rotateY(float a)
     );
 }
 
-mat4 perspective(float fovy, float aspect, float zNear, float zFar)
-{
-    float f = 1.0 / tan(fovy * 0.5);
-    return mat4(
-        f / aspect, 0, 0, 0,
-        0, -f, 0, 0,
-        0, 0, zFar / (zNear - zFar), -1,
-        0, 0, (zNear * zFar) / (zNear - zFar), 0
-    );
-}
-
 void main()
 {
     int vertexIndex = gl_VertexIndex;
     bool isCube = vertexIndex < cubeVertexCount;
+    bool isPyramid = vertexIndex >= cubeVertexCount && vertexIndex < gridStartVertex;
+    bool isGrid = vertexIndex >= gridStartVertex && vertexIndex < (gridStartVertex + gridVertexCount);
     vec3 p = positions[vertexIndex];
-    float objectAngle = isCube ? pushData.cubeAngle : pushData.pyramidAngle;
-    mat4 model = rotateY(objectAngle) * rotateX(objectAngle * 0.6);
-    float aspect = max(pushData.aspect, 0.0001);
-    mat4 proj = perspective(radians(60.0), aspect, 0.1, 10.0);
-    vec4 world = model * vec4(p, 1.0);
+    vec4 world;
+    vec3 worldNormal;
 
-    world.x += isCube ? -0.9 : 0.9;
-    world.z -= isCube ? 2.75 : 2.2;
-
-    gl_Position = proj * world;
-    if (isCube)
+    if (isGrid)
     {
-        outColor = cubeColors[vertexIndex / 6];
+        world = vec4(p, 1.0);
+        outColor = vec3(0.0);
+        outSurfaceKind = 1;
+        outWorldNormal = vec3(0.0, 1.0, 0.0);
     }
     else
     {
-        int pyramidVertex = vertexIndex - cubeVertexCount;
-        int faceIndex = pyramidVertex < 12 ? (pyramidVertex / 3) : 4;
-        outColor = pyramidColors[faceIndex];
+        float objectAngle = isCube ? pushData.animationData.x : pushData.animationData.y;
+        mat4 model = rotateY(objectAngle) * rotateX(objectAngle * 0.6);
+
+        int triStart = (vertexIndex / 3) * 3;
+        vec3 lp0 = positions[triStart + 0];
+        vec3 lp1 = positions[triStart + 1];
+        vec3 lp2 = positions[triStart + 2];
+        vec3 localNormal = normalize(cross(lp1 - lp0, lp2 - lp0));
+        worldNormal = normalize(mat3(model) * localNormal);
+
+        world = model * vec4(p, 1.0);
+
+        world.x += isCube ? -0.9 : 0.9;
+        world.z -= isCube ? 2.75 : 2.2;
+        outSurfaceKind = 0;
+
+        if (isCube)
+        {
+            outColor = cubeColors[vertexIndex / 6];
+        }
+        else if (isPyramid)
+        {
+            int pyramidVertex = vertexIndex - cubeVertexCount;
+            int faceIndex = pyramidVertex < 12 ? (pyramidVertex / 3) : 4;
+            outColor = pyramidColors[faceIndex];
+        }
+
+        outWorldNormal = worldNormal;
     }
+
+    gl_Position = pushData.viewProjection * world;
+    outWorldPosition = world.xyz;
 }

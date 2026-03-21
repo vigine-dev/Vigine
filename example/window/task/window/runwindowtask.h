@@ -33,10 +33,15 @@ class RunWindowTask : public vigine::AbstractTask,
     vigine::Result execute() override;
 
     void onMouseButtonDown(vigine::platform::MouseButton button, int x, int y);
+    void onMouseButtonUp(vigine::platform::MouseButton button, int x, int y);
+    void onMouseMove(int x, int y);
+    void onMouseWheel(int delta, int x, int y);
     void onKeyDown(const vigine::platform::KeyEvent &event);
+    void onKeyUp(const vigine::platform::KeyEvent &event);
 
   private:
     void onWindowResized(vigine::platform::WindowComponent *window, int width, int height);
+    void updateCameraMovementKey(unsigned int keyCode, bool pressed);
 
     vigine::platform::PlatformService *_platformService{nullptr};
     vigine::graphics::GraphicsService *_graphicsService{nullptr};
