@@ -4,18 +4,21 @@
 
 #include "vigine/ecs/platform/iwindoweventhandler.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <thread>
+#include <timeapi.h>
 #include <windows.h>
 #include <windowsx.h>
+#pragma comment(lib, "winmm.lib")
 
 namespace
 {
-constexpr char kWindowClassName[] = "VigineWindowClass";
-constexpr int kOverlayWidth       = 340;
-constexpr int kOverlayHeight      = 92;
+constexpr wchar_t kWindowClassName[] = L"VigineWindowClass";
+constexpr int kOverlayWidth          = 340;
+constexpr int kOverlayHeight         = 108;
 
 constexpr bool wasDownBefore(LPARAM lParam) { return (lParam & (1 << 30)) != 0; }
 
@@ -48,6 +51,38 @@ unsigned int queryModifiers()
         modifiers |= KeyModifierNum;
 
     return modifiers;
+}
+
+uint16_t gPendingHighSurrogate = 0;
+
+bool decodeUtf16CodeUnit(uint16_t codeUnit, unsigned int &codePoint)
+{
+    // UTF-16 high surrogate: wait for the next low surrogate.
+    if (codeUnit >= 0xD800u && codeUnit <= 0xDBFFu)
+    {
+        gPendingHighSurrogate = codeUnit;
+        return false;
+    }
+
+    // UTF-16 low surrogate: combine with stored high surrogate if present.
+    if (codeUnit >= 0xDC00u && codeUnit <= 0xDFFFu)
+    {
+        if (gPendingHighSurrogate != 0)
+        {
+            const uint32_t high   = static_cast<uint32_t>(gPendingHighSurrogate) - 0xD800u;
+            const uint32_t low    = static_cast<uint32_t>(codeUnit) - 0xDC00u;
+            codePoint             = 0x10000u + ((high << 10u) | low);
+            gPendingHighSurrogate = 0;
+            return true;
+        }
+
+        // Isolated low surrogate: ignore.
+        return false;
+    }
+
+    gPendingHighSurrogate = 0;
+    codePoint             = static_cast<unsigned int>(codeUnit);
+    return true;
 }
 
 std::string queryGpuNameForWindow(HWND hwnd)
@@ -144,13 +179,13 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
     if (message == WM_CREATE)
     {
-        CREATESTRUCTA *pCreate = reinterpret_cast<CREATESTRUCTA *>(lParam);
+        CREATESTRUCTW *pCreate = reinterpret_cast<CREATESTRUCTW *>(lParam);
         pThis = reinterpret_cast<vigine::platform::WinAPIComponent *>(pCreate->lpCreateParams);
-        SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
     } else
     {
         pThis = reinterpret_cast<vigine::platform::WinAPIComponent *>(
-            GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+            GetWindowLongPtrW(hwnd, GWLP_USERDATA));
     }
 
     auto *eventHandler = pThis ? pThis->_eventHandler : nullptr;
@@ -163,7 +198,7 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
             return 0;
         }
 
-        return DefWindowProcA(hwnd, message, wParam, lParam);
+        return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
     switch (message)
@@ -291,23 +326,35 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
         });
         return 0;
     case WM_CHAR:
-    case WM_SYSCHAR:
-        eventHandler->onChar(vigine::platform::TextEvent{
-            .codePoint   = static_cast<unsigned int>(wParam),
-            .modifiers   = queryModifiers(),
-            .repeatCount = keyRepeatCount(lParam),
-        });
+    case WM_SYSCHAR: {
+        unsigned int codePoint  = 0;
+        const uint16_t codeUnit = static_cast<uint16_t>(wParam & 0xFFFFu);
+        if (decodeUtf16CodeUnit(codeUnit, codePoint))
+        {
+            eventHandler->onChar(vigine::platform::TextEvent{
+                .codePoint   = codePoint,
+                .modifiers   = queryModifiers(),
+                .repeatCount = keyRepeatCount(lParam),
+            });
+        }
         return 0;
+    }
     case WM_DEADCHAR:
-    case WM_SYSDEADCHAR:
-        eventHandler->onDeadChar(vigine::platform::TextEvent{
-            .codePoint   = static_cast<unsigned int>(wParam),
-            .modifiers   = queryModifiers(),
-            .repeatCount = keyRepeatCount(lParam),
-        });
+    case WM_SYSDEADCHAR: {
+        unsigned int codePoint  = 0;
+        const uint16_t codeUnit = static_cast<uint16_t>(wParam & 0xFFFFu);
+        if (decodeUtf16CodeUnit(codeUnit, codePoint))
+        {
+            eventHandler->onDeadChar(vigine::platform::TextEvent{
+                .codePoint   = codePoint,
+                .modifiers   = queryModifiers(),
+                .repeatCount = keyRepeatCount(lParam),
+            });
+        }
         return 0;
+    }
     default:
-        return DefWindowProcA(hwnd, message, wParam, lParam);
+        return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 }
 } // namespace
@@ -319,9 +366,9 @@ bool vigine::platform::WinAPIComponent::ensureWindowCreated()
     if (_windowHandle)
         return true;
 
-    const HINSTANCE instance = GetModuleHandleA(nullptr);
+    const HINSTANCE instance = GetModuleHandleW(nullptr);
 
-    WNDCLASSEXA windowClass{};
+    WNDCLASSEXW windowClass{};
     windowClass.cbSize        = sizeof(windowClass);
     windowClass.style         = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc   = windowProc;
@@ -330,12 +377,12 @@ bool vigine::platform::WinAPIComponent::ensureWindowCreated()
     windowClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     windowClass.lpszClassName = kWindowClassName;
 
-    const ATOM classAtom      = RegisterClassExA(&windowClass);
+    const ATOM classAtom      = RegisterClassExW(&windowClass);
     if (classAtom == 0 && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
         return false;
 
     _windowHandle =
-        CreateWindowExA(0, kWindowClassName, "Vigine Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+        CreateWindowExW(0, kWindowClassName, L"Vigine Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
                         CW_USEDEFAULT, 940, 660, nullptr, nullptr, instance, this);
 
     if (_windowHandle)
@@ -402,9 +449,11 @@ void vigine::platform::WinAPIComponent::updateFpsOverlay()
     std::snprintf(_gpuName.data(), _gpuName.size(), "%s", gpuName.c_str());
 
     std::snprintf(_fpsText.data(), _fpsText.size(), "FPS: %.1f", fps);
-    std::snprintf(_overlayText.data(), _overlayText.size(),
-                  "FPS: %.1f (%.2f ms)\r\nGPU: %s\r\nMonitor: %d Hz\r\nWindow: %dx%d", fps, frameMs,
-                  _gpuName.data(), refreshHz, clientWidth, clientHeight);
+    std::snprintf(
+        _overlayText.data(), _overlayText.size(),
+        "FPS: %.1f (%.2f ms)\r\nVertices: %llu\r\nGPU: %s\r\nMonitor: %d Hz\r\nWindow: %dx%d", fps,
+        frameMs, static_cast<unsigned long long>(_renderedVertexCount), _gpuName.data(), refreshHz,
+        clientWidth, clientHeight);
 
     if (_fpsLabelHandle && _overlayVisible)
     {
@@ -413,12 +462,18 @@ void vigine::platform::WinAPIComponent::updateFpsOverlay()
     }
 
     char titleText[128]{};
-    std::snprintf(titleText, sizeof(titleText), "Vigine Window | %s", _fpsText.data());
+    std::snprintf(titleText, sizeof(titleText), "Vigine Window | %s | V: %llu", _fpsText.data(),
+                  static_cast<unsigned long long>(_renderedVertexCount));
     if (_windowHandle)
         SetWindowTextA(_windowHandle, titleText);
 
     _fpsSampleStart = now;
     _fpsFrameCount  = 0;
+}
+
+void vigine::platform::WinAPIComponent::setRenderedVertexCount(uint64_t vertexCount)
+{
+    _renderedVertexCount = vertexCount;
 }
 
 void vigine::platform::WinAPIComponent::updateFpsOverlayPosition()
@@ -456,14 +511,18 @@ void vigine::platform::WinAPIComponent::show()
     ShowWindow(_windowHandle, SW_SHOW);
     UpdateWindow(_windowHandle);
 
-    constexpr auto kTargetFrameTime = std::chrono::nanoseconds(6944444);
-    auto nextFrameTime              = std::chrono::steady_clock::now();
+    // Enable 1 ms OS timer resolution for accurate sleep_for() at high FPS.
+    timeBeginPeriod(1);
+
+    constexpr bool kFrameLimiterEnabled = true;
+    constexpr auto kTargetFrameTime     = std::chrono::nanoseconds(6944444); // ~144 FPS
+    auto nextFrameTime                  = std::chrono::steady_clock::now();
 
     MSG message{};
     bool running = true;
     while (running)
     {
-        while (PeekMessageA(&message, nullptr, 0, 0, PM_REMOVE))
+        while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
         {
             if (message.message == WM_QUIT)
             {
@@ -472,7 +531,7 @@ void vigine::platform::WinAPIComponent::show()
             }
 
             TranslateMessage(&message);
-            DispatchMessageA(&message);
+            DispatchMessageW(&message);
         }
 
         if (!running)
@@ -480,25 +539,30 @@ void vigine::platform::WinAPIComponent::show()
 
         runFrame();
 
-        nextFrameTime += kTargetFrameTime;
-        auto now       = std::chrono::steady_clock::now();
-        if (now < nextFrameTime)
+        if (kFrameLimiterEnabled)
         {
-            // Coarse sleep first, then short yield-spin for better pacing precision.
-            const auto coarseSleep =
-                std::chrono::duration_cast<std::chrono::milliseconds>(nextFrameTime - now) -
-                std::chrono::milliseconds(1);
-            if (coarseSleep > std::chrono::milliseconds(0))
-                std::this_thread::sleep_for(coarseSleep);
+            nextFrameTime += kTargetFrameTime;
+            auto now       = std::chrono::steady_clock::now();
+            if (now < nextFrameTime)
+            {
+                // Coarse sleep first, then short yield-spin for better pacing precision.
+                const auto coarseSleep =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(nextFrameTime - now) -
+                    std::chrono::milliseconds(1);
+                if (coarseSleep > std::chrono::milliseconds(0))
+                    std::this_thread::sleep_for(coarseSleep);
 
-            while (std::chrono::steady_clock::now() < nextFrameTime)
-                std::this_thread::yield();
-        } else
-        {
-            // If frame took too long, reset deadline to avoid drift accumulation.
-            nextFrameTime = now;
+                while (std::chrono::steady_clock::now() < nextFrameTime)
+                    std::this_thread::yield();
+            } else
+            {
+                // If frame took too long, reset deadline to avoid drift accumulation.
+                nextFrameTime = now;
+            }
         }
     }
+
+    timeEndPeriod(1);
 }
 
 bool vigine::platform::WinAPIComponent::isMouseTracking() const { return _isMouseTracking; }

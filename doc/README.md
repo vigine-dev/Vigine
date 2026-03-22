@@ -49,8 +49,12 @@ If a task description does not include the project folder layout, use this secti
 - `PostgreSQLSystem : AbstractSystem`
 - `PostgreSQLResult : Result`
 - `TextData : Data`
-- `WinAPIComponent : WindowComponent`
-- `WindowEventDispatcher : IWindowEventHandlerComponent`
+- `TextComponent` (render extension for voxelized text instances via FreeType)
+- `TextEditState` (render extension for in-world text editing; manages UTF-8 text buffer, cursor position, and blink timer)
+- `TextEditorSystem` (example/window subsystem that owns editor interaction logic: cursor placement by ray hit, line wrapping, enter/newline behavior, and render text refresh)
+- `SetupTextEditTask` generates bitmap-style text where each character is a small colored plane
+- `MeshComponent::createPlane()` creates flat rectangular meshes for UI elements
+- `Vertex` now supports optional UV coordinates (texCoord) for future bitmap font texture mapping
 
 ### Supporting contracts
 
@@ -59,6 +63,10 @@ If a task description does not include the project folder layout, use this secti
 - `ISignalBinder` validates whether two tasks may be connected by a signal route.
 - `IWindowEventHandlerComponent` defines the window input and lifecycle callback interface.
 - `AbstractComponent` and `AbstractEntity` are base ECS abstractions kept for component/entity specializations.
+- Window Vulkan example init flow includes `SetupTextTask` and `SetupTextEditTask` to render voxelized text and set up an in-world text editor.
+- `TextEditState` (example-level) manages UTF-8 text buffer, cursor position, and blink timing for the text editor.
+- `RunWindowTask` can toggle mouse-ray visualization (`R`) without affecting ray-based editor behavior and picking logic.
+- `MeshComponent::createPlane(width, height, color)` creates a flat rectangular plane mesh for use as UI panels or backgrounds.
 
 ### Documentation maintenance
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vigine/base/macros.h"
+#include "vigine/ecs/render/textcomponent.h"
 
 #include <chrono>
 #include <cstddef>
@@ -31,7 +32,14 @@ class VulkanAPI
     bool createSwapchain(uint32_t width, uint32_t height);
     bool recreateSwapchain(uint32_t width, uint32_t height);
     bool drawFrame();
-    void setEntityModelMatrices(std::vector<glm::mat4> matrices);
+    void setEntityModelMatrices(std::vector<glm::mat4> cubeMatrices,
+                                std::vector<glm::mat4> textVoxelMatrices,
+                                std::vector<glm::mat4> panelMatrices,
+                                std::vector<glm::mat4> glyphMatrices,
+                                std::vector<glm::mat4> sphereMatrices);
+    // SDF glyph rendering: flat vertex list + atlas upload.
+    void setSdfGlyphData(std::vector<GlyphQuadVertex> vertices,
+                         const std::vector<uint8_t> *atlasPixels, uint32_t atlasGeneration);
     void beginCameraDrag(int x, int y);
     void updateCameraDrag(int x, int y);
     void endCameraDrag();
@@ -43,6 +51,19 @@ class VulkanAPI
     void setMoveUpActive(bool active);
     void setMoveDownActive(bool active);
     void setSprintActive(bool active);
+    glm::vec3 cameraForwardDirection() const;
+    bool screenPointToRay(int x, int y, glm::vec3 &rayOrigin, glm::vec3 &rayDirection) const;
+    bool screenPointToRayFromNearPlane(int x, int y, glm::vec3 &rayOrigin,
+                                       glm::vec3 &rayDirection) const;
+    bool hitTextEditorPanel(int x, int y) const;
+    [[nodiscard]] uint64_t lastRenderedVertexCount() const { return _lastRenderedVertexCount; }
+
+    // SDF text clip planes (world Y). clipYMax == 0 → no clipping.
+    void setSdfClipY(float yMin, float yMax)
+    {
+        _sdfClipYMin = yMin;
+        _sdfClipYMax = yMax;
+    }
 
     // Vulkan resources access
     vk::Instance getInstance() const { return _instance.get(); }
@@ -69,6 +90,8 @@ class VulkanAPI
     bool recreateSwapchainFromSurfaceExtent();
 
     bool _initialized{false};
+    float _sdfClipYMin{0.f};
+    float _sdfClipYMax{0.f};
 
     // Vulkan objects
     vk::UniqueInstance _instance;
@@ -96,6 +119,10 @@ class VulkanAPI
     vk::UniqueRenderPass _renderPass;
     vk::UniquePipelineLayout _pipelineLayout;
     vk::UniquePipeline _graphicsPipeline;
+    vk::UniquePipeline _textVoxelPipeline;
+    vk::UniquePipeline _panelPipeline;
+    vk::UniquePipeline _glyphPipeline;
+    vk::UniquePipeline _spherePipeline;
     vk::UniquePipeline _pyramidPipeline;
     vk::UniquePipeline _gridPipeline;
     vk::UniquePipeline _sunPipeline;
@@ -104,7 +131,37 @@ class VulkanAPI
     std::vector<uint8_t> _imageInitialized;
     float _cubeRotationAngle{0.0f};
     float _pyramidRotationAngle{0.0f};
-    std::vector<glm::mat4> _entityModelMatrices;
+    std::vector<glm::mat4> _cubeEntityModelMatrices;
+    std::vector<glm::mat4> _textVoxelEntityModelMatrices;
+    std::vector<glm::mat4> _panelEntityModelMatrices;
+    std::vector<glm::mat4> _glyphEntityModelMatrices;
+    std::vector<glm::mat4> _sphereEntityModelMatrices;
+
+    // Per-swapchain-image instance buffers for glyph instanced rendering.
+    std::vector<vk::UniqueBuffer> _glyphInstanceBuffers;
+    std::vector<vk::UniqueDeviceMemory> _glyphInstanceMemories;
+    std::vector<vk::DeviceSize> _glyphInstanceBufferCapacities;
+    std::vector<bool> _glyphInstanceUploadNeeded;
+
+    // SDF glyph flat vertex buffer (one buffer per swapchain image).
+    std::vector<GlyphQuadVertex> _sdfGlyphVertices;
+    std::vector<bool> _sdfGlyphUploadNeeded;
+    std::vector<vk::UniqueBuffer> _sdfGlyphVertexBuffers;
+    std::vector<vk::UniqueDeviceMemory> _sdfGlyphVertexMemories;
+    std::vector<vk::DeviceSize> _sdfGlyphVertexCapacities;
+
+    // SDF font atlas Vulkan texture (one global atlas, recreated on font change).
+    vk::UniqueImage _sdfAtlasImage;
+    vk::UniqueDeviceMemory _sdfAtlasMemory;
+    vk::UniqueImageView _sdfAtlasImageView;
+    vk::UniqueSampler _sdfAtlasSampler;
+    vk::UniqueDescriptorSetLayout _sdfDescriptorSetLayout;
+    vk::UniqueDescriptorPool _sdfDescriptorPool;
+    vk::DescriptorSet _sdfDescriptorSet;
+    vk::UniquePipelineLayout _sdfPipelineLayout;
+    vk::UniquePipeline _sdfGlyphPipeline;
+    bool _sdfAtlasReady{false};
+    uint32_t _sdfAtlasGeneration{0};
     float _cameraYaw{0.0f};
     float _cameraPitch{-0.2f};
     glm::vec3 _cameraPosition{0.0f, 1.6f, 4.5f};
@@ -121,6 +178,7 @@ class VulkanAPI
     int _lastCameraPointerY{0};
     std::chrono::steady_clock::time_point _lastFrameTime{};
     bool _swapchainRecreateRequested{false};
+    uint64_t _lastRenderedVertexCount{0};
 
     uint32_t _graphicsQueueFamily{0};
     uint32_t _presentQueueFamily{0};
