@@ -6,6 +6,7 @@ layout(push_constant) uniform Push
     vec4 animationData;
     vec4 sunDirectionIntensity;
     vec4 lightingParams;
+    mat4 modelMatrix;
 } pushData;
 
 layout(location = 0) out vec3 outColor;
@@ -79,12 +80,11 @@ void main()
     vec3 lp2         = positions[triStart + 2];
     vec3 localNormal = normalize(cross(lp1 - lp0, lp2 - lp0));
 
-    vec4 world   = model * vec4(p, 1.0);
-    world.x     -= 0.9;
-    world.z     -= 2.75;
+    mat4 modelMatrix = pushData.modelMatrix * model;
+    vec4 world       = modelMatrix * vec4(p, 1.0);
 
     outColor         = cubeColors[vi / 6];
-    outWorldNormal   = normalize(mat3(model) * localNormal);
+    outWorldNormal   = normalize(mat3(modelMatrix) * localNormal);
     outWorldPosition = world.xyz;
     gl_Position      = pushData.viewProjection * world;
 }

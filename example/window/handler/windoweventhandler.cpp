@@ -34,6 +34,8 @@ void WindowEventHandler::setKeyUpCallback(KeyUpCallback callback)
     _onKeyUp = std::move(callback);
 }
 
+void WindowEventHandler::setCharCallback(CharCallback callback) { _onChar = std::move(callback); }
+
 void WindowEventHandler::setWindowResizedCallback(WindowResizedCallback callback)
 {
     _onWindowResized = std::move(callback);
@@ -143,10 +145,13 @@ void WindowEventHandler::onKeyUp(const vigine::platform::KeyEvent &event)
         _onKeyUp(event);
 }
 
-// COPILOT_TODO: Або прокинути text input далі через callback, або явно зафіксувати, що текстові
-// події цим прикладом не підтримуються.
 void WindowEventHandler::onChar(const vigine::platform::TextEvent &event)
 {
+    if (_onChar)
+    {
+        _onChar(event);
+        return;
+    }
     std::cout << "[" << _handlerId << "] WindowEventHandler::onChar: Char: cp=" << event.codePoint
               << ", mods=" << event.modifiers << ", repeatCount=" << event.repeatCount << std::endl;
 }

@@ -7,3 +7,6 @@
 [submodule "external/vulkan-hpp"]
 	path = external/vulkan-hpp
 	url = https://github.com/vigine-dev/Vulkan-Hpp.git
+[submodule "external/freetype"]
+	path = external/freetype
+	url = git@github.com:freetype/freetype.git

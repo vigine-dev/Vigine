@@ -25,6 +25,9 @@ class GraphicsService
 class DatabaseService
 
 class WindowSystem
+class WindowComponent
+class WinAPIComponent
+class CocoaWindowComponent
 class RenderSystem
 class PostgreSQLSystem
 class IWindowEventHandler
@@ -56,10 +59,13 @@ GraphicsService --|> AbstractService
 DatabaseService --|> AbstractService
 
 WindowSystem --|> AbstractSystem
+WinAPIComponent --|> WindowComponent
+CocoaWindowComponent --|> WindowComponent
 RenderSystem --|> AbstractSystem
 PostgreSQLSystem --|> AbstractSystem
 
 PlatformService --> WindowSystem
+WindowSystem --> WindowComponent
 PlatformService --> IWindowEventHandler
 GraphicsService --> RenderSystem
 DatabaseService --> PostgreSQLSystem

@@ -2,8 +2,10 @@
 
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
+#include "vigine/ecs/render/textcomponent.h"
 
 #include <cstdint>
+#include <glm/vec3.hpp>
 #include <memory>
 #include <unordered_map>
 
@@ -31,6 +33,7 @@ class RenderSystem : public AbstractSystem
     RenderComponent *boundRenderComponent() const;
 
     void update();
+    void markGlyphDirty();
     [[nodiscard]] bool initializeWindowSurface(void *nativeWindowHandle, uint32_t width,
                                                uint32_t height);
     [[nodiscard]] bool resize(uint32_t width, uint32_t height);
@@ -38,6 +41,7 @@ class RenderSystem : public AbstractSystem
     void updateCameraDrag(int x, int y);
     void endCameraDrag();
     void zoomCamera(int delta);
+    void setSdfClipY(float yMin, float yMax);
     void setMoveForwardActive(bool active);
     void setMoveBackwardActive(bool active);
     void setMoveLeftActive(bool active);
@@ -45,6 +49,14 @@ class RenderSystem : public AbstractSystem
     void setMoveUpActive(bool active);
     void setMoveDownActive(bool active);
     void setSprintActive(bool active);
+    [[nodiscard]] glm::vec3 cameraForwardDirection() const;
+    [[nodiscard]] bool screenPointToRay(int x, int y, glm::vec3 &rayOrigin,
+                                        glm::vec3 &rayDirection) const;
+    [[nodiscard]] bool screenPointToRayFromNearPlane(int x, int y, glm::vec3 &rayOrigin,
+                                                     glm::vec3 &rayDirection) const;
+    [[nodiscard]] vigine::Entity *pickFirstIntersectedEntity(int x, int y) const;
+    [[nodiscard]] bool hitTextEditorPanel(int x, int y) const;
+    [[nodiscard]] uint64_t lastRenderedVertexCount() const;
 
   protected:
     void entityBound() override;
@@ -54,6 +66,7 @@ class RenderSystem : public AbstractSystem
     std::unique_ptr<VulkanAPI> _vulkanAPI;
     std::unordered_map<Entity *, std::unique_ptr<RenderComponent>> _entityComponents;
     RenderComponent *_boundEntityComponent;
+    bool _glyphDirty{true};
 };
 
 BUILD_SMART_PTR(RenderSystem);

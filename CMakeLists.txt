@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
-    add_compile_options(/FS)
+    add_compile_options(/FS /utf-8)
 endif()
 
 if(WIN32)
@@ -26,17 +26,42 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-# Set the CMake module path to include the cmake directory
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+# Set the CMake module path to include shared and platform-specific modules
+list(APPEND CMAKE_MODULE_PATH
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_SOURCE_DIR}/cmake/modules
+)
+
+if(APPLE)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/macos)
+elseif(WIN32)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/windows)
+elseif(UNIX)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/linux)
+endif()
+
+# Build FreeType from external submodule.
+# Keep optional compression/shaping deps disabled for a predictable local build.
+set(FT_DISABLE_ZLIB TRUE CACHE BOOL "Disable zlib in bundled FreeType build")
+set(FT_DISABLE_BZIP2 TRUE CACHE BOOL "Disable bzip2 in bundled FreeType build")
+set(FT_DISABLE_PNG TRUE CACHE BOOL "Disable libpng in bundled FreeType build")
+set(FT_DISABLE_HARFBUZZ TRUE CACHE BOOL "Disable HarfBuzz in bundled FreeType build")
+set(FT_DISABLE_BROTLI TRUE CACHE BOOL "Disable Brotli in bundled FreeType build")
+set(SKIP_INSTALL_ALL TRUE CACHE BOOL "Disable install targets for bundled third-party libs")
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
 
 # Find and include glm
 find_package(GLM REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanHpp REQUIRED)
-find_package(libpqxx CONFIG REQUIRED)
-#
 
-if(NOT DEFINED CMAKE_BUILD_TYPE)
+# PostgreSQL (libpqxx) is optional; disable on platforms without vcpkg postgres
+option(ENABLE_POSTGRESQL "Enable PostgreSQL support (requires libpqxx via vcpkg)" ON)
+if(ENABLE_POSTGRESQL)
+    find_package(libpqxx CONFIG REQUIRED)
+endif()
+
+if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release)
@@ -138,19 +163,33 @@ set(SOURCES_SERVICE
 )
 
 # Add source files
-set(HEADER_POSTGRESQL
-    ${INCLUDE_DIR}/vigine/ecs/postgresql/postgresqlsystem.h
-    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/postgresql/table.h
-    ${INCLUDE_DIR}/vigine/ecs/postgresql/column.h
-)
+if(ENABLE_POSTGRESQL)
+    set(HEADER_POSTGRESQL
+        ${INCLUDE_DIR}/vigine/ecs/postgresql/postgresqlsystem.h
+        ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.h
+        ${INCLUDE_DIR}/vigine/ecs/postgresql/table.h
+        ${INCLUDE_DIR}/vigine/ecs/postgresql/column.h
+    )
 
-set(SOURCES_POSTGRESQL
-    ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.cpp
-    ${SRC_DIR}/ecs/postgresql/postgresqlsystem.cpp
-    ${SRC_DIR}/ecs/postgresql/table.cpp
-    ${SRC_DIR}/ecs/postgresql/column.cpp
-)
+    set(SOURCES_POSTGRESQL
+        ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.cpp
+        ${SRC_DIR}/ecs/postgresql/postgresqlsystem.cpp
+        ${SRC_DIR}/ecs/postgresql/table.cpp
+        ${SRC_DIR}/ecs/postgresql/column.cpp
+    )
+
+    set(SOURCES_POSTGRESQL_EXTRA
+        include/vigine/ecs/postgresql/databaseconfiguration.h src/ecs/postgresql/databaseconfiguration.cpp
+        include/vigine/ecs/postgresql/connectiondata.h src/ecs/postgresql/connectiondata.cpp
+        include/vigine/ecs/postgresql/data.h src/ecs/postgresql/data.cpp
+        include/vigine/ecs/postgresql/columntype.h
+        include/vigine/ecs/postgresql/postgresqlresult.h src/ecs/postgresql/postgresqlresult.cpp
+        include/vigine/ecs/postgresql/query/querybuilder.h src/ecs/postgresql/query/querybuilder.cpp
+        include/vigine/ecs/postgresql/tablerows.h src/ecs/postgresql/tablerows.cpp
+        include/vigine/ecs/postgresql/row.h src/ecs/postgresql/row.cpp
+        include/vigine/ecs/postgresql/postgresqltypeconverter.h src/ecs/postgresql/postgresqltypeconverter.cpp
+    )
+endif()
 
 set(HEADER_PLATFORM
     ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
@@ -174,6 +213,16 @@ if(WIN32)
     )
 endif()
 
+if(APPLE)
+    list(APPEND HEADER_PLATFORM
+        ${SRC_DIR}/ecs/platform/cocoawindowcomponent.h
+    )
+
+    list(APPEND SOURCES_PLATFORM
+        ${SRC_DIR}/ecs/platform/cocoawindowcomponent.mm
+    )
+endif()
+
 # add vulkan
 # Add a library
 add_library(${PROJECT_NAME}
@@ -184,21 +233,13 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SERVICE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
+    ${SOURCES_POSTGRESQL_EXTRA}
     ${HEADER_PLATFORM}
     ${SOURCES_PLATFORM}
-    include/vigine/ecs/postgresql/databaseconfiguration.h src/ecs/postgresql/databaseconfiguration.cpp
-    include/vigine/ecs/postgresql/connectiondata.h src/ecs/postgresql/connectiondata.cpp
     include/vigine/base/name.h src/base/name.cpp
     include/vigine/base/password.h src/base/password.cpp
     include/vigine/base/macros.h
-    include/vigine/ecs/postgresql/data.h src/ecs/postgresql/data.cpp
-    include/vigine/ecs/postgresql/columntype.h
     include/vigine/base/info.h
-    include/vigine/ecs/postgresql/postgresqlresult.h src/ecs/postgresql/postgresqlresult.cpp
-    include/vigine/ecs/postgresql/query/querybuilder.h src/ecs/postgresql/query/querybuilder.cpp
-    include/vigine/ecs/postgresql/tablerows.h src/ecs/postgresql/tablerows.cpp
-    include/vigine/ecs/postgresql/row.h src/ecs/postgresql/row.cpp
-    include/vigine/ecs/postgresql/postgresqltypeconverter.h src/ecs/postgresql/postgresqltypeconverter.cpp
 )
 # Include directories
 target_include_directories(${PROJECT_NAME}
@@ -217,14 +258,31 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${GLM_LIBRARIES}
-    libpqxx::pqxx
 )
+
+if(ENABLE_POSTGRESQL)
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        libpqxx::pqxx
+    )
+    target_compile_definitions(${PROJECT_NAME} PUBLIC VIGINE_POSTGRESQL=1)
+endif()
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     ${Vulkan_LIBRARIES}
     ${Vulkan_Hpp_LIBRARIES}
+    freetype
 )
+
+if(APPLE)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        "-framework Cocoa"
+        "-framework QuartzCore"
+        "-framework Metal"
+    )
+endif()
 
 # Install the library and headers
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/build/lib)

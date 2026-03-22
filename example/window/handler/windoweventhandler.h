@@ -14,6 +14,7 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     using MouseWheelCallback      = std::function<void(int, int, int)>;
     using KeyDownCallback         = std::function<void(const vigine::platform::KeyEvent &)>;
     using KeyUpCallback           = std::function<void(const vigine::platform::KeyEvent &)>;
+    using CharCallback            = std::function<void(const vigine::platform::TextEvent &)>;
     using WindowResizedCallback   = std::function<void(int, int)>;
 
     explicit WindowEventHandler(std::string handlerId = "Handler");
@@ -24,6 +25,7 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     void setMouseWheelCallback(MouseWheelCallback callback);
     void setKeyDownCallback(KeyDownCallback callback);
     void setKeyUpCallback(KeyUpCallback callback);
+    void setCharCallback(CharCallback callback);
     void setWindowResizedCallback(WindowResizedCallback callback);
 
     void onWindowClosed() override;
@@ -54,5 +56,6 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     MouseWheelCallback _onMouseWheel;
     KeyDownCallback _onKeyDown;
     KeyUpCallback _onKeyUp;
+    CharCallback _onChar;
     WindowResizedCallback _onWindowResized;
 };

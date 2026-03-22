@@ -62,6 +62,7 @@ vigine::Result SetupCubeTask::execute()
 
     // Configure render component managed by RenderSystem
     renderComponent->setMesh(cubeMesh);
+    renderComponent->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Cube);
 
     // Set initial transform (center at origin, no rotation)
     vigine::graphics::TransformComponent transform;

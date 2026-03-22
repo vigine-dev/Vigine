@@ -16,7 +16,12 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
     task/window/processinputeventtask.h task/window/processinputeventtask.cpp
     task/vulkan/initvulkantask.h task/vulkan/initvulkantask.cpp
     task/vulkan/setupcubetask.h task/vulkan/setupcubetask.cpp
+    task/vulkan/setuptexttask.h task/vulkan/setuptexttask.cpp
+    task/vulkan/setuptextedittask.h task/vulkan/setuptextedittask.cpp
     task/vulkan/rendercubetask.h task/vulkan/rendercubetask.cpp)
+
+set(EXAMPLE_WINDOW_SYSTEM_SOURCES
+    system/texteditorsystem.h system/texteditorsystem.cpp)
 
 set(EXAMPLE_WINDOW_STATE_SOURCES
     state/initstate.h state/initstate.cpp
@@ -39,23 +44,43 @@ endif()
 set(EXAMPLE_WINDOW_SHADER_SOURCES
     ${EXAMPLE_WINDOW_SHADER_DIR}/cube.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/panel.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/panel.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.frag
     ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/pyramid.frag
     ${EXAMPLE_WINDOW_SHADER_DIR}/grid.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/grid.frag
     ${EXAMPLE_WINDOW_SHADER_DIR}/sun.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/sun.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.frag
 )
 
 set(EXAMPLE_WINDOW_SHADER_OUTPUTS
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.frag.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/pyramid.frag.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/grid.frag.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sun.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sun.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.frag.spv
 )
 
 add_custom_command(
@@ -71,6 +96,54 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
     COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/cube.frag.spv
     DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/cube.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textvoxel.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/textvoxel.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/panel.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/panel.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/panel.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/panel.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/panel.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/glyph.frag
     VERBATIM
 )
 
@@ -122,15 +195,54 @@ add_custom_command(
     VERBATIM
 )
 
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.frag
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.frag
+    VERBATIM
+)
+
 add_custom_target(example_window_shaders ALL DEPENDS ${EXAMPLE_WINDOW_SHADER_OUTPUTS})
 
 add_executable(${PROJECT_WINDOW_NAME}
     main.cpp
     ${EXAMPLE_WINDOW_HANDLER_SOURCES}
     ${EXAMPLE_WINDOW_TASK_SOURCES}
+    ${EXAMPLE_WINDOW_SYSTEM_SOURCES}
     ${EXAMPLE_WINDOW_STATE_SOURCES})
 
 add_dependencies(${PROJECT_WINDOW_NAME} example_window_shaders)
+
+add_custom_command(TARGET ${PROJECT_WINDOW_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_LIST_DIR}/assets
+    $<TARGET_FILE_DIR:${PROJECT_WINDOW_NAME}>/assets
+)
 
 target_link_libraries(${PROJECT_WINDOW_NAME}
     PRIVATE

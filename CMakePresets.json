@@ -1,0 +1,85 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base-debug",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VCPKG_MANIFEST_MODE": "ON",
+                "VCPKG_MANIFEST_DIR": "${sourceDir}"
+            }
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS Debug",
+            "inherits": "base-debug",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/platform/macos/vcpkg-toolchain.cmake",
+                "VCPKG_TARGET_TRIPLET": "arm64-osx",
+                "CMAKE_MAKE_PROGRAM": "/opt/homebrew/opt/ninja/bin/ninja"
+            },
+            "environment": {
+                "VULKAN_SDK": "$env{HOME}/VulkanSDK/1.4.341.1/macOS",
+                "PATH": "/opt/homebrew/opt/ninja/bin:$penv{PATH}"
+            }
+        },
+        {
+            "name": "linux-debug",
+            "displayName": "Linux Debug",
+            "inherits": "base-debug",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/platform/linux/vcpkg-toolchain.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-linux"
+            }
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Windows Debug",
+            "inherits": "base-debug",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/platform/windows/vcpkg-toolchain.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            },
+            "environment": {
+                "VULKAN_SDK": "C:/VulkanSDK/1.4.341.1"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "macos-debug",
+            "configurePreset": "macos-debug"
+        },
+        {
+            "name": "linux-debug",
+            "configurePreset": "linux-debug"
+        },
+        {
+            "name": "windows-debug",
+            "configurePreset": "windows-debug"
+        }
+    ]
+}

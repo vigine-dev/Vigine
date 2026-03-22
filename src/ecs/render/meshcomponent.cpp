@@ -9,6 +9,12 @@ void MeshComponent::addVertex(const glm::vec3 &position, const glm::vec3 &color)
     _vertices.push_back({position, color});
 }
 
+void MeshComponent::addVertex(const glm::vec3 &position, const glm::vec3 &color,
+                              const glm::vec2 &texCoord)
+{
+    _vertices.push_back({position, color, texCoord});
+}
+
 void MeshComponent::addIndex(uint32_t index) { _indices.push_back(index); }
 
 MeshComponent MeshComponent::createCube()
@@ -98,6 +104,29 @@ MeshComponent MeshComponent::createCube()
     mesh.addIndex(20);
     mesh.addIndex(22);
     mesh.addIndex(23);
+
+    return mesh;
+}
+
+MeshComponent MeshComponent::createPlane(float width, float height, const glm::vec3 &color)
+{
+    MeshComponent mesh;
+
+    const float hw = width * 0.5f;
+    const float hh = height * 0.5f;
+
+    mesh.addVertex({-hw, -hh, 0.0f}, color); // 0 bottom-left
+    mesh.addVertex({hw, -hh, 0.0f}, color);  // 1 bottom-right
+    mesh.addVertex({hw, hh, 0.0f}, color);   // 2 top-right
+    mesh.addVertex({-hw, hh, 0.0f}, color);  // 3 top-left
+
+    // Single plane (CCW viewed from +Z)
+    mesh.addIndex(0);
+    mesh.addIndex(1);
+    mesh.addIndex(2);
+    mesh.addIndex(0);
+    mesh.addIndex(2);
+    mesh.addIndex(3);
 
     return mesh;
 }
