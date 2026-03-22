@@ -12,7 +12,6 @@
 namespace
 {
 constexpr float kEditorTextPlaneZ        = 1.21f;
-constexpr float kEditorPanelTopY         = 2.4f; // fixed top edge of text-edit panel
 constexpr float kScrollbarPlaneZ         = 1.205f;
 constexpr float kScrollbarInsetY         = 0.06f;
 constexpr float kScrollbarInsetX         = 0.04f;
@@ -40,6 +39,19 @@ void TextEditorSystem::setLayout(std::size_t /*maxColumns*/, float panelWidth, f
 {
     _panelWidth  = panelWidth;
     _panelHeight = panelHeight;
+}
+
+void TextEditorSystem::offsetEditorFrame(float dx, float dy, float dz)
+{
+    _panelCenterX += dx;
+    _panelTopY    += dy;
+    _panelZBase   += dz;
+}
+
+void TextEditorSystem::refreshEditorLayout()
+{
+    updateScrollbarVisuals();
+    updateFocusFrameVisual(_focused);
 }
 
 void TextEditorSystem::onFrame()
@@ -116,9 +128,9 @@ void TextEditorSystem::onFrame()
         applyScrollOffset(maxScroll);
 
     // Clip text to fixed panel bounds in shader.
-    const float panelBottom = kEditorPanelTopY - _panelHeight;
+    const float panelBottom = _panelTopY - _panelHeight;
     if (_renderSystem)
-        _renderSystem->setSdfClipY(panelBottom, kEditorPanelTopY);
+        _renderSystem->setSdfClipY(panelBottom, _panelTopY);
 
     updateScrollbarVisuals();
 
@@ -180,8 +192,8 @@ bool TextEditorSystem::onMouseButtonDown(int x, int y, const vigine::Entity *pic
     {
         // Click on track: center thumb at click and start dragging from center.
         _scrollbarDragYOffset   = 0.0f;
-        const float trackTop    = kEditorPanelTopY - kScrollbarInsetY;
-        const float trackBottom = kEditorPanelTopY - _panelHeight + kScrollbarInsetY;
+        const float trackTop    = _panelTopY - kScrollbarInsetY;
+        const float trackBottom = _panelTopY - _panelHeight + kScrollbarInsetY;
         const float minCenterY  = trackBottom + halfThumb;
         const float maxCenterY  = trackTop - halfThumb;
         const float newCenterY  = (std::max)(minCenterY, (std::min)(hitY, maxCenterY));
@@ -213,8 +225,8 @@ void TextEditorSystem::onMouseMove(int x, int y)
     if (!screenYToWorldY(x, y, hitY))
         return;
 
-    const float trackTop       = kEditorPanelTopY - kScrollbarInsetY;
-    const float trackBottom    = kEditorPanelTopY - _panelHeight + kScrollbarInsetY;
+    const float trackTop       = _panelTopY - kScrollbarInsetY;
+    const float trackBottom    = _panelTopY - _panelHeight + kScrollbarInsetY;
     const float halfThumb      = _scrollbarThumbHeight * 0.5f;
     const float minCenterY     = trackBottom + halfThumb;
     const float maxCenterY     = trackTop - halfThumb;
@@ -393,16 +405,16 @@ void TextEditorSystem::updateScrollbarVisuals()
     if (!trackEntity || !thumbEntity)
         return;
 
-    const float panelRight   = _panelWidth * 0.5f;
+    const float panelRight   = _panelCenterX + _panelWidth * 0.5f;
     const float trackHeight  = (std::max)(0.05f, _panelHeight - 2.0f * kScrollbarInsetY);
-    const float trackCenterY = kEditorPanelTopY - _panelHeight * 0.5f;
+    const float trackCenterY = _panelTopY - _panelHeight * 0.5f;
     const float trackCenterX = panelRight - kScrollbarInsetX - kScrollbarWidth * 0.5f;
 
     _graphicsService->bindEntity(trackEntity);
     if (auto *trackRc = _graphicsService->renderComponent())
     {
         auto t = trackRc->getTransform();
-        t.setPosition({trackCenterX, trackCenterY, kScrollbarPlaneZ});
+        t.setPosition({trackCenterX, trackCenterY, kScrollbarPlaneZ + _panelZBase});
         t.setScale({kScrollbarWidth, trackHeight, 0.01f});
         trackRc->setTransform(t);
     }
@@ -413,8 +425,8 @@ void TextEditorSystem::updateScrollbarVisuals()
     _scrollbarThumbHeight =
         (std::max)(kScrollbarMinThumbHeight, (std::min)(trackHeight * visibleRatio, trackHeight));
 
-    const float trackTop    = kEditorPanelTopY - kScrollbarInsetY;
-    const float trackBottom = kEditorPanelTopY - _panelHeight + kScrollbarInsetY;
+    const float trackTop    = _panelTopY - kScrollbarInsetY;
+    const float trackBottom = _panelTopY - _panelHeight + kScrollbarInsetY;
     const float minCenterY  = trackBottom + _scrollbarThumbHeight * 0.5f;
     const float maxCenterY  = trackTop - _scrollbarThumbHeight * 0.5f;
 
@@ -426,7 +438,8 @@ void TextEditorSystem::updateScrollbarVisuals()
     if (auto *thumbRc = _graphicsService->renderComponent())
     {
         auto t = thumbRc->getTransform();
-        t.setPosition({trackCenterX, _scrollbarThumbCenterY, kScrollbarPlaneZ + 0.001f});
+        t.setPosition(
+            {trackCenterX, _scrollbarThumbCenterY, kScrollbarPlaneZ + _panelZBase + 0.001f});
         t.setScale({kScrollbarWidth * 0.82f, _scrollbarThumbHeight, 0.012f});
         thumbRc->setTransform(t);
     }
@@ -446,7 +459,8 @@ bool TextEditorSystem::screenYToWorldY(int x, int y, float &worldY) const
     if (std::abs(rayDirection.z) < 1e-6f)
         return false;
 
-    const float t = (kScrollbarPlaneZ - rayOrigin.z) / rayDirection.z;
+    const float scrollbarZ = kScrollbarPlaneZ + _panelZBase;
+    const float t          = (scrollbarZ - rayOrigin.z) / rayDirection.z;
     if (t <= 0.0f)
         return false;
 
@@ -483,11 +497,11 @@ void TextEditorSystem::updateFocusFrameVisual(bool visible)
     if (!top || !bottom || !left || !right)
         return;
 
-    const float panelTop     = kEditorPanelTopY;
+    const float panelTop     = _panelTopY;
     const float panelBottom  = panelTop - _panelHeight;
     const float panelCenterY = (panelTop + panelBottom) * 0.5f;
-    const float panelLeft    = -_panelWidth * 0.5f;
-    const float panelRight   = _panelWidth * 0.5f;
+    const float panelLeft    = _panelCenterX - _panelWidth * 0.5f;
+    const float panelRight   = _panelCenterX + _panelWidth * 0.5f;
 
     const float frameTop     = panelTop + kFocusFramePadding;
     const float frameBottom  = panelBottom - kFocusFramePadding;
@@ -516,10 +530,15 @@ void TextEditorSystem::updateFocusFrameVisual(bool visible)
         _graphicsService->unbindEntity();
     };
 
-    place(top, {0.0f, frameTop, kFocusFrameZ}, {hWidth, kFocusFrameThickness, 0.01f});
-    place(bottom, {0.0f, frameBottom, kFocusFrameZ}, {hWidth, kFocusFrameThickness, 0.01f});
-    place(left, {frameLeft, panelCenterY, kFocusFrameZ}, {kFocusFrameThickness, vHeight, 0.01f});
-    place(right, {frameRight, panelCenterY, kFocusFrameZ}, {kFocusFrameThickness, vHeight, 0.01f});
+    // Encode frame side id in scale.z for shader-side perimeter animation mapping.
+    place(top, {_panelCenterX, frameTop, kFocusFrameZ + _panelZBase},
+          {hWidth, kFocusFrameThickness, 0.021f});
+    place(right, {frameRight, panelCenterY, kFocusFrameZ + _panelZBase},
+          {kFocusFrameThickness, vHeight, 0.022f});
+    place(bottom, {_panelCenterX, frameBottom, kFocusFrameZ + _panelZBase},
+          {hWidth, kFocusFrameThickness, 0.023f});
+    place(left, {frameLeft, panelCenterY, kFocusFrameZ + _panelZBase},
+          {kFocusFrameThickness, vHeight, 0.024f});
 
     if (_renderSystem)
         _renderSystem->markGlyphDirty();

@@ -11,6 +11,8 @@ layout(push_constant) uniform Push
 layout(location = 0) in vec3 inColor;
 layout(location = 1) in vec3 inWorldPosition;
 layout(location = 2) in vec3 inWorldNormal;
+layout(location = 3) in vec2 inLocalPosition;
+layout(location = 4) in float inPanelTag;
 layout(location = 0) out vec4 outFragColor;
 
 vec3 hsv2rgb(vec3 c)
@@ -29,37 +31,30 @@ float wrappedDistance(float a, float b, float period)
 void main()
 {
     // Focus frame pass: white frame + moving rainbow segment.
-    if (inWorldPosition.z > 1.2085)
+    // Frame side ID is encoded in scale.z (panel tag) from CPU.
+    if (inPanelTag > 0.0205 && inPanelTag < 0.0245)
     {
-        // Frame bounds should match TextEditorSystem focus frame geometry.
-        const float leftX   = -2.412;
-        const float rightX  =  2.412;
-        const float topY    =  2.412;
-        const float bottomY =  0.888;
+        // Must match TextEditorSystem values: panel(4.8 x 1.5) + 2*padding(0.012).
+        const float frameWidth  = 4.824;
+        const float frameHeight = 1.524;
+        const float perim       = 2.0 * (frameWidth + frameHeight);
 
-        const float width   = rightX - leftX;
-        const float height  = topY - bottomY;
-        const float perim   = 2.0 * (width + height);
+        const float u = clamp(inLocalPosition.x + 0.5, 0.0, 1.0);
+        const float v = clamp(inLocalPosition.y + 0.5, 0.0, 1.0);
 
-        // Parameterize perimeter clockwise from top-left corner.
+        // Clockwise perimeter parameterization from top-left.
         float s = 0.0;
-        float dTop = abs(inWorldPosition.y - topY);
-        float dRight = abs(inWorldPosition.x - rightX);
-        float dBottom = abs(inWorldPosition.y - bottomY);
-        float dLeft = abs(inWorldPosition.x - leftX);
-        float minD = min(min(dTop, dRight), min(dBottom, dLeft));
+        if (inPanelTag < 0.0215) // top
+            s = u * frameWidth;
+        else if (inPanelTag < 0.0225) // right
+            s = frameWidth + (1.0 - v) * frameHeight;
+        else if (inPanelTag < 0.0235) // bottom
+            s = frameWidth + frameHeight + (1.0 - u) * frameWidth;
+        else // left
+            s = frameWidth + frameHeight + frameWidth + v * frameHeight;
 
-        if (minD == dTop)
-            s = clamp(inWorldPosition.x - leftX, 0.0, width);
-        else if (minD == dRight)
-            s = width + clamp(topY - inWorldPosition.y, 0.0, height);
-        else if (minD == dBottom)
-            s = width + height + clamp(rightX - inWorldPosition.x, 0.0, width);
-        else
-            s = width + height + width + clamp(inWorldPosition.y - bottomY, 0.0, height);
-
-        const float speed = 0.24;           // 2x slower movement
-        const float segLen = 0.66;          // medium tail length
+        const float speed = 0.24;
+        const float segLen = 0.66;
         float head = fract(pushData.animationData.x * speed) * perim;
         float dist = wrappedDistance(s, head, perim);
 

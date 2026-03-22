@@ -40,6 +40,9 @@ constexpr unsigned int kKeyRightShift   = 0xA1;
 constexpr unsigned int kKeyControl      = 0x11;
 constexpr unsigned int kKeyLeftControl  = 0xA2;
 constexpr unsigned int kKeyRightControl = 0xA3;
+constexpr unsigned int kKeyAlt          = 0x12;
+constexpr unsigned int kKeyLeftAlt      = 0xA4;
+constexpr unsigned int kKeyRightAlt     = 0xA5;
 constexpr unsigned int kKeyRayToggle    = 'R';
 constexpr unsigned int kKeyEscape       = 0x1B;
 
@@ -282,7 +285,7 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
     }
 
     if (_renderSystem && button == vigine::platform::MouseButton::Right &&
-        (!_focusedEntity || _ctrlHeld))
+        (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->beginCameraDrag(x, y);
 
     std::cout << "[RunWindowTask::onMouseButtonDown] button=" << static_cast<int>(button)
@@ -299,23 +302,39 @@ void RunWindowTask::onMouseButtonUp(vigine::platform::MouseButton button, int x,
         _textEditorSystem->onMouseButtonUp();
 
     if (_renderSystem && button == vigine::platform::MouseButton::Right &&
-        (!_focusedEntity || _ctrlHeld))
+        (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->endCameraDrag();
 }
 
 void RunWindowTask::onMouseMove(int x, int y)
 {
+    _lastMouseRayX     = x;
+    _lastMouseRayY     = y;
+    _hasMouseRaySample = true;
+
+    if (_objectDragActive)
+        updateObjectDrag(x, y);
+
     if (_textEditorSystem)
         _textEditorSystem->onMouseMove(x, y);
 
-    if (_renderSystem && (!_focusedEntity || _ctrlHeld))
+    if (_renderSystem && (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->updateCameraDrag(x, y);
 }
 
 void RunWindowTask::onMouseWheel(int delta, int x, int y)
 {
-    static_cast<void>(x);
-    static_cast<void>(y);
+    // In object-drag mode: wheel adjusts object distance from camera.
+    if (_objectDragActive)
+    {
+        const float wheelSteps = static_cast<float>(delta) / 120.0f;
+        // Wheel forward -> move object forward (farther from camera), and vice versa.
+        const float factor      = std::pow(0.90f, -wheelSteps);
+        _dragDistanceFromCamera = (std::max)(0.15f, _dragDistanceFromCamera * factor);
+        // Allow Z movement so the object actually moves in depth, not just XY.
+        updateObjectDrag(x, y, /*suppressZDelta=*/false);
+        return;
+    }
 
     // When text editor is focused (and Ctrl not held): scroll text, not camera.
     if (_focusedEntity && !_ctrlHeld && _textEditorSystem)
@@ -333,6 +352,21 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
         _ctrlHeld = true;
+
+    if (!event.isRepeat &&
+        (event.keyCode == kKeyAlt || event.keyCode == kKeyLeftAlt || event.keyCode == kKeyRightAlt))
+    {
+        if (_objectDragActive)
+        {
+            endObjectDrag();
+        } else if (_focusedEntity)
+        {
+            const int mx = _hasMouseRaySample ? _lastMouseRayX : 0;
+            const int my = _hasMouseRaySample ? _lastMouseRayY : 0;
+            static_cast<void>(beginObjectDrag(_focusedEntity, mx, my));
+        }
+        return;
+    }
 
     if (event.keyCode == kKeyRayToggle && !event.isRepeat)
     {
@@ -356,7 +390,7 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
         }
     }
 
-    if (!_focusedEntity || _ctrlHeld)
+    if (!_focusedEntity || _ctrlHeld || _objectDragActive)
         updateCameraMovementKey(event.keyCode, true);
 
     if (event.keyCode == kKeyEscape)
@@ -382,7 +416,7 @@ void RunWindowTask::onKeyUp(const vigine::platform::KeyEvent &event)
         event.keyCode == kKeyRightControl)
         _ctrlHeld = false;
 
-    if (!_focusedEntity || _ctrlHeld)
+    if (!_focusedEntity || _ctrlHeld || _objectDragActive)
         updateCameraMovementKey(event.keyCode, false);
 }
 
@@ -541,6 +575,10 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
     if (entity == _focusedEntity)
         return;
 
+    // Any focus change exits move mode.
+    if (_objectDragActive)
+        endObjectDrag();
+
     if (_focusedEntity && _graphicsService && _hasFocusedOriginalScale)
     {
         _graphicsService->bindEntity(_focusedEntity);
@@ -575,6 +613,143 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
         }
         _graphicsService->unbindEntity();
     }
+}
+
+bool RunWindowTask::beginObjectDrag(vigine::Entity *entity, int x, int y)
+{
+    if (!entity || !_graphicsService || !_renderSystem)
+        return false;
+
+    _graphicsService->bindEntity(entity);
+    auto *rc = _graphicsService->renderComponent();
+    if (!rc)
+    {
+        _graphicsService->unbindEntity();
+        return false;
+    }
+
+    const auto transform = rc->getTransform();
+    _graphicsService->unbindEntity();
+
+    glm::vec3 rayOrigin(0.0f);
+    glm::vec3 rayDirection(0.0f);
+    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
+        return false;
+
+    const float dirLen = glm::length(rayDirection);
+    if (dirLen < 1e-6f)
+        return false;
+    rayDirection            /= dirLen;
+
+    _dragDistanceFromCamera  = glm::dot(transform.getPosition() - rayOrigin, rayDirection);
+    if (_dragDistanceFromCamera <= 0.0f)
+        return false;
+
+    const glm::vec3 hit = rayOrigin + rayDirection * _dragDistanceFromCamera;
+
+    _objectDragActive   = true;
+    _dragEditorGroup    = (_textEditorSystem && _textEditorSystem->isEditorEntity(entity));
+    _dragEntity         = entity;
+    _dragGrabOffset     = transform.getPosition() - hit;
+    return true;
+}
+
+void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
+{
+    if (!_objectDragActive || !_dragEntity || !_graphicsService || !_renderSystem)
+        return;
+
+    glm::vec3 rayOrigin(0.0f);
+    glm::vec3 rayDirection(0.0f);
+    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
+        return;
+
+    const float dirLen = glm::length(rayDirection);
+    if (dirLen < 1e-6f)
+        return;
+    rayDirection           /= dirLen;
+
+    const glm::vec3 hit     = rayOrigin + rayDirection * _dragDistanceFromCamera;
+    const glm::vec3 newPos  = hit + _dragGrabOffset;
+
+    _graphicsService->bindEntity(_dragEntity);
+    auto *dragRc = _graphicsService->renderComponent();
+    if (!dragRc)
+    {
+        _graphicsService->unbindEntity();
+        return;
+    }
+
+    auto dragTr     = dragRc->getTransform();
+    glm::vec3 delta = newPos - dragTr.getPosition();
+    if (_dragEditorGroup)
+    {
+        if (suppressZDelta)
+            delta.z = 0.0f; // lateral mouse move: keep editor layer depths stable
+        else
+        {
+            delta.x = 0.0f; // depth (wheel): no XY drift, only Z moves
+            delta.y = 0.0f;
+        }
+    }
+
+    dragTr.setPosition(dragTr.getPosition() + delta);
+    dragRc->setTransform(dragTr);
+    _graphicsService->unbindEntity();
+
+    if (_dragEditorGroup && context())
+    {
+        auto *em = context()->entityManager();
+        if (em)
+        {
+            const char *editorAliases[] = {
+                "TextEditBgEntity",
+                "TextEditEntity",
+                "TextEditScrollbarTrackEntity",
+                "TextEditScrollbarThumbEntity",
+                "TextEditFocusTopEntity",
+                "TextEditFocusBottomEntity",
+                "TextEditFocusLeftEntity",
+                "TextEditFocusRightEntity",
+            };
+
+            for (const char *alias : editorAliases)
+            {
+                auto *e = em->getEntityByAlias(alias);
+                if (!e || e == _dragEntity)
+                    continue;
+
+                _graphicsService->bindEntity(e);
+                if (auto *rc = _graphicsService->renderComponent())
+                {
+                    auto tr = rc->getTransform();
+                    tr.setPosition(tr.getPosition() + delta);
+                    rc->setTransform(tr);
+
+                    if (std::strcmp(alias, "TextEditEntity") == 0)
+                        static_cast<void>(rc->refreshSdfGlyphQuads());
+                }
+                _graphicsService->unbindEntity();
+            }
+
+            if (_textEditorSystem)
+            {
+                _textEditorSystem->offsetEditorFrame(delta.x, delta.y, delta.z);
+                _textEditorSystem->refreshEditorLayout();
+            }
+            if (_renderSystem)
+                _renderSystem->markGlyphDirty();
+        }
+    }
+}
+
+void RunWindowTask::endObjectDrag()
+{
+    _objectDragActive       = false;
+    _dragEditorGroup        = false;
+    _dragEntity             = nullptr;
+    _dragDistanceFromCamera = 0.0f;
+    _dragGrabOffset         = {0.0f, 0.0f, 0.0f};
 }
 
 bool RunWindowTask::ensureMouseRayEntity()

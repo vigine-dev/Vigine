@@ -67,6 +67,9 @@ class RunWindowTask : public vigine::AbstractTask,
     bool ensureMouseClickSphereEntity();
     void updateMouseRayVisualization(int x, int y);
     void updateMouseClickSphereVisualization(int x, int y);
+    bool beginObjectDrag(vigine::Entity *entity, int x, int y);
+    void updateObjectDrag(int x, int y, bool suppressZDelta = true);
+    void endObjectDrag();
 
     vigine::platform::PlatformService *_platformService{nullptr};
     vigine::graphics::GraphicsService *_graphicsService{nullptr};
@@ -82,6 +85,11 @@ class RunWindowTask : public vigine::AbstractTask,
     int _lastMouseRayX{0};
     int _lastMouseRayY{0};
     bool _ctrlHeld{false};
+    bool _objectDragActive{false};
+    bool _dragEditorGroup{false};
+    vigine::Entity *_dragEntity{nullptr};
+    float _dragDistanceFromCamera{0.0f};
+    glm::vec3 _dragGrabOffset{0.0f, 0.0f, 0.0f};
     vigine::platform::WindowComponent *_pendingResizeWindow{nullptr};
     uint32_t _pendingResizeWidth{0};
     uint32_t _pendingResizeHeight{0};

@@ -42,6 +42,8 @@ class TextEditorSystem
     void onChar(const vigine::platform::TextEvent &event, uint8_t movementKeyMask);
     void onMouseWheel(int delta); // delta > 0: scroll up; delta < 0: scroll down
     void setFocused(bool focused);
+    void offsetEditorFrame(float dx, float dy, float dz = 0.0f);
+    void refreshEditorLayout();
 
     bool isEditorEntity(const vigine::Entity *entity) const;
 
@@ -72,6 +74,9 @@ class TextEditorSystem
     std::vector<vigine::graphics::CursorSlot> _cursorSlots;
     float _panelWidth{4.8f};
     float _panelHeight{1.5f};
+    float _panelCenterX{0.0f};
+    float _panelTopY{2.4f};
+    float _panelZBase{0.0f};    // cumulative Z offset (from wheel/depth drag)
     float _scrollOffsetY{0.0f}; // world units scrolled down (0 = top)
     float _contentHeight{0.0f}; // last known text content height (world units)
     float _scrollbarThumbCenterY{0.0f};
