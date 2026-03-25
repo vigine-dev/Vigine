@@ -17,7 +17,7 @@ If a task description does not include the project folder layout, use this secti
 - `include/vigine/ecs/render/` rendering interfaces and systems.
 - `include/vigine/ecs/postgresql/` PostgreSQL data and system API.
 - `src/` engine implementations for the public headers.
-- `src/ecs/platform/` current Windows-specific window components and dispatch internals.
+- `src/ecs/platform/` platform window components and dispatch internals; currently includes WinAPI and Cocoa implementations.
 - `src/ecs/render/` rendering implementation.
 - `src/ecs/postgresql/` PostgreSQL implementation details.
 - `example/` example applications built on top of the engine.
@@ -45,6 +45,8 @@ If a task description does not include the project folder layout, use this secti
 - `GraphicsService : AbstractService`
 - `DatabaseService : AbstractService`
 - `WindowSystem : AbstractSystem`
+- `WinAPIComponent : WindowComponent` (Windows-only native window implementation)
+- `CocoaWindowComponent : WindowComponent` (macOS native window implementation backed by `NSWindow` + `CAMetalLayer`)
 - `RenderSystem : AbstractSystem`
 - `PostgreSQLSystem : AbstractSystem`
 - `PostgreSQLResult : Result`
