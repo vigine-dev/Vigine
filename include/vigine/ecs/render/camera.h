@@ -8,6 +8,19 @@ namespace vigine
 namespace graphics
 {
 
+enum class CameraMode
+{
+    FreeLook,
+    Orbit
+};
+
+enum class SpeedModifier
+{
+    Normal,
+    Slow,
+    Fast
+};
+
 /**
  * @brief Camera configuration parameters
  */
@@ -15,7 +28,7 @@ struct CameraConfig
 {
     float mouseLookSensitivity{0.01f};
     float pitchLimitRad{1.45f};
-    float moveSpeedUnitsPerSec{3.5f};
+    float moveSpeedUnitsPerSec{20.0f};
     float sprintMultiplier{2.1f};
     float wheelStep{120.0f};
     float wheelMovePerStep{0.8f};
@@ -24,6 +37,9 @@ struct CameraConfig
     float nearPlane{0.1f};
     float farPlane{250.0f};
     float fovDegrees{60.0f};
+    float rotateSpeedDegreesPerSec{90.0f};
+    float panSpeedUnitsPerSec{3.5f};
+    float zoomSpeedUnitsPerSec{5.0f};
 };
 
 /**
@@ -50,6 +66,49 @@ class Camera
     void setMoveUpActive(bool active);
     void setMoveDownActive(bool active);
     void setSprintActive(bool active);
+
+    // Continuous rotation control (per-frame, like WASD movement)
+    void setRotateYawLeftActive(bool active);
+    void setRotateYawRightActive(bool active);
+    void setRotatePitchUpActive(bool active);
+    void setRotatePitchDownActive(bool active);
+
+    // Continuous pan control (per-frame)
+    void setPanLeftActive(bool active);
+    void setPanRightActive(bool active);
+    void setPanUpActive(bool active);
+    void setPanDownActive(bool active);
+
+    // Continuous zoom control (per-frame)
+    void setZoomInActive(bool active);
+    void setZoomOutActive(bool active);
+
+    // Speed modifier (Slow=0.3x, Normal=1x, Fast=sprintMultiplier)
+    void setSpeedModifier(SpeedModifier mod);
+    SpeedModifier speedModifier() const;
+
+    // Camera mode
+    void setCameraMode(CameraMode mode);
+    CameraMode cameraMode() const;
+
+    // Orbit target (used in Orbit mode)
+    void setOrbitTarget(const glm::vec3 &target);
+    const glm::vec3 &orbitTarget() const;
+
+    // Pan: shift camera and orbit target by camera-right / camera-up delta
+    void pan(float deltaX, float deltaY);
+
+    // Discrete rotation steps (degrees); respects CameraMode for orbit vs free
+    void rotateYawStep(float angleDeg);
+    void rotatePitchStep(float angleDeg);
+
+    // Reset helpers
+    void resetPosition();
+    void resetRotation();
+    void resetView();
+
+    // Frame: position camera so that a sphere of (center, radius) fits the view
+    void frameTarget(const glm::vec3 &center, float radius);
 
     // Update camera physics (call every frame with delta time)
     void update(float deltaSeconds);
@@ -105,6 +164,26 @@ class Camera
     bool _moveUpActive{false};
     bool _moveDownActive{false};
     bool _sprintActive{false};
+
+    // Continuous rotation flags (Numpad-style, per-frame)
+    bool _rotateYawLeftActive{false};
+    bool _rotateYawRightActive{false};
+    bool _rotatePitchUpActive{false};
+    bool _rotatePitchDownActive{false};
+
+    // Continuous pan flags (Shift+Numpad-style, per-frame)
+    bool _panLeftActive{false};
+    bool _panRightActive{false};
+    bool _panUpActive{false};
+    bool _panDownActive{false};
+
+    // Continuous zoom flags (Numpad +/-, per-frame)
+    bool _zoomInActive{false};
+    bool _zoomOutActive{false};
+
+    CameraMode _mode{CameraMode::FreeLook};
+    glm::vec3 _orbitTarget{0.0f, 0.0f, 0.0f};
+    SpeedModifier _speedModifier{SpeedModifier::Normal};
 
     // Helper functions
     glm::vec3 cameraForward() const;

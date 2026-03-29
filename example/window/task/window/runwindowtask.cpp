@@ -2,6 +2,7 @@
 
 #include "vigine/ecs/entity.h"
 #include "vigine/ecs/entitymanager.h"
+#include "vigine/ecs/render/camera.h"
 #include "vigine/ecs/render/meshcomponent.h"
 #include "vigine/ecs/render/rendercomponent.h"
 #include "vigine/ecs/render/rendersystem.h"
@@ -13,6 +14,8 @@
 #include <vigine/service/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
+#include "../../service/uiservice.h"
+#include "../../system/uisystem.h"
 #include "ecs/platform/windowcomponent.h"
 
 #include <cstring>
@@ -29,12 +32,6 @@
 
 namespace
 {
-constexpr unsigned int kKeyW               = 'W';
-constexpr unsigned int kKeyA               = 'A';
-constexpr unsigned int kKeyS               = 'S';
-constexpr unsigned int kKeyD               = 'D';
-constexpr unsigned int kKeyQ               = 'Q';
-constexpr unsigned int kKeyE               = 'E';
 constexpr unsigned int kKeyShift           = 0x10;
 constexpr unsigned int kKeyLeftShift       = 0xA0;
 constexpr unsigned int kKeyRightShift      = 0xA1;
@@ -113,6 +110,21 @@ void RunWindowTask::contextChanged()
 
     if (_textEditorSystem)
         _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
+
+    // Create ManipulationSystem when all services are ready
+    if (_graphicsService && _renderSystem && !_manipulationSystem)
+    {
+        auto *em = context() ? context()->entityManager() : nullptr;
+        _manipulationSystem =
+            std::make_unique<ManipulationSystem>(_graphicsService, _renderSystem, em);
+    }
+
+    // Create UIService + UISystem when context is ready
+    if (!_uiService)
+    {
+        _uiService = std::make_unique<UIService>(vigine::Name("MainUI"));
+        _uiService->setContext(context());
+    }
 }
 
 // COPILOT_TODO: Гарантувати unbindEntity() на всіх ранніх виходах через
@@ -129,6 +141,45 @@ vigine::Result RunWindowTask::execute()
     auto *entity        = entityManager->getEntityByAlias("MainWindow");
     if (!entity)
         return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
+
+    _windowEntity = entity;
+
+    // Create Settings panel group once UISystem is available
+    if (_uiService && _uiService->uiSystem() && _windowEntity)
+    {
+        _uiService->uiSystem()->createGroup(_windowEntity, UIGroupType::SettingsPanel);
+
+        // Register all profiles and the profile-switch callback
+        _uiService->uiSystem()->setProfiles({
+            &_defaultProfile,
+            &_blenderModernProfile,
+            &_mayaProfile,
+            &_max3dsProfile,
+            &_unrealProfile,
+            &_unityProfile,
+            &_sourceEngineProfile,
+            &_godotProfile,
+            &_cinema4dProfile,
+        });
+        _uiService->uiSystem()->setProfileChangedCallback(
+            [this](vigine::platform::InputProfileComponent *profile) {
+                setActiveProfile(profile);
+                // Sync active index so the panel highlights the right row
+                const auto &profiles = std::vector<vigine::platform::InputProfileComponent *>{
+                    &_defaultProfile,      &_blenderModernProfile, &_mayaProfile,
+                    &_max3dsProfile,       &_unrealProfile,        &_unityProfile,
+                    &_sourceEngineProfile, &_godotProfile,         &_cinema4dProfile,
+                };
+                for (int i = 0; i < static_cast<int>(profiles.size()); ++i)
+                {
+                    if (profiles[static_cast<std::size_t>(i)] == profile)
+                    {
+                        _uiService->uiSystem()->setActiveProfileIndex(i);
+                        break;
+                    }
+                }
+            });
+    }
 
     static_cast<void>(ensureMouseRayEntity());
     static_cast<void>(ensureMouseClickSphereEntity());
@@ -230,6 +281,9 @@ vigine::Result RunWindowTask::execute()
                 if (_textEditorSystem)
                     _textEditorSystem->onFrame();
 
+                if (_uiService && _uiService->uiSystem() && _windowEntity)
+                    _uiService->uiSystem()->render(_windowEntity);
+
                 if (_renderSystem && !resizedThisTick)
                 {
                     _renderSystem->update();
@@ -255,7 +309,38 @@ vigine::Result RunWindowTask::execute()
 
 void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int x, int y)
 {
-    if (button == vigine::platform::MouseButton::Left)
+    using MB = vigine::platform::MouseButton;
+
+    // Route mouse input to UISystem when a visible group exists
+    if (_uiService && _uiService->uiSystem() && _windowEntity &&
+        _uiService->uiSystem()->hasVisibleGroup(_windowEntity))
+    {
+        _uiService->uiSystem()->onMouseButtonDown(_windowEntity, button, x, y);
+        return;
+    }
+
+    // ── Emulate 3-Button Mouse (Phase 4) ─────────────────────────────────────
+    if (_emulate3ButtonMouse)
+    {
+        if (_altHeld && button == MB::Left)
+        {
+            // Alt+LMB = orbit
+            _emulatedOrbitActive = true;
+            if (_renderSystem)
+                _renderSystem->beginCameraDrag(x, y);
+            if (_renderSystem)
+                _renderSystem->setCameraMode(vigine::graphics::CameraMode::Orbit);
+            return;
+        }
+        if (_altHeld && button == MB::Right)
+        {
+            _emulatedZoomDragActive = true;
+            _emulatedDragStartY     = y;
+            return;
+        }
+    }
+
+    if (button == MB::Left)
     {
         vigine::Entity *picked =
             _renderSystem ? _renderSystem->pickFirstIntersectedEntity(x, y) : nullptr;
@@ -281,22 +366,30 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
         // In Ctrl camera-unlock mode keep current focus unchanged.
         if (!_ctrlHeld)
         {
-            // Restore normal behavior: clicked entity receives focus, including text
-            // editor.
+            // Update SelectionSystem (Phase 5)
+            if (_shiftHeld)
+                _selectionSystem.toggleSelection(picked);
+            else
+                _selectionSystem.select(picked);
+
+            // Update camera orbit target to selected entity position (Phase 2)
+            if (_renderSystem && _selectionSystem.primarySelected())
+            {
+                glm::vec3 center(0.0f);
+                float radius = 1.0f;
+                if (_selectionSystem.computeSelectionBounds(center, radius, _graphicsService))
+                    _renderSystem->setCameraOrbitTarget(center);
+            }
+
+            // Restore normal behavior: clicked entity receives focus, including text editor.
             setFocusedEntity(picked);
 
             if (_focusedEntity)
             {
-                _movementKeyMask = 0;
+                resetAllContinuousActions();
                 if (_renderSystem)
                 {
-                    _renderSystem->setMoveForwardActive(false);
-                    _renderSystem->setMoveBackwardActive(false);
-                    _renderSystem->setMoveLeftActive(false);
-                    _renderSystem->setMoveRightActive(false);
-                    _renderSystem->setMoveUpActive(false);
-                    _renderSystem->setMoveDownActive(false);
-                    _renderSystem->setSprintActive(false);
+                    resetAllContinuousActions();
                 }
             }
         }
@@ -305,6 +398,21 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
     if (_renderSystem && button == vigine::platform::MouseButton::Right &&
         (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->beginCameraDrag(x, y);
+
+    // Manipulation confirm/cancel via mouse (Phase 6)
+    if (_manipulationSystem && _manipulationSystem->isActive())
+    {
+        if (button == vigine::platform::MouseButton::Left)
+        {
+            _manipulationSystem->confirm();
+            return;
+        }
+        if (button == vigine::platform::MouseButton::Right)
+        {
+            _manipulationSystem->cancel();
+            return;
+        }
+    }
 
     std::cout << "[RunWindowTask::onMouseButtonDown] button=" << static_cast<int>(button)
               << ", x=" << x << ", y=" << y << std::endl;
@@ -315,6 +423,31 @@ void RunWindowTask::onMouseButtonUp(vigine::platform::MouseButton button, int x,
 {
     static_cast<void>(x);
     static_cast<void>(y);
+
+    using MB = vigine::platform::MouseButton;
+
+    // ── Emulate 3-Button Mouse (Phase 4) ─────────────────────────────────────
+    if (_emulate3ButtonMouse)
+    {
+        if (button == MB::Left && _emulatedOrbitActive)
+        {
+            if (_emulatedOrbitActive)
+            {
+                if (_renderSystem)
+                {
+                    _renderSystem->endCameraDrag();
+                    _renderSystem->setCameraMode(vigine::graphics::CameraMode::FreeLook);
+                }
+            }
+            _emulatedOrbitActive = false;
+            return;
+        }
+        if (button == MB::Right && _emulatedZoomDragActive)
+        {
+            _emulatedZoomDragActive = false;
+            return;
+        }
+    }
 
     if (button == vigine::platform::MouseButton::Left && _textEditorSystem)
         _textEditorSystem->onMouseButtonUp();
@@ -330,8 +463,39 @@ void RunWindowTask::onMouseMove(int x, int y)
     _lastMouseRayY     = y;
     _hasMouseRaySample = true;
 
+    // Route mouse move to UISystem when a visible group exists
+    if (_uiService && _uiService->uiSystem() && _windowEntity &&
+        _uiService->uiSystem()->hasVisibleGroup(_windowEntity))
+    {
+        _uiService->uiSystem()->onMouseMove(_windowEntity, x, y);
+        return;
+    }
+
+    // ── Emulate 3-Button Mouse handling ──────────────────────────────────────
+    if (_emulate3ButtonMouse)
+    {
+        if (_emulatedOrbitActive)
+        {
+            if (_renderSystem)
+                _renderSystem->updateCameraDrag(x, y);
+            return;
+        }
+        if (_emulatedZoomDragActive)
+        {
+            const int dy = y - _emulatedDragStartY;
+            if (_renderSystem)
+                _renderSystem->zoomCamera(-dy * 4);
+            _emulatedDragStartY = y;
+            return;
+        }
+    }
+
     if (_objectDragActive)
         updateObjectDrag(x, y);
+
+    // Forward mouse move to ManipulationSystem if active (Phase 6)
+    if (_manipulationSystem && _manipulationSystem->isActive())
+        _manipulationSystem->updateFromMouse(x, y);
 
     if (_textEditorSystem)
         _textEditorSystem->onMouseMove(x, y);
@@ -368,26 +532,73 @@ void RunWindowTask::onMouseWheel(int delta, int x, int y)
 
 void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
 {
-    if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
-        event.keyCode == kKeyRightControl)
-        _ctrlHeld = true;
-
-    if (!event.isRepeat &&
-        (event.keyCode == kKeyAlt || event.keyCode == kKeyLeftAlt || event.keyCode == kKeyRightAlt))
+    // Route input to UISystem when a visible group exists (except ToggleSettings key)
+    // ToggleSettings is always processed below to allow closing the panel.
+    if (_uiService && _uiService->uiSystem() && _windowEntity &&
+        _uiService->uiSystem()->hasVisibleGroup(_windowEntity))
     {
-        if (_objectDragActive)
+        _uiService->uiSystem()->onKeyDown(_windowEntity, event);
+        // Still process ToggleSettings and modifier keys (handled via InputMap dispatch below).
+        // Check ToggleSettings via InputMap for panel toggle.
+        if (_activeProfile)
         {
-            endObjectDrag();
-        } else if (_focusedEntity)
-        {
-            const int mx = _hasMouseRaySample ? _lastMouseRayX : 0;
-            const int my = _hasMouseRaySample ? _lastMouseRayY : 0;
-            static_cast<void>(beginObjectDrag(_focusedEntity, mx, my));
+            const auto actions =
+                _activeProfile->inputMap().findActions(event.keyCode, event.modifiers);
+            for (const auto action : actions)
+            {
+                if (action == vigine::platform::InputAction::ToggleSettings)
+                {
+                    _uiService->uiSystem()->toggleGroup(_windowEntity, UIGroupType::SettingsPanel);
+                    break;
+                }
+            }
         }
         return;
     }
 
-    if (event.keyCode == kKeyRayToggle && !event.isRepeat)
+    if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
+        event.keyCode == kKeyRightControl)
+    {
+        _ctrlHeld = true;
+        if (_renderSystem)
+        {
+            _renderSystem->setCameraSpeedModifier(vigine::graphics::SpeedModifier::Slow);
+        }
+    }
+
+    if (event.keyCode == kKeyShift || event.keyCode == kKeyLeftShift ||
+        event.keyCode == kKeyRightShift)
+    {
+        _shiftHeld = true;
+        if (_renderSystem)
+        {
+            _renderSystem->setCameraSpeedModifier(vigine::graphics::SpeedModifier::Fast);
+        }
+    }
+
+    if (!event.isRepeat &&
+        (event.keyCode == kKeyAlt || event.keyCode == kKeyLeftAlt || event.keyCode == kKeyRightAlt))
+    {
+        _altHeld = true;
+
+        // When emulate3ButtonMouse is OFF, Alt triggers object drag (legacy behavior)
+        if (!_emulate3ButtonMouse)
+        {
+            if (_objectDragActive)
+            {
+                endObjectDrag();
+            } else if (_focusedEntity)
+            {
+                const int mx = _hasMouseRaySample ? _lastMouseRayX : 0;
+                const int my = _hasMouseRaySample ? _lastMouseRayY : 0;
+                static_cast<void>(beginObjectDrag(_focusedEntity, mx, my));
+            }
+        }
+        return;
+    }
+
+    // Ray toggle — only when no entity is focused
+    if (event.keyCode == kKeyRayToggle && !event.isRepeat && !_focusedEntity)
     {
         _mouseRayVisible = !_mouseRayVisible;
 
@@ -416,7 +627,7 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     }
 
     if (!_focusedEntity || _ctrlHeld || _objectDragActive)
-        updateCameraMovementKey(event.keyCode, true);
+        updateContinuousActions(event.keyCode, event.modifiers, true);
 
     if (event.keyCode == kKeyEscape)
     {
@@ -430,6 +641,118 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     if (_textEditorSystem && isFocusedTextEditor())
         _textEditorSystem->onKeyDown(event.keyCode);
 
+    // ── InputMap-driven camera / object actions (Phase 3+5+6) ───────────────
+    if (_renderSystem)
+    {
+        const auto actions = _activeProfile->inputMap().findActions(event.keyCode, event.modifiers);
+        for (const auto action : actions)
+        {
+            using IA = vigine::platform::InputAction;
+            // One-shot actions: skip on key-repeat
+            if (event.isRepeat)
+                continue;
+
+            switch (action)
+            {
+            case IA::ResetView:
+                _renderSystem->resetCameraView();
+                break;
+            case IA::ResetRotation:
+                _renderSystem->resetCameraRotation();
+                break;
+            case IA::ResetPosition:
+                _renderSystem->resetCameraPosition();
+                break;
+            case IA::FrameAll:
+                _renderSystem->resetCameraView();
+                break;
+            case IA::FrameSelected: {
+                glm::vec3 center(0.0f);
+                float radius = 1.0f;
+                if (_selectionSystem.computeSelectionBounds(center, radius, _graphicsService))
+                    _renderSystem->frameCameraOnTarget(center, radius);
+                break;
+            }
+            case IA::DeselectAll:
+                _selectionSystem.deselectAll();
+                break;
+            case IA::GrabMode: {
+                auto *primary = _selectionSystem.primarySelected();
+                if (primary && _manipulationSystem)
+                {
+                    const int mx = _hasMouseRaySample ? _lastMouseRayX : 0;
+                    const int my = _hasMouseRaySample ? _lastMouseRayY : 0;
+                    _manipulationSystem->beginGrab(primary, mx, my);
+                }
+                break;
+            }
+            case IA::ConstrainX:
+                if (_manipulationSystem)
+                    _manipulationSystem->setAxisConstraint(AxisConstraint::X);
+                break;
+            case IA::ConstrainY:
+                if (_manipulationSystem)
+                    _manipulationSystem->setAxisConstraint(AxisConstraint::Y);
+                break;
+            case IA::ConstrainZ:
+                if (_manipulationSystem)
+                    _manipulationSystem->setAxisConstraint(AxisConstraint::Z);
+                break;
+            case IA::Confirm:
+                if (_manipulationSystem && _manipulationSystem->isActive())
+                    _manipulationSystem->confirm();
+                break;
+            case IA::Cancel:
+                if (_manipulationSystem && _manipulationSystem->isActive())
+                    _manipulationSystem->cancel();
+                break;
+            case IA::Duplicate:
+                if (_manipulationSystem)
+                {
+                    const int mx     = _hasMouseRaySample ? _lastMouseRayX : 0;
+                    const int my     = _hasMouseRaySample ? _lastMouseRayY : 0;
+                    auto newEntities = _manipulationSystem->duplicateEntities(
+                        _selectionSystem.selectedEntities(), mx, my);
+                    // Update selection to the newly duplicated entities
+                    if (!newEntities.empty())
+                    {
+                        _selectionSystem.select(newEntities.front());
+                        for (size_t i = 1; i < newEntities.size(); ++i)
+                            _selectionSystem.addToSelection(newEntities[i]);
+                    }
+                }
+                break;
+            case IA::Delete:
+                if (_manipulationSystem)
+                {
+                    _manipulationSystem->deleteEntities(_selectionSystem.selectedEntities());
+                    _selectionSystem.deselectAll();
+                }
+                break;
+            case IA::ToggleCameraMode:
+                _renderSystem->toggleCameraMode();
+                std::cout << "[Camera] Mode: "
+                          << (_renderSystem->cameraMode() == vigine::graphics::CameraMode::Orbit
+                                  ? "Orbit"
+                                  : "FreeLook")
+                          << std::endl;
+                break;
+            case IA::ToggleSettings:
+                if (_uiService && _uiService->uiSystem() && _windowEntity)
+                    _uiService->uiSystem()->toggleGroup(_windowEntity, UIGroupType::SettingsPanel);
+                break;
+            case IA::Undo:
+                // TODO: Implement undo system (placeholder).
+                break;
+            case IA::Redo:
+                // TODO: Implement redo system (placeholder).
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
     if (!event.isRepeat)
         std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
                   << ", scanCode=" << event.scanCode << std::endl;
@@ -440,58 +763,126 @@ void RunWindowTask::onKeyUp(const vigine::platform::KeyEvent &event)
 {
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
+    {
         _ctrlHeld = false;
+        if (_renderSystem)
+        {
+            if (!_shiftHeld)
+                _renderSystem->setCameraSpeedModifier(vigine::graphics::SpeedModifier::Normal);
+        }
+    }
+
+    if (event.keyCode == kKeyShift || event.keyCode == kKeyLeftShift ||
+        event.keyCode == kKeyRightShift)
+    {
+        _shiftHeld = false;
+        if (_renderSystem)
+        {
+            if (!_ctrlHeld)
+                _renderSystem->setCameraSpeedModifier(vigine::graphics::SpeedModifier::Normal);
+        }
+    }
+
+    if (event.keyCode == kKeyAlt || event.keyCode == kKeyLeftAlt || event.keyCode == kKeyRightAlt)
+        _altHeld = false;
 
     if (!_focusedEntity || _ctrlHeld || _objectDragActive)
-        updateCameraMovementKey(event.keyCode, false);
+        updateContinuousActions(event.keyCode, event.modifiers, false);
 }
 
-void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
+void RunWindowTask::updateContinuousActions(unsigned int keyCode, unsigned int modifiers,
+                                            bool pressed)
+{
+    if (!_renderSystem || !_activeProfile)
+        return;
+
+    const auto actions = _activeProfile->inputMap().findActions(keyCode, modifiers);
+    for (const auto action : actions)
+    {
+        using IA = vigine::platform::InputAction;
+        switch (action)
+        {
+        case IA::MoveForward:
+            _renderSystem->setMoveForwardActive(pressed);
+            break;
+        case IA::MoveBackward:
+            _renderSystem->setMoveBackwardActive(pressed);
+            break;
+        case IA::MoveLeft:
+            _renderSystem->setMoveLeftActive(pressed);
+            break;
+        case IA::MoveRight:
+            _renderSystem->setMoveRightActive(pressed);
+            break;
+        case IA::MoveUp:
+            _renderSystem->setMoveUpActive(pressed);
+            break;
+        case IA::MoveDown:
+            _renderSystem->setMoveDownActive(pressed);
+            break;
+        case IA::RotateYawLeft:
+            _renderSystem->setRotateCameraYawLeftActive(pressed);
+            break;
+        case IA::RotateYawRight:
+            _renderSystem->setRotateCameraYawRightActive(pressed);
+            break;
+        case IA::RotatePitchUp:
+            _renderSystem->setRotateCameraPitchUpActive(pressed);
+            break;
+        case IA::RotatePitchDown:
+            _renderSystem->setRotateCameraPitchDownActive(pressed);
+            break;
+        case IA::ZoomIn:
+            _renderSystem->setZoomCameraInActive(pressed);
+            break;
+        case IA::ZoomOut:
+            _renderSystem->setZoomCameraOutActive(pressed);
+            break;
+        case IA::SpeedSlow:
+            _renderSystem->setCameraSpeedModifier(pressed
+                                                      ? vigine::graphics::SpeedModifier::Slow
+                                                      : vigine::graphics::SpeedModifier::Normal);
+            break;
+        case IA::SpeedFast:
+            _renderSystem->setCameraSpeedModifier(pressed
+                                                      ? vigine::graphics::SpeedModifier::Fast
+                                                      : vigine::graphics::SpeedModifier::Normal);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void RunWindowTask::resetAllContinuousActions()
 {
     if (!_renderSystem)
         return;
+    _renderSystem->setMoveForwardActive(false);
+    _renderSystem->setMoveBackwardActive(false);
+    _renderSystem->setMoveLeftActive(false);
+    _renderSystem->setMoveRightActive(false);
+    _renderSystem->setMoveUpActive(false);
+    _renderSystem->setMoveDownActive(false);
+    _renderSystem->setRotateCameraYawLeftActive(false);
+    _renderSystem->setRotateCameraYawRightActive(false);
+    _renderSystem->setRotateCameraPitchUpActive(false);
+    _renderSystem->setRotateCameraPitchDownActive(false);
+    _renderSystem->setZoomCameraInActive(false);
+    _renderSystem->setZoomCameraOutActive(false);
+    _renderSystem->setCameraSpeedModifier(vigine::graphics::SpeedModifier::Normal);
+}
 
-    auto setMoveMaskBit = [this, pressed](uint8_t bit) {
-        if (pressed)
-            _movementKeyMask = static_cast<uint8_t>(_movementKeyMask | bit);
-        else
-            _movementKeyMask = static_cast<uint8_t>(_movementKeyMask & ~bit);
-    };
+void RunWindowTask::setActiveProfile(vigine::platform::InputProfileComponent *profile)
+{
+    resetAllContinuousActions();
+    _activeProfile = profile ? profile : &_defaultProfile;
+    _activeProfile->inputMap().setNumpadEmulation(_numpadEmulation);
+}
 
-    switch (keyCode)
-    {
-    case kKeyW:
-        _renderSystem->setMoveForwardActive(pressed);
-        setMoveMaskBit(MoveKeyW);
-        break;
-    case kKeyS:
-        _renderSystem->setMoveBackwardActive(pressed);
-        setMoveMaskBit(MoveKeyS);
-        break;
-    case kKeyA:
-        _renderSystem->setMoveLeftActive(pressed);
-        setMoveMaskBit(MoveKeyA);
-        break;
-    case kKeyD:
-        _renderSystem->setMoveRightActive(pressed);
-        setMoveMaskBit(MoveKeyD);
-        break;
-    case kKeyQ:
-        _renderSystem->setMoveDownActive(pressed);
-        setMoveMaskBit(MoveKeyQ);
-        break;
-    case kKeyE:
-        _renderSystem->setMoveUpActive(pressed);
-        setMoveMaskBit(MoveKeyE);
-        break;
-    case kKeyShift:
-    case kKeyLeftShift:
-    case kKeyRightShift:
-        _renderSystem->setSprintActive(pressed);
-        break;
-    default:
-        break;
-    }
+vigine::platform::InputProfileComponent *RunWindowTask::activeProfile() const
+{
+    return _activeProfile;
 }
 
 void RunWindowTask::onWindowResized(vigine::platform::WindowComponent *window, int width,
@@ -517,10 +908,19 @@ void RunWindowTask::setTextEditorSystem(std::shared_ptr<TextEditorSystem> editor
         _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
 }
 
+void RunWindowTask::setNumpadEmulation(bool enabled)
+{
+    _numpadEmulation = enabled;
+    if (_activeProfile)
+        _activeProfile->inputMap().setNumpadEmulation(enabled);
+}
+
+void RunWindowTask::setEmulate3ButtonMouse(bool enabled) { _emulate3ButtonMouse = enabled; }
+
 void RunWindowTask::onChar(const vigine::platform::TextEvent &event)
 {
     if (_textEditorSystem && isFocusedTextEditor())
-        _textEditorSystem->onChar(event, _movementKeyMask);
+        _textEditorSystem->onChar(event, 0);
 }
 
 bool RunWindowTask::handleClipboardShortcut(const vigine::platform::KeyEvent &event)

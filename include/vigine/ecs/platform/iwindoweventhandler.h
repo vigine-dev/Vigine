@@ -67,6 +67,10 @@ class IWindowEventHandlerComponent
     virtual void onKeyUp(const KeyEvent &event)     = 0;
     virtual void onChar(const TextEvent &event)     = 0;
     virtual void onDeadChar(const TextEvent &event) = 0;
+
+    // Touchpad / gesture events (default no-op so existing subclasses are unaffected)
+    virtual void onPinchGesture(float scale, int centerX, int centerY) {}
+    virtual void onTwoFingerDrag(int deltaX, int deltaY, int x, int y) {}
 };
 
 } // namespace platform

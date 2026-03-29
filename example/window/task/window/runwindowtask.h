@@ -3,8 +3,22 @@
 #include "windoweventsignal.h"
 
 #include <vigine/abstracttask.h>
+#include <vigine/ecs/platform/inputmap.h>
+#include <vigine/ecs/platform/inputprofilecomponent.h>
 #include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/ecs/platform/profiles/blenderclassicprofile.h>
+#include <vigine/ecs/platform/profiles/blendermodernprofile.h>
+#include <vigine/ecs/platform/profiles/cinema4dprofile.h>
+#include <vigine/ecs/platform/profiles/godotprofile.h>
+#include <vigine/ecs/platform/profiles/max3dsprofile.h>
+#include <vigine/ecs/platform/profiles/mayaprofile.h>
+#include <vigine/ecs/platform/profiles/sourceengineprofile.h>
+#include <vigine/ecs/platform/profiles/unityprofile.h>
+#include <vigine/ecs/platform/profiles/unrealprofile.h>
 
+#include "../../service/uiservice.h"
+#include "../../system/manipulationsystem.h"
+#include "../../system/selectionsystem.h"
 #include "../../system/texteditorsystem.h"
 
 #include <chrono>
@@ -47,19 +61,18 @@ class RunWindowTask : public vigine::AbstractTask,
 
     void setTextEditorSystem(std::shared_ptr<TextEditorSystem> editorSystem);
 
-  private:
-    enum MovementKeyMask : uint8_t
-    {
-        MoveKeyW = 1u << 0,
-        MoveKeyA = 1u << 1,
-        MoveKeyS = 1u << 2,
-        MoveKeyD = 1u << 3,
-        MoveKeyQ = 1u << 4,
-        MoveKeyE = 1u << 5,
-    };
+    // Input configuration
+    void setNumpadEmulation(bool enabled);
+    void setEmulate3ButtonMouse(bool enabled);
 
+    // Input profile API
+    void setActiveProfile(vigine::platform::InputProfileComponent *profile);
+    vigine::platform::InputProfileComponent *activeProfile() const;
+
+  private:
     void onWindowResized(vigine::platform::WindowComponent *window, int width, int height);
-    void updateCameraMovementKey(unsigned int keyCode, bool pressed);
+    void updateContinuousActions(unsigned int keyCode, unsigned int modifiers, bool pressed);
+    void resetAllContinuousActions();
     bool handleClipboardShortcut(const vigine::platform::KeyEvent &event);
     bool isFocusedTextEditor() const;
     void setFocusedEntity(vigine::Entity *entity);
@@ -75,6 +88,8 @@ class RunWindowTask : public vigine::AbstractTask,
     vigine::graphics::GraphicsService *_graphicsService{nullptr};
     vigine::graphics::RenderSystem *_renderSystem{nullptr};
     std::shared_ptr<TextEditorSystem> _textEditorSystem;
+    SelectionSystem _selectionSystem;
+    std::unique_ptr<ManipulationSystem> _manipulationSystem;
     vigine::Entity *_focusedEntity{nullptr};
     vigine::Entity *_mouseRayEntity{nullptr};
     vigine::Entity *_mouseClickSphereEntity{nullptr};
@@ -85,7 +100,13 @@ class RunWindowTask : public vigine::AbstractTask,
     int _lastMouseRayX{0};
     int _lastMouseRayY{0};
     bool _ctrlHeld{false};
+    bool _altHeld{false};
+    bool _shiftHeld{false};
     bool _objectDragActive{false};
+    // Emulate 3-Button Mouse state (Phase 4)
+    bool _emulatedOrbitActive{false};
+    bool _emulatedZoomDragActive{false};
+    int _emulatedDragStartY{0};
     bool _dragEditorGroup{false};
     vigine::Entity *_dragEntity{nullptr};
     float _dragDistanceFromCamera{0.0f};
@@ -96,7 +117,20 @@ class RunWindowTask : public vigine::AbstractTask,
     uint32_t _appliedResizeWidth{0};
     uint32_t _appliedResizeHeight{0};
     bool _resizePending{false};
-    uint8_t _movementKeyMask{0};
+    vigine::platform::BlenderClassicProfile _defaultProfile;
+    vigine::platform::BlenderModernProfile _blenderModernProfile;
+    vigine::platform::MayaProfile _mayaProfile;
+    vigine::platform::Max3dsProfile _max3dsProfile;
+    vigine::platform::UnrealProfile _unrealProfile;
+    vigine::platform::UnityProfile _unityProfile;
+    vigine::platform::SourceEngineProfile _sourceEngineProfile;
+    vigine::platform::GodotProfile _godotProfile;
+    vigine::platform::Cinema4DProfile _cinema4dProfile;
+    vigine::platform::InputProfileComponent *_activeProfile{&_defaultProfile};
+    bool _numpadEmulation{false};
+    bool _emulate3ButtonMouse{false};
+    std::unique_ptr<UIService> _uiService;
+    vigine::Entity *_windowEntity{nullptr};
     std::chrono::steady_clock::time_point _lastResizeEvent{};
     std::chrono::steady_clock::time_point _lastResizeApply{};
 };

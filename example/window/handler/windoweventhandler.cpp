@@ -41,6 +41,21 @@ void WindowEventHandler::setWindowResizedCallback(WindowResizedCallback callback
     _onWindowResized = std::move(callback);
 }
 
+void WindowEventHandler::setPinchGestureCallback(PinchGestureCallback callback)
+{
+    _onPinchGesture = std::move(callback);
+}
+
+void WindowEventHandler::setTwoFingerDragCallback(TwoFingerDragCallback callback)
+{
+    _onTwoFingerDrag = std::move(callback);
+}
+
+void WindowEventHandler::setMouseHWheelCallback(MouseHWheelCallback callback)
+{
+    _onMouseHWheel = std::move(callback);
+}
+
 void WindowEventHandler::onWindowClosed()
 {
     std::cout << "[" << _handlerId << "] Window closed event" << std::endl;
@@ -91,6 +106,11 @@ void WindowEventHandler::onMouseWheel(int delta, int x, int y)
 
 void WindowEventHandler::onMouseHorizontalWheel(int delta, int x, int y)
 {
+    if (_onMouseHWheel)
+    {
+        _onMouseHWheel(delta, x, y);
+        return;
+    }
     std::cout << "[" << _handlerId << "] Mouse h-wheel: delta=" << delta << " at " << x << ", " << y
               << std::endl;
 }
@@ -163,4 +183,16 @@ void WindowEventHandler::onDeadChar(const vigine::platform::TextEvent &event)
     std::cout << "[" << _handlerId
               << "] WindowEventHandler::onDeadChar: Dead char: cp=" << event.codePoint
               << ", mods=" << event.modifiers << ", repeatCount=" << event.repeatCount << std::endl;
+}
+
+void WindowEventHandler::onPinchGesture(float scale, int centerX, int centerY)
+{
+    if (_onPinchGesture)
+        _onPinchGesture(scale, centerX, centerY);
+}
+
+void WindowEventHandler::onTwoFingerDrag(int deltaX, int deltaY, int x, int y)
+{
+    if (_onTwoFingerDrag)
+        _onTwoFingerDrag(deltaX, deltaY, x, y);
 }

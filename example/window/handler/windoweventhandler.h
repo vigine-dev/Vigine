@@ -16,6 +16,9 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     using KeyUpCallback           = std::function<void(const vigine::platform::KeyEvent &)>;
     using CharCallback            = std::function<void(const vigine::platform::TextEvent &)>;
     using WindowResizedCallback   = std::function<void(int, int)>;
+    using PinchGestureCallback    = std::function<void(float, int, int)>;
+    using TwoFingerDragCallback   = std::function<void(int, int, int, int)>;
+    using MouseHWheelCallback     = std::function<void(int, int, int)>;
 
     explicit WindowEventHandler(std::string handlerId = "Handler");
 
@@ -27,6 +30,9 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     void setKeyUpCallback(KeyUpCallback callback);
     void setCharCallback(CharCallback callback);
     void setWindowResizedCallback(WindowResizedCallback callback);
+    void setPinchGestureCallback(PinchGestureCallback callback);
+    void setTwoFingerDragCallback(TwoFingerDragCallback callback);
+    void setMouseHWheelCallback(MouseHWheelCallback callback);
 
     void onWindowClosed() override;
     void onWindowResized(int width, int height) override;
@@ -48,6 +54,9 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     void onChar(const vigine::platform::TextEvent &event) override;
     void onDeadChar(const vigine::platform::TextEvent &event) override;
 
+    void onPinchGesture(float scale, int centerX, int centerY) override;
+    void onTwoFingerDrag(int deltaX, int deltaY, int x, int y) override;
+
   private:
     std::string _handlerId;
     MouseButtonDownCallback _onMouseButtonDown;
@@ -58,4 +67,7 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     KeyUpCallback _onKeyUp;
     CharCallback _onChar;
     WindowResizedCallback _onWindowResized;
+    PinchGestureCallback _onPinchGesture;
+    TwoFingerDragCallback _onTwoFingerDrag;
+    MouseHWheelCallback _onMouseHWheel;
 };

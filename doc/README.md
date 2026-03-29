@@ -98,6 +98,10 @@ If a task description does not include the project folder layout, use this secti
 - [Example application classes](example-class-diagram.md)
 - [Window signal subsystem](signals-class-diagram.md) (includes sequence flow)
 
+## Reference
+
+- [Keybindings](keybindings.md) — all keyboard shortcuts and mouse gestures for example-window
+
 ## Sequence diagrams
 
 - [Engine run and state transitions](sequence-engine-state.md)
