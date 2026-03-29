@@ -3,12 +3,14 @@
 #include <vigine/context.h>
 #include <vigine/ecs/entitymanager.h>
 #include <vigine/ecs/render/rendercomponent.h>
+#include <vigine/ecs/render/shadercomponent.h>
 #include <vigine/ecs/render/textcomponent.h>
 #include <vigine/ecs/render/transformcomponent.h>
 #include <vigine/property.h>
 #include <vigine/service/graphicsservice.h>
 
 #include <filesystem>
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 
@@ -91,7 +93,31 @@ vigine::Result SetupTextTask::execute()
     transform.setPosition({0.0f, 2.1f, 0.6f});
     transform.setScale({1.0f, 1.0f, 1.0f});
     renderComponent->setTransform(transform);
-    renderComponent->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::TextVoxel);
+
+    // Configure mesh for voxel text instanced rendering
+    vigine::graphics::MeshComponent voxelMesh;
+    voxelMesh.setProceduralInShader(true, 36); // 36 vertices per voxel cube instance
+    renderComponent->setMesh(voxelMesh);
+
+    {
+        vigine::graphics::ShaderComponent shader("textvoxel.vert.spv", "textvoxel.frag.spv");
+        // Voxel text shader generates cube per character instance (36 vertices)
+        shader.setUseVoxelTextLayout(true);
+        shader.setInstancedRendering(true);
+        // Instance vertex layout: mat4 as 4 consecutive vec4 attributes at binding 0.
+        vigine::graphics::VertexBindingDesc instBinding;
+        instBinding.binding      = 0;
+        instBinding.stride       = sizeof(glm::mat4);
+        instBinding.instanceRate = true;
+        instBinding.attributes   = {
+            {0, vigine::graphics::VertexFormat::Float32x4, 0 },
+            {1, vigine::graphics::VertexFormat::Float32x4, 16},
+            {2, vigine::graphics::VertexFormat::Float32x4, 32},
+            {3, vigine::graphics::VertexFormat::Float32x4, 48},
+        };
+        shader.setVertexLayout({instBinding});
+        renderComponent->setShader(shader);
+    }
 
     vigine::graphics::TextComponent text;
     text.setEnabled(true);

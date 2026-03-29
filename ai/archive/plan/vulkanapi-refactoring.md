@@ -11,15 +11,17 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 - 🚨 `createSwapchain()` is ~900 lines: creates 9 hardcoded pipelines, loads shaders inline, builds geometry
 - 🚨 `drawFrame()` is ~500 lines: mixes camera physics, command recording, buffer uploads, draw calls
 - ⚠️ Shader paths and vertex counts (36, 6, 768, 18) are hardcoded magic numbers
-- ⚠️ Camera state + physics lives inside VulkanAPI
-- ⚠️ `ShaderComponent` exists but is unused; `ShaderProfile` enum in `RenderComponent` maps to hardcoded pipelines
-- ⚠️ Platform surface creation uses `#ifdef` blocks inside VulkanAPI
-- 🚨 No abstraction layer for replacing Vulkan with another API
+- ~~⚠️ Camera state + physics lives inside VulkanAPI~~ ✅ Extracted to `Camera` class
+- ~~⚠️ `ShaderComponent` exists but is unused; `ShaderProfile` enum in `RenderComponent` maps to hardcoded pipelines~~ ✅ ShaderComponent extended, ShaderProfile removed
+- ~~⚠️ Platform surface creation uses `#ifdef` blocks inside VulkanAPI~~ ✅ Extracted to SurfaceFactory
+- ~~🚨 No abstraction layer for replacing Vulkan with another API~~ ✅ GraphicsBackend interface created
 - ⚠️ SDF atlas management is interleaved with frame rendering
+- 🚨 Entity pipelines lack descriptor set support — textured shaders (`sampler2D`) can't bind textures
+- ⚠️ All entity pipelines share `_pipelineLayout` without descriptor set layouts; only SDF pipeline has them
 
 ---
 
-## 🟦 Phase 1: Graphics Backend Abstraction
+## ✅ Phase 1: Graphics Backend Abstraction — DONE
 
 **🎯 Goal:** Create a `GraphicsBackend` interface so VulkanAPI becomes a pluggable component.
 
@@ -67,7 +69,7 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🟩 Phase 2: Extract Camera
+## ✅ Phase 2: Extract Camera — DONE
 
 **🎯 Goal:** Move camera state and physics out of VulkanAPI into a standalone `Camera` class.
 
@@ -95,7 +97,7 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🟨 Phase 3: Platform Surface Factory
+## ✅ Phase 3: Platform Surface Factory — DONE
 
 **🎯 Goal:** Extract platform-specific surface creation from VulkanAPI.
 
@@ -118,13 +120,13 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🟧 Phase 4: Shader & Pipeline as ECS Components
+## ✅ Phase 4: Shader & Pipeline as ECS Components — DONE
 
 **🎯 Goal:** Make shaders and pipelines data-driven ECS components instead of hardcoded.
 
 ### Steps
 
-11. **Extend existing `ShaderComponent`** (`include/vigine/ecs/render/shadercomponent.h`):
+11. ✅ **Extend existing `ShaderComponent`** (`include/vigine/ecs/render/shadercomponent.h`):
    - Add SPIR-V binary cache: `_vertexSpirv`, `_fragmentSpirv` (loaded lazily)
    - Add `loadFromFile(vertPath, fragPath)` — calls `loadBinaryFile()`
    - Add `vertexLayout()` → `VertexLayoutDesc` (binding descriptions, attributes)
@@ -133,24 +135,29 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
    - Add `topology()` → enum { TriangleList, LineList }
    - ShaderModuleHandle caching (backend-assigned after first pipeline build)
 
-12. **Create `include/vigine/ecs/render/pipelinecache.h`** helper class:
+12. ✅ **Create `include/vigine/ecs/render/pipelinecache.h`** helper class:
    - Owns compiled pipeline handles per ShaderComponent configuration
    - Key: hash of (vertex shader path + fragment shader path + layout + blend + depth)
    - Lazy creation: first draw call triggers `GraphicsBackend::createPipeline()`
    - Recreated when swapchain invalidated (render pass changes)
    - Owned by RenderSystem (not per-entity — shared pipelines)
 
-13. **Remove `ShaderProfile` enum from `RenderComponent`**:
+13. ✅ **Remove `ShaderProfile` enum from `RenderComponent`**:
    - Replace with `ShaderComponent*` reference (or direct ownership)
    - Entity setup code in example/ sets shader paths on the component instead of selecting an enum
 
-14. **Remove hardcoded pipeline creation from `createSwapchain()`**:
+14. ✅ **Remove hardcoded pipeline creation from `createSwapchain()`**:
    - `createSwapchain()` only creates: swapchain, depth image, render pass, framebuffers, command pool, sync primitives
    - Pipeline creation moves to PipelineCache, triggered lazily during first drawFrame that encounters uncompiled shaders
 
-15. **Update `drawFrame()`**:
+15. ✅ **Update `drawFrame()`**:
    - Instead of binding hardcoded pipeline per profile, iterate entities → look up PipelineCache → bind → draw
    - Group entities by pipeline to minimize bind switches
+
+### ⚠️ Remaining Gap (resolved in Phase 6.1)
+- `PipelineDesc` does not carry descriptor set layout info → all pipelines use shared `_pipelineLayout` (push constants only)
+- Shaders that declare `uniform sampler2D` fail Vulkan validation because the pipeline layout has no descriptor set bindings
+- `ShaderComponent` needs `hasTextureBinding()` flag; `PipelineCache::computeKey()` must include it
 
 ### 📂 Relevant Files
 - `include/vigine/ecs/render/shadercomponent.h` — extend
@@ -161,24 +168,24 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🟪 Phase 5: Geometry as ECS Component
+## ✅ Phase 5: Geometry as ECS Component — DONE
 
 **🎯 Goal:** Make geometry a proper component that provides vertex/index data to the backend.
 
 ### Steps
 
-16. **Extend existing `MeshComponent`** (`include/vigine/ecs/render/meshcomponent.h`):
+16. ✅ **Extend existing `MeshComponent`** (`include/vigine/ecs/render/meshcomponent.h`):
    - Add `vertexCount()` to replace hardcoded magic numbers (36, 6, 768, 18)
    - Add `isProceduralInShader()` flag — for shaders that generate geometry (cube.vert, sphere.vert)
    - Add BufferHandle for GPU-uploaded vertex/index buffers (assigned by backend)
    - Add `dirty()` flag for re-upload tracking
 
-17. **Create GPU buffer management in RenderSystem or GraphicsBackend**:
+17. ✅ **Create GPU buffer management in RenderSystem or GraphicsBackend**:
    - On entity bind → if MeshComponent has CPU data → upload to GPU via `GraphicsBackend::createBuffer()` + `uploadBuffer()`
    - Track BufferHandle lifetime per entity
    - On entity unbind → `destroyBuffer()`
 
-18. **Remove hardcoded vertex counts from `drawFrame()`**:
+18. ✅ **Remove hardcoded vertex counts from `drawFrame()`**:
    - `DrawCallDesc` gets vertex count from MeshComponent
    - Procedural-in-shader meshes store only vertex count (no CPU buffer)
 
@@ -189,25 +196,26 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🟫 Phase 6: Texture/Image as ECS Component
+## ✅ Phase 6: Texture/Image as ECS Component — DONE
 
 **🎯 Goal:** SDF atlas and future textures become components, not VulkanAPI internal state.
 
 ### Steps
 
-19. **Create `include/vigine/ecs/render/texturecomponent.h`**:
+19. ✅ **Create `include/vigine/ecs/render/texturecomponent.h`**:
    - CPU pixel data (or reference), width, height, format
    - GPU TextureHandle (assigned by backend after upload)
    - Generation counter for change detection
    - DescriptorSet handle for shader binding
 
-20. **Extract SDF atlas into TextureComponent**:
+20. ✅ **Extract SDF atlas into TextureComponent**:
    - RenderSystem creates a "SDF Atlas" entity with TextureComponent
    - `setSdfGlyphData()` updates the TextureComponent's pixel data
    - `drawFrame()` binds the texture via handle instead of managing Vulkan images directly
 
-21. **Move atlas upload logic from VulkanAPI to GraphicsBackend interface**:
-   - `createTexture()` + `uploadTexture()` replace the 100-line inline staging buffer code in `setSdfGlyphData()`
+21. ✅ **Move atlas upload logic from VulkanAPI to GraphicsBackend interface**:
+   - `createTexture()` + `uploadTexture()` implemented in VulkanAPI
+   - `RenderSystem::uploadTextureToGpu()` uploads TextureComponent data via VulkanAPI
 
 ### 📂 Relevant Files
 - `src/ecs/render/vulkanapi.cpp` — lines 1475–1653 (setSdfGlyphData atlas upload)
@@ -215,9 +223,87 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## ⬜ Phase 7: Break Down Remaining Large Methods
+## 🔶 Phase 6.1: Entity Texture Descriptor Sets — ✅ DONE
 
-**🎯 Goal:** No method exceeds ~100 lines.
+**🎯 Goal:** Wire up Vulkan descriptor sets so entity shaders with `uniform sampler2D` can bind GPU textures. Currently only the SDF pipeline has descriptor set infrastructure; entity pipelines use a shared `_pipelineLayout` without any descriptor set layouts, causing Vulkan validation errors and black textured planes.
+
+### Context
+
+- `textured_plane.frag` declares `layout(set = 0, binding = 0) uniform sampler2D texSampler`
+- The entity pipeline layout (`_pipelineLayout`) has only push constants — no descriptor set layouts
+- SDF pipeline has its own layout (`_sdfPipelineLayout`) with descriptor set for atlas texture
+- `TextureComponent` already has `_descriptorSet` field and `hasGpuTexture()` method
+- `RenderComponent` already has `_textureHandle` field and `setTextureHandle()` method
+- `RenderSystem::uploadTextureToGpu()` creates GPU texture and stores handle in TextureComponent
+
+### Steps
+
+21a. ✅ **Create `_entityTextureDescriptorSetLayout`** in `VulkanAPI::createSwapchain()`:
+   - Binding: set=0, binding=0, `eCombinedImageSampler`, fragment stage
+   - Same pattern as SDF descriptor set layout
+
+21b. ✅ **Create `_entityTextureDescriptorPool`** in `VulkanAPI::createSwapchain()`:
+   - Pool size: 32 max sets of `eCombinedImageSampler` (expandable later)
+
+21c. ✅ **Add `VulkanAPI::createTextureDescriptorSet(TextureHandle)`**:
+   - Allocate descriptor set from `_entityTextureDescriptorPool`
+   - Update with texture's image view + sampler from TextureHandle
+   - Store in `_textureDescriptorSets[handle.value]` map
+   - Return descriptor set handle (stored in `TextureComponent::_descriptorSet`)
+
+21d. ✅ **Create `_entityTexturePipelineLayout`** in `VulkanAPI::createSwapchain()`:
+   - Push constant range: 128 bytes (same as `_pipelineLayout`)
+   - Descriptor set layouts: 1 (set=0 = combined image sampler)
+   - Used by pipelines whose shaders declare `set=0, binding=0`
+
+21e. ✅ **Extend `ShaderComponent`** with `hasTextureBinding()` flag:
+   - `setHasTextureBinding(bool)` / `hasTextureBinding() const`
+   - Example code sets `true` for textured_plane shader
+
+21f. ✅ **Extend `PipelineDesc`** with `bool hasTextureBinding{false}`:
+   - `PipelineCache::computeKey()` includes this flag in hash
+   - `PipelineCache::getOrCreate()` passes it to `PipelineDesc`
+
+21g. ✅ **Modify `VulkanAPI::createPipeline()`**:
+   - When `desc.hasTextureBinding == true` → use `_entityTexturePipelineLayout`
+   - Otherwise → use `_pipelineLayout` (existing behavior)
+
+21h. ✅ **Extend `EntityDrawGroup`** with texture info:
+   - Add `TextureHandle textureHandle{}` field
+   - When `RenderComponent::textureHandle().isValid()` in `RenderSystem::update()`, store handle in group
+
+21i. ✅ **Extend `VulkanAPI::drawFrame()` entity draw loop**:
+   - Before draw call, if group has valid textureHandle → look up descriptor set → `commandBuffer.bindDescriptorSets()`
+   - Use `_entityTexturePipelineLayout` for push constants when texture is bound
+
+21j. ✅ **Connect end-to-end in example tasks**:
+   - `LoadTexturesTask`: after `uploadTextureToGpu()`, call descriptor set creation
+   - `SetupTexturedPlanesTask`: set `shader.setHasTextureBinding(true)` for textured_plane shader
+
+### 📂 Relevant Files
+- `include/vigine/ecs/render/vulkanapi.h` — add members: `_entityTextureDescriptorSetLayout`, `_entityTextureDescriptorPool`, `_entityTexturePipelineLayout`, `_textureDescriptorSets` map
+- `src/ecs/render/vulkanapi.cpp` — `createSwapchain()`: create descriptor set layout/pool/pipeline layout; `createPipeline()`: select layout; `drawFrame()`: bind descriptor sets; new `createTextureDescriptorSet()`
+- `include/vigine/ecs/render/graphicshandles.h` — extend `PipelineDesc` and `EntityDrawGroup`
+- `include/vigine/ecs/render/shadercomponent.h` — add `hasTextureBinding` flag
+- `src/ecs/render/pipelinecache.cpp` — update `computeKey()` and `getOrCreate()`
+- `src/ecs/render/rendersystem.cpp` — `update()`: populate texture handle in draw groups
+- `example/window/task/vulkan/loadtexturestask.cpp` — call descriptor set creation after GPU upload
+- `example/window/task/vulkan/setuptexturedplanestask.cpp` — `shader.setHasTextureBinding(true)`
+
+---
+
+## ✅ Phase 7: Break Down Remaining Large Methods — DONE
+
+**🎯 Goal:** No method exceeds ~100 lines. Decompose VulkanAPI into 5 helper classes.
+
+**📌 Detailed decomposition plan:** [vulkanapi-decomposition.md](vulkanapi-decomposition.md) — fully implemented (Phases 1–7 of that plan are done).
+
+**Result:** `VulkanAPI` became a thin orchestrator (~380 lines, all methods 1–30 lines) backed by:
+- `VulkanDevice` — instance, physical device, logical device, surface, queues
+- `VulkanSwapchain` — swapchain lifecycle, render pass, framebuffers, sync primitives
+- `VulkanTextureStore` — texture CRUD, staging upload, descriptor sets
+- `VulkanPipelineStore` — pipeline and shader module CRUD
+- `VulkanFrameRenderer` — frame recording, SDF pipeline, entity/SDF draw calls
 
 ### Steps
 
@@ -228,14 +314,15 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
    - `createFramebuffers()` — per-image framebuffers
    - `createCommandResources()` — command pool + buffers
    - `createSyncPrimitives()` — semaphores + fences
+   - `createTextureDescriptorResources()` — entity texture descriptor set layout, pool, pipeline layout (from Phase 6.1)
    - `createSwapchain()` orchestrates these in sequence
 
 23. **Split `drawFrame()` into phases**:
-   - `updateAnimationState(float dt)` — rotation angles, camera (after Phase 2: removed)
    - `acquireSwapchainImage()` → imageIndex or failure
    - `recordCommandBuffer(uint32_t imageIndex)` — render pass + draw calls
    - `submitAndPresent(uint32_t imageIndex)` — queue submit + present
-   - `recordDrawCalls(commandBuffer)` — iterate entities by pipeline, bind, draw
+   - `recordEntityDrawCalls(commandBuffer)` — iterate entities by pipeline, bind descriptor sets if texture present, draw
+   - `recordSdfDrawCalls(commandBuffer)` — SDF glyph rendering with atlas descriptor set
 
 24. **Extract per-swapchain-image buffer management**:
    - Create `VulkanPerImageBuffer` helper (manages the resize+upload+map pattern used by glyph instances and SDF vertex buffers)
@@ -246,14 +333,14 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ---
 
-## 🏁 Phase 8: Update Example Code & Documentation
+## 🏁 Phase 8: Update Example Code & Documentation — TODO
 
 ### Steps
 
 25. **Update `example/window/`** entity setup to use new components:
-   - Set `ShaderComponent` with shader file paths instead of `ShaderProfile` enum
-   - Set `MeshComponent` with vertex counts for procedural geometry
-   - TextureComponent for SDF atlas
+   - ✅ Set `ShaderComponent` with shader file paths instead of `ShaderProfile` enum
+   - ✅ Set `MeshComponent` with vertex counts for procedural geometry
+   - ⚠️ TextureComponent entity creation + image loading (partially done — see Phase 6.1)
 
 26. **Update `doc/README.md`** and relevant Mermaid diagrams:
    - Add GraphicsBackend, Camera, PipelineCache, TextureComponent, SurfaceFactory to class diagrams
@@ -274,6 +361,7 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 5. 🔗 **Verify entity workflow** — in example, create entity → attach ShaderComponent + MeshComponent → see it render; detach → see it disappear
 6. 🪟 After Phase 3: verify Windows build still creates surface correctly
 7. 📏 After Phase 7: no method in vulkanapi.cpp exceeds ~100 lines (measurable via line count per function)
+8. 🖼️ **After Phase 6.1:** textured planes render with ocean images (not black); no `VUID-VkGraphicsPipelineCreateInfo-layout-07988` validation errors; no "PipelineCache: failed to load SPIR-V" spam in console; existing cube/text/SDF entities still render correctly
 
 ---
 
@@ -283,9 +371,12 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 - **Camera is owned by RenderSystem**, not by VulkanAPI. Camera could later become a component on a "camera entity" but that's out of scope.
 - **PipelineCache is RenderSystem-owned**, shared across entities. Same shader pair → same pipeline handle.
 - **Existing `ShaderComponent` is extended**, not replaced. Backward compatibility with the existing header path.
-- **Phase order matters**: Phase 1 → 2 → 3 can run somewhat independently; Phase 4 depends on Phase 1; Phase 5–6 depend on Phase 4; Phase 7 can start after Phase 4; Phase 8 runs last.
+- **Phase order matters**: Phase 1 → 2 → 3 can run somewhat independently; Phase 4 depends on Phase 1; Phase 5–6 depend on Phase 4; **Phase 6.1 depends on Phase 4 + 6**; Phase 7 depends on Phase 6.1; Phase 8 runs last.
 - **DirectX is NOT implemented** — only the abstract interface is created to keep the door open.
 - **Scope excludes**: shader hot-reload, material system, render graph, multi-threading, GPU memory allocator (VMA). These are future work.
+- **Entity texture descriptor set layout** reuses the same binding pattern as SDF (set=0, binding=0, combined image sampler) — no new descriptor types needed.
+- **Pipeline layout selection** is per-pipeline (based on `ShaderComponent::hasTextureBinding()`), not per-draw-call. This avoids recompiling pipelines at draw time.
+- **Descriptor pool** starts at 32 max sets — enough for current needs, can grow later or use `VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT` for dynamic allocation.
 
 ---
 
@@ -307,16 +398,20 @@ Refactor the monolithic `VulkanAPI` class (~2174 lines, two 500–900 line metho
 
 ## ✏️ Modified Files
 
-| Path | Changes |
-|------|---------|
-| `include/vigine/ecs/render/vulkanapi.h` | Implement GraphicsBackend, remove camera/surface code |
-| `src/ecs/render/vulkanapi.cpp` | Split into small methods, delegate to helpers |
-| `include/vigine/ecs/render/rendersystem.h` | Own GraphicsBackend+Camera+PipelineCache |
-| `src/ecs/render/rendersystem.cpp` | Use abstractions instead of direct VulkanAPI calls |
-| `include/vigine/ecs/render/shadercomponent.h` | Add SPIR-V cache, layout, blend mode |
-| `include/vigine/ecs/render/rendercomponent.h` | Remove ShaderProfile, reference ShaderComponent |
-| `include/vigine/ecs/render/meshcomponent.h` | Add vertex count, procedural flag, BufferHandle |
-| `example/window/task/` | Use new component API for entity setup |
-| `CMakeLists.txt` | Add new source files |
-| `doc/README.md` | Update architecture description |
-| `doc/core-class-diagram.md` | Update class diagram |
+| Path | Changes | Phase |
+|------|--------|-------|
+| `include/vigine/ecs/render/vulkanapi.h` | Implement GraphicsBackend, remove camera/surface code; add entity texture descriptor set members (6.1) | 1, 6.1 |
+| `src/ecs/render/vulkanapi.cpp` | Split into small methods, delegate to helpers; `createSwapchain()`: texture descriptor set layout/pool/pipeline layout; `createPipeline()`: select layout by texture flag; `drawFrame()`: bind descriptor sets for textured entities; new `createTextureDescriptorSet()` | 1, 6.1, 7 |
+| `include/vigine/ecs/render/rendersystem.h` | Own GraphicsBackend+Camera+PipelineCache; TextureComponent management | 1, 6 |
+| `src/ecs/render/rendersystem.cpp` | Use abstractions instead of direct VulkanAPI calls; `update()`: populate texture handle in draw groups; `uploadTextureToGpu()` | 1, 6, 6.1 |
+| `include/vigine/ecs/render/shadercomponent.h` | Add SPIR-V cache, layout, blend mode; add `hasTextureBinding` flag (6.1) | 4, 6.1 |
+| `include/vigine/ecs/render/rendercomponent.h` | Remove ShaderProfile, reference ShaderComponent; add `_textureHandle` + `setTextureHandle()` | 4, 6 |
+| `include/vigine/ecs/render/meshcomponent.h` | Add vertex count, procedural flag, BufferHandle | 5 |
+| `include/vigine/ecs/render/graphicshandles.h` | Extend `PipelineDesc` with `hasTextureBinding`; extend `EntityDrawGroup` with `textureHandle` | 6.1 |
+| `src/ecs/render/pipelinecache.cpp` | Update `computeKey()` to include texture flag; pass to `PipelineDesc` | 6.1 |
+| `example/window/task/vulkan/loadtexturestask.cpp` | Image loading via stb_image; TextureComponent + GPU upload; descriptor set creation (6.1) | 6, 6.1 |
+| `example/window/task/vulkan/setuptexturedplanestask.cpp` | Create plane entities with textured shader; `shader.setHasTextureBinding(true)` (6.1) | 6, 6.1 |
+| `example/window/task/` | Use new component API for entity setup | 8 |
+| `CMakeLists.txt` | Add new source files | 1 |
+| `doc/README.md` | Update architecture description | 8 |
+| `doc/core-class-diagram.md` | Update class diagram | 8 |

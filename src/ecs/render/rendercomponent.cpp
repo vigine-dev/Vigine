@@ -249,7 +249,9 @@ void RenderComponent::setMesh(const MeshComponent &mesh) { _mesh = mesh; }
 
 void RenderComponent::setTransform(const TransformComponent &transform) { _transform = transform; }
 
-void RenderComponent::setShaderProfile(ShaderProfile profile) { _shaderProfile = profile; }
+void RenderComponent::setShader(const ShaderComponent &shader) { _shader = shader; }
+
+void RenderComponent::setTextureHandle(TextureHandle handle) { _textureHandle = handle; }
 
 void RenderComponent::setPickable(bool pickable) { _pickable = pickable; }
 
@@ -258,7 +260,7 @@ bool RenderComponent::setText(const TextComponent &textComponent)
     _text = textComponent;
 
     // TextVoxel entities still need per-pixel offsets for the instanced voxel draw.
-    if (_shaderProfile == ShaderProfile::TextVoxel)
+    if (_shader.useVoxelTextLayout())
     {
         const bool voxelOk = rebuildTextVoxelOffsets();
         // SDF quads not used by TextVoxel pipeline, skip.
@@ -275,6 +277,26 @@ bool RenderComponent::refreshSdfGlyphQuads() { return rebuildSdfGlyphQuads(); }
 void RenderComponent::appendModelMatrices(std::vector<glm::mat4> &modelMatrices) const
 {
     const glm::mat4 anchorMatrix = _transform.getModelMatrix();
+
+    if (_text.drawBaseInstance())
+        modelMatrices.push_back(anchorMatrix);
+
+    if (!_text.enabled())
+        return;
+
+    for (const auto &offset : _text.voxelOffsets())
+    {
+        glm::mat4 model = anchorMatrix;
+        model           = glm::translate(model, offset);
+        model           = glm::scale(model, glm::vec3(_text.voxelSize()));
+        modelMatrices.push_back(std::move(model));
+    }
+}
+
+void RenderComponent::appendModelMatrices(std::vector<glm::mat4> &modelMatrices,
+                                          const glm::mat4 &anchorOverride) const
+{
+    const glm::mat4 anchorMatrix = anchorOverride;
 
     if (_text.drawBaseInstance())
         modelMatrices.push_back(anchorMatrix);
@@ -1062,6 +1084,28 @@ void RenderComponent::scrollVertical(float deltaAnchorOffsetY)
     // Invalidate pixel-space anchor cache: next emitWorldVerticesFromLines will
     // force full re-transform from pixel quads (consistent with new anchorOffset).
     _cachedAnchorY = 1e30f;
+}
+
+void RenderComponent::translateGlyphVertices(const glm::vec3 &delta)
+{
+    if (delta.x == 0.0f && delta.y == 0.0f && delta.z == 0.0f)
+        return;
+
+    // Translate all cached world vertices by delta (for entity movement).
+    for (auto &v : _cachedBodyWorldVertices)
+        v.pos += delta;
+    for (auto &v : _cachedCursorWorldVertices)
+        v.pos += delta;
+    for (auto &line : _lineCache)
+        for (auto &v : line.cachedWorldVerts)
+            v.pos += delta;
+    for (auto &slot : _cursorSlots)
+    {
+        slot.worldX += delta.x;
+        slot.worldY += delta.y;
+    }
+
+    // Unlike scrollVertical, anchorOffset stays unchanged (entity moved, not scrolled).
 }
 
 // Returns the SDF atlas pixel data for the given font/size (for GPU upload).

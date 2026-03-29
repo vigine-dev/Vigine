@@ -4,6 +4,7 @@
 #include <vigine/ecs/entitymanager.h>
 #include <vigine/ecs/render/meshcomponent.h>
 #include <vigine/ecs/render/rendercomponent.h>
+#include <vigine/ecs/render/shadercomponent.h>
 #include <vigine/ecs/render/transformcomponent.h>
 #include <vigine/property.h>
 #include <vigine/service/graphicsservice.h>
@@ -59,10 +60,15 @@ vigine::Result SetupCubeTask::execute()
 
     // Create a cube mesh with colored faces
     auto cubeMesh = vigine::graphics::MeshComponent::createCube();
+    // Cube shader generates geometry procedurally (36 vertices: 6 faces × 2 triangles × 3 vertices)
+    cubeMesh.setProceduralInShader(true, 36);
 
     // Configure render component managed by RenderSystem
     renderComponent->setMesh(cubeMesh);
-    renderComponent->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Cube);
+    {
+        vigine::graphics::ShaderComponent shader("cube.vert.spv", "cube.frag.spv");
+        renderComponent->setShader(shader);
+    }
 
     // Set initial transform (center at origin, no rotation)
     vigine::graphics::TransformComponent transform;

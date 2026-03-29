@@ -21,12 +21,15 @@ class TransformComponent
     void setPosition(const glm::vec3 &pos);
     void setRotation(const glm::vec3 &rot);
     void setScale(const glm::vec3 &scale);
+    void setBillboard(bool enabled) { _billboard = enabled; }
 
     glm::vec3 getPosition() const { return _position; }
     glm::vec3 getRotation() const { return _rotation; }
     glm::vec3 getScale() const { return _scale; }
+    bool isBillboard() const { return _billboard; }
 
     glm::mat4 getModelMatrix() const;
+    glm::mat4 getBillboardModelMatrix(const glm::vec3 &cameraPosition) const;
 
     void rotate(const glm::vec3 &axis, float angle);
 
@@ -34,6 +37,7 @@ class TransformComponent
     glm::vec3 _position{0.0f, 0.0f, 0.0f};
     glm::vec3 _rotation{0.0f, 0.0f, 0.0f};
     glm::vec3 _scale{1.0f, 1.0f, 1.0f};
+    bool _billboard{false};
 };
 
 BUILD_SMART_PTR(TransformComponent);

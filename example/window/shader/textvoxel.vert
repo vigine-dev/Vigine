@@ -6,8 +6,13 @@ layout(push_constant) uniform Push
     vec4 animationData;
     vec4 sunDirectionIntensity;
     vec4 lightingParams;
-    mat4 modelMatrix;
 } pushData;
+
+// Per-instance model matrix passed via instanced vertex buffer (binding 0).
+layout(location = 0) in vec4 instanceMatrix0;
+layout(location = 1) in vec4 instanceMatrix1;
+layout(location = 2) in vec4 instanceMatrix2;
+layout(location = 3) in vec4 instanceMatrix3;
 
 layout(location = 0) out vec3 outColor;
 layout(location = 1) out vec3 outWorldPosition;
@@ -79,10 +84,11 @@ void main()
 
     float angle      = pushData.animationData.x * 1.35;
     mat4 spin        = rotateY(angle) * rotateX(angle * 0.65);
-    mat4 modelMatrix = pushData.modelMatrix * spin;
+    mat4 instanceMatrix = mat4(instanceMatrix0, instanceMatrix1, instanceMatrix2, instanceMatrix3);
+    mat4 modelMatrix = instanceMatrix * spin;
     vec4 world       = modelMatrix * vec4(p, 1.0);
 
-    vec3 seedColor = fract(abs(pushData.modelMatrix[3].xyz) * vec3(0.73, 1.31, 1.91));
+    vec3 seedColor = fract(abs(instanceMatrix[3].xyz) * vec3(0.73, 1.31, 1.91));
     outColor       = mix(faceColors[vi / 6], seedColor, 0.55);
     outWorldNormal   = normalize(mat3(modelMatrix) * localNormal);
     outWorldPosition = world.xyz;
