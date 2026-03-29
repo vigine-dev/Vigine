@@ -1,6 +1,8 @@
 #pragma once
 
+#include "graphicshandles.h"
 #include "meshcomponent.h"
+#include "shadercomponent.h"
 #include "textcomponent.h"
 #include "transformcomponent.h"
 
@@ -17,15 +19,6 @@ namespace graphics
 class RenderComponent
 {
   public:
-    enum class ShaderProfile
-    {
-        Cube,
-        TextVoxel,
-        Panel,
-        Glyph,
-        Sphere
-    };
-
     RenderComponent();
     ~RenderComponent();
 
@@ -34,8 +27,9 @@ class RenderComponent
     void setMesh(const MeshComponent &mesh);
     void setTransform(const TransformComponent &transform);
     bool setText(const TextComponent &textComponent);
-    void setShaderProfile(ShaderProfile profile);
+    void setShader(const ShaderComponent &shader);
     void setPickable(bool pickable);
+    void setTextureHandle(TextureHandle handle);
 
     MeshComponent &getMesh() { return _mesh; }
     const MeshComponent &getMesh() const { return _mesh; }
@@ -43,10 +37,14 @@ class RenderComponent
     const TransformComponent &getTransform() const { return _transform; }
     TextComponent &getText() { return _text; }
     const TextComponent &getText() const { return _text; }
-    ShaderProfile getShaderProfile() const { return _shaderProfile; }
+    ShaderComponent &getShader() { return _shader; }
+    const ShaderComponent &getShader() const { return _shader; }
     bool isPickable() const { return _pickable; }
+    TextureHandle textureHandle() const { return _textureHandle; }
 
     void appendModelMatrices(std::vector<glm::mat4> &modelMatrices) const;
+    void appendModelMatrices(std::vector<glm::mat4> &modelMatrices,
+                             const glm::mat4 &anchorOverride) const;
     void appendGlyphQuadVertices(std::vector<GlyphQuadVertex> &vertices) const;
     const std::vector<uint8_t> *getSdfAtlasPixels() const;
     uint32_t getSdfAtlasGeneration() const;
@@ -59,6 +57,9 @@ class RenderComponent
     // Shift all cached world vertices by deltaAnchorOffsetY world units (for scroll).
     // O(total_verts) vector additions — no layout rebuild.
     void scrollVertical(float deltaAnchorOffsetY);
+    // Translate all glyph vertices by a world-space delta (for panel movement).
+    // O(total_verts) — does not change anchorOffset or trigger re-layout.
+    void translateGlyphVertices(const glm::vec3 &delta);
 
   private:
     bool rebuildTextVoxelOffsets();
@@ -89,7 +90,8 @@ class RenderComponent
     MeshComponent _mesh;
     TransformComponent _transform;
     TextComponent _text;
-    ShaderProfile _shaderProfile{ShaderProfile::Cube};
+    ShaderComponent _shader;
+    TextureHandle _textureHandle;
     bool _pickable{true};
     std::vector<GlyphQuadVertex> _cachedBodyWorldVertices;
     std::vector<GlyphQuadVertex> _cachedCursorWorldVertices;

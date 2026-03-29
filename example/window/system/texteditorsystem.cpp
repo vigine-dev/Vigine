@@ -52,6 +52,13 @@ void TextEditorSystem::refreshEditorLayout()
 {
     updateScrollbarVisuals();
     updateFocusFrameVisual(_focused);
+
+    // Update clip region when panel position changes.
+    if (_renderSystem)
+    {
+        const float panelBottom = _panelTopY - _panelHeight;
+        _renderSystem->setSdfClipY(panelBottom, _panelTopY);
+    }
 }
 
 void TextEditorSystem::onFrame()
@@ -108,13 +115,15 @@ void TextEditorSystem::onFrame()
             _cursorSlots        = rc->takeCursorSlots();
             contentHeight       = rc->sdfContentHeight();
             _state->textChanged = false;
+
+            // Mark glyph dirty only when vertex data actually changed.
+            if (_renderSystem)
+                _renderSystem->markGlyphDirty();
         } else
         {
             // Only cursor visibility toggled (blink) — skip expensive rebuild.
             rc->updateCursorVisible(_state->showCursor);
         }
-        if (_renderSystem)
-            _renderSystem->markGlyphDirty();
     }
     _graphicsService->unbindEntity();
 
@@ -127,10 +136,14 @@ void TextEditorSystem::onFrame()
     if (_scrollOffsetY > maxScroll)
         applyScrollOffset(maxScroll);
 
-    // Clip text to fixed panel bounds in shader.
-    const float panelBottom = _panelTopY - _panelHeight;
-    if (_renderSystem)
-        _renderSystem->setSdfClipY(panelBottom, _panelTopY);
+    // Clip text to fixed panel bounds in shader (only if panel moved or content changed).
+    // No need to update clip on every cursor blink.
+    if (_state->textChanged)
+    {
+        const float panelBottom = _panelTopY - _panelHeight;
+        if (_renderSystem)
+            _renderSystem->setSdfClipY(panelBottom, _panelTopY);
+    }
 
     updateScrollbarVisuals();
 
@@ -539,9 +552,6 @@ void TextEditorSystem::updateFocusFrameVisual(bool visible)
           {hWidth, kFocusFrameThickness, 0.023f});
     place(left, {frameLeft, panelCenterY, kFocusFrameZ + _panelZBase},
           {kFocusFrameThickness, vHeight, 0.024f});
-
-    if (_renderSystem)
-        _renderSystem->markGlyphDirty();
 }
 
 std::size_t TextEditorSystem::cursorFromHitPoint(int x, int y) const

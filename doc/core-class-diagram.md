@@ -36,6 +36,14 @@ class ISignal
 class ISignalEmiter
 class ISignalBinder
 
+class GraphicsBackend
+class VulkanAPI
+class VulkanDevice
+class VulkanSwapchain
+class VulkanTextureStore
+class VulkanPipelineStore
+class VulkanFrameRenderer
+
 Engine *-- StateMachine
 Engine *-- Context
 Engine *-- EntityManager
@@ -72,6 +80,13 @@ DatabaseService --> PostgreSQLSystem
 
 ISignalEmiter ..> ISignal
 ISignalBinder ..> AbstractTask
+
+VulkanAPI --|> GraphicsBackend
+VulkanAPI *-- VulkanDevice
+VulkanAPI *-- VulkanSwapchain
+VulkanAPI *-- VulkanTextureStore
+VulkanAPI *-- VulkanPipelineStore
+VulkanAPI *-- VulkanFrameRenderer
 
 EntityBindingHost --> Entity : binds
 AbstractState --> Result

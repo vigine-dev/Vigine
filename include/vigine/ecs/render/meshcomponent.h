@@ -1,5 +1,7 @@
 #pragma once
 
+#include "graphicshandles.h"
+
 #include "vigine/base/macros.h"
 
 #include <glm/glm.hpp>
@@ -33,12 +35,45 @@ class MeshComponent
     uint32_t getVertexCount() const { return _vertices.size(); }
     uint32_t getIndexCount() const { return _indices.size(); }
 
+    // Procedural geometry in shader (e.g., cube.vert, sphere.vert generate vertices)
+    void setProceduralInShader(bool procedural, uint32_t vertexCount = 0)
+    {
+        _isProceduralInShader  = procedural;
+        _proceduralVertexCount = vertexCount;
+        if (procedural)
+            _dirty = false; // Procedural meshes don't have CPU data to upload
+    }
+    bool isProceduralInShader() const { return _isProceduralInShader; }
+    uint32_t proceduralVertexCount() const { return _proceduralVertexCount; }
+
+    // GPU buffer handles (assigned by backend after upload)
+    void setVertexBufferHandle(BufferHandle handle) { _vertexBuffer = handle; }
+    BufferHandle vertexBufferHandle() const { return _vertexBuffer; }
+    void setIndexBufferHandle(BufferHandle handle) { _indexBuffer = handle; }
+    BufferHandle indexBufferHandle() const { return _indexBuffer; }
+
+    // Dirty flag for re-upload tracking
+    void markDirty() { _dirty = true; }
+    void clearDirty() { _dirty = false; }
+    bool isDirty() const { return _dirty; }
+
     static MeshComponent createCube();
     static MeshComponent createPlane(float width, float height, const glm::vec3 &color);
 
   private:
     std::vector<Vertex> _vertices;
     std::vector<uint32_t> _indices;
+
+    // Procedural geometry flags (for shaders that generate geometry)
+    bool _isProceduralInShader{false};
+    uint32_t _proceduralVertexCount{0};
+
+    // GPU buffer handles
+    BufferHandle _vertexBuffer{};
+    BufferHandle _indexBuffer{};
+
+    // Dirty tracking
+    bool _dirty{true};
 };
 
 BUILD_SMART_PTR(MeshComponent);

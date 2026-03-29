@@ -16,8 +16,12 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
     task/window/processinputeventtask.h task/window/processinputeventtask.cpp
     task/vulkan/initvulkantask.h task/vulkan/initvulkantask.cpp
     task/vulkan/setupcubetask.h task/vulkan/setupcubetask.cpp
+    task/vulkan/setuphelpergeometrytask.h task/vulkan/setuphelpergeometrytask.cpp
     task/vulkan/setuptexttask.h task/vulkan/setuptexttask.cpp
     task/vulkan/setuptextedittask.h task/vulkan/setuptextedittask.cpp
+    task/vulkan/loadtexturestask.h task/vulkan/loadtexturestask.cpp
+    task/vulkan/setuptexturedplanestask.h task/vulkan/setuptexturedplanestask.cpp
+    task/vulkan/imageloader.h task/vulkan/imageloader.cpp
     task/vulkan/rendercubetask.h task/vulkan/rendercubetask.cpp)
 
 set(EXAMPLE_WINDOW_SYSTEM_SOURCES
@@ -60,6 +64,8 @@ set(EXAMPLE_WINDOW_SHADER_SOURCES
     ${EXAMPLE_WINDOW_SHADER_DIR}/sphere.frag
     ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.vert
     ${EXAMPLE_WINDOW_SHADER_DIR}/glyph_sdf.frag
+    ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.vert
+    ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.frag
 )
 
 set(EXAMPLE_WINDOW_SHADER_OUTPUTS
@@ -81,6 +87,8 @@ set(EXAMPLE_WINDOW_SHADER_OUTPUTS
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/sphere.frag.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.vert.spv
     ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/glyph_sdf.frag.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.vert.spv
+    ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.frag.spv
 )
 
 add_custom_command(
@@ -227,6 +235,22 @@ add_custom_command(
     VERBATIM
 )
 
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.vert -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.vert.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.vert
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXAMPLE_WINDOW_SHADER_OUT_DIR}
+    COMMAND ${GLSLC_EXECUTABLE} ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.frag -o ${EXAMPLE_WINDOW_SHADER_OUT_DIR}/textured_plane.frag.spv
+    DEPENDS ${EXAMPLE_WINDOW_SHADER_DIR}/textured_plane.frag
+    VERBATIM
+)
+
 add_custom_target(example_window_shaders ALL DEPENDS ${EXAMPLE_WINDOW_SHADER_OUTPUTS})
 
 add_executable(${PROJECT_WINDOW_NAME}
@@ -253,4 +277,5 @@ target_include_directories(${PROJECT_WINDOW_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}
 )

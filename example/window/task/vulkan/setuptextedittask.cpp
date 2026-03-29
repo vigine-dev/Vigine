@@ -4,6 +4,7 @@
 #include <vigine/ecs/entitymanager.h>
 #include <vigine/ecs/render/meshcomponent.h>
 #include <vigine/ecs/render/rendercomponent.h>
+#include <vigine/ecs/render/shadercomponent.h>
 #include <vigine/ecs/render/textcomponent.h>
 #include <vigine/ecs/render/transformcomponent.h>
 #include <vigine/property.h>
@@ -108,8 +109,12 @@ vigine::Result SetupTextEditTask::execute()
         // Flat dark-blue panel: slightly larger and moved toward camera (in front of cube).
         auto panelMesh = vigine::graphics::MeshComponent::createPlane(kPanelWidth, kPanelHeight,
                                                                       {0.08f, 0.08f, 0.25f});
+        panelMesh.setProceduralInShader(true, 6); // Panel shader generates quad (6 vertices)
         rc->setMesh(panelMesh);
-        rc->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Panel);
+        {
+            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            rc->setShader(shader);
+        }
 
         vigine::graphics::TransformComponent transform;
         transform.setPosition({0.0f, kPanelCenterY, kPanelZ});
@@ -139,9 +144,14 @@ vigine::Result SetupTextEditTask::execute()
                                   "Render component unavailable for TextEditScrollbarTrackEntity");
         }
 
-        rc->setMesh(
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f}));
-        rc->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Panel);
+        auto trackMesh =
+            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f});
+        trackMesh.setProceduralInShader(true, 6);
+        rc->setMesh(trackMesh);
+        {
+            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            rc->setShader(shader);
+        }
 
         vigine::graphics::TransformComponent transform;
         transform.setPosition({kScrollbarX, kPanelCenterY, kPanelZ + 0.005f});
@@ -165,9 +175,14 @@ vigine::Result SetupTextEditTask::execute()
                                   "Render component unavailable for TextEditScrollbarThumbEntity");
         }
 
-        rc->setMesh(
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f}));
-        rc->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Panel);
+        auto thumbMesh =
+            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f});
+        thumbMesh.setProceduralInShader(true, 6);
+        rc->setMesh(thumbMesh);
+        {
+            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            rc->setShader(shader);
+        }
 
         transform.setPosition({kScrollbarX, 2.14f, kPanelZ + 0.006f});
         transform.setScale({kScrollbarWidth * 0.82f, kScrollbarThumbHeight, 0.012f});
@@ -208,8 +223,30 @@ vigine::Result SetupTextEditTask::execute()
         // Wrap at panel usable width (4.8 - 2*0.05 inset)
         text.setMaxLineWorldWidth(4.58f);
 
-        // Set profile before setText so that RenderComponent knows to build SDF quads.
-        rc->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Glyph);
+        // Configure mesh for glyph instanced rendering
+        vigine::graphics::MeshComponent glyphMesh;
+        glyphMesh.setProceduralInShader(true, 6); // 6 vertices per glyph quad instance
+        rc->setMesh(glyphMesh);
+
+        // Set shader before setText so that RenderComponent knows to build SDF quads.
+        {
+            vigine::graphics::ShaderComponent shader("glyph.vert.spv", "glyph.frag.spv");
+            // Glyph shader generates procedural quad per glyph instance (6 vertices)
+            shader.setInstancedRendering(true);
+            // Instance vertex layout: mat4 as 4 consecutive vec4 attributes.
+            vigine::graphics::VertexBindingDesc instBinding;
+            instBinding.binding      = 0;
+            instBinding.stride       = sizeof(glm::mat4);
+            instBinding.instanceRate = true;
+            instBinding.attributes   = {
+                {0, vigine::graphics::VertexFormat::Float32x4, 0 },
+                {1, vigine::graphics::VertexFormat::Float32x4, 16},
+                {2, vigine::graphics::VertexFormat::Float32x4, 32},
+                {3, vigine::graphics::VertexFormat::Float32x4, 48},
+            };
+            shader.setVertexLayout({instBinding});
+            rc->setShader(shader);
+        }
 
         if (!rc->setText(text))
         {
@@ -254,9 +291,14 @@ vigine::Result SetupTextEditTask::execute()
                                       "Render component unavailable for focus frame entity");
             }
 
-            rc->setMesh(
-                vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f}));
-            rc->setShaderProfile(vigine::graphics::RenderComponent::ShaderProfile::Panel);
+            auto frameMesh =
+                vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f});
+            frameMesh.setProceduralInShader(true, 6);
+            rc->setMesh(frameMesh);
+            {
+                vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+                rc->setShader(shader);
+            }
 
             vigine::graphics::TransformComponent transform;
             transform.setPosition({0.0f, -100.0f, 0.0f});

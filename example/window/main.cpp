@@ -10,16 +10,20 @@
 #include "state/workstate.h"
 #include "system/texteditorsystem.h"
 #include "task/vulkan/initvulkantask.h"
+#include "task/vulkan/loadtexturestask.h"
 #include "task/vulkan/rendercubetask.h"
 #include "task/vulkan/setupcubetask.h"
+#include "task/vulkan/setuphelpergeometrytask.h"
 #include "task/vulkan/setuptextedittask.h"
 #include "task/vulkan/setuptexttask.h"
+#include "task/vulkan/setuptexturedplanestask.h"
 #include "task/window/initwindowtask.h"
 #include "task/window/processinputeventtask.h"
 #include "task/window/runwindowtask.h"
 #include "task/window/windoweventsignal.h"
 
 #include <memory>
+
 
 using namespace vigine;
 
@@ -28,12 +32,15 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignal
                                              std::shared_ptr<TextEditState> textEditState,
                                              std::shared_ptr<TextEditorSystem> textEditorSystem)
 {
-    auto taskFlow    = std::make_unique<TaskFlow>();
+    auto taskFlow             = std::make_unique<TaskFlow>();
 
-    auto *initWindow = taskFlow->addTask(std::make_unique<InitWindowTask>());
-    auto *initVulkan = taskFlow->addTask(std::make_unique<InitVulkanTask>());
-    auto *setupCube  = taskFlow->addTask(std::make_unique<SetupCubeTask>());
-    auto *setupText  = taskFlow->addTask(std::make_unique<SetupTextTask>());
+    auto *initWindow          = taskFlow->addTask(std::make_unique<InitWindowTask>());
+    auto *initVulkan          = taskFlow->addTask(std::make_unique<InitVulkanTask>());
+    auto *setupHelperGeometry = taskFlow->addTask(std::make_unique<SetupHelperGeometryTask>());
+    auto *setupCube           = taskFlow->addTask(std::make_unique<SetupCubeTask>());
+    auto *setupText           = taskFlow->addTask(std::make_unique<SetupTextTask>());
+    auto *loadTextures        = taskFlow->addTask(std::make_unique<LoadTexturesTask>());
+    auto *setupTexturedPlanes = taskFlow->addTask(std::make_unique<SetupTexturedPlanesTask>());
     auto *setupTextEdit =
         taskFlow->addTask(std::make_unique<SetupTextEditTask>(textEditState, textEditorSystem));
     auto *runWindow             = taskFlow->addTask(std::make_unique<RunWindowTask>());
@@ -43,9 +50,12 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(MouseEventSignalBinder &mouseSignal
     runWindowTask->setTextEditorSystem(std::move(textEditorSystem));
 
     static_cast<void>(taskFlow->route(initWindow, initVulkan));
-    static_cast<void>(taskFlow->route(initVulkan, setupCube));
+    static_cast<void>(taskFlow->route(initVulkan, setupHelperGeometry));
+    static_cast<void>(taskFlow->route(setupHelperGeometry, setupCube));
     static_cast<void>(taskFlow->route(setupCube, setupText));
-    static_cast<void>(taskFlow->route(setupText, setupTextEdit));
+    static_cast<void>(taskFlow->route(setupText, loadTextures));
+    static_cast<void>(taskFlow->route(loadTextures, setupTexturedPlanes));
+    static_cast<void>(taskFlow->route(setupTexturedPlanes, setupTextEdit));
     static_cast<void>(taskFlow->route(setupTextEdit, runWindow));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &mouseSignalBinder));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask, &keySignalBinder));

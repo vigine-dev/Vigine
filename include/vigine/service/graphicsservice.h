@@ -9,6 +9,7 @@ namespace graphics
 {
 class RenderComponent;
 class RenderSystem;
+class TextureComponent;
 
 class GraphicsService : public AbstractService
 {
@@ -20,6 +21,7 @@ class GraphicsService : public AbstractService
 
     RenderSystem *renderSystem() const { return _renderSystem; }
     RenderComponent *renderComponent() const;
+    TextureComponent *textureComponent() const;
 
   protected:
     void contextChanged() override;

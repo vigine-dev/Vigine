@@ -48,6 +48,23 @@ If a task description does not include the project folder layout, use this secti
 - `WinAPIComponent : WindowComponent` (Windows-only native window implementation)
 - `CocoaWindowComponent : WindowComponent` (macOS native window implementation backed by `NSWindow` + `CAMetalLayer`)
 - `RenderSystem : AbstractSystem`
+- `RenderComponent` holds per-entity rendering state: `ShaderComponent` (shader paths, pipeline config), `MeshComponent`, `TransformComponent`, `TextComponent`, `TextureComponent`.
+- `ShaderComponent` defines per-entity pipeline configuration: SPIR-V shader paths, vertex layout, blend mode, depth flags, topology, instanced rendering, procedural vertex count.
+- `MeshComponent` provides vertex/index data, procedural mesh flags, and GPU buffer handles.
+- `TextureComponent` stores CPU pixel data, dimensions, format, GPU `TextureHandle`, and descriptor set binding info; used for SDF atlases and future texture-based rendering.
+- `PipelineCache` (owned by `RenderSystem`) maps `ShaderComponent` configs to `PipelineHandle` via hash-based caching; creates Vulkan pipelines on first use.
+- `EntityDrawGroup` groups entities sharing the same pipeline for draw-call submission.
+- `GraphicsBackend` is the abstract rendering API interface; `VulkanAPI` is the concrete backend.
+- `VulkanAPI` is a thin orchestrator (~380 lines); all Vulkan-specific work is delegated to five internal helper classes:
+  - `VulkanDevice` (`src/ecs/render/`) — Vulkan instance, physical device, logical device, surface, and queues. Also wraps `SurfaceFactory` for platform-specific surface creation.
+  - `VulkanSwapchain` (`src/ecs/render/`) — swapchain lifecycle, render pass, framebuffers, command pool, sync primitives (semaphores + fences), and per-frame acquire/present logic.
+  - `VulkanTextureStore` (`src/ecs/render/`) — texture CRUD (`createTexture`, `uploadTexture`, `destroyTexture`), staging upload with fence-guarded cleanup, and entity texture descriptor set management.
+  - `VulkanPipelineStore` (`src/ecs/render/`) — pipeline and shader module CRUD; maps opaque `PipelineHandle`/`ShaderModuleHandle` to internal `vk::Pipeline`/`vk::ShaderModule` objects.
+  - `VulkanFrameRenderer` (`src/ecs/render/`) — per-frame command recording; owns SDF pipeline, per-image glyph/instance buffers, entity draw group dispatch, and rotation animation state.
+- `VulkanTypes` (`src/ecs/render/vulkantypes.h`) — shared `PushConstants` struct used by swapchain pipeline layout and frame renderer push constant writes.
+- `GraphicsBackend::createTexture()` and `uploadTexture()` manage texture creation and pixel upload; `VulkanAPI` delegates these to `VulkanTextureStore` which uses staging buffers and image layout transitions.
+- SDF atlas for text rendering is implemented via `TextureHandle` and managed through `GraphicsBackend` methods instead of direct Vulkan objects.
+- Entity pipelines are created on demand by `PipelineCache`, not hardcoded in `createSwapchain()`.
 - `PostgreSQLSystem : AbstractSystem`
 - `PostgreSQLResult : Result`
 - `TextData : Data`

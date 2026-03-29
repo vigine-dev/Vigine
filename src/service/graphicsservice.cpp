@@ -1,8 +1,10 @@
 #include "vigine/service/graphicsservice.h"
 
 #include "vigine/context.h"
+#include "vigine/ecs/entity.h"
 #include "vigine/ecs/render/rendercomponent.h"
 #include "vigine/ecs/render/rendersystem.h"
+#include "vigine/ecs/render/texturecomponent.h"
 #include "vigine/property.h"
 
 vigine::graphics::GraphicsService::GraphicsService(const Name &name) : AbstractService(name) {}
@@ -51,6 +53,14 @@ vigine::graphics::RenderComponent *vigine::graphics::GraphicsService::renderComp
         return nullptr;
 
     return _renderSystem->boundRenderComponent();
+}
+
+vigine::graphics::TextureComponent *vigine::graphics::GraphicsService::textureComponent() const
+{
+    if (!_renderSystem)
+        return nullptr;
+
+    return _renderSystem->boundTextureComponent();
 }
 
 vigine::ServiceId vigine::graphics::GraphicsService::id() const { return "Graphics"; }

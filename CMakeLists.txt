@@ -115,10 +115,16 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/componentmanager.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/graphicsbackend.h
+    ${INCLUDE_DIR}/vigine/ecs/render/graphicshandles.h
+    ${INCLUDE_DIR}/vigine/ecs/render/camera.h
+    ${INCLUDE_DIR}/vigine/ecs/render/surfacefactory.h
     ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/ecs/render/transformcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/meshcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/shadercomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/texturecomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/render/pipelinecache.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
@@ -135,10 +141,18 @@ set(SOURCES
     ${SRC_DIR}/ecs/componentmanager.cpp
     ${SRC_DIR}/ecs/render/rendersystem.cpp
     ${SRC_DIR}/ecs/render/rendercomponent.cpp
+    ${SRC_DIR}/ecs/render/camera.cpp
     ${SRC_DIR}/ecs/render/vulkanapi.cpp
+    ${SRC_DIR}/ecs/render/vulkandevice.cpp
+    ${SRC_DIR}/ecs/render/vulkanswapchain.cpp
+    ${SRC_DIR}/ecs/render/vulkantexturestore.cpp
+    ${SRC_DIR}/ecs/render/vulkanpipelinestore.cpp
+    ${SRC_DIR}/ecs/render/vulkanframerenderer.cpp
     ${SRC_DIR}/ecs/render/transformcomponent.cpp
     ${SRC_DIR}/ecs/render/meshcomponent.cpp
     ${SRC_DIR}/ecs/render/shadercomponent.cpp
+    ${SRC_DIR}/ecs/render/texturecomponent.cpp
+    ${SRC_DIR}/ecs/render/pipelinecache.cpp
     ${SRC_DIR}/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
@@ -148,6 +162,13 @@ set(SOURCES
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
 )
+
+# Add platform-specific surface factory
+if(WIN32)
+    list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/win32surfacefactory.cpp)
+elseif(APPLE)
+    list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/metalsurfacefactory.cpp)
+endif()
 
 # Add source files
 set(HEADER_SERVICE
