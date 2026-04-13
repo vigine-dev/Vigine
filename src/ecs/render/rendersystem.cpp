@@ -115,21 +115,48 @@ RenderSystem::RenderSystem(const SystemName &name)
     : AbstractSystem(name), _graphicsBackend(std::make_unique<VulkanAPI>()),
       _boundEntityComponent(nullptr), _boundTextureComponent(nullptr)
 {
-    // Initialize Vulkan API
+    // Vulkan init moved to initialize() -- called explicitly by application
+}
+
+bool RenderSystem::initialize(void *nativeWindowHandle, uint32_t width, uint32_t height)
+{
+    if (!vulkanAPI())
+        return false;
+
     if (!vulkanAPI()->initializeInstance())
     {
         std::cerr << "Failed to initialize Vulkan instance" << std::endl;
+        return false;
     }
 
     if (!vulkanAPI()->selectPhysicalDevice())
     {
         std::cerr << "Failed to select physical device" << std::endl;
+        return false;
     }
 
     if (!vulkanAPI()->createLogicalDevice())
     {
         std::cerr << "Failed to create logical device" << std::endl;
+        return false;
     }
+
+    if (nativeWindowHandle)
+    {
+        if (!vulkanAPI()->createSurface(nativeWindowHandle))
+        {
+            std::cerr << "Failed to create Vulkan surface" << std::endl;
+            return false;
+        }
+
+        if (!vulkanAPI()->createSwapchain(width, height))
+        {
+            std::cerr << "Failed to create Vulkan swapchain" << std::endl;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 RenderSystem::~RenderSystem()

@@ -24,7 +24,7 @@ endif()
 
 # Default search path (can be overridden with -DVULKAN_HPP_DIR=...)
 if(NOT DEFINED VULKAN_HPP_DIR)
-    set(VULKAN_HPP_DIR "${CMAKE_SOURCE_DIR}/external/vulkan-hpp")
+    set(VULKAN_HPP_DIR "${VIGINE_ROOT_DIR}/external/vulkan-hpp")
 endif()
 
 set(VulkanHpp_FOUND FALSE)

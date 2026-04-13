@@ -41,6 +41,7 @@ class RenderSystem : public AbstractSystem
 
     void update();
     void markGlyphDirty();
+    [[nodiscard]] bool initialize(void *nativeWindowHandle, uint32_t width, uint32_t height);
     [[nodiscard]] bool initializeWindowSurface(void *nativeWindowHandle, uint32_t width,
                                                uint32_t height);
     [[nodiscard]] bool resize(uint32_t width, uint32_t height);

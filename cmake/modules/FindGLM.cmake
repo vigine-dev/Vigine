@@ -5,6 +5,7 @@
 
 find_path(GLM_INCLUDE_DIR glm/glm.hpp
    PATHS
+   ${VIGINE_ROOT_DIR}/external/glm
    ${CMAKE_SOURCE_DIR}/external/glm
    NO_DEFAULT_PATH
 )
@@ -14,7 +15,7 @@ if(GLM_INCLUDE_DIR)
    set(GLM_LIBRARIES glm)
    set(GLM_INCLUDE_DIRS ${GLM_INCLUDE_DIR})
 
-   add_subdirectory(${CMAKE_SOURCE_DIR}/external/glm)
+   add_subdirectory(${VIGINE_ROOT_DIR}/external/glm ${CMAKE_BINARY_DIR}/_deps/glm)
 
 else()
 

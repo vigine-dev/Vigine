@@ -29,6 +29,15 @@ void vigine::graphics::GraphicsService::contextChanged()
         context()->system("Render", "MainRender", vigine::Property::New));
 }
 
+bool vigine::graphics::GraphicsService::initializeRender(void *nativeWindowHandle,
+                                                          uint32_t width, uint32_t height)
+{
+    if (!_renderSystem)
+        return false;
+
+    return _renderSystem->initialize(nativeWindowHandle, width, height);
+}
+
 void vigine::graphics::GraphicsService::entityBound()
 {
     auto *entity = getBoundEntity();

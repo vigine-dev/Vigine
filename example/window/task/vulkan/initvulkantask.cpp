@@ -84,10 +84,10 @@ vigine::Result InitVulkanTask::execute()
         return vigine::Result(vigine::Result::Code::Error, "Native window handle is unavailable");
     }
 
-    if (!_renderSystem->initializeWindowSurface(nativeWindowHandle, 940, 660))
+    if (!_renderSystem->initialize(nativeWindowHandle, 940, 660))
     {
         return vigine::Result(vigine::Result::Code::Error,
-                              "Failed to initialize Vulkan surface/swapchain");
+                              "Failed to initialize render system");
     }
 
     std::cout << "Vulkan API initialized successfully" << std::endl;

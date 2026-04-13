@@ -64,6 +64,10 @@ VulkanTextureStore::VulkanTextureStore(VulkanDevice &device) : _device(device) {
 
 VulkanTextureStore::~VulkanTextureStore()
 {
+    // Wait for GPU to finish all work before destroying any resources.
+    if (_device.device())
+        _device.device().waitIdle();
+
     // Wait for all pending texture uploads to complete before freeing resources.
     if (_device.device() && !_pendingTextureUploads.empty())
     {
