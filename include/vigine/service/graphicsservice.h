@@ -20,6 +20,7 @@ class GraphicsService : public AbstractService
     [[nodiscard]] ServiceId id() const override;
 
     RenderSystem *renderSystem() const { return _renderSystem; }
+    [[nodiscard]] bool initializeRender(void *nativeWindowHandle, uint32_t width, uint32_t height);
     RenderComponent *renderComponent() const;
     TextureComponent *textureComponent() const;
 

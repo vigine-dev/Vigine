@@ -5,6 +5,10 @@ set(PROJECT_NAME vigine)
 set(VCPKG_INSTALLED_DIR "${CMAKE_BINARY_DIR}/vcpkg_installed")
 
 project(${PROJECT_NAME})
+
+# Store Vigine's root for Find modules (CMAKE_SOURCE_DIR may differ when used as subdirectory)
+set(VIGINE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "Vigine root directory")
+
 #
 # Set C++23 standard
 set(CMAKE_CXX_STANDARD 23)
@@ -23,21 +27,21 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Set the CMake module path to include shared and platform-specific modules
 list(APPEND CMAKE_MODULE_PATH
-    ${CMAKE_SOURCE_DIR}/cmake
-    ${CMAKE_SOURCE_DIR}/cmake/modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
 )
 
 if(APPLE)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/macos)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/macos)
 elseif(WIN32)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/windows)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/windows)
 elseif(UNIX)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/platform/linux)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/linux)
 endif()
 
 # Build FreeType from external submodule.
@@ -48,7 +52,7 @@ set(FT_DISABLE_PNG TRUE CACHE BOOL "Disable libpng in bundled FreeType build")
 set(FT_DISABLE_HARFBUZZ TRUE CACHE BOOL "Disable HarfBuzz in bundled FreeType build")
 set(FT_DISABLE_BROTLI TRUE CACHE BOOL "Disable Brotli in bundled FreeType build")
 set(SKIP_INSTALL_ALL TRUE CACHE BOOL "Disable install targets for bundled third-party libs")
-add_subdirectory(${CMAKE_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
 
 # Find and include glm
 find_package(GLM REQUIRED)
@@ -86,12 +90,12 @@ endif()
 option(ENABLE_EXAMPLE "Build example projects" ON)
 option(ENABLE_UNITTEST "Enable tests" OFF)
 
-if(ENABLE_UNITTEST AND EXISTS "${CMAKE_SOURCE_DIR}/test/CMakeLists.txt")
+if(ENABLE_UNITTEST AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
     add_subdirectory(test)
 endif()
 
 # Add the example project if the option is enabled
-if(ENABLE_EXAMPLE AND EXISTS "${CMAKE_SOURCE_DIR}/example/CMakeLists.txt")
+if(ENABLE_EXAMPLE AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/example/CMakeLists.txt")
     add_subdirectory(example)
 endif()
 
@@ -246,8 +250,15 @@ endif()
 
 # add vulkan
 # Add a library
+option(VIGINE_BUILD_SHARED "Build Vigine as a shared library" OFF)
+if(VIGINE_BUILD_SHARED)
+    set(_VIGINE_LIB_TYPE SHARED)
+else()
+    set(_VIGINE_LIB_TYPE STATIC)
+endif()
+
 add_library(${PROJECT_NAME}
-    STATIC
+    ${_VIGINE_LIB_TYPE}
     ${HEADER}
     ${SOURCES}
     ${HEADER_SERVICE}
@@ -265,8 +276,8 @@ add_library(${PROJECT_NAME}
 # Include directories
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${GLM_INCLUDE_DIRS}
 )
 
@@ -306,5 +317,5 @@ if(APPLE)
 endif()
 
 # Install the library and headers
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/build/lib)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION ${CMAKE_SOURCE_DIR}/build/include)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build/lib)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build/include)

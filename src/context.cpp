@@ -1,7 +1,9 @@
 #include "vigine/context.h"
 
 #include "vigine/ecs/platform/windowsystem.h"
+#if VIGINE_POSTGRESQL
 #include "vigine/ecs/postgresql/postgresqlsystem.h"
+#endif
 #include "vigine/ecs/render/rendersystem.h"
 #include "vigine/property.h"
 #include "vigine/service/databaseservice.h"
@@ -67,12 +69,14 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
         return std::move(renderSystem);
     }
 
+#if VIGINE_POSTGRESQL
     if (id == "PostgreSQL")
     {
         auto postgreSQLSystem = vigine::postgresql::make_PostgreSQLSystemUPtr(name);
 
         return std::move(postgreSQLSystem);
     }
+#endif
 
     return nullptr;
 }
