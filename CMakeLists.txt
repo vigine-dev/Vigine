@@ -91,6 +91,10 @@ option(ENABLE_EXAMPLE "Build example projects" ON)
 option(ENABLE_UNITTEST "Enable tests" OFF)
 
 if(ENABLE_UNITTEST AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
+    # enable_testing() must be called from the top-level CMakeLists.txt so
+    # that ctest picks up tests registered with gtest_discover_tests in the
+    # test subdirectory.
+    enable_testing()
     add_subdirectory(test)
 endif()
 
