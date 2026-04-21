@@ -11,6 +11,10 @@
 #include <vector>
 
 #include "vigine/result.h"
+#include "vigine/threading/ibarrier.h"
+#include "vigine/threading/imessagechannel.h"
+#include "vigine/threading/imutex.h"
+#include "vigine/threading/isemaphore.h"
 #include "vigine/threading/ithreadmanager.h"
 #include "vigine/threading/namedthreadid.h"
 #include "vigine/threading/threadmanagerconfig.h"
@@ -57,6 +61,47 @@ class AbstractThreadManager : public IThreadManager
     [[nodiscard]] std::size_t poolSize() const noexcept override;
     [[nodiscard]] std::size_t dedicatedThreadCount() const noexcept override;
     [[nodiscard]] std::size_t namedThreadCount() const noexcept override;
+
+    // ------ IThreadManager: sync primitive factories (shared impl) ------
+
+    /**
+     * @brief Default @ref IMutex factory returning a @c std::mutex
+     *        wrapper.
+     *
+     * Derived classes override only when they need a different concrete
+     * mutex (for example a sanitiser-instrumented one).
+     */
+    [[nodiscard]] std::unique_ptr<IMutex> createMutex() override;
+
+    /**
+     * @brief Default @ref ISemaphore factory returning a counter built
+     *        on @c std::mutex + @c std::condition_variable.
+     */
+    [[nodiscard]] std::unique_ptr<ISemaphore>
+        createSemaphore(std::size_t initialCount) override;
+
+    /**
+     * @brief Default @ref IBarrier factory returning a cv-based
+     *        reusable barrier.
+     *
+     * A dedicated cv-based implementation (not @c std::barrier) is used
+     * for ABI stability across compilers and to keep the fallback code
+     * path singular — every supported toolchain hits exactly one
+     * implementation.
+     */
+    [[nodiscard]] std::unique_ptr<IBarrier>
+        createBarrier(std::size_t parties) override;
+
+    /**
+     * @brief Default @ref IMessageChannel factory returning a bounded
+     *        FIFO queue.
+     *
+     * The queue uses @c std::mutex plus two @c std::condition_variable
+     * instances (not-full / not-empty) to keep producer and consumer
+     * wake-ups independent.
+     */
+    [[nodiscard]] std::unique_ptr<IMessageChannel>
+        createMessageChannel(std::size_t capacity) override;
 
   protected:
     explicit AbstractThreadManager(ThreadManagerConfig config) noexcept;
