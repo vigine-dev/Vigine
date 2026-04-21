@@ -137,3 +137,37 @@ gtest_discover_tests(${PAYLOAD_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Messaging Core Smoke Target =======================
+# Smoke coverage for the unified message bus: factory ownership, the five
+# routing modes (FirstMatch / FanOut / Chain / Bubble / Broadcast),
+# subscription cancel, shutdown rejection, and exception isolation.
+set(MESSAGING_SMOKE_TARGET messaging-smoke)
+
+add_executable(${MESSAGING_SMOKE_TARGET}
+    messaging/smoke_test.cpp
+)
+
+target_include_directories(${MESSAGING_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${MESSAGING_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${MESSAGING_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${MESSAGING_SMOKE_TARGET}
+    PROPERTIES LABELS "messaging-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
