@@ -29,7 +29,7 @@ namespace vigine
  * @see ISignal
  * @see ISignalBinder
  */
-class ISignalEmiter
+class ISignalEmiter // INV-10 EXEMPTION: predates convention; carries proxy state; rename tracked separately
 {
   public:
     /**

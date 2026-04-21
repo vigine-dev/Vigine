@@ -21,6 +21,20 @@ jobs:
       - name: Run check_graph_purity
         run: python scripts/check_graph_purity.py --root .
 
+  naming-convention:
+    name: Naming convention check (INV-10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check_naming_convention
+        run: python scripts/check_naming_convention.py --root .
+
   unit-tests-scripts:
     name: Script unit tests
     runs-on: ubuntu-latest
@@ -37,3 +51,6 @@ jobs:
 
       - name: Run test_check_graph_purity
         run: pytest test/scripts/test_check_graph_purity.py -q
+
+      - name: Run test_check_naming_convention
+        run: pytest test/scripts/test_check_naming_convention.py -q
