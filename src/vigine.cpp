@@ -3,8 +3,7 @@
 #include "vigine/context.h"
 #include "vigine/ecs/entitymanager.h"
 #include "vigine/statemachine.h"
-
-#include <iostream>
+#include "vigine/threading/ithreadmanager.h"
 
 namespace vigine
 {
@@ -16,7 +15,7 @@ Engine::Engine()
     _stateMachine.reset(new StateMachine(_context.get()));
 }
 
-Engine::~Engine() {}
+Engine::~Engine() = default;
 
 void Engine::run()
 {
@@ -24,10 +23,10 @@ void Engine::run()
         _stateMachine->runCurrentState();
 }
 
-StateMachine *Engine::state() { return _stateMachine.get(); }
+IStateMachine &Engine::state() const { return *_stateMachine; }
 
-Context *Engine::context() { return _context.get(); }
+IContext &Engine::context() const { return *_context; }
 
-void exampleFunction() {}
+IEntityManager &Engine::entityManager() const { return *_entityManager; }
 
 } // namespace vigine

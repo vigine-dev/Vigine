@@ -82,7 +82,11 @@ std::unique_ptr<TaskFlow> createCloseTaskFlow() { return std::make_unique<TaskFl
 int main()
 {
     Engine engine;
-    StateMachine *stMachine = engine.state();
+    // Engine::state() now returns IStateMachine&; downcast back to the
+    // concrete StateMachine for the rich state-machine API. The cast
+    // is temporary scaffolding that will disappear once addState /
+    // addTransition move onto the interface in a later leaf.
+    StateMachine *stMachine = static_cast<StateMachine *>(&engine.state());
 
     MouseEventSignalBinder mouseSignalBinder;
     KeyEventSignalBinder keySignalBinder;

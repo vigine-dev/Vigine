@@ -2,6 +2,7 @@
 
 #include "abstractstate.h"
 #include "result.h"
+#include "statemachine/istatemachine.h"
 
 #include <memory>
 #include <unordered_map>
@@ -11,7 +12,7 @@ namespace vigine
 {
 class Engine;
 
-class StateMachine
+class StateMachine : public IStateMachine
 {
     using StateUPtr           = std::unique_ptr<AbstractState>;
     using StateContainer      = std::vector<StateUPtr>;

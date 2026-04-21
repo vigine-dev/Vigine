@@ -18,7 +18,18 @@ class Result
         // existing values above keep their numeric positions so that
         // callers that persist or serialise Result codes are unaffected.
         DuplicatePayloadId,
-        OutOfRange
+        OutOfRange,
+        // Appended for the messaging control-block additions (R.3.1.1).
+        // Append-only; existing numeric values above are frozen.
+        // SubscriptionExpired   -- reported when a caller hands the bus a
+        //                          connection id whose slot has been
+        //                          released (target-first destruction or
+        //                          an explicit unregister).
+        // InvalidMessageTarget  -- reported when the target pointer is
+        //                          null or the registered target has
+        //                          already been torn down.
+        SubscriptionExpired,
+        InvalidMessageTarget
     };
 
     Result();
