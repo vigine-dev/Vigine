@@ -151,6 +151,10 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/graph/igraph.h
     ${INCLUDE_DIR}/vigine/graph/factory.h
     ${INCLUDE_DIR}/vigine/graph/abstractgraph.h
+    ${INCLUDE_DIR}/vigine/messaging/kind.h
+    ${INCLUDE_DIR}/vigine/ecs/kind.h
+    ${INCLUDE_DIR}/vigine/fsm/kind.h
+    ${INCLUDE_DIR}/vigine/taskflow/kind.h
 )
 
 set(SOURCES
