@@ -5,7 +5,11 @@
 #include <string_view>
 
 #include "vigine/result.h"
+#include "vigine/threading/ibarrier.h"
+#include "vigine/threading/imessagechannel.h"
+#include "vigine/threading/imutex.h"
 #include "vigine/threading/irunnable.h"
+#include "vigine/threading/isemaphore.h"
 #include "vigine/threading/itaskhandle.h"
 #include "vigine/threading/namedthreadid.h"
 #include "vigine/threading/threadaffinity.h"
@@ -134,6 +138,53 @@ class IThreadManager
      *        registered.
      */
     [[nodiscard]] virtual std::size_t namedThreadCount() const noexcept = 0;
+
+    // ------ Sync primitive factories ------
+
+    /**
+     * @brief Produces a new @ref IMutex owned by the caller.
+     *
+     * Every returned mutex is a fresh primitive with no shared state.
+     * The manager does not track the mutex after the call returns —
+     * lifetime is governed purely by the caller's
+     * @c std::unique_ptr.
+     */
+    [[nodiscard]] virtual std::unique_ptr<IMutex> createMutex() = 0;
+
+    /**
+     * @brief Produces a new counting @ref ISemaphore with initial
+     *        counter @p initialCount.
+     *
+     * @p initialCount is the starting value of the internal counter.
+     * A value of @c 0 means the first @ref ISemaphore::acquire call
+     * blocks until a matching @ref ISemaphore::release runs on another
+     * thread.
+     */
+    [[nodiscard]] virtual std::unique_ptr<ISemaphore>
+        createSemaphore(std::size_t initialCount) = 0;
+
+    /**
+     * @brief Produces a new reusable @ref IBarrier expecting @p parties
+     *        arrivals per phase.
+     *
+     * @p parties must be at least @c 1. A value of @c 0 is a
+     * programming error; implementations treat it as @c 1 (a no-op
+     * barrier) so that call sites do not crash on degenerate input.
+     */
+    [[nodiscard]] virtual std::unique_ptr<IBarrier>
+        createBarrier(std::size_t parties) = 0;
+
+    /**
+     * @brief Produces a new bounded @ref IMessageChannel of capacity
+     *        @p capacity.
+     *
+     * @p capacity is the maximum number of queued messages before a
+     * producer blocks on @ref IMessageChannel::send. A value of @c 0
+     * is a programming error; implementations treat it as @c 1 so that
+     * the channel can still carry at least one message in transit.
+     */
+    [[nodiscard]] virtual std::unique_ptr<IMessageChannel>
+        createMessageChannel(std::size_t capacity) = 0;
 
     // ------ Lifecycle ------
 

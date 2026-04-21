@@ -161,6 +161,10 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/threading/threadmanagerconfig.h
     ${INCLUDE_DIR}/vigine/threading/irunnable.h
     ${INCLUDE_DIR}/vigine/threading/itaskhandle.h
+    ${INCLUDE_DIR}/vigine/threading/imutex.h
+    ${INCLUDE_DIR}/vigine/threading/isemaphore.h
+    ${INCLUDE_DIR}/vigine/threading/ibarrier.h
+    ${INCLUDE_DIR}/vigine/threading/imessagechannel.h
     ${INCLUDE_DIR}/vigine/threading/ithreadmanager.h
     ${INCLUDE_DIR}/vigine/threading/abstractthreadmanager.h
     ${INCLUDE_DIR}/vigine/threading/defaultthreadmanager.h
@@ -212,6 +216,15 @@ set(SOURCES
     ${SRC_DIR}/graph/factory.cpp
     ${SRC_DIR}/threading/abstractthreadmanager.cpp
     ${SRC_DIR}/threading/defaultthreadmanager.cpp
+    ${SRC_DIR}/threading/defaultmutex.h
+    ${SRC_DIR}/threading/defaultmutex.cpp
+    ${SRC_DIR}/threading/defaultsemaphore.h
+    ${SRC_DIR}/threading/defaultsemaphore.cpp
+    ${SRC_DIR}/threading/defaultbarrier.h
+    ${SRC_DIR}/threading/defaultbarrier.cpp
+    ${SRC_DIR}/threading/defaultmessagechannel.h
+    ${SRC_DIR}/threading/defaultmessagechannel.cpp
+    ${SRC_DIR}/threading/defaultthreadmanager_factories.cpp
     ${SRC_DIR}/threading/factory.cpp
     ${SRC_DIR}/payload/abstractpayloadregistry.h
     ${SRC_DIR}/payload/abstractpayloadregistry.cpp
