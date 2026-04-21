@@ -318,6 +318,25 @@ set(SOURCES_SERVICE
     ${SRC_DIR}/service/platformservice.cpp
 )
 
+# Level-1 ECS wrapper (R.4.2) -- public surface.
+set(HEADER_ECS_CORE
+    ${INCLUDE_DIR}/vigine/ecs/ecstypes.h
+    ${INCLUDE_DIR}/vigine/ecs/iecs.h
+    ${INCLUDE_DIR}/vigine/ecs/icomponentstore.h
+    ${INCLUDE_DIR}/vigine/ecs/abstractecs.h
+    ${INCLUDE_DIR}/vigine/ecs/factory.h
+)
+
+# Level-1 ECS wrapper (R.4.2) -- internal entity world + base impl.
+set(SOURCES_ECS_CORE
+    ${SRC_DIR}/ecs/entityworld.h
+    ${SRC_DIR}/ecs/entityworld.cpp
+    ${SRC_DIR}/ecs/abstractecs.cpp
+    ${SRC_DIR}/ecs/defaultecs.h
+    ${SRC_DIR}/ecs/defaultecs.cpp
+    ${SRC_DIR}/ecs/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -394,6 +413,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES}
     ${HEADER_SERVICE}
     ${SOURCES_SERVICE}
+    ${HEADER_ECS_CORE}
+    ${SOURCES_ECS_CORE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
