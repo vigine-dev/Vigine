@@ -174,6 +174,15 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/payload/ipayloadregistry.h
     ${INCLUDE_DIR}/vigine/payload/factory.h
     ${INCLUDE_DIR}/vigine/messaging/kind.h
+    ${INCLUDE_DIR}/vigine/messaging/connectionid.h
+    ${INCLUDE_DIR}/vigine/messaging/targetkind.h
+    ${INCLUDE_DIR}/vigine/messaging/iconnectiontoken.h
+    ${INCLUDE_DIR}/vigine/messaging/ibuscontrolblock.h
+    ${INCLUDE_DIR}/vigine/messaging/connectiontoken.h
+    ${INCLUDE_DIR}/vigine/messaging/abstractmessagetarget.h
+    ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
+    ${INCLUDE_DIR}/vigine/context/icontext.h
+    ${INCLUDE_DIR}/vigine/ecs/ientitymanager.h
     ${INCLUDE_DIR}/vigine/ecs/kind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
     ${INCLUDE_DIR}/vigine/taskflow/kind.h
@@ -231,6 +240,12 @@ set(SOURCES
     ${SRC_DIR}/payload/defaultpayloadregistry.h
     ${SRC_DIR}/payload/defaultpayloadregistry.cpp
     ${SRC_DIR}/payload/factory.cpp
+    ${SRC_DIR}/messaging/abstractmessagetarget.cpp
+    ${SRC_DIR}/messaging/connectiontoken.cpp
+    ${SRC_DIR}/messaging/ibuscontrolblock_default.h
+    ${SRC_DIR}/messaging/ibuscontrolblock_default.cpp
+    ${SRC_DIR}/messaging/cleanup.h
+    ${SRC_DIR}/messaging/cleanup.cpp
 )
 
 # Add platform-specific surface factory

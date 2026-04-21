@@ -52,7 +52,12 @@ std::unique_ptr<TaskFlow> createCloseTaskFlow() { return std::make_unique<TaskFl
 int main()
 {
     Engine engine;
-    StateMachine *stMachine = engine.state();
+    // Engine::state() now returns IStateMachine&; the concrete
+    // StateMachine is still the only implementation shipped with the
+    // engine, so downcast back to it for the rich state-machine API.
+    // Later leaves move the addState/addTransition surface onto the
+    // interface itself; the cast is temporary scaffolding.
+    StateMachine *stMachine = static_cast<StateMachine *>(&engine.state());
 
     auto initState          = std::make_unique<InitState>();
     auto workState          = std::make_unique<WorkState>();

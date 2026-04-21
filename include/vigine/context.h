@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vigine/context/icontext.h"
 #include "vigine/ecs/abstractsystem.h"
 #include <vigine/abstractservice.h>
 
@@ -17,7 +18,7 @@ class EntityManager;
 using ServiceInstancesContainer = std::vector<std::pair<const Name, AbstractServiceUPtr>>;
 using SystemInstancesContainer  = std::vector<std::pair<const SystemId, AbstractSystemUPtr>>;
 
-class Context
+class Context : public IContext
 {
   public:
     AbstractService *service(const ServiceId id, const Name name, const Property property);

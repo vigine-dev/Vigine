@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vigine/ecs/ientitymanager.h"
+
 #include <map>
 #include <memory>
 #include <string>
@@ -12,7 +14,7 @@ class Entity;
 
 using EntityUPtr = std::unique_ptr<Entity>;
 
-class EntityManager
+class EntityManager : public IEntityManager
 {
   public:
     ~EntityManager();
