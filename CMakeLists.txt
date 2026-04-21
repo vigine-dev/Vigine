@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.25)
 
 set(PROJECT_NAME vigine)
 
@@ -10,17 +10,35 @@ project(${PROJECT_NAME})
 set(VIGINE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "Vigine root directory")
 
 #
-# Set C++23 standard
+# Set C++23 standard. CMAKE_CXX_EXTENSIONS OFF keeps the build portable
+# across MSVC, libc++ / clang, and libstdc++ / gcc -- GNU extensions
+# silently change semantics (e.g. VLAs, __restrict) that are not part
+# of ISO C++.
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Load the central compile-options helper. The helper is scoped to the
+# vigine library target (not directory-wide) so bundled third-party
+# sources like FreeType do not inherit /W4 / -Wpedantic.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/VigineCompileOptions.cmake)
 
 if(MSVC)
     add_compile_options(/FS /utf-8)
 endif()
 
 if(WIN32)
-    add_compile_definitions(VK_USE_PLATFORM_WIN32_KHR)
+    # Windows 10+ baseline. Pins every Win32 API surface the build
+    # consumes to the Windows 10 (NTDDI_WIN10_VB) feature set; an older
+    # API accidentally used elsewhere would fail to compile here.
+    add_compile_definitions(
+        VK_USE_PLATFORM_WIN32_KHR
+        _WIN32_WINNT=0x0A00
+        NTDDI_VERSION=0x0A000000
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+    )
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -56,7 +74,18 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
 
 # Find and include glm
 find_package(GLM REQUIRED)
-find_package(Vulkan REQUIRED)
+# Vulkan 1.3 is the baseline. Try 1.3 first; if the build host only has
+# 1.2, downgrade with a visible WARNING so the mismatch is audible in
+# configure logs. CI jobs pin SDK 1.3.
+find_package(Vulkan 1.3 QUIET)
+if(Vulkan_FOUND)
+    find_package(Vulkan 1.3 REQUIRED)
+else()
+    message(WARNING
+        "Vulkan 1.3 SDK not found; falling back to Vulkan >= 1.2. "
+        "CI jobs require 1.3 -- install VulkanSDK 1.3+ for a parity build.")
+    find_package(Vulkan 1.2 REQUIRED)
+endif()
 find_package(VulkanHpp REQUIRED)
 
 # std::thread / std::mutex need the Threads package (Threads::Threads)
@@ -354,6 +383,12 @@ add_library(${PROJECT_NAME}
     include/vigine/base/macros.h
     include/vigine/base/info.h
 )
+
+# Apply the warning / strict-mode compile options to the vigine target.
+# Scoped via target_compile_options inside the helper so FreeType and
+# other vendored dependencies are not affected.
+vigine_apply_compile_options(${PROJECT_NAME})
+
 # Include directories
 target_include_directories(${PROJECT_NAME}
     PUBLIC
