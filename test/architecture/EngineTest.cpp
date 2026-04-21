@@ -26,7 +26,9 @@ TEST(EngineTest, constructor_empty)
 TEST(EngineTest, state)
 {
     auto engine = std::make_unique<Engine>();
-    ASSERT_NE(engine->state(), nullptr);
+    // Engine::state() returns IStateMachine& -- a reference, so the
+    // address is always non-null by construction.
+    ASSERT_NE(&engine->state(), nullptr);
 }
 
 TEST(EngineTest, run_without_states)
@@ -37,8 +39,10 @@ TEST(EngineTest, run_without_states)
 
 TEST(EngineTest, state_management)
 {
-    auto engine       = std::make_unique<Engine>();
-    auto stateMachine = engine->state();
+    auto engine = std::make_unique<Engine>();
+    // Downcast back to the concrete StateMachine for the rich state
+    // API; later leaves move that API onto IStateMachine itself.
+    auto *stateMachine = static_cast<StateMachine *>(&engine->state());
     ASSERT_NE(stateMachine, nullptr);
 
     // Test state machine functionality through engine
