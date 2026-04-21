@@ -134,6 +134,18 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
     ${INCLUDE_DIR}/vigine/base/constant.h
     ${INCLUDE_DIR}/vigine/base/function.h
+    ${INCLUDE_DIR}/vigine/graph/nodeid.h
+    ${INCLUDE_DIR}/vigine/graph/edgeid.h
+    ${INCLUDE_DIR}/vigine/graph/traverse_mode.h
+    ${INCLUDE_DIR}/vigine/graph/visit_result.h
+    ${INCLUDE_DIR}/vigine/graph/kind.h
+    ${INCLUDE_DIR}/vigine/graph/iedgedata.h
+    ${INCLUDE_DIR}/vigine/graph/inode.h
+    ${INCLUDE_DIR}/vigine/graph/iedge.h
+    ${INCLUDE_DIR}/vigine/graph/igraphvisitor.h
+    ${INCLUDE_DIR}/vigine/graph/igraphquery.h
+    ${INCLUDE_DIR}/vigine/graph/igraph.h
+    ${INCLUDE_DIR}/vigine/graph/factory.h
 )
 
 set(SOURCES
