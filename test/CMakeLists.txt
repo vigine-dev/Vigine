@@ -25,6 +25,7 @@ add_executable(${PROJECT_TEST_NAME}
     architecture/ecs/AbstractSystemTest.cpp
     architecture/ecs/AbstractComponentTest.cpp
     architecture/ecs/AbstractEntityTest.cpp
+    graph/smoke_test.cpp
 )
 
 # ====================== Add Include Directories =======================

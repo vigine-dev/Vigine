@@ -146,6 +146,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/graph/igraphquery.h
     ${INCLUDE_DIR}/vigine/graph/igraph.h
     ${INCLUDE_DIR}/vigine/graph/factory.h
+    ${INCLUDE_DIR}/vigine/graph/abstractgraph.h
 )
 
 set(SOURCES
@@ -177,6 +178,12 @@ set(SOURCES
     ${SRC_DIR}/ecs/entitymanager.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
+    ${SRC_DIR}/graph/abstractgraph.cpp
+    ${SRC_DIR}/graph/defaultgraph.cpp
+    ${SRC_DIR}/graph/defaultgraph_traverse.cpp
+    ${SRC_DIR}/graph/defaultgraph_query.cpp
+    ${SRC_DIR}/graph/defaultgraph_export.cpp
+    ${SRC_DIR}/graph/factory.cpp
 )
 
 # Add platform-specific surface factory
