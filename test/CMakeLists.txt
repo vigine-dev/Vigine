@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 # ====================== Add Google Test =======================
+# Align GoogleTest's CRT with the rest of the tree so the test
+# executables link against the same runtime as the vigine library
+# (prevents LNK2038 MTd_StaticDebug vs MDd_DynamicDebug mismatches on
+# MSVC).
+set(gtest_force_shared_crt ON CACHE BOOL "Use shared (DLL) CRT for GoogleTest" FORCE)
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 # ====================== Create Test Executable =======================
@@ -29,8 +34,8 @@ add_executable(${PROJECT_TEST_NAME}
 )
 
 # ====================== Add Include Directories =======================
-target_include_directories(${PROJECT_TEST_NAME} 
-    PRIVATE 
+target_include_directories(${PROJECT_TEST_NAME}
+    PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -48,5 +53,52 @@ target_link_libraries(${PROJECT_TEST_NAME}
 # ====================== Set Output Directory =======================
 set_target_properties(${PROJECT_TEST_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# ====================== Graph Contract Test Target =======================
+# The graph contract suite exercises IGraph against the pure-virtual
+# public surface. Its cases are parametrised on a factory callable so
+# that additional concrete IGraph implementations inherit the same
+# coverage by instantiating with another factory.
+set(GRAPH_CONTRACT_TARGET graph-contract)
+
+add_executable(${GRAPH_CONTRACT_TARGET}
+    graph/contract_igraph.cpp
+    graph/contract_inode.cpp
+    graph/contract_iedge.cpp
+    graph/contract_traversal.cpp
+    graph/contract_query.cpp
+    graph/contract_generational_id.cpp
+    graph/contract_hsm_bubble.cpp
+    graph/contract_fanout.cpp
+    graph/contract_async_timeout.cpp
+    graph/contract_result_deferred.cpp
+)
+
+target_include_directories(${GRAPH_CONTRACT_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${GRAPH_CONTRACT_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${GRAPH_CONTRACT_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# Register the contract suite with CTest, tagged so it can be selected
+# with `ctest -L graph-contract`.
+include(GoogleTest)
+gtest_discover_tests(${GRAPH_CONTRACT_TARGET}
+    PROPERTIES LABELS "graph-contract"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
 )
 
