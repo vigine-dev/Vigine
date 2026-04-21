@@ -59,6 +59,11 @@ find_package(GLM REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanHpp REQUIRED)
 
+# std::thread / std::mutex need the Threads package (Threads::Threads)
+# on POSIX targets to pull in -pthread. A no-op on MSVC.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 # PostgreSQL (libpqxx) is optional; disable on platforms without vcpkg postgres
 option(ENABLE_POSTGRESQL "Enable PostgreSQL support (requires libpqxx via vcpkg)" ON)
 if(ENABLE_POSTGRESQL)
@@ -151,6 +156,15 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/graph/igraph.h
     ${INCLUDE_DIR}/vigine/graph/factory.h
     ${INCLUDE_DIR}/vigine/graph/abstractgraph.h
+    ${INCLUDE_DIR}/vigine/threading/threadaffinity.h
+    ${INCLUDE_DIR}/vigine/threading/namedthreadid.h
+    ${INCLUDE_DIR}/vigine/threading/threadmanagerconfig.h
+    ${INCLUDE_DIR}/vigine/threading/irunnable.h
+    ${INCLUDE_DIR}/vigine/threading/itaskhandle.h
+    ${INCLUDE_DIR}/vigine/threading/ithreadmanager.h
+    ${INCLUDE_DIR}/vigine/threading/abstractthreadmanager.h
+    ${INCLUDE_DIR}/vigine/threading/defaultthreadmanager.h
+    ${INCLUDE_DIR}/vigine/threading/factory.h
     ${INCLUDE_DIR}/vigine/messaging/kind.h
     ${INCLUDE_DIR}/vigine/ecs/kind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
@@ -192,6 +206,9 @@ set(SOURCES
     ${SRC_DIR}/graph/defaultgraph_query.cpp
     ${SRC_DIR}/graph/defaultgraph_export.cpp
     ${SRC_DIR}/graph/factory.cpp
+    ${SRC_DIR}/threading/abstractthreadmanager.cpp
+    ${SRC_DIR}/threading/defaultthreadmanager.cpp
+    ${SRC_DIR}/threading/factory.cpp
 )
 
 # Add platform-specific surface factory
@@ -317,6 +334,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${GLM_LIBRARIES}
+    Threads::Threads
 )
 
 if(ENABLE_POSTGRESQL)
