@@ -102,3 +102,38 @@ gtest_discover_tests(${GRAPH_CONTRACT_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Payload Registry Smoke Target =======================
+# Smoke coverage for IPayloadRegistry: factory ownership, engine
+# bootstrap, happy-path user registration, overlap and out-of-range
+# rejection, unregister, and a concurrent register/resolve case that
+# the thread sanitiser verifies under -fsanitize=thread.
+set(PAYLOAD_SMOKE_TARGET payload-smoke)
+
+add_executable(${PAYLOAD_SMOKE_TARGET}
+    payload/smoke_test.cpp
+)
+
+target_include_directories(${PAYLOAD_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${PAYLOAD_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${PAYLOAD_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${PAYLOAD_SMOKE_TARGET}
+    PROPERTIES LABELS "payload-registry-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+

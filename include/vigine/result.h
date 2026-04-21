@@ -13,7 +13,12 @@ class Result
     enum class Code
     {
         Success,
-        Error
+        Error,
+        // Appended for the payload-id registry (R.1.3.1). Append-only:
+        // existing values above keep their numeric positions so that
+        // callers that persist or serialise Result codes are unaffected.
+        DuplicatePayloadId,
+        OutOfRange
     };
 
     Result();
