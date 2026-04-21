@@ -180,6 +180,19 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/messaging/ibuscontrolblock.h
     ${INCLUDE_DIR}/vigine/messaging/connectiontoken.h
     ${INCLUDE_DIR}/vigine/messaging/abstractmessagetarget.h
+    ${INCLUDE_DIR}/vigine/messaging/busid.h
+    ${INCLUDE_DIR}/vigine/messaging/busconfig.h
+    ${INCLUDE_DIR}/vigine/messaging/messagekind.h
+    ${INCLUDE_DIR}/vigine/messaging/routemode.h
+    ${INCLUDE_DIR}/vigine/messaging/messagefilter.h
+    ${INCLUDE_DIR}/vigine/messaging/imessagepayload.h
+    ${INCLUDE_DIR}/vigine/messaging/imessage.h
+    ${INCLUDE_DIR}/vigine/messaging/isubscriber.h
+    ${INCLUDE_DIR}/vigine/messaging/isubscriptiontoken.h
+    ${INCLUDE_DIR}/vigine/messaging/imessagebus.h
+    ${INCLUDE_DIR}/vigine/messaging/abstractmessagebus.h
+    ${INCLUDE_DIR}/vigine/messaging/systemmessagebus.h
+    ${INCLUDE_DIR}/vigine/messaging/factory.h
     ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
     ${INCLUDE_DIR}/vigine/context/icontext.h
     ${INCLUDE_DIR}/vigine/ecs/ientitymanager.h
@@ -246,6 +259,14 @@ set(SOURCES
     ${SRC_DIR}/messaging/ibuscontrolblock_default.cpp
     ${SRC_DIR}/messaging/cleanup.h
     ${SRC_DIR}/messaging/cleanup.cpp
+    ${SRC_DIR}/messaging/abstractmessagebus.cpp
+    ${SRC_DIR}/messaging/systemmessagebus.cpp
+    ${SRC_DIR}/messaging/createmessagebus.cpp
+    ${SRC_DIR}/messaging/routing/firstmatch.cpp
+    ${SRC_DIR}/messaging/routing/fanout.cpp
+    ${SRC_DIR}/messaging/routing/chain.cpp
+    ${SRC_DIR}/messaging/routing/bubble.cpp
+    ${SRC_DIR}/messaging/routing/broadcast.cpp
 )
 
 # Add platform-specific surface factory
