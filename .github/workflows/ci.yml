@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feat/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  graph-purity:
+    name: Graph-core purity check (INV-9)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run check_graph_purity
+        run: python scripts/check_graph_purity.py --root .
+
+  unit-tests-scripts:
+    name: Script unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run test_check_graph_purity
+        run: pytest test/scripts/test_check_graph_purity.py -q
