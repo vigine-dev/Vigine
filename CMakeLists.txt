@@ -165,6 +165,10 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/threading/abstractthreadmanager.h
     ${INCLUDE_DIR}/vigine/threading/defaultthreadmanager.h
     ${INCLUDE_DIR}/vigine/threading/factory.h
+    ${INCLUDE_DIR}/vigine/payload/payloadtypeid.h
+    ${INCLUDE_DIR}/vigine/payload/payloadrange.h
+    ${INCLUDE_DIR}/vigine/payload/ipayloadregistry.h
+    ${INCLUDE_DIR}/vigine/payload/factory.h
     ${INCLUDE_DIR}/vigine/messaging/kind.h
     ${INCLUDE_DIR}/vigine/ecs/kind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
@@ -209,6 +213,11 @@ set(SOURCES
     ${SRC_DIR}/threading/abstractthreadmanager.cpp
     ${SRC_DIR}/threading/defaultthreadmanager.cpp
     ${SRC_DIR}/threading/factory.cpp
+    ${SRC_DIR}/payload/abstractpayloadregistry.h
+    ${SRC_DIR}/payload/abstractpayloadregistry.cpp
+    ${SRC_DIR}/payload/defaultpayloadregistry.h
+    ${SRC_DIR}/payload/defaultpayloadregistry.cpp
+    ${SRC_DIR}/payload/factory.cpp
 )
 
 # Add platform-specific surface factory
