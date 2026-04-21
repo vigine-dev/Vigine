@@ -26,7 +26,12 @@ bool Result::isSuccess() const { return _code == Code::Success; }
 
 Result::Code Result::code() const { return _code; }
 
-bool Result::isError() const { return _code == Code::Error; }
+// Any non-Success code is treated as an error, so that codes appended
+// after the initial `Success` / `Error` pair (e.g. DuplicatePayloadId,
+// OutOfRange introduced with the payload-id registry) are reported as
+// errors by isError() without requiring every caller to know the full
+// code list.
+bool Result::isError() const { return _code != Code::Success; }
 
 const std::string &Result::message() const { return _message; }
 } // namespace vigine
