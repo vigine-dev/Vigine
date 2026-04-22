@@ -19,7 +19,9 @@ from pathlib import Path
 import pytest
 
 # Add script/ to path so the module can be imported directly.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+# The directory was renamed from `scripts/` to `script/` during the
+# post-shipment cleanup — keep this path in sync.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "script"))
 
 import check_naming_convention as cnc  # noqa: E402
 
@@ -252,3 +254,91 @@ def test_missing_path_graceful(tmp_path: Path, capsys: pytest.CaptureFixture) ->
     captured = capsys.readouterr()
     assert code == 1, "Expected exit 1 for missing scan path"
     assert "not found" in captured.err.lower() or "not found" in captured.out.lower()
+
+
+# ---------------------------------------------------------------------------
+# Test 9 -- Waiver covers nested class/struct declarations inside the body
+# ---------------------------------------------------------------------------
+
+def test_waiver_covers_nested_types(tmp_path: Path) -> None:
+    """A nested I-prefix class inside a waivered parent must also be
+    waivered. Previously the waiver only skipped the opening line, which
+    let nested declarations trigger spurious Rule 1 violations at the
+    outer scope."""
+    d = tmp_path / "include" / "vigine"
+    write_header(
+        d,
+        "waived_nested.h",
+        """\
+        #pragma once
+        namespace test {
+        class IHasState // INV-10 EXEMPTION: legacy ABI
+        {
+          public:
+            // This nested interface would trip Rule 1 if re-checked at
+            // the outer scope (non-virtual body inside an I-prefix
+            // class), but the waiver on the parent must cover it too.
+            class INestedBad {
+              public:
+                void helper() { /* non-virtual body */ }
+                int  _field{0};
+            };
+
+            virtual void work() = 0;
+          private:
+            int _field{0};
+        };
+        }
+        """,
+    )
+    code = run(["--path", str(d), "--quiet"])
+    assert code == 0, "Expected exit 0 when waiver covers nested types"
+
+
+# ---------------------------------------------------------------------------
+# Test 10 -- Rule 1 does not misfire on non-method lines that contain '('
+# ---------------------------------------------------------------------------
+
+def test_rule_1_ignores_non_method_lines(tmp_path: Path) -> None:
+    """Lines that carry `(` but are not member functions (type aliases,
+    friend declarations, static-assert, typedef function-pointers) must
+    not count as non-virtual methods for Rule 1 purposes."""
+    d = tmp_path / "include" / "vigine"
+    write_header(
+        d,
+        "ok_non_method_parens.h",
+        """\
+        #pragma once
+        #include <functional>
+        namespace test {
+        class IWithAliases {
+          public:
+            // Type alias that mentions `(` inside the function-type
+            // signature.
+            using Callback = std::function<void(int)>;
+
+            // Classical C-style typedef for a function pointer.
+            typedef void (*RawCallback)(int);
+
+            // Forward-friend declaration of a free function.
+            friend bool operator==(const IWithAliases &, const IWithAliases &);
+
+            // Compile-time check that is not a member function.
+            static_assert(sizeof(int) == 4, "int must be 32 bits");
+
+            virtual void doWork() = 0;
+
+          protected:
+            IWithAliases()                                 = default;
+            virtual ~IWithAliases()                        = default;
+            IWithAliases(const IWithAliases &)             = delete;
+            IWithAliases &operator=(const IWithAliases &) = delete;
+        };
+        }
+        """,
+    )
+    code = run(["--path", str(d), "--quiet"])
+    assert code == 0, (
+        "Expected exit 0 — using/typedef/friend/static_assert lines "
+        "that happen to contain `(` must not trigger Rule 1"
+    )
