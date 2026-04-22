@@ -469,6 +469,47 @@ gtest_discover_tests(${SYNC_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== ThreadManager Smoke Target ====================
+# Smoke coverage for the IThreadManager lifecycle and scheduling surface:
+# factory returns a non-null manager; poolSize matches config; schedule
+# with Pool / Any / Dedicated affinities runs runnables and resolves
+# their handles; scheduleOnNamed round trip registers, executes, and
+# unregisters a named thread; stale-id scheduling returns an error handle;
+# postToMainThread + runMainThreadPump fires queued runnables exactly once
+# on the calling thread; shutdown joins workers and rejects subsequent
+# schedules; double-shutdown is a no-op; pending pool tasks drain before
+# shutdown returns.
+set(THREADMANAGER_SMOKE_TARGET threadmanager-smoke)
+
+add_executable(${THREADMANAGER_SMOKE_TARGET}
+    threading/threadmanager_smoke_test.cpp
+)
+
+target_include_directories(${THREADMANAGER_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${THREADMANAGER_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${THREADMANAGER_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${THREADMANAGER_SMOKE_TARGET}
+    PROPERTIES LABELS "threadmanager-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== Service Smoke Target ===========================
 # Smoke coverage for the IService Level-1 wrapper: createService()
 # hands back a live default service; dependencies() is empty on a
