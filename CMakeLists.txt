@@ -351,6 +351,24 @@ set(SOURCES_ECS_CORE
     ${SRC_DIR}/ecs/factory.cpp
 )
 
+# Level-1 state machine wrapper (R.4.3) -- public surface.
+set(HEADER_STATEMACHINE_CORE
+    ${INCLUDE_DIR}/vigine/statemachine/stateid.h
+    ${INCLUDE_DIR}/vigine/statemachine/routemode.h
+    ${INCLUDE_DIR}/vigine/statemachine/abstractstatemachine.h
+    ${INCLUDE_DIR}/vigine/statemachine/factory.h
+)
+
+# Level-1 state machine wrapper (R.4.3) -- internal state topology + base impl.
+set(SOURCES_STATEMACHINE_CORE
+    ${SRC_DIR}/statemachine/statetopology.h
+    ${SRC_DIR}/statemachine/statetopology.cpp
+    ${SRC_DIR}/statemachine/abstractstatemachine.cpp
+    ${SRC_DIR}/statemachine/defaultstatemachine.h
+    ${SRC_DIR}/statemachine/defaultstatemachine.cpp
+    ${SRC_DIR}/statemachine/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -429,6 +447,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SERVICE}
     ${HEADER_ECS_CORE}
     ${SOURCES_ECS_CORE}
+    ${HEADER_STATEMACHINE_CORE}
+    ${SOURCES_STATEMACHINE_CORE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
