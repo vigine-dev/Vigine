@@ -79,12 +79,17 @@ Result DefaultMessageChannel::receive(Message &out, std::chrono::milliseconds ti
     }
     else if (!_notEmpty.wait_for(lock, timeout, predicate))
     {
+        // Contract: on failure @p out is left default-constructed so
+        // callers looping with a shared Message variable do not see
+        // stale data from a previous receive.
+        out = Message{};
         return Result{Result::Code::Error, "threading: channel receive timeout"};
     }
 
     if (_queue.empty())
     {
-        // Closed and empty — final-drain path.
+        // Closed and empty — final-drain path. Reset @p out per contract.
+        out = Message{};
         return Result{Result::Code::Error, "threading: channel closed"};
     }
 

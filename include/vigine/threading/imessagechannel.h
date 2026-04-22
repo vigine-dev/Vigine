@@ -92,12 +92,20 @@ class IMessageChannel
      * @brief Sends a message, blocking up to @p timeout when the channel
      *        is full.
      *
-     * Transfers ownership of @p message into the channel on success.
+     * `Message` is move-only, so callers invoke
+     * `channel.send(std::move(msg))`. Ownership transfers into the
+     * parameter before the function body runs; the original variable is
+     * in a valid-but-unspecified moved-from state immediately after the
+     * call returns, regardless of outcome.
+     *
      * Returns a successful @ref Result when the message was queued.
      * Returns an error @ref Result when @p timeout elapses before space
-     * becomes available, or when the channel is closed. On failure the
-     * caller retains ownership through @p message (the implementation
-     * leaves the buffer intact on the caller side).
+     * becomes available, or when the channel is closed. The moved-from
+     * `Message` on the caller side is NOT restored on failure — callers
+     * that need retry semantics must reconstruct the message before
+     * calling again. For the "inspect failure and retry with the same
+     * payload" pattern, prefer @ref trySend, which takes a reference
+     * and leaves ownership with the caller when it returns false.
      */
     [[nodiscard]] virtual Result send(Message message, std::chrono::milliseconds timeout = std::chrono::milliseconds::max()) = 0;
 
