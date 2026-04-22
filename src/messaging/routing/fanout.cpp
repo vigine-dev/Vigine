@@ -32,7 +32,7 @@ void AbstractMessageBus::dispatchFanOut(
         {
             continue;
         }
-        (void)deliver(*slot.subscriber, message);
+        (void)deliver(slot, message);
     }
 }
 

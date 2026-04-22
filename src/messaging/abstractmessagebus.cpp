@@ -319,10 +319,15 @@ AbstractMessageBus::subscribe(const MessageFilter &filter, ISubscriber *subscrib
         std::unique_lock<std::shared_mutex> lock{_registryMutex};
         serial = _nextSerial++;
         SubscriptionSlot slot{};
-        slot.subscriber = subscriber;
-        slot.filter     = filter;
-        slot.serial     = serial;
-        slot.active     = true;
+        slot.subscriber   = subscriber;
+        slot.filter       = filter;
+        slot.serial       = serial;
+        slot.active       = true;
+        // One mutex per slot, shared across every snapshot copy so
+        // the dispatch path can serialise `onMessage` calls for the
+        // same subscriber without a global delivery mutex (which
+        // would serialise unrelated subscribers too).
+        slot.deliverMutex = std::make_shared<std::mutex>();
         _subscriptions.emplace(serial, std::move(slot));
     }
 
@@ -479,12 +484,28 @@ void AbstractMessageBus::drainQueue(bool untilShutdown)
     }
 }
 
-DispatchResult AbstractMessageBus::deliver(ISubscriber &subscriber,
-                                           const IMessage &message) noexcept
+DispatchResult AbstractMessageBus::deliver(const SubscriptionSlot &slot,
+                                           const IMessage         &message) noexcept
 {
+    if (slot.subscriber == nullptr)
+    {
+        return DispatchResult::Pass;
+    }
+    // Optional per-slot mutex. `shared_ptr` lets the slot value-copy
+    // inside `snapshotRegistry()` point at the same mutex the
+    // registry holds, so serialisation actually works through the
+    // snapshot path. A missing mutex (legacy test fixtures that
+    // construct a bare `SubscriptionSlot` without going through
+    // `subscribe()`) falls through to an unlocked call — preserves
+    // pre-existing behaviour for those edge cases.
+    std::unique_lock<std::mutex> lock;
+    if (slot.deliverMutex)
+    {
+        lock = std::unique_lock<std::mutex>{*slot.deliverMutex};
+    }
     try
     {
-        return subscriber.onMessage(message);
+        return slot.subscriber->onMessage(message);
     }
     catch (const std::exception &ex)
     {
