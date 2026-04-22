@@ -20,9 +20,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string_view>
+#include <thread>
 #include <utility>
 
 namespace
@@ -404,6 +407,116 @@ TEST_F(MessagingSmoke, ThrowingSubscriberIsolated)
 
     EXPECT_EQ(thrower.calls(), 1u);
     EXPECT_EQ(follower.hits(), 1u);
+}
+
+// ---------------------------------------------------------------------------
+// Case 9 -- Token cancel blocks until any in-flight onMessage returns.
+//
+// The ISubscriptionToken contract says: "The destructor blocks until every
+// in-flight dispatch targeting this slot has returned."  This test pins that
+// guarantee by posting a message from a second thread whose subscriber sleeps
+// for a fixed interval.  The main thread cancels the token concurrently and
+// checks that cancel() did not return before the subscriber finished.
+// ---------------------------------------------------------------------------
+
+/// @brief Subscriber that sleeps inside onMessage and records when it enters
+///        and exits the call so the test can assert cancel() timing.
+class SlowSubscriber final : public ISubscriber
+{
+  public:
+    explicit SlowSubscriber(std::chrono::milliseconds delay) noexcept
+        : _delay(delay)
+    {
+    }
+
+    [[nodiscard]] DispatchResult onMessage(const IMessage & /*message*/) override
+    {
+        // Signal that onMessage has started and record the entry time.
+        _entered.store(true, std::memory_order_release);
+        _enteredCv.notify_all();
+
+        std::this_thread::sleep_for(_delay);
+
+        _exitedAt = std::chrono::steady_clock::now();
+        _exited.store(true, std::memory_order_release);
+        return DispatchResult::Handled;
+    }
+
+    void waitForEntry(std::chrono::milliseconds timeout = std::chrono::milliseconds{500}) const
+    {
+        std::unique_lock<std::mutex> lk{_cvMutex};
+        _enteredCv.wait_for(lk, timeout, [this] {
+            return _entered.load(std::memory_order_acquire);
+        });
+    }
+
+    [[nodiscard]] bool exited() const noexcept
+    {
+        return _exited.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] std::chrono::steady_clock::time_point exitedAt() const noexcept
+    {
+        return _exitedAt;
+    }
+
+  private:
+    std::chrono::milliseconds              _delay;
+    std::atomic<bool>                      _entered{false};
+    std::atomic<bool>                      _exited{false};
+    std::chrono::steady_clock::time_point  _exitedAt{};
+    mutable std::mutex                     _cvMutex;
+    mutable std::condition_variable        _enteredCv;
+};
+
+TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
+{
+    auto bus = createMessageBus(inlineConfig("dtor-blocks-bus"), *_threadManager);
+
+    // Use a 50 ms sleep so the window is wide enough to catch races
+    // without making the test slow.
+    const auto delay = std::chrono::milliseconds{50};
+    SlowSubscriber slow{delay};
+
+    MessageFilter filter{};
+    filter.kind = MessageKind::Signal;
+
+    auto token = bus->subscribe(filter, &slow);
+    ASSERT_TRUE(token);
+    ASSERT_TRUE(token->active());
+
+    // Post the message from a background thread so that `onMessage` runs
+    // concurrently with the main thread's cancel() call.  InlineOnly
+    // dispatches synchronously on the post() caller's thread.
+    std::thread dispatcher([&bus] {
+        (void)bus->post(std::make_unique<SmokeMessage>(
+            MessageKind::Signal,
+            RouteMode::Broadcast,
+            vigine::payload::PayloadTypeId{0x10700u}));
+    });
+
+    // Wait until `onMessage` has actually started before calling cancel()
+    // so we know the dispatch is in-flight when we cancel.
+    slow.waitForEntry();
+
+    const auto cancelStart = std::chrono::steady_clock::now();
+    token->cancel();
+    const auto cancelEnd = std::chrono::steady_clock::now();
+
+    // cancel() must have waited: it should return no earlier than when
+    // the subscriber's sleep finished.
+    EXPECT_TRUE(slow.exited())
+        << "onMessage had not returned when cancel() returned — dtor-blocks "
+           "contract violated";
+
+    if (slow.exited())
+    {
+        // Allow a small margin for OS scheduling jitter.
+        EXPECT_GE(cancelEnd, slow.exitedAt())
+            << "cancel() returned before onMessage() exited";
+    }
+
+    dispatcher.join();
 }
 
 } // namespace
