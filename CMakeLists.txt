@@ -389,6 +389,21 @@ set(SOURCES_TASKFLOW_CORE
     ${SRC_DIR}/taskflow/factory.cpp
 )
 
+# Context aggregator (R.4.5) -- public surface.
+set(HEADER_CONTEXT_AGGREGATOR
+    ${INCLUDE_DIR}/vigine/context/contextconfig.h
+    ${INCLUDE_DIR}/vigine/context/abstractcontext.h
+    ${INCLUDE_DIR}/vigine/context/factory.h
+)
+
+# Context aggregator (R.4.5) -- internal concrete + factory + base impl.
+set(SOURCES_CONTEXT_AGGREGATOR
+    ${SRC_DIR}/context/abstractcontext.cpp
+    ${SRC_DIR}/context/defaultcontext.h
+    ${SRC_DIR}/context/defaultcontext.cpp
+    ${SRC_DIR}/context/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -471,6 +486,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_STATEMACHINE_CORE}
     ${HEADER_TASKFLOW_CORE}
     ${SOURCES_TASKFLOW_CORE}
+    ${HEADER_CONTEXT_AGGREGATOR}
+    ${SOURCES_CONTEXT_AGGREGATOR}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}

@@ -1,16 +1,26 @@
 #include "vigine/context.h"
 
+#include "vigine/ecs/iecs.h"
 #include "vigine/ecs/platform/windowsystem.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/ecs/postgresql/postgresqlsystem.h"
 #endif
 #include "vigine/ecs/render/rendersystem.h"
+#include "vigine/messaging/busconfig.h"
+#include "vigine/messaging/busid.h"
+#include "vigine/messaging/imessagebus.h"
 #include "vigine/property.h"
+#include "vigine/result.h"
 #include "vigine/service/databaseservice.h"
 #include "vigine/service/graphicsservice.h"
+#include "vigine/service/iservice.h"
 #include "vigine/service/platformservice.h"
+#include "vigine/statemachine/istatemachine.h"
+#include "vigine/taskflow/itaskflow.h"
+#include "vigine/threading/ithreadmanager.h"
 
 #include <algorithm>
+#include <stdexcept>
 #include <utility>
 
 vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemName name,
@@ -148,4 +158,80 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
     }
 
     return nullptr;
+}
+
+// ---------------------------------------------------------------------------
+// Legacy Context — IContext aggregator stubs.
+//
+// Post R.4.5 the IContext interface became the full engine aggregator. The
+// legacy Context does not own a thread manager, system bus, or Level-1
+// wrappers, so these accessors either throw (references must be non-null)
+// or return empty handles. Callers that need the real aggregator go through
+// vigine::context::createContext.
+// ---------------------------------------------------------------------------
+
+vigine::messaging::IMessageBus &vigine::Context::systemBus()
+{
+    throw std::logic_error{
+        "legacy vigine::Context has no system bus; use vigine::context::createContext"};
+}
+
+std::shared_ptr<vigine::messaging::IMessageBus>
+vigine::Context::createMessageBus(const vigine::messaging::BusConfig & /*config*/)
+{
+    return nullptr;
+}
+
+std::shared_ptr<vigine::messaging::IMessageBus>
+vigine::Context::messageBus(vigine::messaging::BusId /*id*/) const
+{
+    return nullptr;
+}
+
+vigine::ecs::IECS &vigine::Context::ecs()
+{
+    throw std::logic_error{
+        "legacy vigine::Context has no Level-1 ECS wrapper; use vigine::context::createContext"};
+}
+
+vigine::statemachine::IStateMachine &vigine::Context::stateMachine()
+{
+    throw std::logic_error{
+        "legacy vigine::Context has no Level-1 state machine wrapper; use vigine::context::createContext"};
+}
+
+vigine::taskflow::ITaskFlow &vigine::Context::taskFlow()
+{
+    throw std::logic_error{
+        "legacy vigine::Context has no Level-1 task flow wrapper; use vigine::context::createContext"};
+}
+
+vigine::threading::IThreadManager &vigine::Context::threadManager()
+{
+    throw std::logic_error{
+        "legacy vigine::Context has no thread manager; use vigine::context::createContext"};
+}
+
+std::shared_ptr<vigine::service::IService>
+vigine::Context::service(vigine::service::ServiceId /*id*/) const
+{
+    return nullptr;
+}
+
+vigine::Result
+vigine::Context::registerService(std::shared_ptr<vigine::service::IService> /*service*/)
+{
+    return Result{
+        Result::Code::Error,
+        "legacy vigine::Context does not accept service registrations; use vigine::context::createContext"};
+}
+
+void vigine::Context::freeze() noexcept
+{
+    _frozen = true;
+}
+
+bool vigine::Context::isFrozen() const noexcept
+{
+    return _frozen;
 }
