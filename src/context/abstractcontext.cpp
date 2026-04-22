@@ -137,16 +137,35 @@ AbstractContext::service(service::ServiceId id) const
         return nullptr;
     }
 
-    // The registry is keyed on @c ServiceId::index; generation is not
-    // recycled at this leaf (no @c unregisterService), so every issued
-    // id maps to exactly one registered slot for the context's
-    // lifetime. Looking up by index alone is sufficient until a later
-    // leaf introduces generational slot recycling.
+    // The registry is keyed on @c ServiceId::index; the lookup has to
+    // also honour generation so a stale handle returned from a
+    // previous registration (or typed-over from an unrelated
+    // context) cannot alias a live slot. Generational slot recycling
+    // itself is not yet on the surface (no @c unregisterService),
+    // but generation-bump-on-every-registration already runs inside
+    // @ref allocateServiceId, so two successive registrations issue
+    // two different ids even when the index happens to line up.
     std::scoped_lock lock{_registryMutex};
     auto it = _services.find(id.index);
     if (it == _services.end())
     {
         return nullptr;
+    }
+    // If the registered service carries a stamped non-sentinel id
+    // (the common case — AbstractService-derived services get
+    // stamped during `registerService`), require an exact match on
+    // the full `(index, generation)` pair. When the service does
+    // not report a stamped id (`IService`-only implementations that
+    // bypass the stamping hook), fall back to index-only match so
+    // this path stays backward-compatible with custom service types
+    // that do not plug into the `AbstractService::setId` surface.
+    if (it->second)
+    {
+        const auto storedId = it->second->id();
+        if (storedId.valid() && storedId != id)
+        {
+            return nullptr;
+        }
     }
     return it->second;
 }
