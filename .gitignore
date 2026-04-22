@@ -1,4 +1,4 @@
-/build/
+build*/
 /vcpkg_installed/
 /.cache/
 /.vscode/
@@ -15,3 +15,11 @@
 /*.a
 /*.txt.user
 /.qtcreator/
+__pycache__/
+*.pyc
+.vs/
+*.ilk
+*.exp
+*.ipch
+*.ipdb
+*.idb

@@ -1,1 +1,0 @@
-include("D:/work/project/CodeMap/external/Vigine/build_test/test/payload-smoke[1]_include-${CTEST_CONFIGURATION_TYPE}.cmake")
