@@ -22,6 +22,7 @@
 #include "task/window/runwindowtask.h"
 #include "task/window/windoweventsignal.h"
 
+#include <cassert>
 #include <memory>
 
 
@@ -86,7 +87,10 @@ int main()
     // concrete StateMachine for the rich state-machine API. The cast
     // is temporary scaffolding that will disappear once addState /
     // addTransition move onto the interface in a later leaf.
-    StateMachine *stMachine = static_cast<StateMachine *>(&engine.state());
+    StateMachine *stMachine = dynamic_cast<StateMachine *>(&engine.state());
+    assert(stMachine != nullptr &&
+           "Engine::state() must be a concrete StateMachine until the "
+           "rich API lifts onto IStateMachine");
 
     MouseEventSignalBinder mouseSignalBinder;
     KeyEventSignalBinder keySignalBinder;

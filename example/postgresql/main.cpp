@@ -12,6 +12,7 @@
 #include "task/db/checkbdshecmetask.h"
 #include "task/db/initbdtask.h"
 
+#include <cassert>
 #include <memory>
 
 
@@ -57,7 +58,10 @@ int main()
     // engine, so downcast back to it for the rich state-machine API.
     // Later leaves move the addState/addTransition surface onto the
     // interface itself; the cast is temporary scaffolding.
-    StateMachine *stMachine = static_cast<StateMachine *>(&engine.state());
+    StateMachine *stMachine = dynamic_cast<StateMachine *>(&engine.state());
+    assert(stMachine != nullptr &&
+           "Engine::state() must be a concrete StateMachine until the "
+           "rich API lifts onto IStateMachine");
 
     auto initState          = std::make_unique<InitState>();
     auto workState          = std::make_unique<WorkState>();

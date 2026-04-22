@@ -42,7 +42,7 @@ TEST(EngineTest, state_management)
     auto engine = std::make_unique<Engine>();
     // Downcast back to the concrete StateMachine for the rich state
     // API; later leaves move that API onto IStateMachine itself.
-    auto *stateMachine = static_cast<StateMachine *>(&engine->state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&engine->state());
     ASSERT_NE(stateMachine, nullptr);
 
     // Test state machine functionality through engine
