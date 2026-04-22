@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """check_naming_convention.py -- Static checker for the I/Abstract naming convention (INV-10).
 
-Scans include/vigine/**/*.h and verifies that:
+Scans include/vigine/**/*.h and src/**/*.h and verifies that:
 
   Rule 1 (I-prefix): A class whose name starts with "I" followed by an
     uppercase letter must NOT have any non-virtual method with an inline
     body and must NOT have any underscore-prefixed data member.
     (Special-member housekeeping -- virtual destructor = default/delete,
     copy/move = default/delete, protected default constructor = default --
-    and virtual methods with optional-hook bodies are not counted.)
+    and virtual methods with optional-hook bodies are not counted. Non-
+    member lines that happen to carry `(` -- `using Callback = std::function
+    <...>`, `typedef void (*fn)(int);`, `friend bool operator==(...)`,
+    `static_assert(sizeof(...) == 8);` -- are not member functions and
+    therefore do not trigger Rule 1 either.)
 
   Rule 2 (Abstract-prefix): A class whose name starts with "Abstract" must
     have AT LEAST ONE method that is not pure-virtual (= 0) and not a
@@ -19,7 +23,8 @@ Only top-level class/struct definitions are checked; forward declarations
 (no body) are skipped; nested classes inside a body are not re-checked.
 
 Waiver: when the class declaration line contains "// INV-10 EXEMPTION:"
-the entire class is skipped without error.
+the ENTIRE class body is skipped without error, including any nested
+class or struct declared inside it.
 
 Exit codes:
   0 -- all checked classes conform.
@@ -37,7 +42,12 @@ from pathlib import Path
 
 WAIVER_MARKER = "// INV-10 EXEMPTION:"
 
-DEFAULT_SCAN_DIRS: list[str] = ["include/vigine"]
+# Default scan roots cover both the public engine API (`include/vigine`) and
+# the internal implementation (`src/`). INV-10 applies to class declarations
+# anywhere in the engine tree, not only the public surface — a concrete
+# `IFoo` helper that forgets the prefix convention in `src/` must still
+# trip CI.
+DEFAULT_SCAN_DIRS: list[str] = ["include/vigine", "src"]
 
 EXTENSIONS: frozenset[str] = frozenset({".h", ".hpp"})
 
@@ -67,6 +77,20 @@ _DATA_MEMBER_RE = re.compile(
 # A line that declares or defines a method (has parentheses) and is NOT
 # pure-virtual and NOT deleted/defaulted.  Used for the Abstract Rule 2.
 _METHOD_DECL_RE = re.compile(r"\(")   # any line with '(' is a method candidate
+
+# Non-method lines that may legitimately contain `(` inside a class body
+# and therefore must NOT trip the "has non-virtual method" branch of
+# Rule 1. Each pattern matches the beginning of a stripped line.
+_NON_METHOD_LINE_RES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^\s*using\b"),          # `using Callback = std::function<...>;`
+    re.compile(r"^\s*typedef\b"),        # `typedef void (*fn)(int);`
+    re.compile(r"^\s*friend\b"),         # `friend bool operator==(const X&, ...);`
+    re.compile(r"^\s*static_assert\b"),  # `static_assert(sizeof(...) == 8);`
+)
+
+
+def _is_non_method_line(sc: str) -> bool:
+    return any(pat.match(sc) for pat in _NON_METHOD_LINE_RES)
 
 # Comments.
 _BLOCK_COMMENT_RE = re.compile(r"^\s*/?\*")
@@ -121,6 +145,58 @@ def _extract_class_body(lines: list[str], start: int) -> tuple[list[str], int] |
 
 
 # ---------------------------------------------------------------------------
+# Continuation joiner
+# ---------------------------------------------------------------------------
+
+def _join_continuations(body_lines: list[str]) -> list[str]:
+    """Collapse C++ declarations that span multiple source lines into
+    single-line equivalents before per-line analysis.
+
+    A line that does not end with a statement-terminating character
+    (`;`, `{`, `}`, `:`) is glued to the next non-blank non-comment line.
+    This lets the analyser see idiomatic multi-line signatures like
+
+        [[nodiscard]] virtual Result
+            emit(std::unique_ptr<Payload> p) = 0;
+
+    as one logical statement where both `virtual` and `= 0;` are visible
+    at once — rather than separately flagging the parameter line as a
+    non-virtual method with a body.
+
+    Comment lines and blank lines pass through verbatim so the outer
+    depth-counter (which counts `{` and `}`) still balances correctly.
+    """
+    out: list[str] = []
+    buf: str = ""
+
+    def _flush_buf() -> None:
+        nonlocal buf
+        if buf:
+            out.append(buf)
+            buf = ""
+
+    for raw in body_lines:
+        if not raw.strip() or _is_comment_line(raw):
+            _flush_buf()
+            out.append(raw)
+            continue
+
+        sc = _strip_comments(raw).rstrip()
+        if buf:
+            buf = buf.rstrip() + " " + raw.strip()
+        else:
+            buf = raw
+
+        # End of logical statement when the comment-stripped line ends
+        # with one of the terminating characters.
+        if sc and sc[-1] in ";{}:":
+            _flush_buf()
+
+    _flush_buf()
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Class body analyser
 # ---------------------------------------------------------------------------
 
@@ -143,7 +219,7 @@ class _ClassInfo:
         self.has_non_pure_non_virtual_impl = False
         self.has_any_non_delete_method     = False
         self.has_data_member               = False
-        self._parse(body_lines)
+        self._parse(_join_continuations(body_lines))
 
     def _parse(self, body_lines: list[str]) -> None:
         depth = 0  # 1 = directly inside the class being analysed.
@@ -184,6 +260,13 @@ class _ClassInfo:
 
             # -- Method lines (have parentheses) --
             if _METHOD_DECL_RE.search(sc):
+                # Some lines carry `(` but do not declare a member function
+                # of the current class (type aliases, forward friend
+                # declarations, static-assert expressions). They must not
+                # trip the "has non-virtual method" check — Rule 1 is about
+                # member functions specifically.
+                if _is_non_method_line(sc):
+                    continue
                 # A non-pure, non-delete, non-default method.
                 self.has_any_non_delete_method = True
                 # Check whether it is non-virtual (I-prefix violation).
@@ -260,7 +343,19 @@ def scan_file(path: Path, quiet: bool) -> list[str]:
         raw    = lines[idx]
         lineno = idx + 1
 
+        # A waiver marker placed on a class-open line (the idiomatic
+        # placement — see `ISignalEmiter`, `IHasState`) skips the WHOLE
+        # class body, not just the marker line. Without this, nested
+        # types inside a waivered class (`class Inner { ... };`) would
+        # be re-checked at the outer scope and produce spurious
+        # violations on declarations the waiver was meant to cover.
         if WAIVER_MARKER in raw:
+            if _CLASS_OPEN_RE.match(raw):
+                result = _extract_class_body(lines, idx)
+                if result is not None:
+                    _body, end_idx = result
+                    idx = end_idx + 1
+                    continue
             idx += 1
             continue
 
