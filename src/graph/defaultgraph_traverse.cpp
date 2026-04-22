@@ -15,6 +15,75 @@ namespace
 {
 using NodeIdSet = std::unordered_set<NodeId, internal::NodeIdHasher>;
 
+// ---------------------------------------------------------------------------
+// Visitor-facing by-value snapshots.
+//
+// The driver used to hand the visitor a raw `INode &` / `IEdge &`
+// obtained via `graph.node(id)` / `graph.edge(id)` — a non-owning
+// pointer that refers directly to the graph's live storage. Visitor
+// callbacks are explicitly allowed to mutate the graph (remove the
+// current node, rewire edges, ...), so a `removeNode(current)`
+// inside `onNode()` would free the storage while the reference was
+// still on the stack — undefined behaviour.
+//
+// We now copy the interface-visible fields into a stack-allocated
+// snapshot object before the callback runs. Snapshots satisfy the
+// pure-virtual interfaces (`INode`, `IEdge`) without touching the
+// live graph. The visitor holds a reference to the snapshot, not
+// to the live node/edge; a concurrent mutation cannot invalidate
+// the fields the callback reads.
+//
+// Caveat on `IEdge::data()`: the snapshot carries a `const IEdgeData
+// *` that was fetched from the live edge before the callback. The
+// `IEdgeData` object itself lives inside the graph-owned `IEdge`;
+// if the visitor removes the current edge, the `IEdgeData` pointed
+// at goes with it, so the pointer `snapshot.data()` returns
+// dangles post-remove. Callers that need the payload must read it
+// BEFORE mutating. This is a narrower failure mode than the old
+// "every field dangles" shape and matches how pointer-returning
+// accessors typically behave in C++.
+// ---------------------------------------------------------------------------
+
+class NodeSnapshot final : public INode
+{
+  public:
+    NodeSnapshot(NodeId id, NodeKind kind) noexcept
+        : _id(id), _kind(kind)
+    {
+    }
+    [[nodiscard]] NodeId   id()   const noexcept override { return _id; }
+    [[nodiscard]] NodeKind kind() const noexcept override { return _kind; }
+
+  private:
+    NodeId   _id;
+    NodeKind _kind;
+};
+
+class EdgeSnapshot final : public IEdge
+{
+  public:
+    EdgeSnapshot(EdgeId           id,
+                 EdgeKind         kind,
+                 NodeId           from,
+                 NodeId           to,
+                 const IEdgeData *data) noexcept
+        : _id(id), _kind(kind), _from(from), _to(to), _data(data)
+    {
+    }
+    [[nodiscard]] EdgeId           id()   const noexcept override { return _id; }
+    [[nodiscard]] EdgeKind         kind() const noexcept override { return _kind; }
+    [[nodiscard]] NodeId           from() const noexcept override { return _from; }
+    [[nodiscard]] NodeId           to()   const noexcept override { return _to; }
+    [[nodiscard]] const IEdgeData *data() const noexcept override { return _data; }
+
+  private:
+    EdgeId           _id;
+    EdgeKind         _kind;
+    NodeId           _from;
+    NodeId           _to;
+    const IEdgeData *_data;
+};
+
 // Re-looks-up a node / edge through the public read path, which handles
 // its own locking and generational check.
 const INode *resolve(const AbstractGraph &graph, NodeId id)
@@ -38,13 +107,22 @@ enum class NodeStep
 
 NodeStep visitNode(const AbstractGraph &graph, NodeId id, IGraphVisitor &visitor)
 {
-    const INode *ptr = resolve(graph, id);
-    if (!ptr)
+    // Copy the interface-visible fields out of the live node BEFORE
+    // handing anything to the visitor. A visitor that mutates the
+    // graph inside its own `onNode` (e.g. `removeNode(current)`)
+    // would invalidate a raw `INode &` we'd otherwise pass through.
+    NodeKind kind{};
     {
-        // Node removed between snapshot and visit — safe to skip.
-        return NodeStep::Prune;
+        const INode *ptr = resolve(graph, id);
+        if (!ptr)
+        {
+            // Node removed between snapshot and visit — safe to skip.
+            return NodeStep::Prune;
+        }
+        kind = ptr->kind();
     }
-    const VisitResult result = visitor.onNode(*ptr);
+    NodeSnapshot      snapshot{id, kind};
+    const VisitResult result = visitor.onNode(snapshot);
     switch (result)
     {
         case VisitResult::Continue: return NodeStep::Descend;
@@ -60,13 +138,28 @@ NodeStep visitNode(const AbstractGraph &graph, NodeId id, IGraphVisitor &visitor
 bool visitEdge(const AbstractGraph &graph, EdgeId id, IGraphVisitor &visitor, bool *prune)
 {
     *prune = false;
-    const IEdge *ptr = resolve(graph, id);
-    if (!ptr)
+    // Snapshot the edge's interface fields so a visitor that removes
+    // the current edge from inside onEdge() cannot see a dangling
+    // IEdge reference. See the snapshot-type comment at the top of
+    // this TU for the data()-pointer caveat.
+    EdgeKind         kind{};
+    NodeId           from{};
+    NodeId           to{};
+    const IEdgeData *data = nullptr;
     {
-        *prune = true;
-        return true;
+        const IEdge *ptr = resolve(graph, id);
+        if (!ptr)
+        {
+            *prune = true;
+            return true;
+        }
+        kind = ptr->kind();
+        from = ptr->from();
+        to   = ptr->to();
+        data = ptr->data();
     }
-    const VisitResult result = visitor.onEdge(*ptr);
+    EdgeSnapshot      snapshot{id, kind, from, to, data};
+    const VisitResult result = visitor.onEdge(snapshot);
     switch (result)
     {
         case VisitResult::Continue: return true;
