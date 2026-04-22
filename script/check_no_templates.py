@@ -10,9 +10,9 @@ and reports any match.
 
 Usage:
 
-    python scripts/check_no_templates.py
-    python scripts/check_no_templates.py --path include/vigine/messaging/
-    python scripts/check_no_templates.py --path include/vigine/messaging/ --quiet
+    python script/check_no_templates.py
+    python script/check_no_templates.py --path include/vigine/messaging/
+    python script/check_no_templates.py --path include/vigine/messaging/ --quiet
 
 Exit codes:
     0 -- all scanned files are template-free.

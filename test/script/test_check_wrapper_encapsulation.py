@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-# Make the scripts/ directory importable without installing the package.
+# Make the script/ directory importable without installing the package.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
 
 import check_wrapper_encapsulation as cwe  # noqa: E402
