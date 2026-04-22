@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -135,8 +136,11 @@ class AbstractService : public IService
     ServiceId _id{};
 
     /// Lifecycle flag: @c true between a successful @ref onInit and
-    /// the matching @ref onShutdown.
-    bool _initialised{false};
+    /// the matching @ref onShutdown. Atomic because the header
+    /// advertises concurrent @ref isInitialised reads alongside
+    /// lifecycle transitions — a plain @c bool here would be a data
+    /// race (TSAN-observable) even though the flag is narrow.
+    std::atomic<bool> _initialised{false};
 };
 
 } // namespace vigine::service
