@@ -485,6 +485,22 @@ set(SOURCES_CHANNELFACTORY
     ${SRC_DIR}/channelfactory/factory.cpp
 )
 
+# Request-bus facade (R.3.3.2.1 / plan_19) -- public surface.
+set(HEADER_REQUESTBUS
+    ${INCLUDE_DIR}/vigine/requestbus/ifuture.h
+    ${INCLUDE_DIR}/vigine/requestbus/requestconfig.h
+    ${INCLUDE_DIR}/vigine/requestbus/irequestbus.h
+    ${INCLUDE_DIR}/vigine/requestbus/abstractrequestbus.h
+    ${INCLUDE_DIR}/vigine/requestbus/defaultrequestbus.h
+    ${INCLUDE_DIR}/vigine/requestbus/factory.h
+)
+
+# Request-bus facade (R.3.3.2.1 / plan_19) -- internal concrete + factory.
+set(SOURCES_REQUESTBUS
+    ${SRC_DIR}/requestbus/abstractrequestbus.cpp
+    ${SRC_DIR}/requestbus/defaultrequestbus.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -577,6 +593,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_TOPICBUS}
     ${HEADER_CHANNELFACTORY}
     ${SOURCES_CHANNELFACTORY}
+    ${HEADER_REQUESTBUS}
+    ${SOURCES_REQUESTBUS}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
