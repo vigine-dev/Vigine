@@ -413,6 +413,41 @@ target_include_directories(${ENGINE_SMOKE_TARGET}
 )
 
 target_link_libraries(${ENGINE_SMOKE_TARGET}
+# ====================== Full-Stack Contract Suite =======================
+# End-to-end contract coverage for the unified substrate: engine
+# lifecycle, threading primitives, messaging bus, every Level-2 facade
+# (signal / event / topic / channel / request / reactive / actor /
+# pipeline), and the Level-1 wrappers (service / ECS / statemachine /
+# taskflow) through the public IContext aggregator. Each scenario lives
+# in its own .cpp under test/contract/ and shares the engine fixture in
+# test/contract/fixtures/engine_fixture.h.
+set(FULL_CONTRACT_TARGET full-contract)
+
+add_executable(${FULL_CONTRACT_TARGET}
+    contract/scenario_01_engine_lifecycle.cpp
+    contract/scenario_02_threading_primitives.cpp
+    contract/scenario_03_messaging_bus.cpp
+    contract/scenario_04_signal_emitter.cpp
+    contract/scenario_05_event_scheduler.cpp
+    contract/scenario_06_topic_isolation.cpp
+    contract/scenario_07_channel_backpressure.cpp
+    contract/scenario_08_request_response.cpp
+    contract/scenario_09_reactive_pipeline.cpp
+    contract/scenario_10_actor_host.cpp
+    contract/scenario_11_pipeline_builder.cpp
+    contract/scenario_12_service_lifecycle.cpp
+    contract/scenario_13_ecs_entity_lifecycle.cpp
+    contract/scenario_14_statemachine_hsm.cpp
+)
+
+target_include_directories(${FULL_CONTRACT_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/contract
+)
+
+target_link_libraries(${FULL_CONTRACT_TARGET}
     PRIVATE
     gtest
     gtest_main
@@ -429,7 +464,6 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
-=======
 # ====================== Linux Platform Smoke Target =======================
 # Three scenarios: XCB window open/close, SIGTERM self-pipe delivery,
 # SIGUSR1/SIGUSR2 subscribe succeeds. Gated to Linux only; invisible to
@@ -469,4 +503,14 @@ if(UNIX AND NOT APPLE)
         DISCOVERY_MODE PRE_TEST
     )
 endif() # UNIX AND NOT APPLE
+=======
+set_target_properties(${FULL_CONTRACT_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${FULL_CONTRACT_TARGET}
+    PROPERTIES LABELS "full-contract"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
 
