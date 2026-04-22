@@ -499,6 +499,20 @@ set(HEADER_REQUESTBUS
 set(SOURCES_REQUESTBUS
     ${SRC_DIR}/requestbus/abstractrequestbus.cpp
     ${SRC_DIR}/requestbus/defaultrequestbus.cpp
+# Reactive-stream facade (R.3.3.2.2 / plan_20) -- public surface.
+set(HEADER_REACTIVESTREAM
+    ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscription.h
+    ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscriber.h
+    ${INCLUDE_DIR}/vigine/reactivestream/ireactivepublisher.h
+    ${INCLUDE_DIR}/vigine/reactivestream/ireactivestream.h
+    ${INCLUDE_DIR}/vigine/reactivestream/abstractreactivestream.h
+    ${INCLUDE_DIR}/vigine/reactivestream/defaultreactivestream.h
+)
+
+# Reactive-stream facade (R.3.3.2.2 / plan_20) -- internal concrete + factory.
+set(SOURCES_REACTIVESTREAM
+    ${SRC_DIR}/reactivestream/abstractreactivestream.cpp
+    ${SRC_DIR}/reactivestream/defaultreactivestream.cpp
 )
 
 # Add source files
@@ -595,6 +609,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_CHANNELFACTORY}
     ${HEADER_REQUESTBUS}
     ${SOURCES_REQUESTBUS}
+    ${HEADER_REACTIVESTREAM}
+    ${SOURCES_REACTIVESTREAM}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
