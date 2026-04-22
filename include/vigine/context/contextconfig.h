@@ -41,10 +41,15 @@ struct ContextConfig
      * The conventional name for the system bus is @c "system" and the
      * conventional priority is @ref messaging::BusPriority::High so
      * lifecycle traffic wins against application workload. Defaults
-     * here match that expectation.
+     * here match that expectation. The `BusId` defaults to the
+     * engine-reserved system-bus value so a `ContextConfig{}` produces
+     * a context that constructs its system bus without any further
+     * caller input; previously this field defaulted to the invalid
+     * sentinel `BusId{}`, which quietly produced a context that
+     * failed to wire the system bus.
      */
     messaging::BusConfig systemBus{
-        messaging::BusId{},
+        messaging::BusId{messaging::BusId::kSystemBusValue},
         "system",
         messaging::BusPriority::High,
         messaging::ThreadingPolicy::Dedicated,

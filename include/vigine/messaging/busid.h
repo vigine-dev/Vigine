@@ -24,6 +24,12 @@ struct BusId
 
     [[nodiscard]] constexpr bool valid() const noexcept { return value != 0; }
 
+    /// The engine-wide reserved identifier for the system bus. Every
+    /// `createContext` call wires this value into the system bus so
+    /// that facades consistently reach it by id without knowing the
+    /// concrete factory.
+    static constexpr std::uint32_t kSystemBusValue = 1;
+
     [[nodiscard]] friend constexpr bool operator==(BusId lhs, BusId rhs) noexcept
     {
         return lhs.value == rhs.value;
