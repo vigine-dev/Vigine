@@ -24,6 +24,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # sources like FreeType do not inherit /W4 / -Wpedantic.
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/VigineCompileOptions.cmake)
 
+# Optional sanitizer support (Linux + Clang only).
+# Pass -DVIGINE_SANITIZER=asan|ubsan|tsan to enable. MSVC builds must
+# leave this unset (the helper aborts with a clear error if called on MSVC).
+set(VIGINE_SANITIZER "" CACHE STRING "Sanitizer to enable: asan | ubsan | tsan (empty = off)")
+set_property(CACHE VIGINE_SANITIZER PROPERTY STRINGS "" asan ubsan tsan)
+if(NOT VIGINE_SANITIZER STREQUAL "")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/VigineSanitizer.cmake)
+endif()
+
 if(MSVC)
     add_compile_options(/FS /utf-8)
 endif()
@@ -661,6 +670,13 @@ add_library(${PROJECT_NAME}
 # Scoped via target_compile_options inside the helper so FreeType and
 # other vendored dependencies are not affected.
 vigine_apply_compile_options(${PROJECT_NAME})
+
+# Apply sanitizer flags when VIGINE_SANITIZER is set. Guarded by the same
+# condition used at include-time above so the helper is only called when the
+# module has been loaded.
+if(NOT VIGINE_SANITIZER STREQUAL "")
+    vigine_apply_sanitizer(${PROJECT_NAME} ${VIGINE_SANITIZER})
+endif()
 
 # Include directories
 target_include_directories(${PROJECT_NAME}
