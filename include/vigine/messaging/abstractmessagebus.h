@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/graph/abstractgraph.h"  // INV-11 EXEMPTION: AbstractMessageBus inherits graph substrate for internal routing
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/messaging/connectionid.h"
@@ -81,7 +81,7 @@ class DefaultBusControlBlock;
  */
 class AbstractMessageBus
     : public IMessageBus
-    , protected vigine::graph::AbstractGraph
+    , protected vigine::graph::AbstractGraph  // INV-11 EXEMPTION: routing substrate is an internal implementation detail
 {
   public:
     ~AbstractMessageBus() override;
