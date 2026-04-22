@@ -530,7 +530,11 @@ set(SOURCES_REQUESTBUS
     ${SRC_DIR}/requestbus/defaultrequestbus.cpp
 )
 
-# Reactive-stream facade (R.3.3.2.2 / plan_20) -- public surface.
+# Reactive-stream facade -- public surface. The `factory.h` entry
+# matches the convention used by every other facade (signal / topic
+# / channel / request / actor / pipeline / event scheduler): a
+# factory-only public header that does not pull the concrete
+# `DefaultReactiveStream` into callers' translation units.
 set(HEADER_REACTIVESTREAM
     ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscription.h
     ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscriber.h
@@ -538,6 +542,7 @@ set(HEADER_REACTIVESTREAM
     ${INCLUDE_DIR}/vigine/reactivestream/ireactivestream.h
     ${INCLUDE_DIR}/vigine/reactivestream/abstractreactivestream.h
     ${INCLUDE_DIR}/vigine/reactivestream/defaultreactivestream.h
+    ${INCLUDE_DIR}/vigine/reactivestream/factory.h
 )
 
 # Reactive-stream facade (R.3.3.2.2 / plan_20) -- internal concrete + factory.
