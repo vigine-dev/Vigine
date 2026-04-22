@@ -310,12 +310,26 @@ set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/databaseservice.h
     ${INCLUDE_DIR}/vigine/service/graphicsservice.h
     ${INCLUDE_DIR}/vigine/service/platformservice.h
+    # Level-1 service wrapper (R.4.1) — public surface.
+    ${INCLUDE_DIR}/vigine/service/serviceid.h
+    ${INCLUDE_DIR}/vigine/service/dependencykind.h
+    ${INCLUDE_DIR}/vigine/service/initpolicy.h
+    ${INCLUDE_DIR}/vigine/service/iservice.h
+    ${INCLUDE_DIR}/vigine/service/abstractservice.h
+    ${INCLUDE_DIR}/vigine/service/factory.h
 )
 
 set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
     ${SRC_DIR}/service/graphicsservice.cpp
     ${SRC_DIR}/service/platformservice.cpp
+    # Level-1 service wrapper (R.4.1) — internal registry + base impl.
+    ${SRC_DIR}/service/serviceregistry.h
+    ${SRC_DIR}/service/serviceregistry.cpp
+    ${SRC_DIR}/service/abstractservice.cpp
+    ${SRC_DIR}/service/defaultservice.h
+    ${SRC_DIR}/service/defaultservice.cpp
+    ${SRC_DIR}/service/factory.cpp
 )
 
 # Add source files
