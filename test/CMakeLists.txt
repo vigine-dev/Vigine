@@ -431,6 +431,43 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Service Smoke Target ===========================
+# Smoke coverage for the IService Level-1 wrapper: createService()
+# hands back a live default service; dependencies() is empty on a
+# fresh one; isInitialised() flips across onInit / onShutdown and
+# stays stable under a repeat onInit. Exercises the wrapper without
+# the context-aggregator fixture so regressions fail in isolation.
+set(SERVICE_SMOKE_TARGET service-smoke)
+
+add_executable(${SERVICE_SMOKE_TARGET}
+    service/smoke_test.cpp
+)
+
+target_include_directories(${SERVICE_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${SERVICE_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${SERVICE_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${SERVICE_SMOKE_TARGET}
+    PROPERTIES LABELS "service-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== StateMachine Smoke Target =======================
 # Smoke coverage for the IStateMachine Level-1 wrapper: default state
 # auto-provisioning, addState / setInitial / transition happy paths,
