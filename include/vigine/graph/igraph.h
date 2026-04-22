@@ -75,6 +75,9 @@ class IGraph
      *
      * Implementations validate that the endpoints addressed by @p edge
      * exist; when they do not, the returned identifier is invalid.
+     * Passing a null pointer is a programming error and is undefined —
+     * same contract as @ref addNode; callers must hand over a
+     * fully-constructed concrete @ref IEdge.
      */
     [[nodiscard]] virtual EdgeId addEdge(std::unique_ptr<IEdge> edge) = 0;
 

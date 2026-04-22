@@ -1,5 +1,7 @@
 #include "vigine/graph/abstractgraph.h"
 
+#include "graph/nodeid_hasher.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <deque>
@@ -11,16 +13,7 @@ namespace vigine::graph
 {
 namespace
 {
-// Hash adapter so NodeId can be stored in unordered containers.
-struct NodeIdHasher
-{
-    std::size_t operator()(NodeId id) const noexcept
-    {
-        return (static_cast<std::size_t>(id.index) << 32) ^ static_cast<std::size_t>(id.generation);
-    }
-};
-
-using NodeIdSet = std::unordered_set<NodeId, NodeIdHasher>;
+using NodeIdSet = std::unordered_set<NodeId, internal::NodeIdHasher>;
 
 // Re-looks-up a node / edge through the public read path, which handles
 // its own locking and generational check.
@@ -206,7 +199,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
             (void)startNode;
 
             const Snapshot snap = buildSnapshot();
-            std::unordered_map<NodeId, std::size_t, NodeIdHasher> indegree;
+            std::unordered_map<NodeId, std::size_t, internal::NodeIdHasher> indegree;
             for (const NodeId &nid : snap.nodes)
             {
                 const auto it = snap.inByKey.find(Snapshot::nodeKey(nid));

@@ -1,5 +1,7 @@
 #include "vigine/graph/abstractgraph.h"
 
+#include "graph/nodeid_hasher.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <deque>
@@ -13,19 +15,10 @@ namespace vigine::graph
 {
 namespace
 {
-// Hash adapter so NodeId can be an unordered-container key.
-struct NodeIdHasher
-{
-    std::size_t operator()(NodeId id) const noexcept
-    {
-        return (static_cast<std::size_t>(id.index) << 32) ^ static_cast<std::size_t>(id.generation);
-    }
-};
-
-using NodeIdSet = std::unordered_set<NodeId, NodeIdHasher>;
+using NodeIdSet = std::unordered_set<NodeId, internal::NodeIdHasher>;
 
 template <class Value>
-using NodeIdMap = std::unordered_map<NodeId, Value, NodeIdHasher>;
+using NodeIdMap = std::unordered_map<NodeId, Value, internal::NodeIdHasher>;
 
 } // namespace
 
