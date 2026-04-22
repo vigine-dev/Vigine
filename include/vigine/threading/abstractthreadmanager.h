@@ -65,11 +65,16 @@ class AbstractThreadManager : public IThreadManager
     // ------ IThreadManager: sync primitive factories (shared impl) ------
 
     /**
-     * @brief Default @ref IMutex factory returning a @c std::mutex
+     * @brief Default @ref IMutex factory returning a @c std::timed_mutex
      *        wrapper.
      *
-     * Derived classes override only when they need a different concrete
-     * mutex (for example a sanitiser-instrumented one).
+     * @c std::timed_mutex is chosen over plain @c std::mutex so that
+     * @ref IMutex::lockFor honours finite timeouts through
+     * @c std::timed_mutex::try_lock_for without the wrapper faking a
+     * busy-wait. Infinite timeouts forward to
+     * @c std::timed_mutex::lock. Derived classes override only when
+     * they need a different concrete mutex (for example a sanitiser-
+     * instrumented one).
      */
     [[nodiscard]] std::unique_ptr<IMutex> createMutex() override;
 
