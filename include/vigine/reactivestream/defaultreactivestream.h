@@ -64,22 +64,27 @@ class DefaultReactiveStream final : public AbstractReactiveStream
     vigine::Result shutdown() override;
 
     /**
-     * @brief Pushes @p payload to every active subscriber with outstanding
-     *        demand.
+     * @brief Pushes @p payload to the FIRST active subscriber with
+     *        outstanding demand — single-consumer / cold-publisher
+     *        semantics.
      *
-     * Called by the engine (or tests) to deliver an item to all subscribers
-     * that have signalled demand via @ref IReactiveSubscription::request.
-     * Subscribers with zero demand do not receive the item (backpressure).
+     * The facade is single-consumer by design: the payload is a
+     * `std::unique_ptr<IMessagePayload>` and cannot be fanned out
+     * without cloning. The driver walks the subscriber snapshot in
+     * registration order, skips cancelled / terminal subscriptions
+     * and subscribers whose demand is zero (backpressure), and
+     * transfers ownership to the first live subscriber with non-zero
+     * demand. When multiple subscribers share the stream, only that
+     * first match receives the payload.
      *
-     * @p payload ownership is transferred to the first subscriber that
-     * accepts it. When multiple subscribers share the stream, only the
-     * first subscriber with non-zero demand receives the payload in this
-     * simplified implementation. Engine code that needs fan-out to all
-     * subscribers must post a payload per subscriber.
+     * Engine code that needs fan-out to many subscribers must post
+     * one payload per subscriber (or use `IMessageBus` directly,
+     * which is the correct seam for multi-consumer delivery).
      *
-     * Returns @c Result::Code::Success even when no subscriber has demand
-     * (the item is silently dropped in that case, consistent with
-     * backpressure semantics).
+     * Returns @c Result::Code::Success when the payload landed on a
+     * subscriber or was dropped because no subscriber had demand
+     * (backpressure case — intentionally non-fatal). Returns an
+     * error `Result` only on a null payload or a shut-down stream.
      */
     vigine::Result publish(std::unique_ptr<vigine::messaging::IMessagePayload> payload);
 
