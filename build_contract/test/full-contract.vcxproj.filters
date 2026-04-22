@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_01_engine_lifecycle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_02_threading_primitives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_03_messaging_bus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_04_signal_emitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_05_event_scheduler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_06_topic_isolation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_07_channel_backpressure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_08_request_response.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_09_reactive_pipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_10_actor_host.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_11_pipeline_builder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_12_service_lifecycle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_13_ecs_entity_lifecycle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\test\contract\scenario_14_statemachine_hsm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\test\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{DD75281C-BB26-3879-8AF9-FAB4E9DC11FE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

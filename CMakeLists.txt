@@ -102,6 +102,15 @@ find_package(VulkanHpp REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# libxcb is required on Linux for XCB window backend + VK_KHR_xcb_surface.
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(XCB REQUIRED xcb)
+    if(NOT XCB_FOUND)
+        message(FATAL_ERROR "libxcb not found. Install libxcb-dev (Ubuntu) or libxcb-devel (Fedora).")
+    endif()
+endif()
+
 # PostgreSQL (libpqxx) is optional; disable on platforms without vcpkg postgres
 option(ENABLE_POSTGRESQL "Enable PostgreSQL support (requires libpqxx via vcpkg)" ON)
 if(ENABLE_POSTGRESQL)
@@ -312,6 +321,8 @@ if(WIN32)
     list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/win32surfacefactory.cpp)
 elseif(APPLE)
     list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/metalsurfacefactory.cpp)
+elseif(UNIX)
+    list(APPEND SOURCES ${SRC_DIR}/platform/linux/vulkan_surface_xcb.cpp)
 endif()
 
 # Add source files
@@ -456,6 +467,11 @@ elseif(APPLE)
     list(APPEND SOURCES_EVENTSCHEDULER
         ${SRC_DIR}/eventscheduler/iossignalsource_macos.h
         ${SRC_DIR}/eventscheduler/iossignalsource_macos.mm
+    )
+elseif(UNIX)
+    list(APPEND SOURCES_EVENTSCHEDULER
+        ${SRC_DIR}/platform/linux/iossignalsource_posix.h
+        ${SRC_DIR}/platform/linux/iossignalsource_posix.cpp
     )
 endif()
 
@@ -638,6 +654,16 @@ if(APPLE)
     )
 endif()
 
+if(UNIX AND NOT APPLE)
+    list(APPEND HEADER_PLATFORM
+        ${SRC_DIR}/platform/linux/xcbwindowbackend.h
+    )
+
+    list(APPEND SOURCES_PLATFORM
+        ${SRC_DIR}/platform/linux/xcbwindowbackend.cpp
+    )
+endif()
+
 # add vulkan
 # Add a library
 option(VIGINE_BUILD_SHARED "Build Vigine as a shared library" OFF)
@@ -743,6 +769,18 @@ if(APPLE)
         "-framework Cocoa"
         "-framework QuartzCore"
         "-framework Metal"
+    )
+endif()
+
+if(UNIX AND NOT APPLE)
+    target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        ${XCB_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        ${XCB_LIBRARIES}
     )
 endif()
 

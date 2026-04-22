@@ -1,0 +1,114 @@
+Start testing: Apr 22 04:46 FLE Daylight Time
+----------------------------------------------------------
+4/7 Testing: ChannelFactorySmoke.SendReceiveRoundTrip
+4/7 Test: ChannelFactorySmoke.SendReceiveRoundTrip
+Command: "D:/work/project/CodeMap/external/Vigine/build_debug/bin/channelfactory-smoke.exe" "--gtest_filter=ChannelFactorySmoke.SendReceiveRoundTrip" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_debug/test
+"ChannelFactorySmoke.SendReceiveRoundTrip" start time: Apr 22 04:46 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ChannelFactorySmoke.SendReceiveRoundTrip
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ChannelFactorySmoke
+[ RUN      ] ChannelFactorySmoke.SendReceiveRoundTrip
+[       OK ] ChannelFactorySmoke.SendReceiveRoundTrip (1 ms)
+[----------] 1 test from ChannelFactorySmoke (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ChannelFactorySmoke.SendReceiveRoundTrip" end time: Apr 22 04:46 FLE Daylight Time
+"ChannelFactorySmoke.SendReceiveRoundTrip" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/7 Testing: ChannelFactorySmoke.CloseWakesBlockedReceiver
+5/7 Test: ChannelFactorySmoke.CloseWakesBlockedReceiver
+Command: "D:/work/project/CodeMap/external/Vigine/build_debug/bin/channelfactory-smoke.exe" "--gtest_filter=ChannelFactorySmoke.CloseWakesBlockedReceiver" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_debug/test
+"ChannelFactorySmoke.CloseWakesBlockedReceiver" start time: Apr 22 04:46 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ChannelFactorySmoke.CloseWakesBlockedReceiver
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ChannelFactorySmoke
+[ RUN      ] ChannelFactorySmoke.CloseWakesBlockedReceiver
+[       OK ] ChannelFactorySmoke.CloseWakesBlockedReceiver (28 ms)
+[----------] 1 test from ChannelFactorySmoke (28 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (28 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"ChannelFactorySmoke.CloseWakesBlockedReceiver" end time: Apr 22 04:46 FLE Daylight Time
+"ChannelFactorySmoke.CloseWakesBlockedReceiver" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/7 Testing: ChannelFactorySmoke.BoundedZeroCapacityRejected
+6/7 Test: ChannelFactorySmoke.BoundedZeroCapacityRejected
+Command: "D:/work/project/CodeMap/external/Vigine/build_debug/bin/channelfactory-smoke.exe" "--gtest_filter=ChannelFactorySmoke.BoundedZeroCapacityRejected" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_debug/test
+"ChannelFactorySmoke.BoundedZeroCapacityRejected" start time: Apr 22 04:46 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ChannelFactorySmoke.BoundedZeroCapacityRejected
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ChannelFactorySmoke
+[ RUN      ] ChannelFactorySmoke.BoundedZeroCapacityRejected
+[       OK ] ChannelFactorySmoke.BoundedZeroCapacityRejected (1 ms)
+[----------] 1 test from ChannelFactorySmoke (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ChannelFactorySmoke.BoundedZeroCapacityRejected" end time: Apr 22 04:46 FLE Daylight Time
+"ChannelFactorySmoke.BoundedZeroCapacityRejected" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/7 Testing: ChannelFactorySmoke.UnboundedNonZeroCapacityRejected
+7/7 Test: ChannelFactorySmoke.UnboundedNonZeroCapacityRejected
+Command: "D:/work/project/CodeMap/external/Vigine/build_debug/bin/channelfactory-smoke.exe" "--gtest_filter=ChannelFactorySmoke.UnboundedNonZeroCapacityRejected" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_debug/test
+"ChannelFactorySmoke.UnboundedNonZeroCapacityRejected" start time: Apr 22 04:46 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ChannelFactorySmoke.UnboundedNonZeroCapacityRejected
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ChannelFactorySmoke
+[ RUN      ] ChannelFactorySmoke.UnboundedNonZeroCapacityRejected
+[       OK ] ChannelFactorySmoke.UnboundedNonZeroCapacityRejected (1 ms)
+[----------] 1 test from ChannelFactorySmoke (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ChannelFactorySmoke.UnboundedNonZeroCapacityRejected" end time: Apr 22 04:46 FLE Daylight Time
+"ChannelFactorySmoke.UnboundedNonZeroCapacityRejected" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 22 04:46 FLE Daylight Time
+
+channelfactory-smoke =   0.08 sec*proc
+
