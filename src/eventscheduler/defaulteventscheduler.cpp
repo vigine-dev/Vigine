@@ -376,8 +376,12 @@ void DefaultEventScheduler::onTimerFired(std::uint64_t timerId)
     auto payload = std::make_unique<EventPayload>(ptid);
     auto msg     = std::make_unique<EventMessage>(ptid, std::move(payload), entry->target);
 
-    // Result intentionally discarded: dead-letter is handled by the bus.
-    static_cast<void>(vigine::messaging::AbstractMessageBus::post(std::move(msg)));
+    // Deliver directly to the target rather than through the internal bus.
+    // AbstractMessageBus::post() dispatches only to ISubscriber slots; no
+    // subscriber is registered on this bus, so posting would silently drop
+    // every event. The caller provided a concrete AbstractMessageTarget whose
+    // onMessage() is the documented delivery hook for event-scheduler events.
+    entry->target->onMessage(*msg);
     entry->inFlight.store(false, std::memory_order_release);
 
     // Disarm if one-shot (period == 0).
@@ -407,8 +411,8 @@ void DefaultEventScheduler::onOsSignal(OsSignal signal)
         vigine::payload::PayloadTypeId ptid = entry->config.firedPayloadTypeId;
         auto payload = std::make_unique<EventPayload>(ptid);
         auto msg     = std::make_unique<EventMessage>(ptid, std::move(payload), entry->target);
-        // Result intentionally discarded: dead-letter is handled by the bus.
-        static_cast<void>(vigine::messaging::AbstractMessageBus::post(std::move(msg)));
+        // Deliver directly to the target (same rationale as onTimerFired).
+        entry->target->onMessage(*msg);
     }
 }
 
