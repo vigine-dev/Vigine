@@ -44,9 +44,14 @@ class IComponentStore
      * @brief Takes ownership of @p component and attaches it to
      *        @p entity.
      *
-     * Delegates to @ref IECS::attachComponent. Returns a successful
-     * @ref Result when the attach succeeds; any error reported by the
-     * underlying ECS (stale entity, null pointer) surfaces unchanged.
+     * Delegates to @ref IECS::attachComponent. That lower-level call
+     * returns a @ref ComponentHandle and signals failure through an
+     * invalid handle (no `Result` there). This surface translates the
+     * outcome into a @ref Result: valid handle → Success; invalid
+     * handle (stale entity, null pointer) → `Result::Code::Error`
+     * with a short message naming the attach-failure cause. Systems
+     * that need the @ref ComponentHandle itself should call
+     * @ref IECS::attachComponent directly.
      */
     [[nodiscard]] virtual Result
         add(EntityId entity, std::unique_ptr<IComponent> component) = 0;

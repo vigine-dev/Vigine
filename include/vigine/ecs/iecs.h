@@ -163,9 +163,12 @@ class IECS
      *        when no such component exists.
      *
      * The returned pointer is valid until the next ECS mutation that
-     * touches @p entity; callers that need longer-lived references
-     * should keep the @ref ComponentHandle and re-resolve through the
-     * ECS.
+     * touches @p entity; callers that need longer-lived access should
+     * re-invoke @ref findComponent with the same `(entity, typeId)`
+     * pair. The interface does not currently expose a
+     * `resolve(ComponentHandle)` lookup — the handle returned by
+     * @ref attachComponent is a validity witness, not a re-resolve
+     * key in v1.
      */
     [[nodiscard]] virtual const IComponent *
         findComponent(EntityId entity, ComponentTypeId typeId) const = 0;
