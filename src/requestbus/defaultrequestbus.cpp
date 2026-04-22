@@ -219,11 +219,110 @@ class RequestMessage final : public vigine::messaging::IMessage
         return _scheduledFor;
     }
 
+    // Internal accessor (this TU only) — lets the responder-side filtering
+    // wrapper inspect the topic id stamped by request() so it can drop
+    // messages addressed to other topics. Not part of any public header.
+    [[nodiscard]] vigine::topicbus::TopicId topic() const noexcept
+    {
+        return _topic;
+    }
+
   private:
     vigine::topicbus::TopicId                   _topic;
     std::unique_ptr<RequestPayloadWrapper>       _payload;
     vigine::messaging::CorrelationId             _corrId;
     std::chrono::steady_clock::time_point        _scheduledFor;
+};
+
+// -----------------------------------------------------------------
+// TopicFilteringSubscriber — responder-side wrapper that inspects the
+// RequestMessage's topic id and only forwards messages whose topic
+// matches the one the caller passed to respondTo(). Without this
+// wrapper, the raw message bus has no topic filter and every responder
+// would receive every TopicRequest regardless of topic.
+// -----------------------------------------------------------------
+
+class TopicFilteringSubscriber final : public vigine::messaging::ISubscriber
+{
+  public:
+    TopicFilteringSubscriber(vigine::topicbus::TopicId       topic,
+                             vigine::messaging::ISubscriber *inner) noexcept
+        : _topic(topic), _inner(inner)
+    {
+    }
+
+    [[nodiscard]] vigine::messaging::DispatchResult
+        onMessage(const vigine::messaging::IMessage &msg) override
+    {
+        if (!_inner)
+        {
+            return vigine::messaging::DispatchResult::Pass;
+        }
+
+        // Only dispatch if the envelope is one we stamped and the topic
+        // matches. Any other message shape (or a mismatched topic) is
+        // passed through so the bus keeps walking its FirstMatch chain.
+        const auto *req = dynamic_cast<const RequestMessage *>(&msg);
+        if (!req || req->topic() != _topic)
+        {
+            return vigine::messaging::DispatchResult::Pass;
+        }
+
+        return _inner->onMessage(msg);
+    }
+
+  private:
+    vigine::topicbus::TopicId        _topic;
+    vigine::messaging::ISubscriber  *_inner;
+};
+
+// -----------------------------------------------------------------
+// FilteringSubscriptionToken — composite RAII handle that owns both
+// the filtering wrapper and the inner bus subscription token. Member
+// destruction order matters: _innerToken is declared first so it is
+// destroyed LAST. The destructor cancels _innerToken explicitly before
+// the wrapper is released, so the bus has stopped dispatching to the
+// wrapper before the wrapper goes away.
+// -----------------------------------------------------------------
+
+class FilteringSubscriptionToken final : public vigine::messaging::ISubscriptionToken
+{
+  public:
+    FilteringSubscriptionToken(
+        std::unique_ptr<TopicFilteringSubscriber>              wrapper,
+        std::unique_ptr<vigine::messaging::ISubscriptionToken> innerToken) noexcept
+        : _wrapper(std::move(wrapper))
+        , _innerToken(std::move(innerToken))
+    {
+    }
+
+    ~FilteringSubscriptionToken() override
+    {
+        // Tear down the bus subscription first so no further dispatch
+        // targets our wrapper, then allow the wrapper to be freed.
+        if (_innerToken)
+        {
+            _innerToken->cancel();
+        }
+    }
+
+    void cancel() noexcept override
+    {
+        if (_innerToken)
+        {
+            _innerToken->cancel();
+        }
+    }
+
+    [[nodiscard]] bool active() const noexcept override
+    {
+        return _innerToken && _innerToken->active();
+    }
+
+  private:
+    // Keep the wrapper alive as long as the bus may dispatch to it.
+    std::unique_ptr<TopicFilteringSubscriber>              _wrapper;
+    std::unique_ptr<vigine::messaging::ISubscriptionToken> _innerToken;
 };
 
 // -----------------------------------------------------------------
@@ -518,6 +617,11 @@ DefaultRequestBus::respondTo(vigine::topicbus::TopicId              topic,
         return nullptr;
     }
 
+    if (!topic.valid())
+    {
+        return nullptr;
+    }
+
     if (_impl->shutdown.load(std::memory_order_acquire))
     {
         return nullptr;
@@ -526,14 +630,23 @@ DefaultRequestBus::respondTo(vigine::topicbus::TopicId              topic,
     vigine::messaging::MessageFilter filter{};
     filter.kind          = vigine::messaging::MessageKind::TopicRequest;
     filter.expectedRoute = vigine::messaging::RouteMode::FirstMatch;
-    // We filter by topic id via the typeId field repurposed as a
-    // topic discriminator; the raw bus has no dedicated topic filter.
-    // Responder receives all TopicRequest messages and must inspect the
-    // message's correlationId / payload to determine if it is relevant.
-    // This matches the sibling facade pattern (topic bus, channel factory).
-    (void)topic; // topic routing is done at the responder's onMessage level
 
-    return bus().subscribe(filter, subscriber);
+    // Topic routing happens at the subscriber level: the raw bus has no
+    // dedicated topic filter, so we install a small filtering wrapper
+    // that inspects each incoming RequestMessage's topic id and only
+    // forwards messages whose topic matches the one the caller asked
+    // for. The composite token below keeps the wrapper alive as long as
+    // the bus may dispatch to it, tearing the bus subscription down
+    // first on destruction.
+    auto wrapper = std::make_unique<TopicFilteringSubscriber>(topic, subscriber);
+    auto innerToken = bus().subscribe(filter, wrapper.get());
+    if (!innerToken)
+    {
+        return nullptr;
+    }
+
+    return std::make_unique<FilteringSubscriptionToken>(
+        std::move(wrapper), std::move(innerToken));
 }
 
 void DefaultRequestBus::respond(
