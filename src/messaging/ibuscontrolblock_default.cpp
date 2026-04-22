@@ -82,28 +82,32 @@ void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
     _registry.erase(it);
 }
 
-AbstractMessageTarget *
+DefaultBusControlBlock::LookupGuard
 DefaultBusControlBlock::lookup(ConnectionId id) const noexcept
 {
     if (!id.valid())
     {
-        return nullptr;
+        return {};
     }
     if (!_alive.load(std::memory_order_acquire))
     {
-        return nullptr;
+        return {};
     }
     std::shared_lock<std::shared_mutex> lock{_registryMutex};
     auto it = _registry.find(id.index);
     if (it == _registry.end())
     {
-        return nullptr;
+        return {};
     }
     if (it->second.generation != id.generation)
     {
-        return nullptr;
+        return {};
     }
-    return it->second.target;
+    // Hand the lock over to the caller alongside the pointer. The
+    // RAII guard releases the lock when the caller's scope ends,
+    // so a concurrent unregisterTarget cannot retire the slot while
+    // the caller dereferences `target`.
+    return LookupGuard{it->second.target, std::move(lock)};
 }
 
 } // namespace vigine::messaging

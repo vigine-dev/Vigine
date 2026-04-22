@@ -43,17 +43,42 @@ class DefaultBusControlBlock final : public IBusControlBlock
     void unregisterTarget(ConnectionId id) noexcept override;
 
     /**
-     * @brief Returns the live target pointer behind @p id, or
-     *        @c nullptr when the slot is stale, recycled, or the bus
-     *        is dead.
+     * @brief RAII pair holding the registry's shared lock alongside
+     *        a target pointer.
      *
-     * Exposed on the concrete type so that the bus's dispatch path can
-     * look up the target without reaching into the registry map
-     * directly. The returned pointer is valid only as long as the
-     * matching @ref ConnectionToken is alive; the bus holds a
-     * @c shared_lock while dereferencing it.
+     * Returned by @ref lookup so callers can dereference `target`
+     * without racing a concurrent `unregisterTarget`. The shared
+     * lock releases when the guard goes out of scope. Move-only
+     * (the shared_lock is move-only by construction); copies would
+     * accidentally extend the locked region indefinitely.
+     *
+     * Usage:
+     *   if (auto guard = control.lookup(id); guard.target != nullptr)
+     *   {
+     *       guard.target->onMessage(msg);
+     *   }
+     *
+     * When the lookup fails (invalid id, stale generation, bus
+     * dead), `guard.target` is `nullptr` and the shared_lock is
+     * not held. Callers only need to null-check `target`.
      */
-    [[nodiscard]] AbstractMessageTarget *lookup(ConnectionId id) const noexcept;
+    struct LookupGuard
+    {
+        AbstractMessageTarget               *target{nullptr};
+        std::shared_lock<std::shared_mutex>  lock{};
+    };
+
+    /**
+     * @brief Returns an RAII guard around the live target pointer
+     *        behind @p id, or an empty guard when the slot is stale,
+     *        recycled, or the bus is dead.
+     *
+     * The returned guard owns a shared_lock on the registry, so
+     * dereferencing `guard.target` is safe against a concurrent
+     * `unregisterTarget` for the lifetime of the guard. Releasing
+     * the guard releases the lock.
+     */
+    [[nodiscard]] LookupGuard lookup(ConnectionId id) const noexcept;
 
   private:
     struct Slot
