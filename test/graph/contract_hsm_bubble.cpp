@@ -31,8 +31,8 @@
 //     through the graph unchanged; the query surface filters on them.
 //   * Custom mode follows the chain exactly as the visitor decides.
 //   * VisitResult::Stop returned from onNode short-circuits the walk;
-//     the driver reports the stop through Result::Error with the
-//     "traversal stopped" message.
+//     the driver returns a successful Result — Stop is a normal
+//     early-exit signal, not a fault.
 // =============================================================================
 
 namespace vigine::graph::contract
@@ -125,8 +125,8 @@ TEST_P(BubbleContract, HandlerNodeStopsTheBubble)
     // Handler sits at mid2; bubble stops there, root is not visited.
     BubbleVisitor visitor(*graph, /*handler=*/mid2);
     const Result  r = graph->traverse(leaf, TraverseMode::Custom, visitor);
-    EXPECT_TRUE(r.isError());
-    EXPECT_EQ(r.message(), "traversal stopped");
+    // Stop is a normal early-exit signal — the walk returns success.
+    EXPECT_TRUE(r.isSuccess());
 
     ASSERT_EQ(visitor.order().size(), 3u);
     EXPECT_EQ(visitor.order()[0], leaf);

@@ -26,14 +26,13 @@
 // Custom against the seven-node fixture, plus the Skip / Stop / prune
 // behaviour of the visitor return codes.
 //
-// A note on Stop semantics. The concrete AbstractGraph implementation
-// reports visitor-Stop by returning Result::Code::Error with the message
-// "traversal stopped". The IGraph interface doc says Stop terminates the
-// traversal with an error Result, and the core Result type only carries
-// two codes (Success / Error). The suite therefore asserts the shipped
-// behaviour: Stop -> isError() with the expected message. An engineer
-// reading this file: Stop is an early-exit signal, not a failure; the
-// message disambiguates it from other error conditions.
+// A note on Stop semantics. VisitResult::Stop is an early-exit signal,
+// not a failure: "the visitor is done, the walk does not need to
+// continue". The IGraph interface contract treats it as normal
+// completion, and the concrete AbstractGraph implementation returns a
+// successful Result on visitor-Stop. Only cycles (topological) and
+// invalid start nodes surface an error Result. The suite asserts the
+// success-on-Stop shape below.
 // =============================================================================
 
 namespace vigine::graph::contract
@@ -234,13 +233,14 @@ TEST_P(TraversalContract, DepthFirstSkipPrunesSubtree)
     EXPECT_NE(hasB, v.end());
 }
 
-TEST_P(TraversalContract, DepthFirstStopReportsErrorResult)
+TEST_P(TraversalContract, DepthFirstStopReportsSuccessResult)
 {
     StopAtVisitor visitor(fixture.nodes[SevenNodeFixture::D]);
     const Result  r = fixture.graph->traverse(
         fixture.nodes[SevenNodeFixture::A], TraverseMode::DepthFirst, visitor);
-    EXPECT_TRUE(r.isError());
-    EXPECT_EQ(r.message(), "traversal stopped");
+    // Stop is a normal early-exit signal, not a fault — the walk
+    // returns success.
+    EXPECT_TRUE(r.isSuccess());
 
     // The stop-at node is observed exactly once.
     const auto &v = visitor.visitedNodes();
@@ -299,13 +299,13 @@ TEST_P(TraversalContract, BreadthFirstVisitsDepthOneBeforeDepthTwo)
                          fixture.nodes[SevenNodeFixture::G]));
 }
 
-TEST_P(TraversalContract, BreadthFirstStopReportsErrorResult)
+TEST_P(TraversalContract, BreadthFirstStopReportsSuccessResult)
 {
     StopAtVisitor visitor(fixture.nodes[SevenNodeFixture::C]);
     const Result  r = fixture.graph->traverse(
         fixture.nodes[SevenNodeFixture::A], TraverseMode::BreadthFirst, visitor);
-    EXPECT_TRUE(r.isError());
-    EXPECT_EQ(r.message(), "traversal stopped");
+    // Stop is a normal early-exit signal, not a fault.
+    EXPECT_TRUE(r.isSuccess());
 }
 
 // -----------------------------------------------------------------------------

@@ -73,16 +73,16 @@ class DeadlineVisitor : public IGraphVisitor
 
 using AsyncTimeoutContract = SevenNodeParamFixture;
 
-TEST_P(AsyncTimeoutContract, StopReportsDeterministicErrorMessage)
+TEST_P(AsyncTimeoutContract, StopReportsSuccessResult)
 {
     DeadlineVisitor visitor(/*fireAfter=*/3);
     const Result    r = fixture.graph->traverse(
         fixture.nodes[SevenNodeFixture::A], TraverseMode::DepthFirst, visitor);
 
-    // The visitor fired before the traversal could finish on its own.
+    // The visitor fired before the traversal could finish on its own —
+    // Stop is a normal early-exit signal, the walk returns success.
     EXPECT_TRUE(visitor.fired());
-    EXPECT_TRUE(r.isError());
-    EXPECT_EQ(r.message(), "traversal stopped");
+    EXPECT_TRUE(r.isSuccess());
 }
 
 TEST_P(AsyncTimeoutContract, StopCompletesInBoundedWallTime)
@@ -98,7 +98,8 @@ TEST_P(AsyncTimeoutContract, StopCompletesInBoundedWallTime)
         fixture.nodes[SevenNodeFixture::A], TraverseMode::DepthFirst, visitor);
     const auto elapsed = std::chrono::steady_clock::now() - start;
 
-    EXPECT_TRUE(r.isError());
+    // Stop aborts the walk cleanly; the Result is success.
+    EXPECT_TRUE(r.isSuccess());
     EXPECT_LT(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(), 2000)
         << "Stop should abort the traversal promptly";
 }

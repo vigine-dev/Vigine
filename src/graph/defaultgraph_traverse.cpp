@@ -108,7 +108,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                 const NodeStep step = visitNode(*this, current, visitor);
                 if (step == NodeStep::Stop)
                 {
-                    return Result(Result::Code::Error, "traversal stopped");
+                    return Result();
                 }
                 if (step == NodeStep::Prune)
                 {
@@ -123,7 +123,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                     const bool cont  = visitEdge(*this, *it, visitor, &prune);
                     if (!cont)
                     {
-                        return Result(Result::Code::Error, "traversal stopped");
+                        return Result();
                     }
                     if (prune)
                     {
@@ -159,7 +159,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                 const NodeStep step = visitNode(*this, current, visitor);
                 if (step == NodeStep::Stop)
                 {
-                    return Result(Result::Code::Error, "traversal stopped");
+                    return Result();
                 }
                 if (step == NodeStep::Prune)
                 {
@@ -172,7 +172,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                     const bool cont  = visitEdge(*this, eid, visitor, &prune);
                     if (!cont)
                     {
-                        return Result(Result::Code::Error, "traversal stopped");
+                        return Result();
                     }
                     if (prune)
                     {
@@ -266,20 +266,31 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                 const NodeStep step = visitNode(*this, nid, visitor);
                 if (step == NodeStep::Stop)
                 {
-                    return Result(Result::Code::Error, "traversal stopped");
+                    return Result();
                 }
                 if (step == NodeStep::Prune)
                 {
                     continue;
                 }
-                const std::vector<EdgeId> outs = snapshotOutEdges(nid);
-                for (EdgeId eid : outs)
+                // Read outgoing edges from the snapshot captured above,
+                // not from the live graph. Going back to the live graph
+                // here would (a) reintroduce the lock contention the
+                // snapshot was built to eliminate, and (b) let edges
+                // added concurrently after the snapshot slip into the
+                // walk — breaking the documented "traversal is isolated
+                // from concurrent mutation" contract.
+                const auto outIt = snap.outByKey.find(Snapshot::nodeKey(nid));
+                if (outIt == snap.outByKey.end())
+                {
+                    continue;
+                }
+                for (EdgeId eid : outIt->second)
                 {
                     bool       prune = false;
                     const bool cont  = visitEdge(*this, eid, visitor, &prune);
                     if (!cont)
                     {
-                        return Result(Result::Code::Error, "traversal stopped");
+                        return Result();
                     }
                     if (prune)
                     {
@@ -306,7 +317,7 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
                 const NodeStep step = visitNode(*this, current, visitor);
                 if (step == NodeStep::Stop)
                 {
-                    return Result(Result::Code::Error, "traversal stopped");
+                    return Result();
                 }
                 if (step == NodeStep::Prune)
                 {
