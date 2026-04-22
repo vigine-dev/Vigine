@@ -218,9 +218,11 @@ class AbstractContext : public IContext
      * Incremented once per successful @ref registerService call. Never
      * reused: the aggregator does not recycle slots, so every live id
      * maps to exactly one registered service for the context's
-     * lifetime.
+     * lifetime. Atomic because @ref nextServiceIndex reads this value
+     * without holding @ref _registryMutex — a plain uint32_t there
+     * would be a data race with the mutator path.
      */
-    std::uint32_t _nextServiceIndex{1};
+    std::atomic<std::uint32_t> _nextServiceIndex{1};
 
     /**
      * @brief Monotonic counter for the generation field of issued
@@ -229,9 +231,10 @@ class AbstractContext : public IContext
      * Always non-zero so that issued ids pass
      * @ref service::ServiceId::valid. Stored separately from the index
      * so that future generational recycling can use it without
-     * disturbing the lookup map.
+     * disturbing the lookup map. Atomic for symmetry with
+     * @ref _nextServiceIndex; the mutator path bumps them together.
      */
-    std::uint32_t _serviceGeneration{1};
+    std::atomic<std::uint32_t> _serviceGeneration{1};
 
     /**
      * @brief Mutex serialising mutators against each other and against
