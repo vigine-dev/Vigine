@@ -418,6 +418,38 @@ set(SOURCES_SIGNALEMITTER
     ${SRC_DIR}/signalemitter/defaultsignalemitter.cpp
 )
 
+# Event-scheduler facade (R.3.3.1.2 / plan_16) -- public surface.
+set(HEADER_EVENTSCHEDULER
+    ${INCLUDE_DIR}/vigine/eventscheduler/ossignal.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/eventconfig.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/ieventhandle.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/itimersource.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/iossignalsource.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/ieventscheduler.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/abstracteventscheduler.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/defaulteventscheduler.h
+)
+
+# Event-scheduler facade (R.3.3.1.2 / plan_16) -- internal concrete + platform.
+set(SOURCES_EVENTSCHEDULER
+    ${SRC_DIR}/eventscheduler/abstracteventscheduler.cpp
+    ${SRC_DIR}/eventscheduler/itimersource_default.h
+    ${SRC_DIR}/eventscheduler/itimersource_default.cpp
+    ${SRC_DIR}/eventscheduler/defaulteventscheduler.cpp
+)
+
+if(WIN32)
+    list(APPEND SOURCES_EVENTSCHEDULER
+        ${SRC_DIR}/eventscheduler/iossignalsource_win.h
+        ${SRC_DIR}/eventscheduler/iossignalsource_win.cpp
+    )
+elseif(APPLE)
+    list(APPEND SOURCES_EVENTSCHEDULER
+        ${SRC_DIR}/eventscheduler/iossignalsource_macos.h
+        ${SRC_DIR}/eventscheduler/iossignalsource_macos.mm
+    )
+endif()
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -504,6 +536,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_CONTEXT_AGGREGATOR}
     ${HEADER_SIGNALEMITTER}
     ${SOURCES_SIGNALEMITTER}
+    ${HEADER_EVENTSCHEDULER}
+    ${SOURCES_EVENTSCHEDULER}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
