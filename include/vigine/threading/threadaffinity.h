@@ -25,11 +25,20 @@ enum class ThreadAffinity : std::uint8_t
     Any = 0,
     /// Strictly the main thread. Drains via @ref IThreadManager::runMainThreadPump.
     Main = 1,
-    /// One-per-caller dedicated thread with FIFO queue. Lazy-allocated.
+    /// Fresh dedicated OS thread per schedule call. The current
+    /// implementation does not reuse dedicated slots across calls — a
+    /// caller-keyed FIFO reuse (with an upper bound from
+    /// @ref ThreadManagerConfig::maxDedicatedThreads) is on the backlog;
+    /// until it lands, callers that need predictable per-caller FIFO
+    /// should reuse a single @ref NamedThreadId through
+    /// @ref IThreadManager::scheduleOnNamed instead.
     Dedicated = 2,
     /// Worker pool. Parallel execution across the configured pool size.
     Pool = 3,
-    /// Explicit named thread identified by @ref NamedThreadId.
+    /// Explicit named thread identified by @ref NamedThreadId. Route
+    /// through @ref IThreadManager::scheduleOnNamed — the generic
+    /// @ref IThreadManager::schedule path cannot carry an id and
+    /// rejects this affinity with an error `Result`.
     Named = 4,
 };
 

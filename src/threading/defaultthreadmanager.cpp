@@ -252,16 +252,18 @@ void workerLoop(WorkQueue &queue)
 }
 
 // Drain a stopped queue, settling every handle with a cancellation
-// Result so waiters do not hang.
-void drainStoppedQueue(WorkQueue &queue)
+// `Result` so waiters do not hang. The reason string travels to every
+// settled handle — callers supply it so debug output reflects the
+// actual cause (shutdown vs. named-thread unregistration) instead of
+// always blaming shutdown.
+void drainStoppedQueue(WorkQueue &queue, const char *reason)
 {
     auto leftovers = queue.drainCancelled();
     for (auto &entry : leftovers)
     {
         if (entry.handle)
         {
-            entry.handle->settle(
-                Result{Result::Code::Error, "threading: manager shut down"});
+            entry.handle->settle(Result{Result::Code::Error, reason});
         }
     }
 }
@@ -304,7 +306,12 @@ struct DefaultThreadManager::Impl
     std::mutex                   mainMutex;
     std::deque<QueueEntry>       mainQueue;
 
-    bool shutdownCompleted{false};
+    // `shutdown()` is documented as safe to call from any thread. The
+    // flag that tracks whether shutdown has already run is read and
+    // written by those concurrent callers — a plain `bool` would be a
+    // data race visible to TSAN. An atomic gives a sequentially
+    // consistent ordering with no lock overhead on the hot path.
+    std::atomic<bool> shutdownCompleted{false};
 };
 
 // =========================================================================
@@ -398,13 +405,16 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
 
         case ThreadAffinity::Named:
         {
-            // Named affinity without an id falls back to the pool; a
-            // caller that wants a named thread should use scheduleOnNamed.
-            if (!_impl->pool.push(std::move(entry)))
-            {
-                handle->settle(
-                    Result{Result::Code::Error, "threading: pool queue closed"});
-            }
+            // The generic `schedule(runnable, affinity)` entry point has
+            // no way to carry a `NamedThreadId`, so a Named request here
+            // is always a caller bug. Previously we quietly diverted to
+            // the pool, which made the bug invisible. Surface it as an
+            // explicit error so the caller sees the missing id and
+            // routes through `scheduleOnNamed(runnable, id)` instead.
+            handle->settle(Result{
+                Result::Code::Error,
+                "threading: Named affinity requires a NamedThreadId; "
+                "use scheduleOnNamed(runnable, id)"});
             break;
         }
     }
@@ -535,7 +545,7 @@ void DefaultThreadManager::unregisterNamedThread(NamedThreadId id)
         {
             slot->worker.join();
         }
-        drainStoppedQueue(*slot->queue);
+        drainStoppedQueue(*slot->queue, "threading: named thread unregistered");
     }
 }
 
@@ -548,7 +558,14 @@ void DefaultThreadManager::shutdown()
     {
         return;
     }
-    if (_impl->shutdownCompleted)
+    // Atomic exchange: the first caller to flip the flag runs the
+    // full teardown; any concurrent or subsequent caller sees `true`
+    // and returns immediately. This replaces the plain-bool double-
+    // check idiom that produced a data race under two concurrent
+    // `shutdown()` invocations.
+    bool expected = false;
+    if (!_impl->shutdownCompleted.compare_exchange_strong(
+            expected, true, std::memory_order_acq_rel))
     {
         return;
     }
@@ -566,7 +583,7 @@ void DefaultThreadManager::shutdown()
         }
     }
     _impl->poolWorkers.clear();
-    drainStoppedQueue(_impl->pool);
+    drainStoppedQueue(_impl->pool, "threading: manager shut down");
 
     // Stop + join every dedicated slot.
     std::vector<std::unique_ptr<Impl::DedicatedSlot>> dedicated;
@@ -585,7 +602,7 @@ void DefaultThreadManager::shutdown()
         {
             slot->worker.join();
         }
-        drainStoppedQueue(*slot->queue);
+        drainStoppedQueue(*slot->queue, "threading: manager shut down");
         releaseDedicatedSlot();
     }
 
@@ -607,7 +624,7 @@ void DefaultThreadManager::shutdown()
         {
             slot->worker.join();
         }
-        drainStoppedQueue(*slot->queue);
+        drainStoppedQueue(*slot->queue, "threading: manager shut down");
     }
 
     // Drain the main-thread queue so its handles settle instead of hang.
@@ -625,7 +642,11 @@ void DefaultThreadManager::shutdown()
         }
     }
 
-    _impl->shutdownCompleted = true;
+    // No trailing store of `shutdownCompleted = true` here: the
+    // compare_exchange_strong at the top of the function already set
+    // the flag. Repeating the write would be correct but redundant
+    // and misleading — callers racing at the top check the flag via
+    // the CAS, not via a plain load after the teardown completes.
 }
 
 } // namespace vigine::threading
