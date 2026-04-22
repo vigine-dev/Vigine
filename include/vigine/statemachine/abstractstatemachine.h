@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include "vigine/result.h"
@@ -169,16 +170,22 @@ class AbstractStateMachine : public IStateMachine
      * Initialised to @ref _defaultState during construction so the
      * machine has a valid @ref current immediately. Updated by
      * @ref setInitial and @ref transition.
+     *
+     * Atomic because the header advertises concurrent `current()`
+     * reads alongside lifecycle transitions. `StateId` is an 8-byte
+     * trivially-copyable pair; `std::atomic<StateId>` is lock-free
+     * on every supported 64-bit target.
      */
-    StateId _current{};
+    std::atomic<StateId> _current{};
 
     /**
      * @brief Selected hierarchical routing mode.
      *
-     * Defaults to @ref RouteMode::Bubble per UD-3. Updated by
-     * @ref setRouteMode; read by @ref routeMode.
+     * Defaults to @ref RouteMode::Bubble. Updated by
+     * @ref setRouteMode; read by @ref routeMode. Atomic for the same
+     * reason as @c _current — a single-byte enum, always lock-free.
      */
-    RouteMode _routeMode{RouteMode::Bubble};
+    std::atomic<RouteMode> _routeMode{RouteMode::Bubble};
 };
 
 } // namespace vigine::statemachine
