@@ -32,8 +32,6 @@ void LoadTexturesTask::contextChanged()
 
 vigine::Result LoadTexturesTask::execute()
 {
-    std::cout << "Loading textures from resource/img..." << std::endl;
-
     if (!_graphicsService)
     {
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
@@ -41,13 +39,35 @@ vigine::Result LoadTexturesTask::execute()
 
     auto *entityManager = context()->entityManager();
 
-    // Scan resource/img/ for all supported image files
-    const std::filesystem::path imgDir{"resource/img"};
-    if (!std::filesystem::is_directory(imgDir))
+    // Try several candidate cwd-relative paths so the example works whether
+    // it is launched from the engine root, the exe directory (the build
+    // system post-build-copies `resource/` next to the exe), `build/bin/`,
+    // or `build/bin/Release/`. The first candidate that resolves to an
+    // existing directory wins. Matches the candidate-list pattern already
+    // used by SetupTextTask and SetupTextEditTask for `assets/fonts/`.
+    static constexpr const char *kImgCandidates[] = {
+        "resource/img",          // engine root, or exe dir (post-build copy)
+        "../resource/img",       // build/bin
+        "../../resource/img",    // build/bin/Release
+        "../../../resource/img", // deeper config layouts
+    };
+    std::filesystem::path imgDir;
+    for (const auto *candidate : kImgCandidates)
+    {
+        std::error_code ec;
+        if (std::filesystem::is_directory(candidate, ec))
+        {
+            imgDir = candidate;
+            break;
+        }
+    }
+    if (imgDir.empty())
     {
         return vigine::Result(vigine::Result::Code::Error,
                               "Image directory not found: resource/img");
     }
+
+    std::cout << "Loading textures from " << imgDir.string() << "..." << std::endl;
 
     std::vector<std::string> imagePaths;
     for (const auto &entry : std::filesystem::directory_iterator(imgDir))
