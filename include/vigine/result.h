@@ -29,7 +29,15 @@ class Result
         //                          null or the registered target has
         //                          already been torn down.
         SubscriptionExpired,
-        InvalidMessageTarget
+        InvalidMessageTarget,
+        // Appended for the context aggregator (R.4.5). Append-only;
+        // existing numeric values above are frozen.
+        // TopologyFrozen -- reported when a caller invokes a mutating
+        //                   IContext method (createMessageBus,
+        //                   registerService) after the engine has
+        //                   frozen the context topology. Mutation
+        //                   is blocked; reads remain available.
+        TopologyFrozen
     };
 
     Result();
