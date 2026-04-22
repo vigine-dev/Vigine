@@ -19,9 +19,9 @@ class IMessage;
  * subscriber needs: a mutex-guarded vector of the tokens that keep its
  * bus subscriptions alive. Concrete subscribers (states, task flows,
  * tasks, topic nodes, channel nodes, actor nodes, application targets)
- * derive from this base, override the three pure-virtual hooks, and
- * rely on the base class's RAII to unregister every subscription when
- * the target is destroyed.
+ * derive from this base, override the two pure-virtual hooks
+ * (@ref targetKind and @ref onMessage), and rely on the base class's
+ * RAII to unregister every subscription when the target is destroyed.
  *
  * The class carries state, so it follows the project's @c Abstract
  * naming convention rather than the @c I pure-virtual prefix. The
