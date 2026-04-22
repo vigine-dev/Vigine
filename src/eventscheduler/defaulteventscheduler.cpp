@@ -143,8 +143,10 @@ struct ScheduledEvent
 class DefaultEventHandle final : public IEventHandle
 {
   public:
-    explicit DefaultEventHandle(std::shared_ptr<ScheduledEvent> event) noexcept
+    DefaultEventHandle(std::shared_ptr<ScheduledEvent> event,
+                       ITimerSource                   *timerSrc) noexcept
         : _event(std::move(event))
+        , _timerSrc(timerSrc)
     {
     }
 
@@ -155,9 +157,25 @@ class DefaultEventHandle final : public IEventHandle
 
     void cancel() noexcept override
     {
-        if (_event)
+        if (!_event)
         {
-            _event->active.store(false, std::memory_order_release);
+            return;
+        }
+        // Drop the `active` flag first so any concurrent `onTimerFired`
+        // bails out at its own `active.load()` gate before it can
+        // observe the disarm race.
+        _event->active.store(false, std::memory_order_release);
+        // Then tell the underlying source to stop delivering. For
+        // periodic events (`config.count == 0`) this is what actually
+        // stops the wake-ups — the flag-only prior impl left the timer
+        // firing forever, with every fire a no-op but still consuming
+        // the thread + callback pair. A one-shot timer that has
+        // already fired has `timerId == 0` by the time we get here
+        // (the scheduler clears it after the single dispatch); the
+        // `disarm` call is guarded accordingly.
+        if (_event->timerId != 0 && _timerSrc != nullptr)
+        {
+            _timerSrc->disarm(_event->timerId);
         }
     }
 
@@ -173,6 +191,7 @@ class DefaultEventHandle final : public IEventHandle
 
   private:
     std::shared_ptr<ScheduledEvent> _event;
+    ITimerSource                   *_timerSrc{nullptr};
 };
 
 // -----------------------------------------------------------------
@@ -269,7 +288,7 @@ DefaultEventScheduler::schedule(
         return nullptr;
     }
 
-    return std::make_unique<DefaultEventHandle>(entry);
+    return std::make_unique<DefaultEventHandle>(entry, &_impl->timerSrc);
 }
 
 vigine::Result DefaultEventScheduler::shutdown()
