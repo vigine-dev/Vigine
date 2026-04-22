@@ -404,6 +404,20 @@ set(SOURCES_CONTEXT_AGGREGATOR
     ${SRC_DIR}/context/factory.cpp
 )
 
+# Signal-emitter facade (R.3.3.1.1 / plan_15) -- public surface.
+set(HEADER_SIGNALEMITTER
+    ${INCLUDE_DIR}/vigine/signalemitter/isignalpayload.h
+    ${INCLUDE_DIR}/vigine/signalemitter/isignalemitter.h
+    ${INCLUDE_DIR}/vigine/signalemitter/abstractsignalemitter.h
+    ${INCLUDE_DIR}/vigine/signalemitter/defaultsignalemitter.h
+)
+
+# Signal-emitter facade (R.3.3.1.1 / plan_15) -- internal concrete + factory.
+set(SOURCES_SIGNALEMITTER
+    ${SRC_DIR}/signalemitter/abstractsignalemitter.cpp
+    ${SRC_DIR}/signalemitter/defaultsignalemitter.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -488,6 +502,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_TASKFLOW_CORE}
     ${HEADER_CONTEXT_AGGREGATOR}
     ${SOURCES_CONTEXT_AGGREGATOR}
+    ${HEADER_SIGNALEMITTER}
+    ${SOURCES_SIGNALEMITTER}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
