@@ -498,20 +498,29 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::scheduleOnNamed(
 // =========================================================================
 void DefaultThreadManager::postToMainThread(std::unique_ptr<IRunnable> runnable)
 {
-    auto handle = std::make_shared<TaskHandle>();
+    // `postToMainThread` returns `void` — callers cannot observe
+    // success, failure, or completion through the function boundary.
+    // The older implementation still allocated a `TaskHandle`, filled
+    // it into the queue entry, and settled it on error / shutdown
+    // paths. Nothing could ever read that handle, so the allocation
+    // was dead weight on a hot path (main-thread post runs every
+    // tick of the engine pump).
+    //
+    // Fire-and-forget semantics now: early-return on null runnable
+    // or a shut-down manager without allocating a handle; the queue
+    // entry carries a null handle so `runEntry` skips the handle-
+    // based branches naturally.
     if (!runnable)
     {
-        handle->settle(Result{Result::Code::Error, "threading: null runnable"});
         return;
     }
     if (isShutDown())
     {
-        handle->settle(Result{Result::Code::Error, "threading: manager shut down"});
         return;
     }
     QueueEntry entry;
     entry.runnable = std::move(runnable);
-    entry.handle   = handle;
+    // entry.handle intentionally left null; see the rationale above.
     std::lock_guard<std::mutex> lock(_impl->mainMutex);
     _impl->mainQueue.push_back(std::move(entry));
 }
