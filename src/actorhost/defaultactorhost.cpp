@@ -4,6 +4,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <cstdio>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -110,21 +111,33 @@ class MailboxRunnable final : public vigine::threading::IRunnable
 
     [[nodiscard]] vigine::Result run() override
     {
-        // onStart — ignore return value but log failure to stderr.
+        // onStart — non-fatal; if it throws, log and proceed into the
+        // receive loop so the actor still drains messages.
         try
         {
             _actor->onStart();
         }
         catch (const std::exception &ex)
         {
-            // onStart failure is non-fatal; actor proceeds to receive loop.
-            (void)ex;
+            std::fprintf(stderr,
+                         "[vigine::actorhost] IActor::onStart threw: %s\n",
+                         ex.what());
         }
         catch (...)
         {
+            std::fprintf(stderr,
+                         "[vigine::actorhost] IActor::onStart threw a "
+                         "non-std::exception object\n");
         }
 
-        // Drain loop — sequential; one message at a time.
+        // Drain loop — sequential; one message at a time. Exceptions
+        // are caught + logged; the actor continues receiving (v1
+        // semantics: no supervised restart). The comment above the
+        // prior catch blocks claimed "crash logged" but no logging
+        // ever ran — the catch-swallow was silent. Emit to stderr
+        // so the next hang / missed delivery is traceable back to
+        // the thrower. A proper logging hook replaces this when the
+        // engine standardises one.
         while (true)
         {
             auto msg = _queue->pop();
@@ -137,23 +150,37 @@ class MailboxRunnable final : public vigine::threading::IRunnable
             {
                 _actor->receive(*msg);
             }
-            catch (const std::exception & /*ex*/)
+            catch (const std::exception &ex)
             {
-                // Crash logged; actor continues receiving (v1 semantics).
+                std::fprintf(
+                    stderr,
+                    "[vigine::actorhost] IActor::receive threw: %s\n",
+                    ex.what());
             }
             catch (...)
             {
-                // Unknown exception — same policy.
+                std::fprintf(stderr,
+                             "[vigine::actorhost] IActor::receive threw a "
+                             "non-std::exception object\n");
             }
         }
 
-        // onStop
+        // onStop — same log-and-continue policy.
         try
         {
             _actor->onStop();
         }
+        catch (const std::exception &ex)
+        {
+            std::fprintf(stderr,
+                         "[vigine::actorhost] IActor::onStop threw: %s\n",
+                         ex.what());
+        }
         catch (...)
         {
+            std::fprintf(stderr,
+                         "[vigine::actorhost] IActor::onStop threw a "
+                         "non-std::exception object\n");
         }
 
         return vigine::Result{};
