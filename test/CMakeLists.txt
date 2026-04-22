@@ -267,14 +267,22 @@ gtest_discover_tests(${CHANNELFACTORY_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
-# ====================== RequestBus Smoke Target =======================
-set(REQUESTBUS_SMOKE_TARGET requestbus-smoke)
+# ====================== RequestBus Smoke Target ================set(REQUESTBUS_SMOKE_TARGET requestbus-smoke)
 
 add_executable(${REQUESTBUS_SMOKE_TARGET}
     requestbus/smoke_test.cpp
 )
 
 target_include_directories(${REQUESTBUS_SMOKE_TARGET}
+=======
+# ====================== ReactiveStream Smoke Target =======================
+set(REACTIVESTREAM_SMOKE_TARGET reactivestream-smoke)
+
+add_executable(${REACTIVESTREAM_SMOKE_TARGET}
+    reactivestream/smoke_test.cpp
+)
+
+target_include_directories(${REACTIVESTREAM_SMOKE_TARGET}
     PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
@@ -282,6 +290,7 @@ target_include_directories(${REQUESTBUS_SMOKE_TARGET}
 )
 
 target_link_libraries(${REQUESTBUS_SMOKE_TARGET}
+target_link_libraries(${REACTIVESTREAM_SMOKE_TARGET}
     PRIVATE
     gtest
     gtest_main
@@ -295,6 +304,12 @@ set_target_properties(${REQUESTBUS_SMOKE_TARGET} PROPERTIES
 
 gtest_discover_tests(${REQUESTBUS_SMOKE_TARGET}
     PROPERTIES LABELS "requestbus-smoke"
+set_target_properties(${REACTIVESTREAM_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${REACTIVESTREAM_SMOKE_TARGET}
+    PROPERTIES LABELS "reactivestream-smoke"
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
