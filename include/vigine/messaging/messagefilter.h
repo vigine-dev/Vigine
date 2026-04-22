@@ -21,10 +21,14 @@ class AbstractMessageTarget;
  *   - @c typeId -- when the wrapped @c value is non-zero, the bus only
  *     delivers messages whose payload id matches exactly. A zero value
  *     accepts any payload id (wildcard).
- *   - @c target -- when set, the bus only delivers messages addressed
- *     to the matching @ref AbstractMessageTarget (pointer identity).
- *     @c std::nullopt accepts messages addressed to any target and
- *     broadcast-style messages with a null target pointer.
+ *   - @c target -- when non-null, the bus only delivers messages
+ *     addressed to the matching @ref AbstractMessageTarget (pointer
+ *     identity). A @c nullptr accepts messages addressed to any
+ *     target and broadcast-style messages with a null target
+ *     pointer; that is the default. (The field is a raw pointer,
+ *     not a @c std::optional — previous revisions of this doc
+ *     described a `std::nullopt` sentinel that never existed in
+ *     the struct.)
  *   - @c expectedRoute -- when set, the bus only delivers messages
  *     whose @ref IMessage::routeMode matches. Most subscribers leave
  *     this empty and trust the facade's route choice.
