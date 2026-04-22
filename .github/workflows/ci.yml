@@ -125,12 +125,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache vcpkg
+      - name: Cache vcpkg_installed
         uses: actions/cache@v4
         with:
-          path: |
-            ${{ github.workspace }}/vcpkg
-            ${{ github.workspace }}/build/vcpkg_installed
+          # Only `build/vcpkg_installed` is a real cacheable path. The
+          # repo ships `vcpkg.json` manifest-mode but does not vendor
+          # a `vcpkg/` directory — previously listing `$GITHUB_WORKSPACE
+          # /vcpkg` here stored an empty directory on every run and
+          # confused the cache accounting. Drop it.
+          path: ${{ github.workspace }}/build/vcpkg_installed
           key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ matrix.os }}-
