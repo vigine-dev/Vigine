@@ -233,3 +233,83 @@ def test_facade_waiver_respected(
     out  = capsys.readouterr().out
     assert code == 0, "Expected exit 0 when the only violation carries a facade waiver"
     assert "0 violations" in out
+
+
+# ---------------------------------------------------------------------------
+# Test 7: class-scoped waiver covers the whole body (including forbidden
+# tokens on later lines).
+# ---------------------------------------------------------------------------
+
+
+def test_wrapper_class_scoped_waiver_covers_body(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """A waiver marker on a class declaration skips the whole body, so
+    forbidden tokens appearing on later lines of the same class do not
+    trigger violations. This exercises the class-body-swallow path that
+    the checker advertises but previously lacked test coverage for."""
+    svc_dir = tmp_path / "include" / "vigine" / "service"
+    svc_dir.mkdir(parents=True)
+    _write(
+        svc_dir,
+        "iwaivedclass.h",
+        """\
+        #pragma once
+        #include "vigine/service/serviceid.h"
+
+        namespace vigine::service {
+        class IWaivedClass  // INV-11 EXEMPTION: cross-layer bridge class, approved
+        {
+        public:
+            virtual ~IWaivedClass() = default;
+            virtual NodeId nodeRef() const = 0;
+            virtual EdgeId edgeRef() const = 0;
+        };
+        } // namespace vigine::service
+        """,
+    )
+    code = _run(["--path", str(svc_dir), "--quiet"])
+    out  = capsys.readouterr().out
+    assert code == 0, "Expected exit 0 when the class-level waiver covers body tokens"
+    assert "0 violations" in out
+
+
+# ---------------------------------------------------------------------------
+# Test 8: waiver marker on a non-class line does not drag a neighbouring
+# block into the skip range.
+# ---------------------------------------------------------------------------
+
+
+def test_wrapper_waiver_on_non_class_line_does_not_swallow_block(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    """A waiver marker on an `#include`, `namespace`, or stray comment
+    used to activate the class-body-swallow walk and brace-count
+    through an adjacent namespace, silently skipping real violations.
+    The marker must only skip the line it sits on."""
+    svc_dir = tmp_path / "include" / "vigine" / "service"
+    svc_dir.mkdir(parents=True)
+    _write(
+        svc_dir,
+        "iwaivermisplaced.h",
+        """\
+        #pragma once
+        #include "vigine/service/serviceid.h"  // INV-11 EXEMPTION: vendor header pulled through a bridge
+
+        namespace vigine::service {
+        class IMisplacedWaiver {
+        public:
+            virtual ~IMisplacedWaiver() = default;
+            virtual NodeId nodeRef() const = 0;
+        };
+        } // namespace vigine::service
+        """,
+    )
+    code = _run(["--path", str(svc_dir)])
+    out  = capsys.readouterr().out
+    assert code == 1, (
+        "Expected exit 1: waiver on the #include line must not swallow the "
+        "following namespace/class body"
+    )
+    assert "iwaivermisplaced.h" in out
+    assert "NodeId" in out
