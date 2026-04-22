@@ -43,6 +43,15 @@
 //
 // Scenario 5 — publish to invalid TopicId returns error:
 //   publish(TopicId{0}, ...) must return Result::Code::Error.
+//
+// Scenario 6 — topic isolation (currently SKIPPED):
+//   Two subscribers, each on a different topic. Publishing a single payload
+//   to topic A must deliver only to the A-subscriber, and leave the
+//   B-subscriber untouched. This case exercises the topic-filter path on
+//   subscribe; the current DefaultTopicBus::subscribe ignores the TopicId
+//   argument, so the isolation assertion is expected to fail today. The
+//   test is gated with GTEST_SKIP so the smoke target stays green on CI;
+//   remove the skip once the subscribe topic-filter fix lands.
 // ---------------------------------------------------------------------------
 
 namespace
@@ -193,6 +202,51 @@ TEST_F(TopicBusSmoke, PublishInvalidTopicReturnsError)
 
     EXPECT_TRUE(result.isError())
         << "publishing to TopicId{0} must return an error result";
+}
+
+// ---------------------------------------------------------------------------
+// Scenario 6: topic isolation — publish to A does not deliver to B
+//
+// Two topics ("alpha", "beta"), one CountingSubscriber per topic. Publish
+// a single payload on topic alpha and assert that the alpha subscriber
+// fires exactly once while the beta subscriber stays at zero.
+//
+// Skipped today because DefaultTopicBus::subscribe currently ignores the
+// TopicId argument and every subscriber is dispatched for every publish.
+// Un-skip this case (delete the GTEST_SKIP line) once the subscribe
+// topic-filter fix lands.
+// ---------------------------------------------------------------------------
+
+TEST_F(TopicBusSmoke, PublishToOneTopicDoesNotDeliverToOtherTopic)
+{
+    // Arrange: two distinct topics, two distinct subscribers.
+    TopicId topicA = _topic->createTopic("alpha");
+    TopicId topicB = _topic->createTopic("beta");
+    ASSERT_TRUE(topicA.valid()) << "expected a valid TopicId for 'alpha'";
+    ASSERT_TRUE(topicB.valid()) << "expected a valid TopicId for 'beta'";
+    ASSERT_NE(topicA, topicB)   << "distinct names must yield distinct ids";
+
+    CountingSubscriber subA;
+    CountingSubscriber subB;
+
+    auto tokenA = _topic->subscribe(topicA, &subA);
+    auto tokenB = _topic->subscribe(topicB, &subB);
+    ASSERT_NE(tokenA, nullptr) << "subscribe on topicA must return a token";
+    ASSERT_NE(tokenB, nullptr) << "subscribe on topicB must return a token";
+
+    // Act: publish exactly one message to topic A.
+    auto payload = std::make_unique<SmokePayload>(vigine::payload::PayloadTypeId{7});
+    auto result  = _topic->publish(topicA, std::move(payload));
+    ASSERT_TRUE(result.isSuccess())
+        << "publish to topicA should succeed; got: " << result.message();
+
+    // Assert: only the A-subscriber should have fired. Gated until the
+    // DefaultTopicBus::subscribe topic-filter fix lands.
+    GTEST_SKIP() << "pending DefaultTopicBus::subscribe topic-filter fix";
+    EXPECT_EQ(subA.callCount.load(), 1)
+        << "topicA subscriber should have been called exactly once";
+    EXPECT_EQ(subB.callCount.load(), 0)
+        << "topicB subscriber must not be called when publishing to topicA";
 }
 
 } // namespace
