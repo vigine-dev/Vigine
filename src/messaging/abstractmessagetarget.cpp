@@ -16,10 +16,16 @@ void AbstractMessageTarget::acceptConnection(std::unique_ptr<IConnectionToken> t
 
 bool AbstractMessageTarget::canMove() const noexcept
 {
-    // Deliberately unsynchronised: the check is advisory only; callers
-    // that race with a concurrent acceptConnection cannot rely on the
-    // answer for correctness. The move constructor / move assignment
-    // below asserts on the same predicate under a lock.
+    // Must hold `_connectionsMutex` while reading `_connections` — even
+    // for an advisory answer. `std::vector` is not TSAN-safe and an
+    // unsynchronised `empty()` racing with a concurrent
+    // `acceptConnection()` (which does `push_back`) is a C++ data
+    // race (UB), not merely a stale read. Contention is negligible in
+    // practice: `canMove()` fires at move boundaries, which are rare.
+    // The move constructor / move assignment below take the same lock
+    // before asserting on the same predicate, so the pre-move advisory
+    // probe matches what the move itself would see.
+    std::lock_guard<std::mutex> lock{_connectionsMutex};
     return _connections.empty();
 }
 
