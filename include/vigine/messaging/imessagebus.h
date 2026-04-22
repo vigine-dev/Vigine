@@ -96,11 +96,19 @@ class IMessageBus
      * @brief Enqueues @p message for dispatch.
      *
      * The bus validates @p message (non-null, kind and route mode in
-     * the closed enums, target alive when non-null), applies the
-     * @ref BackpressurePolicy from @ref BusConfig, and either enqueues
-     * the envelope for the dispatch worker or -- under
-     * @ref ThreadingPolicy::InlineOnly -- dispatches synchronously on
-     * the caller's thread.
+     * the closed enums), applies the @ref BackpressurePolicy from
+     * @ref BusConfig, and either enqueues the envelope for the
+     * dispatch worker or -- under @ref ThreadingPolicy::InlineOnly --
+     * dispatches synchronously on the caller's thread.
+     *
+     * Target liveness is the CALLER's responsibility. The bus does
+     * not inspect @p message->target() for liveness because the
+     * target may legitimately live on a different bus or never have
+     * been registered with any bus (`target` is only a subscription
+     * filter hint). Callers that hand the bus a dangling target
+     * pointer get undefined behaviour at dispatch time. Use RAII
+     * via @ref IConnectionToken / @ref AbstractMessageTarget to keep
+     * targets alive for the full lifetime of every in-flight message.
      *
      * Returns a success @ref Result when the message was accepted.
      * Returns @ref Result::Code::Error when the bus is shut down, when
