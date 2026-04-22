@@ -10,7 +10,7 @@ namespace vigine
 
 class Context;
 
-class AbstractState
+class AbstractState // ENCAP EXEMPTION: legacy; protected _taskFlow/_isActive/_context pending cleanup
 {
   public:
     virtual ~AbstractState() = default;

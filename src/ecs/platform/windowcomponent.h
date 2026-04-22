@@ -9,7 +9,7 @@ namespace platform
 class IWindowEventHandlerComponent;
 class WindowSystem;
 
-class WindowComponent
+class WindowComponent // ENCAP EXEMPTION: legacy; public _eventHandler pending cleanup
 {
   public:
     WindowComponent();
