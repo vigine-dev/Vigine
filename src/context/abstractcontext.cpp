@@ -22,8 +22,16 @@ AbstractContext::AbstractContext(const ContextConfig &config)
     // its dispatch worker can schedule on the engine pool. The factory
     // returns a unique_ptr; we lift it into a shared_ptr so facades
     // and services can keep an independent handle.
-    , _systemBus{std::shared_ptr<messaging::IMessageBus>{
-          messaging::createMessageBus(config.systemBus, *_threadManager).release()}}
+    //
+    // Use the `shared_ptr(unique_ptr&&)` conversion rather than
+    // `shared_ptr(unique_ptr.release())`. If the shared_ptr control-
+    // block allocation throws (bad_alloc), the conversion overload
+    // destroys the moved-in unique_ptr and releases the underlying
+    // bus; the `.release()` form hands over a naked raw pointer and
+    // leaks if the same allocation throws.
+    , _systemBus{
+          std::shared_ptr<messaging::IMessageBus>{
+              messaging::createMessageBus(config.systemBus, *_threadManager)}}
     // Steps 3--5: Level-1 wrappers from their default factories. Each
     // is self-contained; the default factories auto-provision the
     // minimum state callers need (e.g. the state machine registers one
@@ -67,8 +75,20 @@ AbstractContext::createMessageBus(const messaging::BusConfig &config)
         return nullptr;
     }
 
-    std::shared_ptr<messaging::IMessageBus> shared{bus.release()};
-    _userBuses.emplace(shared->id().value, shared);
+    // Convert via `unique_ptr&&` so the control-block-alloc failure
+    // path unwinds cleanly (the unique_ptr destroys the bus during
+    // stack unwind); the prior `.release()` form leaked on bad_alloc.
+    std::shared_ptr<messaging::IMessageBus> shared{std::move(bus)};
+    // `emplace` returns `{iterator, bool}`; the `bool` is `false`
+    // when the key already exists, which means two buses landed on
+    // the same id — a programming error on the messaging factory
+    // side. Silent ignore would let the first registration stay
+    // live and silently dropped the new one; fail-fast instead.
+    const auto [it, inserted] = _userBuses.emplace(shared->id().value, shared);
+    if (!inserted)
+    {
+        return nullptr;
+    }
     return shared;
 }
 
