@@ -67,7 +67,7 @@ class AbstractService : public IService
     [[nodiscard]] ServiceId id() const noexcept override;
     [[nodiscard]] Result    onInit(IContext &context) override;
     [[nodiscard]] Result    onShutdown(IContext &context) override;
-    [[nodiscard]] std::vector<std::shared_ptr<IService>>
+    [[nodiscard]] std::vector<IService *>
                             dependencies() const override;
     [[nodiscard]] bool      isInitialised() const noexcept override;
 
@@ -101,8 +101,13 @@ class AbstractService : public IService
      * container's topological sort consumes. Adding a duplicate entry
      * is allowed but wasteful; the container treats duplicates as a
      * single edge.
+     *
+     * @p dependency is a non-owning raw pointer; the container owns
+     * every service via `std::unique_ptr` and keeps them alive for
+     * the full lifetime of every dependent. A null pointer is
+     * silently ignored (matches the previous shared_ptr contract).
      */
-    void addDependency(std::shared_ptr<IService> dependency);
+    void addDependency(IService *dependency);
 
     /**
      * @brief Overwrites the stored @ref ServiceId for this service.
@@ -127,10 +132,13 @@ class AbstractService : public IService
      */
     std::unique_ptr<ServiceRegistry> _registry;
 
-    /// Declared dependencies on other services. Cross-service
-    /// ownership edges held as @c std::shared_ptr so a dependency
-    /// target outlives every dependent.
-    std::vector<std::shared_ptr<IService>> _dependencies;
+    /// Declared dependencies on other services. Non-owning raw
+    /// pointers: ownership sits on the container (`std::unique_ptr`),
+    /// which keeps every service alive for the full lifetime of
+    /// every dependent. The container's registration order guarantees
+    /// a dependency is registered (and stays registered) before the
+    /// dependent that references it.
+    std::vector<IService *> _dependencies;
 
     /// Stable identifier assigned by the container during registration.
     ServiceId _id{};

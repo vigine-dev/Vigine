@@ -98,20 +98,23 @@ class IService
     /**
      * @brief Reports the other services this one depends on.
      *
-     * Every handle returned here is treated as a @ref DependencyKind
+     * Every pointer returned here is treated as a @ref DependencyKind
      * @c Required edge by the default topological sort. Services that
      * need @c Optional or @c RuntimeOnly semantics expose that through
      * their own constructors and attach the kind inside the wrapper
      * implementation before the DAG is built. Returning an empty
      * vector marks the service as a root of the init DAG.
      *
-     * The returned vector carries @c std::shared_ptr<IService> handles
-     * because dependencies are cross-service ownership edges; the
-     * target service must outlive every dependent. Handles are copies
-     * of the container's internal pointers, so the caller may inspect
-     * them without synchronising with the container.
+     * The returned vector carries non-owning raw @ref IService
+     * pointers. Ownership of every service lives in the container
+     * (`std::unique_ptr`); dependencies are cross-service references
+     * that the container keeps alive for the full lifetime of the
+     * dependent — by the time a dependent's `onShutdown` has run, no
+     * dependency has been destroyed yet. The raw-pointer signature
+     * matches the engine-wide ownership model (unique container +
+     * non-owning observers) and avoids promising a second owner.
      */
-    [[nodiscard]] virtual std::vector<std::shared_ptr<IService>>
+    [[nodiscard]] virtual std::vector<IService *>
         dependencies() const = 0;
 
     /**
