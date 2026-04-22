@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 # Add the scripts directory to sys.path so the module can be imported directly.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "script"))
 
 import check_graph_purity as cgp  # noqa: E402
 
@@ -137,7 +137,7 @@ def test_waiver_respected(tmp_path: Path, capsys: pytest.CaptureFixture) -> None
         """,
     )
     code = run(["--root", str(tmp_path), "--quiet"])
-    assert code == 0, "Expected exit 0 when the only hit is waiived"
+    assert code == 0, "Expected exit 0 when the only hit is waived"
     captured = capsys.readouterr()
     assert "0 violations" in captured.out
 

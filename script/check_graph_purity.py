@@ -138,14 +138,20 @@ def scan_file(
         # a commented-out include can hide an intent and is still a red flag.
         # But in practice, an #include never appears inside a block comment, so
         # this is just a belt-and-suspenders check.
-        if "#include" in line:
-            m = include_pat.search(line)
-            if m:
-                hit = m.group(0).strip()
-                violations.append(f"{path}:{lineno}: {hit}")
-                if not quiet:
-                    print(violations[-1])
-                continue  # Don't double-report the same line for identifiers.
+        #
+        # The include pattern already accepts optional whitespace between `#`
+        # and `include` (`#\s*include`), so we skip the fast-path substring
+        # gate on `"#include"` — that gate missed the valid preprocessor
+        # form `# include <...>` (with the space) and turned a reformatted
+        # header into a silent bypass. Running the regex unconditionally on
+        # every line is a few microseconds and removes the bypass path.
+        m = include_pat.search(line)
+        if m:
+            hit = m.group(0).strip()
+            violations.append(f"{path}:{lineno}: {hit}")
+            if not quiet:
+                print(violations[-1])
+            continue  # Don't double-report the same line for identifiers.
 
         # Identifier checks are skipped for pure comment lines.  Doc comments
         # routinely reference wrapper-layer namespaces as examples without
@@ -205,7 +211,11 @@ def main(argv: list[str] | None = None) -> int:
         action="append",
         type=Path,
         default=[],
-        help="Additional path to scan (can be repeated). When provided, replaces the default scan dirs.",
+        help=(
+            "Path to scan; overrides the default scan dirs entirely when "
+            "supplied. Can be repeated to supply several. Note: this does "
+            "NOT append to the defaults — passing --path replaces them."
+        ),
     )
     parser.add_argument(
         "--forbid",

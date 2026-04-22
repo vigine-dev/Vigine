@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 # Add script/ to path so the module can be imported directly.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "script"))
 
 import check_strict_encapsulation as cse  # noqa: E402
 

@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 # Add script/ to sys.path so the module can be imported directly.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "script"))
 
 import check_cross_platform as ccp  # noqa: E402
 
