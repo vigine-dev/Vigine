@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstdio>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -484,12 +486,26 @@ DispatchResult AbstractMessageBus::deliver(ISubscriber &subscriber,
     {
         return subscriber.onMessage(message);
     }
-    catch (...)
+    catch (const std::exception &ex)
     {
         // Exception isolation at the dispatch boundary. A misbehaving
-        // subscriber must not stall the whole registry. Reporting
-        // Handled short-circuits the current walk but does not kill
-        // the next dispatch -- exactly the behaviour plan_09 specifies.
+        // subscriber must not stall the whole registry. The header
+        // advertises that an escape is logged and swallowed; emit a
+        // minimal diagnostic on stderr so the silent-failure mode the
+        // catch used to produce no longer hides the root cause from
+        // whoever is debugging a missed delivery. A proper logging
+        // hook will replace the stderr call when the engine
+        // standardises one.
+        std::fprintf(stderr,
+                     "[vigine::messaging] subscriber onMessage threw: %s\n",
+                     ex.what());
+        return DispatchResult::Handled;
+    }
+    catch (...)
+    {
+        std::fprintf(stderr,
+                     "[vigine::messaging] subscriber onMessage threw a "
+                     "non-std::exception object\n");
         return DispatchResult::Handled;
     }
 }
