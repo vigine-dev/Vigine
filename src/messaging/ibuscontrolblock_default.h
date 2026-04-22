@@ -91,6 +91,16 @@ class DefaultBusControlBlock final : public IBusControlBlock
     std::unordered_map<std::uint32_t, Slot>       _registry;
     std::uint32_t                                 _nextIndex{1};
     std::uint32_t                                 _nextGeneration{1};
+    // Free-list of indices vacated by `unregisterTarget`.
+    // `allocateSlot` pops a recycled index before extending
+    // `_nextIndex`, so the registry does not grow monotonically
+    // under subscribe / unsubscribe churn. A per-index next-
+    // generation tracker guarantees a recycled slot always gets a
+    // generation strictly higher than any id previously issued for
+    // that index — stale `ConnectionId`s that remembered the old
+    // generation still fail their generational equality check.
+    std::vector<std::uint32_t>                       _freeIndices;
+    std::unordered_map<std::uint32_t, std::uint32_t> _nextGenerationByIndex;
     std::atomic<bool>                             _alive{true};
 };
 

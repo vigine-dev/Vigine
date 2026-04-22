@@ -47,10 +47,34 @@ DefaultBusControlBlock::allocateSlot(AbstractMessageTarget *target)
         return ConnectionId{};
     }
 
-    const std::uint32_t index      = _nextIndex++;
-    const std::uint32_t generation = _nextGeneration++;
-    _registry.emplace(index, Slot{target, generation});
+    // Prefer a recycled index so the registry does not grow
+    // monotonically under subscribe / unsubscribe churn.
+    std::uint32_t index;
+    std::uint32_t generation;
+    if (!_freeIndices.empty())
+    {
+        index = _freeIndices.back();
+        _freeIndices.pop_back();
+        auto genIt = _nextGenerationByIndex.find(index);
+        generation = (genIt != _nextGenerationByIndex.end()) ? genIt->second
+                                                             : _nextGeneration++;
+        // Wrap-around guard: generation 0 is the invalid sentinel.
+        if (generation == 0u)
+        {
+            generation = 1u;
+        }
+    }
+    else
+    {
+        index      = _nextIndex++;
+        generation = _nextGeneration++;
+        if (generation == 0u)
+        {
+            generation = _nextGeneration++;
+        }
+    }
 
+    _registry.emplace(index, Slot{target, generation});
     return ConnectionId{index, generation};
 }
 
@@ -79,7 +103,19 @@ void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
         // caller's id is stale and must not touch the live slot.
         return;
     }
+    // Remember the next generation for this index, erase the slot,
+    // push the index onto the free-list. `allocateSlot` picks it
+    // up on its next call. Previous behaviour left the slot in
+    // place as a null-target tombstone; over long sessions the
+    // registry grew without bound.
+    std::uint32_t nextGen = it->second.generation + 1u;
+    if (nextGen == 0u)
+    {
+        nextGen = 1u;
+    }
+    _nextGenerationByIndex[id.index] = nextGen;
     _registry.erase(it);
+    _freeIndices.push_back(id.index);
 }
 
 DefaultBusControlBlock::LookupGuard
