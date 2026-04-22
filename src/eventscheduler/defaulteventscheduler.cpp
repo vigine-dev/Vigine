@@ -1,4 +1,5 @@
-#include "vigine/eventscheduler/defaulteventscheduler.h"
+#include "eventscheduler/defaulteventscheduler.h"
+#include "vigine/eventscheduler/factory.h"
 
 #include <atomic>
 #include <cassert>

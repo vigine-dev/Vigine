@@ -18,24 +18,23 @@ namespace vigine::eventscheduler
 /**
  * @brief Concrete final event-scheduler facade.
  *
- * @ref DefaultEventScheduler is Level-5 of the five-layer wrapper recipe.
- * It wires a platform @ref ITimerSource and @ref IOsSignalSource into the
- * @ref AbstractEventScheduler chain and implements @ref IEventScheduler
- * by listening for timer and OS-signal callbacks, then posting
- * @ref vigine::messaging::MessageKind::Event messages to the underlying
- * @ref vigine::messaging::AbstractMessageBus.
+ * `DefaultEventScheduler` is the concrete implementation behind the
+ * `createEventScheduler` public factory (declared in
+ * `include/vigine/eventscheduler/factory.h`). Callers never name this
+ * type directly — it lives under `src/eventscheduler/` precisely
+ * because nothing outside the implementation needs it. The factory
+ * returns a `std::unique_ptr<IEventScheduler>`, so consumers only
+ * see the interface.
  *
- * Callers obtain instances exclusively through
- * @ref createEventScheduler — they never construct this type by name.
+ * The class wires a platform @ref ITimerSource and @ref IOsSignalSource
+ * into the @ref AbstractEventScheduler chain and implements
+ * @ref IEventScheduler by listening for timer and OS-signal callbacks,
+ * then posting @ref vigine::messaging::MessageKind::Event messages to
+ * the underlying bus.
  *
- * Thread-safety: @ref schedule, @ref shutdown, and the timer/OS-signal
- * callbacks are all safe to call from any thread concurrently. Internal
- * state (the scheduled-events map) is guarded by a @c std::shared_mutex.
- *
- * Invariants:
- *   - @c final: no further subclassing allowed.
- *   - FF-1: @ref schedule returns @c std::unique_ptr<IEventHandle>.
- *   - INV-11: no graph types leak into this header.
+ * Thread-safety: `schedule`, `shutdown`, and the timer / OS-signal
+ * callbacks are all safe to call from any thread concurrently. The
+ * scheduled-events map is guarded by a `std::shared_mutex`.
  */
 class DefaultEventScheduler final
     : public AbstractEventScheduler
@@ -47,8 +46,9 @@ class DefaultEventScheduler final
      * @brief Constructs the scheduler.
      *
      * @p threadManager backs the internal bus.
-     * @p timerSource   provides timer arm/disarm (owned by caller).
-     * @p osSignalSource provides OS-signal subscribe/unsubscribe (owned by caller).
+     * @p timerSource   provides timer arm / disarm (owned by caller).
+     * @p osSignalSource provides OS-signal subscribe / unsubscribe
+     *                   (owned by caller).
      */
     explicit DefaultEventScheduler(vigine::threading::IThreadManager &threadManager,
                                    ITimerSource                      &timerSource,
@@ -76,22 +76,9 @@ class DefaultEventScheduler final
     void onOsSignal(OsSignal signal) override;
 
     // Pimpl hides the scheduled-events map and atomic shutdown flag so
-    // the private implementation details are not exposed in the public header.
+    // the private implementation details stay private.
     struct Impl;
     std::unique_ptr<Impl> _impl;
 };
-
-/**
- * @brief Factory function — the sole entry point for creating an
- *        event-scheduler facade.
- *
- * Returns a @c std::unique_ptr so the caller owns the facade exclusively
- * (FF-1). The internal bus and timer/OS-signal sources are backed by the
- * supplied references; all three must outlive the returned scheduler.
- */
-[[nodiscard]] std::unique_ptr<IEventScheduler>
-    createEventScheduler(vigine::threading::IThreadManager &threadManager,
-                         ITimerSource                      &timerSource,
-                         IOsSignalSource                   &osSignalSource);
 
 } // namespace vigine::eventscheduler

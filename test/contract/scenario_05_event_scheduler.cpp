@@ -23,8 +23,8 @@
 #include "fixtures/engine_fixture.h"
 
 #include "vigine/context/icontext.h"
-#include "vigine/eventscheduler/defaulteventscheduler.h"
 #include "vigine/eventscheduler/eventconfig.h"
+#include "vigine/eventscheduler/factory.h"
 #include "vigine/eventscheduler/ieventhandle.h"
 #include "vigine/eventscheduler/ieventscheduler.h"
 #include "vigine/eventscheduler/iossignalsource.h"
