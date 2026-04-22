@@ -211,9 +211,11 @@ bool AbstractContext::isFrozen() const noexcept
 
 std::size_t AbstractContext::nextServiceIndex() const noexcept
 {
-    // Read without the lock; callers who need a monotonically-stable
-    // reading relative to a registration should hold their own mutex.
-    return _nextServiceIndex;
+    // Atomic read (no lock). Callers who need a monotonically-stable
+    // reading relative to a registration should hold their own mutex
+    // alongside; the atomic `load` here just closes the data race
+    // with the mutator path writing via `allocateServiceId`.
+    return _nextServiceIndex.load(std::memory_order_acquire);
 }
 
 // ---------------------------------------------------------------------
@@ -224,17 +226,20 @@ service::ServiceId AbstractContext::allocateServiceId() noexcept
 {
     // Called under _registryMutex by @ref registerService. Non-zero
     // generation guarantees @ref ServiceId::valid returns true on the
-    // issued handle.
-    service::ServiceId id{_nextServiceIndex, _serviceGeneration};
-    ++_nextServiceIndex;
-    ++_serviceGeneration;
-    if (_serviceGeneration == 0)
-    {
-        // Wrap-around guard: skip the invalid sentinel generation so
-        // no future id accidentally compares equal to the default
-        // @c ServiceId{}.
-        _serviceGeneration = 1;
-    }
+    // issued handle. The atomic members are updated with relaxed
+    // ordering — the mutex provides the happens-before between the
+    // bump and the registry emplace; the atomics only exist so that
+    // lock-free readers (`nextServiceIndex()`) do not race.
+    const auto index      = _nextServiceIndex.load(std::memory_order_relaxed);
+    const auto generation = _serviceGeneration.load(std::memory_order_relaxed);
+    service::ServiceId id{index, generation};
+    _nextServiceIndex.store(index + 1, std::memory_order_release);
+    const auto nextGen = generation + 1;
+    // Wrap-around guard: skip the invalid sentinel generation so
+    // no future id accidentally compares equal to the default
+    // @c ServiceId{}.
+    _serviceGeneration.store(nextGen == 0 ? std::uint32_t{1} : nextGen,
+                             std::memory_order_release);
     return id;
 }
 
