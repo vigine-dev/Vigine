@@ -431,6 +431,44 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Sync Primitives Smoke Target ===================
+# Smoke coverage for the four factory-produced sync primitives on
+# IThreadManager: IMutex (lock / tryLock / lockFor timeout), ISemaphore
+# (acquire / release / count / tryAcquire), IBarrier (two-party
+# arriveAndWait round trip), IMessageChannel (send / receive / close).
+# Level-0 primitive — wrappers above all depend on these working; a
+# dedicated smoke target turns regressions into localised failures.
+set(SYNC_SMOKE_TARGET sync-smoke)
+
+add_executable(${SYNC_SMOKE_TARGET}
+    threading/sync_smoke_test.cpp
+)
+
+target_include_directories(${SYNC_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${SYNC_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${SYNC_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${SYNC_SMOKE_TARGET}
+    PROPERTIES LABELS "sync-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== Service Smoke Target ===========================
 # Smoke coverage for the IService Level-1 wrapper: createService()
 # hands back a live default service; dependencies() is empty on a
