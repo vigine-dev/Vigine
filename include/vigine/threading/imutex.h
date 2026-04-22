@@ -13,10 +13,12 @@ namespace vigine::threading
  * obtain an instance from @ref IThreadManager::createMutex, hand the
  * returned @c std::unique_ptr ownership around, and call @ref lock /
  * @ref tryLock / @ref unlock on it exactly as they would a
- * @c std::mutex. The concrete implementation is hidden behind the
- * interface so that later leaves may swap @c std::mutex for a sanitiser-
- * friendly instrumented mutex or for an @c std::timed_mutex on platforms
- * that give tighter guarantees, without touching call sites.
+ * @c std::mutex. The default factory returns a wrapper around
+ * @c std::timed_mutex, so @ref lock with a finite @p timeout forwards to
+ * @c std::timed_mutex::try_lock_for. The concrete type stays hidden
+ * behind the interface so call sites are insulated from the underlying
+ * primitive and from any future swap (for example to a sanitiser-friendly
+ * instrumented mutex).
  *
  * Ownership and lifetime: every mutex is owned by the caller via
  * @c std::unique_ptr. The manager that produced the mutex does not
