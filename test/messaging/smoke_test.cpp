@@ -268,6 +268,43 @@ TEST_F(MessagingSmoke, ChainStopsOnHandled)
 }
 
 // ---------------------------------------------------------------------------
+// Case 4b -- Bubble stops on the first subscriber that reports Handled.
+//
+// The v1 AbstractMessageTarget has no parent() hook, so Bubble
+// currently degrades to FirstMatch-with-Handled semantics: walk the
+// snapshot in registration order, deliver to the first matching
+// subscriber, stop when it reports Handled or Stop. This smoke case
+// pins that shipped shape — when parent chains land in a later
+// leaf, the test shape grows to cover walking upward.
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, BubbleStopsOnHandled)
+{
+    auto bus = createMessageBus(inlineConfig(), *_threadManager);
+
+    CountingSubscriber first{DispatchResult::Handled};
+    CountingSubscriber second{DispatchResult::Pass};
+
+    MessageFilter filter{};
+    filter.kind = MessageKind::Event;
+
+    auto tfirst  = bus->subscribe(filter, &first);
+    auto tsecond = bus->subscribe(filter, &second);
+    ASSERT_TRUE(tfirst && tsecond);
+
+    const Result posted = bus->post(std::make_unique<SmokeMessage>(
+        MessageKind::Event,
+        RouteMode::Bubble,
+        vigine::payload::PayloadTypeId{0x10350u}));
+    EXPECT_TRUE(posted.isSuccess());
+
+    // First matching subscriber sees the message once and reports
+    // Handled; the walk stops before reaching `second`.
+    EXPECT_EQ(first.hits(), 1u);
+    EXPECT_EQ(second.hits(), 0u);
+}
+
+// ---------------------------------------------------------------------------
 // Case 5 -- Broadcast reaches every subscriber regardless of filter target.
 // ---------------------------------------------------------------------------
 
