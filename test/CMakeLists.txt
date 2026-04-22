@@ -431,6 +431,45 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== ECS Smoke Target ================================
+# Smoke coverage for the ECS Level-1 wrapper: create + attach churn
+# across 1k entities, component lookup round-trip, entitiesWith
+# iteration under attach/remove churn, and the cascade on
+# removeEntity. Exercises `createECS()` directly so regressions in
+# the underlying entity-world storage (tombstone accumulation, missed
+# cascades, iteration-under-churn) fail here instead of hiding
+# behind a full engine fixture.
+set(ECS_SMOKE_TARGET ecs-smoke)
+
+add_executable(${ECS_SMOKE_TARGET}
+    ecs/smoke_test.cpp
+)
+
+target_include_directories(${ECS_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${ECS_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ECS_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${ECS_SMOKE_TARGET}
+    PROPERTIES LABELS "ecs-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== Full-Stack Contract Suite =======================
 # End-to-end contract coverage for the unified substrate: engine
 # lifecycle, threading primitives, messaging bus, every Level-2 facade
