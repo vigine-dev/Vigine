@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\handler\windoweventhandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\initwindowtask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\runwindowtask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\windoweventsignal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\processinputeventtask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\initvulkantask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setupcubetask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuphelpergeometrytask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptexttask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptextedittask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\loadtexturestask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptexturedplanestask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\imageloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\rendercubetask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\system\texteditorsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\state\initstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\state\workstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\state\errorstate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\work\project\CodeMap\external\Vigine\example\window\state\closestate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\handler\windoweventhandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\initwindowtask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\runwindowtask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\windoweventsignal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\window\processinputeventtask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\initvulkantask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setupcubetask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuphelpergeometrytask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptexttask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptextedittask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\loadtexturestask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\setuptexturedplanestask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\imageloader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\task\vulkan\rendercubetask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\system\texteditorsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\state\initstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\state\workstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\state\errorstate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\work\project\CodeMap\external\Vigine\example\window\state\closestate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\example\window\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{B5A511DE-EB1A-3FA7-9DA1-D2DE8D3071CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{DD75281C-BB26-3879-8AF9-FAB4E9DC11FE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

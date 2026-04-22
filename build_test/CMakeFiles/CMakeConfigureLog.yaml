@@ -1,0 +1,2456 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineSystem.cmake:212 (message)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      The system is: Windows - 10.0.26200 - AMD64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCCompilerId.c.in"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/"
+    found: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeCCompilerId.c.in"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:122 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+      Build started 04/22/2026 07:08:29.
+      
+      Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdC\\CompilerIdC.vcxproj" on node 1 (default targets).
+      PrepareForBuild:
+        Creating directory "Debug\\".
+        Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+        Creating directory "Debug\\CompilerIdC.tlog\\".
+      InitializeBuildStatus:
+        Creating "Debug\\CompilerIdC.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        Touching "Debug\\CompilerIdC.tlog\\unsuccessfulbuild".
+      VcpkgCheckManifestRoot:
+        The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+      ClCompile:
+        C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc145.pdb" /external:W0 /Gd /TC /FC /errorReport:queue CMakeCCompilerId.c
+        CMakeCCompilerId.c
+      Link:
+        C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdC.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdC.lib" /MACHINE:X64 Debug\\CMakeCCompilerId.obj
+        CompilerIdC.vcxproj -> D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdC\\CompilerIdC.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_C_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_C_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        Deleting file "Debug\\CompilerIdC.tlog\\unsuccessfulbuild".
+        Touching "Debug\\CompilerIdC.tlog\\CompilerIdC.lastbuildstate".
+      Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdC\\CompilerIdC.vcxproj" (default targets).
+      
+      Build succeeded.
+          0 Warning(s)
+          0 Error(s)
+      
+      Time Elapsed 00:00:00.67
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.vcxproj"
+      
+      The C compiler identification is MSVC, found in:
+        D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/4.1.1-msvc1/CompilerIdC/CompilerIdC.exe
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:103 (__resolve_linker_path)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "_CMAKE_TOOL_WITH_PATH"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "link"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.com"
+    found: "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:37 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:65 (__resolve_tool_path)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:104 (__resolve_linker_path)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "_CMAKE_TOOL_WITH_PATH"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "lld-link"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lld-link"
+      - "C:/Users/vital/bin/lld-link.com"
+      - "C:/Users/vital/bin/lld-link.exe"
+      - "C:/Users/vital/bin/lld-link"
+      - "C:/Program Files/Git/mingw64/bin/lld-link.com"
+      - "C:/Program Files/Git/mingw64/bin/lld-link.exe"
+      - "C:/Program Files/Git/mingw64/bin/lld-link"
+      - "C:/Program Files/Git/usr/local/bin/lld-link.com"
+      - "C:/Program Files/Git/usr/local/bin/lld-link.exe"
+      - "C:/Program Files/Git/usr/local/bin/lld-link"
+      - "C:/Program Files/Git/usr/bin/lld-link.com"
+      - "C:/Program Files/Git/usr/bin/lld-link.exe"
+      - "C:/Program Files/Git/usr/bin/lld-link"
+      - "C:/VulkanSDK/1.4.341.1/Bin/lld-link.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/lld-link.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/lld-link"
+      - "C:/Windows/System32/lld-link.com"
+      - "C:/Windows/System32/lld-link.exe"
+      - "C:/Windows/System32/lld-link"
+      - "C:/Windows/lld-link.com"
+      - "C:/Windows/lld-link.exe"
+      - "C:/Windows/lld-link"
+      - "C:/Windows/System32/wbem/lld-link.com"
+      - "C:/Windows/System32/wbem/lld-link.exe"
+      - "C:/Windows/System32/wbem/lld-link"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/lld-link"
+      - "C:/Windows/System32/OpenSSH/lld-link.com"
+      - "C:/Windows/System32/OpenSSH/lld-link.exe"
+      - "C:/Windows/System32/OpenSSH/lld-link"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/lld-link"
+      - "C:/Program Files/doxygen/bin/lld-link.com"
+      - "C:/Program Files/doxygen/bin/lld-link.exe"
+      - "C:/Program Files/doxygen/bin/lld-link"
+      - "C:/Program Files/Graphviz/bin/lld-link.com"
+      - "C:/Program Files/Graphviz/bin/lld-link.exe"
+      - "C:/Program Files/Graphviz/bin/lld-link"
+      - "C:/Program Files/git-cola/bin/lld-link.com"
+      - "C:/Program Files/git-cola/bin/lld-link.exe"
+      - "C:/Program Files/git-cola/bin/lld-link"
+      - "C:/Program Files/Git/cmd/lld-link.com"
+      - "C:/Program Files/Git/cmd/lld-link.exe"
+      - "C:/Program Files/Git/cmd/lld-link"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/lld-link.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/lld-link.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/lld-link"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/lld-link.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/lld-link"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/lld-link.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/lld-link.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/lld-link"
+      - "C:/Users/vital/AppData/Local/Python/bin/lld-link.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/lld-link.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/lld-link"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/lld-link.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/lld-link.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/lld-link"
+      - "C:/Program Files/PowerShell/7/lld-link.com"
+      - "C:/Program Files/PowerShell/7/lld-link.exe"
+      - "C:/Program Files/PowerShell/7/lld-link"
+      - "C:/Program Files/GitHub CLI/lld-link.com"
+      - "C:/Program Files/GitHub CLI/lld-link.exe"
+      - "C:/Program Files/GitHub CLI/lld-link"
+      - "C:/Program Files/Docker/Docker/resources/bin/lld-link.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/lld-link.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/lld-link"
+      - "C:/Program Files/nodejs/lld-link.com"
+      - "C:/Program Files/nodejs/lld-link.exe"
+      - "C:/Program Files/nodejs/lld-link"
+      - "C:/Program Files/LLVM/bin/lld-link.com"
+    found: "C:/Program Files/LLVM/bin/lld-link.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "CMAKE_LINKER"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "link"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.com"
+    found: "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/link.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "CMAKE_MT"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "mt"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/mt"
+      - "C:/Users/vital/bin/mt.com"
+      - "C:/Users/vital/bin/mt.exe"
+      - "C:/Users/vital/bin/mt"
+      - "C:/Program Files/Git/mingw64/bin/mt.com"
+      - "C:/Program Files/Git/mingw64/bin/mt.exe"
+      - "C:/Program Files/Git/mingw64/bin/mt"
+      - "C:/Program Files/Git/usr/local/bin/mt.com"
+      - "C:/Program Files/Git/usr/local/bin/mt.exe"
+      - "C:/Program Files/Git/usr/local/bin/mt"
+      - "C:/Program Files/Git/usr/bin/mt.com"
+      - "C:/Program Files/Git/usr/bin/mt.exe"
+      - "C:/Program Files/Git/usr/bin/mt"
+      - "C:/VulkanSDK/1.4.341.1/Bin/mt.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/mt.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/mt"
+      - "C:/Windows/System32/mt.com"
+      - "C:/Windows/System32/mt.exe"
+      - "C:/Windows/System32/mt"
+      - "C:/Windows/mt.com"
+      - "C:/Windows/mt.exe"
+      - "C:/Windows/mt"
+      - "C:/Windows/System32/wbem/mt.com"
+      - "C:/Windows/System32/wbem/mt.exe"
+      - "C:/Windows/System32/wbem/mt"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/mt"
+      - "C:/Windows/System32/OpenSSH/mt.com"
+      - "C:/Windows/System32/OpenSSH/mt.exe"
+      - "C:/Windows/System32/OpenSSH/mt"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/mt"
+      - "C:/Program Files/doxygen/bin/mt.com"
+      - "C:/Program Files/doxygen/bin/mt.exe"
+      - "C:/Program Files/doxygen/bin/mt"
+      - "C:/Program Files/Graphviz/bin/mt.com"
+      - "C:/Program Files/Graphviz/bin/mt.exe"
+      - "C:/Program Files/Graphviz/bin/mt"
+      - "C:/Program Files/git-cola/bin/mt.com"
+      - "C:/Program Files/git-cola/bin/mt.exe"
+      - "C:/Program Files/git-cola/bin/mt"
+      - "C:/Program Files/Git/cmd/mt.com"
+      - "C:/Program Files/Git/cmd/mt.exe"
+      - "C:/Program Files/Git/cmd/mt"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/mt.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/mt.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/mt"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/mt.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/mt.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/mt"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/mt.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/mt.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/mt"
+      - "C:/Users/vital/AppData/Local/Python/bin/mt.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/mt.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/mt"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/mt.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/mt.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/mt"
+      - "C:/Program Files/PowerShell/7/mt.com"
+      - "C:/Program Files/PowerShell/7/mt.exe"
+      - "C:/Program Files/PowerShell/7/mt"
+      - "C:/Program Files/GitHub CLI/mt.com"
+      - "C:/Program Files/GitHub CLI/mt.exe"
+      - "C:/Program Files/GitHub CLI/mt"
+      - "C:/Program Files/Docker/Docker/resources/bin/mt.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/mt.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/mt"
+      - "C:/Program Files/nodejs/mt.com"
+      - "C:/Program Files/nodejs/mt.exe"
+      - "C:/Program Files/nodejs/mt"
+      - "C:/Program Files/LLVM/bin/mt.com"
+      - "C:/Program Files/LLVM/bin/mt.exe"
+      - "C:/Program Files/LLVM/bin/mt"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/mt.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/mt.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/mt"
+      - "C:/Users/vital/AppData/Roaming/npm/mt.com"
+      - "C:/Users/vital/AppData/Roaming/npm/mt.exe"
+      - "C:/Users/vital/AppData/Roaming/npm/mt"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/mt.com"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/mt.exe"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/mt"
+      - "C:/Program Files/Git/usr/bin/core_perl/mt.com"
+      - "C:/Program Files/Git/usr/bin/core_perl/mt.exe"
+      - "C:/Program Files/Git/usr/bin/core_perl/mt"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/mt.com"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/mt.exe"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/mt"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeFindBinUtils.cmake:238 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "CMAKE_AR"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "lib"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+    searched_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lib.com"
+    found: "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/lib.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:462 (find_file)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:500 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/"
+    found: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+      Build started 04/22/2026 07:08:30.
+      
+      Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdCXX\\CompilerIdCXX.vcxproj" on node 1 (default targets).
+      PrepareForBuild:
+        Creating directory "Debug\\".
+        Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+        Creating directory "Debug\\CompilerIdCXX.tlog\\".
+      InitializeBuildStatus:
+        Creating "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        Touching "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+      VcpkgCheckManifestRoot:
+        The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+      ClCompile:
+        C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc145.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
+        CMakeCXXCompilerId.cpp
+      Link:
+        C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
+        CompilerIdCXX.vcxproj -> D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdCXX\\CompilerIdCXX.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        Deleting file "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+        Touching "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.lastbuildstate".
+      Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\4.1.1-msvc1\\CompilerIdCXX\\CompilerIdCXX.vcxproj" (default targets).
+      
+      Build succeeded.
+          0 Warning(s)
+          0 Error(s)
+      
+      Time Elapsed 00:00:00.49
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
+      
+      The CXX compiler identification is MSVC, found in:
+        D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/4.1.1-msvc1/CompilerIdCXX/CompilerIdCXX.exe
+      
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineRCCompiler.cmake:40 (find_program)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Platform/Windows-MSVC.cmake:581 (enable_language)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Platform/Windows-MSVC.cmake:554 (__windows_compiler_msvc_enable_rc)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Platform/Windows-MSVC-C.cmake:5 (__windows_compiler_msvc)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeCInformation.cmake:48 (include)"
+      - "CMakeLists.txt:7 (project)"
+    mode: "program"
+    variable: "CMAKE_RC_COMPILER"
+    description: "RC compiler"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "rc"
+    candidate_directories:
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/bin/"
+      - "C:/Program Files/sbin/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/bin/"
+      - "C:/Program Files (x86)/sbin/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/bin/"
+      - "C:/Program Files (x86)/vigine/sbin/"
+      - "C:/Program Files (x86)/vigine/"
+    searched_directories:
+      - "C:/Users/vital/bin/rc.com"
+      - "C:/Users/vital/bin/rc.exe"
+      - "C:/Users/vital/bin/rc"
+      - "C:/Program Files/Git/mingw64/bin/rc.com"
+      - "C:/Program Files/Git/mingw64/bin/rc.exe"
+      - "C:/Program Files/Git/mingw64/bin/rc"
+      - "C:/Program Files/Git/usr/local/bin/rc.com"
+      - "C:/Program Files/Git/usr/local/bin/rc.exe"
+      - "C:/Program Files/Git/usr/local/bin/rc"
+      - "C:/Program Files/Git/usr/bin/rc.com"
+      - "C:/Program Files/Git/usr/bin/rc.exe"
+      - "C:/Program Files/Git/usr/bin/rc"
+      - "C:/VulkanSDK/1.4.341.1/Bin/rc.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/rc.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/rc"
+      - "C:/Windows/System32/rc.com"
+      - "C:/Windows/System32/rc.exe"
+      - "C:/Windows/System32/rc"
+      - "C:/Windows/rc.com"
+      - "C:/Windows/rc.exe"
+      - "C:/Windows/rc"
+      - "C:/Windows/System32/wbem/rc.com"
+      - "C:/Windows/System32/wbem/rc.exe"
+      - "C:/Windows/System32/wbem/rc"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/rc"
+      - "C:/Windows/System32/OpenSSH/rc.com"
+      - "C:/Windows/System32/OpenSSH/rc.exe"
+      - "C:/Windows/System32/OpenSSH/rc"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/rc"
+      - "C:/Program Files/doxygen/bin/rc.com"
+      - "C:/Program Files/doxygen/bin/rc.exe"
+      - "C:/Program Files/doxygen/bin/rc"
+      - "C:/Program Files/Graphviz/bin/rc.com"
+      - "C:/Program Files/Graphviz/bin/rc.exe"
+      - "C:/Program Files/Graphviz/bin/rc"
+      - "C:/Program Files/git-cola/bin/rc.com"
+      - "C:/Program Files/git-cola/bin/rc.exe"
+      - "C:/Program Files/git-cola/bin/rc"
+      - "C:/Program Files/Git/cmd/rc.com"
+      - "C:/Program Files/Git/cmd/rc.exe"
+      - "C:/Program Files/Git/cmd/rc"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/rc.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/rc.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/rc"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/rc.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/rc.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/rc"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/rc.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/rc.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/rc"
+      - "C:/Users/vital/AppData/Local/Python/bin/rc.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/rc.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/rc"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/rc.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/rc.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/rc"
+      - "C:/Program Files/PowerShell/7/rc.com"
+      - "C:/Program Files/PowerShell/7/rc.exe"
+      - "C:/Program Files/PowerShell/7/rc"
+      - "C:/Program Files/GitHub CLI/rc.com"
+      - "C:/Program Files/GitHub CLI/rc.exe"
+      - "C:/Program Files/GitHub CLI/rc"
+      - "C:/Program Files/Docker/Docker/resources/bin/rc.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/rc.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/rc"
+      - "C:/Program Files/nodejs/rc.com"
+      - "C:/Program Files/nodejs/rc.exe"
+      - "C:/Program Files/nodejs/rc"
+      - "C:/Program Files/LLVM/bin/rc.com"
+      - "C:/Program Files/LLVM/bin/rc.exe"
+      - "C:/Program Files/LLVM/bin/rc"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/rc.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/rc.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/rc"
+      - "C:/Users/vital/AppData/Roaming/npm/rc.com"
+      - "C:/Users/vital/AppData/Roaming/npm/rc.exe"
+      - "C:/Users/vital/AppData/Roaming/npm/rc"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/rc.com"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/rc.exe"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/rc"
+      - "C:/Program Files/Git/usr/bin/core_perl/rc.com"
+      - "C:/Program Files/Git/usr/bin/core_perl/rc.exe"
+      - "C:/Program Files/Git/usr/bin/core_perl/rc"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/rc.com"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/rc.exe"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/rc"
+      - "C:/Program Files/bin/rc.com"
+      - "C:/Program Files/bin/rc.exe"
+      - "C:/Program Files/bin/rc"
+      - "C:/Program Files/sbin/rc.com"
+      - "C:/Program Files/sbin/rc.exe"
+      - "C:/Program Files/sbin/rc"
+      - "C:/Program Files/rc.com"
+      - "C:/Program Files/rc.exe"
+      - "C:/Program Files/rc"
+      - "C:/Program Files (x86)/bin/rc.com"
+      - "C:/Program Files (x86)/bin/rc.exe"
+      - "C:/Program Files (x86)/bin/rc"
+      - "C:/Program Files (x86)/sbin/rc.com"
+      - "C:/Program Files (x86)/sbin/rc.exe"
+      - "C:/Program Files (x86)/sbin/rc"
+      - "C:/Program Files (x86)/rc.com"
+      - "C:/Program Files (x86)/rc.exe"
+      - "C:/Program Files (x86)/rc"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/rc"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/rc"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/rc"
+      - "C:/Program Files (x86)/vigine/bin/rc.com"
+      - "C:/Program Files (x86)/vigine/bin/rc.exe"
+      - "C:/Program Files (x86)/vigine/bin/rc"
+      - "C:/Program Files (x86)/vigine/sbin/rc.com"
+      - "C:/Program Files (x86)/vigine/sbin/rc.exe"
+      - "C:/Program Files (x86)/vigine/sbin/rc"
+      - "C:/Program Files (x86)/vigine/rc.com"
+      - "C:/Program Files (x86)/vigine/rc.exe"
+      - "C:/Program Files (x86)/vigine/rc"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-l9rdxq"
+      binary: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-l9rdxq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-l9rdxq'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Insiders/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_0e9e1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+        Build started 04/22/2026 07:08:30.
+        
+        Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-l9rdxq\\cmTC_0e9e1.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_0e9e1.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-l9rdxq\\Debug\\".
+          Creating directory "cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_0e9e1.dir\\Debug\\\\" /Fd"cmTC_0e9e1.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.1\\Modules\\CMakeCCompilerABI.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_0e9e1.dir\\Debug\\\\" /Fd"cmTC_0e9e1.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.1\\Modules\\CMakeCCompilerABI.c"
+          CMakeCCompilerABI.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-l9rdxq\\Debug\\cmTC_0e9e1.exe" /INCREMENTAL /ILK:"cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-l9rdxq/Debug/cmTC_0e9e1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-l9rdxq/Debug/cmTC_0e9e1.lib" /MACHINE:X64  /machine:x64 cmTC_0e9e1.dir\\Debug\\CMakeCCompilerABI.obj
+          cmTC_0e9e1.vcxproj -> D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-l9rdxq\\Debug\\cmTC_0e9e1.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.tlog\\unsuccessfulbuild".
+          Touching "cmTC_0e9e1.dir\\Debug\\cmTC_0e9e1.tlog\\cmTC_0e9e1.lastbuildstate".
+        Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-l9rdxq\\cmTC_0e9e1.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:00.44
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'C': C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Internal/CMakeDetermineLinkerId.cmake:36 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Running the C compiler's linker: "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.50.35722.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:83 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-997kit"
+      binary: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-997kit"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-997kit'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Insiders/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9cb97.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+        Build started 04/22/2026 07:08:31.
+        
+        Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-997kit\\cmTC_9cb97.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_9cb97.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-997kit\\Debug\\".
+          Creating directory "cmTC_9cb97.dir\\Debug\\cmTC_9cb97.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_9cb97.dir\\Debug\\cmTC_9cb97.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_9cb97.dir\\Debug\\cmTC_9cb97.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GS /fp:precise /Fo"cmTC_9cb97.dir\\Debug\\\\" /Fd"cmTC_9cb97.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.1\\Modules\\CMakeCXXCompilerABI.cpp"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /GS /fp:precise /Fo"cmTC_9cb97.dir\\Debug\\\\" /Fd"cmTC_9cb97.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TP /errorReport:queue "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-4.1\\Modules\\CMakeCXXCompilerABI.cpp"
+          CMakeCXXCompilerABI.cpp
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-997kit\\Debug\\cmTC_9cb97.exe" /INCREMENTAL /ILK:"cmTC_9cb97.dir\\Debug\\cmTC_9cb97.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-997kit/Debug/cmTC_9cb97.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-997kit/Debug/cmTC_9cb97.lib" /MACHINE:X64  /machine:x64 cmTC_9cb97.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_9cb97.vcxproj -> D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-997kit\\Debug\\cmTC_9cb97.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_9cb97.dir\\Debug\\cmTC_9cb97.tlog\\unsuccessfulbuild".
+          Touching "cmTC_9cb97.dir\\Debug\\cmTC_9cb97.tlog\\cmTC_9cb97.lastbuildstate".
+        Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-997kit\\cmTC_9cb97.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:00.44
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:253 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|link\\.exe|lld-link(\\.exe)?))("|,| |$)]
+        linker tool for 'CXX': C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe
+        implicit libs: []
+        implicit objs: []
+        implicit dirs: []
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Internal/CMakeDetermineLinkerId.cmake:36 (message)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeDetermineCompilerABI.cmake:299 (cmake_determine_linker_id)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:7 (project)"
+    message: |
+      Running the CXX compiler's linker: "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.50.35717/bin/HostX64/x64/link.exe" "-v"
+      Microsoft (R) Incremental Linker Version 14.50.35722.0
+      Copyright (C) Microsoft Corporation.  All rights reserved.
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindPkgConfig.cmake:69 (find_program)"
+      - "external/freetype/CMakeLists.txt:255 (include)"
+    mode: "program"
+    variable: "PKG_CONFIG_EXECUTABLE"
+    description: "pkg-config executable"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "pkg-config.bat"
+      - "pkg-config"
+      - "pkgconf"
+    candidate_directories:
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/bin/"
+      - "C:/Program Files/sbin/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/bin/"
+      - "C:/Program Files (x86)/sbin/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/bin/"
+      - "C:/Program Files (x86)/vigine/sbin/"
+      - "C:/Program Files (x86)/vigine/"
+    searched_directories:
+      - "C:/Users/vital/bin/pkg-config.bat.com"
+      - "C:/Users/vital/bin/pkg-config.bat.exe"
+      - "C:/Users/vital/bin/pkg-config.bat"
+      - "C:/Users/vital/bin/pkg-config.com"
+      - "C:/Users/vital/bin/pkg-config.exe"
+      - "C:/Users/vital/bin/pkg-config"
+      - "C:/Users/vital/bin/pkgconf.com"
+      - "C:/Users/vital/bin/pkgconf.exe"
+      - "C:/Users/vital/bin/pkgconf"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config.bat.com"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config.bat"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config.com"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config.exe"
+      - "C:/Program Files/Git/mingw64/bin/pkg-config"
+      - "C:/Program Files/Git/mingw64/bin/pkgconf.com"
+      - "C:/Program Files/Git/mingw64/bin/pkgconf.exe"
+      - "C:/Program Files/Git/mingw64/bin/pkgconf"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config.bat.com"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config.bat"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config.com"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config.exe"
+      - "C:/Program Files/Git/usr/local/bin/pkg-config"
+      - "C:/Program Files/Git/usr/local/bin/pkgconf.com"
+      - "C:/Program Files/Git/usr/local/bin/pkgconf.exe"
+      - "C:/Program Files/Git/usr/local/bin/pkgconf"
+      - "C:/Program Files/Git/usr/bin/pkg-config.bat.com"
+      - "C:/Program Files/Git/usr/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Git/usr/bin/pkg-config.bat"
+      - "C:/Program Files/Git/usr/bin/pkg-config.com"
+      - "C:/Program Files/Git/usr/bin/pkg-config.exe"
+      - "C:/Program Files/Git/usr/bin/pkg-config"
+      - "C:/Program Files/Git/usr/bin/pkgconf.com"
+      - "C:/Program Files/Git/usr/bin/pkgconf.exe"
+      - "C:/Program Files/Git/usr/bin/pkgconf"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config.bat.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config.bat.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config.bat"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkg-config"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkgconf.com"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkgconf.exe"
+      - "C:/VulkanSDK/1.4.341.1/Bin/pkgconf"
+      - "C:/Windows/System32/pkg-config.bat.com"
+      - "C:/Windows/System32/pkg-config.bat.exe"
+      - "C:/Windows/System32/pkg-config.bat"
+      - "C:/Windows/System32/pkg-config.com"
+      - "C:/Windows/System32/pkg-config.exe"
+      - "C:/Windows/System32/pkg-config"
+      - "C:/Windows/System32/pkgconf.com"
+      - "C:/Windows/System32/pkgconf.exe"
+      - "C:/Windows/System32/pkgconf"
+      - "C:/Windows/pkg-config.bat.com"
+      - "C:/Windows/pkg-config.bat.exe"
+      - "C:/Windows/pkg-config.bat"
+      - "C:/Windows/pkg-config.com"
+      - "C:/Windows/pkg-config.exe"
+      - "C:/Windows/pkg-config"
+      - "C:/Windows/pkgconf.com"
+      - "C:/Windows/pkgconf.exe"
+      - "C:/Windows/pkgconf"
+      - "C:/Windows/System32/wbem/pkg-config.bat.com"
+      - "C:/Windows/System32/wbem/pkg-config.bat.exe"
+      - "C:/Windows/System32/wbem/pkg-config.bat"
+      - "C:/Windows/System32/wbem/pkg-config.com"
+      - "C:/Windows/System32/wbem/pkg-config.exe"
+      - "C:/Windows/System32/wbem/pkg-config"
+      - "C:/Windows/System32/wbem/pkgconf.com"
+      - "C:/Windows/System32/wbem/pkgconf.exe"
+      - "C:/Windows/System32/wbem/pkgconf"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config.bat.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config.bat.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config.bat"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkg-config"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkgconf.com"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkgconf.exe"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/pkgconf"
+      - "C:/Windows/System32/OpenSSH/pkg-config.bat.com"
+      - "C:/Windows/System32/OpenSSH/pkg-config.bat.exe"
+      - "C:/Windows/System32/OpenSSH/pkg-config.bat"
+      - "C:/Windows/System32/OpenSSH/pkg-config.com"
+      - "C:/Windows/System32/OpenSSH/pkg-config.exe"
+      - "C:/Windows/System32/OpenSSH/pkg-config"
+      - "C:/Windows/System32/OpenSSH/pkgconf.com"
+      - "C:/Windows/System32/OpenSSH/pkgconf.exe"
+      - "C:/Windows/System32/OpenSSH/pkgconf"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config.bat.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config.bat"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkg-config"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkgconf.com"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkgconf.exe"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/pkgconf"
+      - "C:/Program Files/doxygen/bin/pkg-config.bat.com"
+      - "C:/Program Files/doxygen/bin/pkg-config.bat.exe"
+      - "C:/Program Files/doxygen/bin/pkg-config.bat"
+      - "C:/Program Files/doxygen/bin/pkg-config.com"
+      - "C:/Program Files/doxygen/bin/pkg-config.exe"
+      - "C:/Program Files/doxygen/bin/pkg-config"
+      - "C:/Program Files/doxygen/bin/pkgconf.com"
+      - "C:/Program Files/doxygen/bin/pkgconf.exe"
+      - "C:/Program Files/doxygen/bin/pkgconf"
+      - "C:/Program Files/Graphviz/bin/pkg-config.bat.com"
+      - "C:/Program Files/Graphviz/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Graphviz/bin/pkg-config.bat"
+      - "C:/Program Files/Graphviz/bin/pkg-config.com"
+      - "C:/Program Files/Graphviz/bin/pkg-config.exe"
+      - "C:/Program Files/Graphviz/bin/pkg-config"
+      - "C:/Program Files/Graphviz/bin/pkgconf.com"
+      - "C:/Program Files/Graphviz/bin/pkgconf.exe"
+      - "C:/Program Files/Graphviz/bin/pkgconf"
+      - "C:/Program Files/git-cola/bin/pkg-config.bat.com"
+      - "C:/Program Files/git-cola/bin/pkg-config.bat.exe"
+      - "C:/Program Files/git-cola/bin/pkg-config.bat"
+      - "C:/Program Files/git-cola/bin/pkg-config.com"
+      - "C:/Program Files/git-cola/bin/pkg-config.exe"
+      - "C:/Program Files/git-cola/bin/pkg-config"
+      - "C:/Program Files/git-cola/bin/pkgconf.com"
+      - "C:/Program Files/git-cola/bin/pkgconf.exe"
+      - "C:/Program Files/git-cola/bin/pkgconf"
+      - "C:/Program Files/Git/cmd/pkg-config.bat.com"
+      - "C:/Program Files/Git/cmd/pkg-config.bat.exe"
+      - "C:/Program Files/Git/cmd/pkg-config.bat"
+      - "C:/Program Files/Git/cmd/pkg-config.com"
+      - "C:/Program Files/Git/cmd/pkg-config.exe"
+      - "C:/Program Files/Git/cmd/pkg-config"
+      - "C:/Program Files/Git/cmd/pkgconf.com"
+      - "C:/Program Files/Git/cmd/pkgconf.exe"
+      - "C:/Program Files/Git/cmd/pkgconf"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config.bat"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkg-config"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkgconf.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkgconf.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/pkgconf"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config.bat"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkg-config"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkgconf.com"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkgconf.exe"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/pkgconf"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config.bat"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkg-config"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkgconf.com"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkgconf.exe"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/pkgconf"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config.bat"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkg-config"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkgconf.com"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkgconf.exe"
+      - "C:/Users/vital/AppData/Local/Python/bin/pkgconf"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config.bat.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config.bat.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config.bat"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkg-config"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkgconf.com"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkgconf.exe"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/pkgconf"
+      - "C:/Program Files/PowerShell/7/pkg-config.bat.com"
+      - "C:/Program Files/PowerShell/7/pkg-config.bat.exe"
+      - "C:/Program Files/PowerShell/7/pkg-config.bat"
+      - "C:/Program Files/PowerShell/7/pkg-config.com"
+      - "C:/Program Files/PowerShell/7/pkg-config.exe"
+      - "C:/Program Files/PowerShell/7/pkg-config"
+      - "C:/Program Files/PowerShell/7/pkgconf.com"
+      - "C:/Program Files/PowerShell/7/pkgconf.exe"
+      - "C:/Program Files/PowerShell/7/pkgconf"
+      - "C:/Program Files/GitHub CLI/pkg-config.bat.com"
+      - "C:/Program Files/GitHub CLI/pkg-config.bat.exe"
+      - "C:/Program Files/GitHub CLI/pkg-config.bat"
+      - "C:/Program Files/GitHub CLI/pkg-config.com"
+      - "C:/Program Files/GitHub CLI/pkg-config.exe"
+      - "C:/Program Files/GitHub CLI/pkg-config"
+      - "C:/Program Files/GitHub CLI/pkgconf.com"
+      - "C:/Program Files/GitHub CLI/pkgconf.exe"
+      - "C:/Program Files/GitHub CLI/pkgconf"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config.bat.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config.bat"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkg-config"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkgconf.com"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkgconf.exe"
+      - "C:/Program Files/Docker/Docker/resources/bin/pkgconf"
+      - "C:/Program Files/nodejs/pkg-config.bat.com"
+      - "C:/Program Files/nodejs/pkg-config.bat.exe"
+      - "C:/Program Files/nodejs/pkg-config.bat"
+      - "C:/Program Files/nodejs/pkg-config.com"
+      - "C:/Program Files/nodejs/pkg-config.exe"
+      - "C:/Program Files/nodejs/pkg-config"
+      - "C:/Program Files/nodejs/pkgconf.com"
+      - "C:/Program Files/nodejs/pkgconf.exe"
+      - "C:/Program Files/nodejs/pkgconf"
+      - "C:/Program Files/LLVM/bin/pkg-config.bat.com"
+      - "C:/Program Files/LLVM/bin/pkg-config.bat.exe"
+      - "C:/Program Files/LLVM/bin/pkg-config.bat"
+      - "C:/Program Files/LLVM/bin/pkg-config.com"
+      - "C:/Program Files/LLVM/bin/pkg-config.exe"
+      - "C:/Program Files/LLVM/bin/pkg-config"
+      - "C:/Program Files/LLVM/bin/pkgconf.com"
+      - "C:/Program Files/LLVM/bin/pkgconf.exe"
+      - "C:/Program Files/LLVM/bin/pkgconf"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config.bat"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkg-config"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkgconf.com"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkgconf.exe"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/pkgconf"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config.bat"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config.com"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config.exe"
+      - "C:/Users/vital/AppData/Roaming/npm/pkg-config"
+      - "C:/Users/vital/AppData/Roaming/npm/pkgconf.com"
+      - "C:/Users/vital/AppData/Roaming/npm/pkgconf.exe"
+      - "C:/Users/vital/AppData/Roaming/npm/pkgconf"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config.bat.com"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config.bat.exe"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config.bat"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config.com"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config.exe"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkg-config"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkgconf.com"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkgconf.exe"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/pkgconf"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config.bat.com"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config.bat.exe"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config.bat"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config.com"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config.exe"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkg-config"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkgconf.com"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkgconf.exe"
+      - "C:/Program Files/Git/usr/bin/core_perl/pkgconf"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config.bat.com"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config.bat.exe"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config.bat"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config.com"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config.exe"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkg-config"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkgconf.com"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkgconf.exe"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/pkgconf"
+      - "C:/Program Files/bin/pkg-config.bat.com"
+      - "C:/Program Files/bin/pkg-config.bat.exe"
+      - "C:/Program Files/bin/pkg-config.bat"
+      - "C:/Program Files/bin/pkg-config.com"
+      - "C:/Program Files/bin/pkg-config.exe"
+      - "C:/Program Files/bin/pkg-config"
+      - "C:/Program Files/bin/pkgconf.com"
+      - "C:/Program Files/bin/pkgconf.exe"
+      - "C:/Program Files/bin/pkgconf"
+      - "C:/Program Files/sbin/pkg-config.bat.com"
+      - "C:/Program Files/sbin/pkg-config.bat.exe"
+      - "C:/Program Files/sbin/pkg-config.bat"
+      - "C:/Program Files/sbin/pkg-config.com"
+      - "C:/Program Files/sbin/pkg-config.exe"
+      - "C:/Program Files/sbin/pkg-config"
+      - "C:/Program Files/sbin/pkgconf.com"
+      - "C:/Program Files/sbin/pkgconf.exe"
+      - "C:/Program Files/sbin/pkgconf"
+      - "C:/Program Files/pkg-config.bat.com"
+      - "C:/Program Files/pkg-config.bat.exe"
+      - "C:/Program Files/pkg-config.bat"
+      - "C:/Program Files/pkg-config.com"
+      - "C:/Program Files/pkg-config.exe"
+      - "C:/Program Files/pkg-config"
+      - "C:/Program Files/pkgconf.com"
+      - "C:/Program Files/pkgconf.exe"
+      - "C:/Program Files/pkgconf"
+      - "C:/Program Files (x86)/bin/pkg-config.bat.com"
+      - "C:/Program Files (x86)/bin/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/bin/pkg-config.bat"
+      - "C:/Program Files (x86)/bin/pkg-config.com"
+      - "C:/Program Files (x86)/bin/pkg-config.exe"
+      - "C:/Program Files (x86)/bin/pkg-config"
+      - "C:/Program Files (x86)/bin/pkgconf.com"
+      - "C:/Program Files (x86)/bin/pkgconf.exe"
+      - "C:/Program Files (x86)/bin/pkgconf"
+      - "C:/Program Files (x86)/sbin/pkg-config.bat.com"
+      - "C:/Program Files (x86)/sbin/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/sbin/pkg-config.bat"
+      - "C:/Program Files (x86)/sbin/pkg-config.com"
+      - "C:/Program Files (x86)/sbin/pkg-config.exe"
+      - "C:/Program Files (x86)/sbin/pkg-config"
+      - "C:/Program Files (x86)/sbin/pkgconf.com"
+      - "C:/Program Files (x86)/sbin/pkgconf.exe"
+      - "C:/Program Files (x86)/sbin/pkgconf"
+      - "C:/Program Files (x86)/pkg-config.bat.com"
+      - "C:/Program Files (x86)/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/pkg-config.bat"
+      - "C:/Program Files (x86)/pkg-config.com"
+      - "C:/Program Files (x86)/pkg-config.exe"
+      - "C:/Program Files (x86)/pkg-config"
+      - "C:/Program Files (x86)/pkgconf.com"
+      - "C:/Program Files (x86)/pkgconf.exe"
+      - "C:/Program Files (x86)/pkgconf"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config.bat.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config.bat.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config.bat"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkg-config"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkgconf.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkgconf.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/pkgconf"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config.bat.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config.bat.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config.bat"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkg-config"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkgconf.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkgconf.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/pkgconf"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config.bat.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config.bat.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config.bat"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkg-config"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkgconf.com"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkgconf.exe"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/pkgconf"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config.bat.com"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config.bat"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config.com"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config.exe"
+      - "C:/Program Files (x86)/vigine/bin/pkg-config"
+      - "C:/Program Files (x86)/vigine/bin/pkgconf.com"
+      - "C:/Program Files (x86)/vigine/bin/pkgconf.exe"
+      - "C:/Program Files (x86)/vigine/bin/pkgconf"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config.bat.com"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config.bat"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config.com"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config.exe"
+      - "C:/Program Files (x86)/vigine/sbin/pkg-config"
+      - "C:/Program Files (x86)/vigine/sbin/pkgconf.com"
+      - "C:/Program Files (x86)/vigine/sbin/pkgconf.exe"
+      - "C:/Program Files (x86)/vigine/sbin/pkgconf"
+      - "C:/Program Files (x86)/vigine/pkg-config.bat.com"
+      - "C:/Program Files (x86)/vigine/pkg-config.bat.exe"
+      - "C:/Program Files (x86)/vigine/pkg-config.bat"
+      - "C:/Program Files (x86)/vigine/pkg-config.com"
+      - "C:/Program Files (x86)/vigine/pkg-config.exe"
+      - "C:/Program Files (x86)/vigine/pkg-config"
+      - "C:/Program Files (x86)/vigine/pkgconf.com"
+      - "C:/Program Files (x86)/vigine/pkgconf.exe"
+      - "C:/Program Files (x86)/vigine/pkgconf"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "cmake/modules/FindGLM.cmake:6 (find_path)"
+      - "CMakeLists.txt:76 (find_package)"
+    mode: "path"
+    variable: "GLM_INCLUDE_DIR"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "glm/glm.hpp"
+    candidate_directories:
+      - "D:/work/project/CodeMap/external/Vigine/external/glm/"
+    found: "D:/work/project/CodeMap/external/Vigine/external/glm/"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindVulkan.cmake:387 (find_path)"
+      - "CMakeLists.txt:80 (find_package)"
+    mode: "path"
+    variable: "Vulkan_INCLUDE_DIR"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "vulkan/vulkan.h"
+    candidate_directories:
+      - "C:/VulkanSDK/1.4.341.1/include/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/include/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/include/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/include/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/include/"
+      - "C:/Program Files (x86)/vigine/"
+    found: "C:/VulkanSDK/1.4.341.1/include/"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindVulkan.cmake:394 (find_library)"
+      - "CMakeLists.txt:80 (find_package)"
+    mode: "library"
+    variable: "Vulkan_LIBRARY"
+    description: "Path to a library."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "vulkan-1"
+    candidate_directories:
+      - "C:/VulkanSDK/1.4.341.1/lib/"
+      - "C:/VulkanSDK/1.4.341.1/bin/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/lib/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/lib/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/lib/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/lib/"
+      - "C:/Program Files (x86)/vigine/"
+      - "C:/Program Files (x86)/vigine/bin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "/bin/"
+    found: "C:/VulkanSDK/1.4.341.1/Lib/vulkan-1.lib"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_LIBRARY_PATH:
+        - "C:/Program Files (x86)/vigine/bin"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin"
+        - "/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindVulkan.cmake:402 (find_program)"
+      - "CMakeLists.txt:80 (find_package)"
+    mode: "program"
+    variable: "Vulkan_GLSLC_EXECUTABLE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "glslc"
+    candidate_directories:
+      - "C:/VulkanSDK/1.4.341.1/bin/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/bin/"
+      - "C:/Program Files/sbin/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/bin/"
+      - "C:/Program Files (x86)/sbin/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/bin/"
+      - "C:/Program Files (x86)/vigine/sbin/"
+      - "C:/Program Files (x86)/vigine/"
+    searched_directories:
+      - "C:/VulkanSDK/1.4.341.1/bin/glslc.com"
+    found: "C:/VulkanSDK/1.4.341.1/Bin/glslc.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindVulkan.cmake:410 (find_program)"
+      - "CMakeLists.txt:80 (find_package)"
+    mode: "program"
+    variable: "Vulkan_GLSLANG_VALIDATOR_EXECUTABLE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "glslangValidator"
+    candidate_directories:
+      - "C:/VulkanSDK/1.4.341.1/bin/"
+      - "C:/Users/vital/bin/"
+      - "C:/Program Files/Git/mingw64/bin/"
+      - "C:/Program Files/Git/usr/local/bin/"
+      - "C:/Program Files/Git/usr/bin/"
+      - "C:/VulkanSDK/1.4.341.1/Bin/"
+      - "C:/Windows/System32/"
+      - "C:/Windows/"
+      - "C:/Windows/System32/wbem/"
+      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
+      - "C:/Windows/System32/OpenSSH/"
+      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
+      - "C:/Program Files/doxygen/bin/"
+      - "C:/Program Files/Graphviz/bin/"
+      - "C:/Program Files/git-cola/bin/"
+      - "C:/Program Files/Git/cmd/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WindowsApps/"
+      - "C:/Users/vital/AppData/Local/Programs/Microsoft VS Code/bin/"
+      - "C:/Users/vital/AppData/Local/GitHubDesktop/bin/"
+      - "C:/Users/vital/AppData/Local/Python/bin/"
+      - "C:/Program Files/HP/OMEN-Broadcast/Common/"
+      - "C:/Program Files/PowerShell/7/"
+      - "C:/Program Files/GitHub CLI/"
+      - "C:/Program Files/Docker/Docker/resources/bin/"
+      - "C:/Program Files/nodejs/"
+      - "C:/Program Files/LLVM/bin/"
+      - "C:/Users/vital/AppData/Local/Microsoft/WinGet/Packages/GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+      - "C:/Users/vital/AppData/Roaming/npm/"
+      - "C:/Program Files/Git/usr/bin/vendor_perl/"
+      - "C:/Program Files/Git/usr/bin/core_perl/"
+      - "C:/Users/vital/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/e7eaa6c2-4122-410d-b52f-89e101d3d27a/5060942c-d995-4519-ad75-056362aebdaf/bin/"
+      - "C:/Program Files/bin/"
+      - "C:/Program Files/sbin/"
+      - "C:/Program Files/"
+      - "C:/Program Files (x86)/bin/"
+      - "C:/Program Files (x86)/sbin/"
+      - "C:/Program Files (x86)/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/sbin/"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/"
+      - "C:/Program Files (x86)/vigine/bin/"
+      - "C:/Program Files (x86)/vigine/sbin/"
+      - "C:/Program Files (x86)/vigine/"
+    searched_directories:
+      - "C:/VulkanSDK/1.4.341.1/bin/glslangValidator.com"
+    found: "C:/VulkanSDK/1.4.341.1/Bin/glslangValidator.exe"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\vital\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\local\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin"
+        - "C:\\Users\\vital\\bin"
+        - "C:\\VulkanSDK\\1.4.341.1\\Bin"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Windows\\System32\\OpenSSH"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit"
+        - "C:\\Program Files\\doxygen\\bin"
+        - "C:\\Program Files\\Graphviz\\bin"
+        - "C:\\Program Files\\git-cola\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\vital\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Python\\bin"
+        - "C:\\Program Files\\HP\\OMEN-Broadcast\\Common"
+        - "C:\\Program Files\\PowerShell\\7"
+        - "C:\\Program Files\\GitHub CLI"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\LLVM\\bin"
+        - "C:\\Users\\vital\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "C:\\Users\\vital\\AppData\\Roaming\\npm"
+        - "C:\\Program Files\\nodejs"
+        - "C:\\Program Files\\Git\\mingw64\\bin"
+        - "C:\\Program Files\\Git\\usr\\bin\\vendor_perl"
+        - "C:\\Program Files\\Git\\usr\\bin\\core_perl"
+        - "C:\\Users\\vital\\AppData\\Roaming\\Claude\\local-agent-mode-sessions\\skills-plugin\\e7eaa6c2-4122-410d-b52f-89e101d3d27a\\5060942c-d995-4519-ad75-056362aebdaf\\bin"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/vigine"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake"
+        - "C:/Program Files (x86)/vigine"
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/Internal/CheckSourceCompiles.cmake:104 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CheckCSourceCompiles.cmake:103 (cmake_check_source_compiles)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:97 (check_c_source_compiles)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "CMakeLists.txt:94 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-6v9uta"
+      binary: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-6v9uta"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/work/project/CodeMap/external/Vigine/cmake;D:/work/project/CodeMap/external/Vigine/cmake/modules;D:/work/project/CodeMap/external/Vigine/cmake/platform/windows"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-6v9uta'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Insiders/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_bded7.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+        Build started 04/22/2026 07:08:32.
+        
+        Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\cmTC_bded7.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_bded7.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\Debug\\".
+          Creating directory "cmTC_bded7.dir\\Debug\\cmTC_bded7.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_bded7.dir\\Debug\\cmTC_bded7.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_bded7.dir\\Debug\\cmTC_bded7.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_bded7.dir\\Debug\\\\" /Fd"cmTC_bded7.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\src.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_bded7.dir\\Debug\\\\" /Fd"cmTC_bded7.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\src.c"
+          src.c
+        D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\cmTC_bded7.vcxproj]
+        Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\cmTC_bded7.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\cmTC_bded7.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-6v9uta\\cmTC_bded7.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.24
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:112 (check_library_exists)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "CMakeLists.txt:94 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uq6ox5"
+      binary: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uq6ox5"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/work/project/CodeMap/external/Vigine/cmake;D:/work/project/CodeMap/external/Vigine/cmake/modules;D:/work/project/CodeMap/external/Vigine/cmake/platform/windows"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uq6ox5'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Insiders/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9071a.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+        Build started 04/22/2026 07:08:33.
+        
+        Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\cmTC_9071a.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_9071a.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\Debug\\".
+          Creating directory "cmTC_9071a.dir\\Debug\\cmTC_9071a.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_9071a.dir\\Debug\\cmTC_9071a.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_9071a.dir\\Debug\\cmTC_9071a.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_9071a.dir\\Debug\\\\" /Fd"cmTC_9071a.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_9071a.dir\\Debug\\\\" /Fd"cmTC_9071a.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\Debug\\cmTC_9071a.exe" /INCREMENTAL /ILK:"cmTC_9071a.dir\\Debug\\cmTC_9071a.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uq6ox5/Debug/cmTC_9071a.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uq6ox5/Debug/cmTC_9071a.lib" /MACHINE:X64  /machine:x64 cmTC_9071a.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\cmTC_9071a.vcxproj]
+        Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\cmTC_9071a.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\cmTC_9071a.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uq6ox5\\cmTC_9071a.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.34
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/CheckLibraryExists.cmake:154 (try_compile)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:112 (check_library_exists)"
+      - "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-4.1/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "CMakeLists.txt:94 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uwv2cn"
+      binary: "D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uwv2cn"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/work/project/CodeMap/external/Vigine/cmake;D:/work/project/CodeMap/external/Vigine/cmake/modules;D:/work/project/CodeMap/external/Vigine/cmake/platform/windows"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uwv2cn'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Insiders/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_96785.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        MSBuild version 18.3.0-preview-26055-07+fb775842a for .NET Framework
+        Build started 04/22/2026 07:08:33.
+        
+        Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\cmTC_96785.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_96785.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\Debug\\".
+          Creating directory "cmTC_96785.dir\\Debug\\cmTC_96785.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_96785.dir\\Debug\\cmTC_96785.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_96785.dir\\Debug\\cmTC_96785.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in D:\\work\\project\\CodeMap\\external\\Vigine\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_96785.dir\\Debug\\\\" /Fd"cmTC_96785.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Fo"cmTC_96785.dir\\Debug\\\\" /Fd"cmTC_96785.dir\\Debug\\vc145.pdb" /external:W1 /Gd /TC /errorReport:queue "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Insiders\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\Debug\\cmTC_96785.exe" /INCREMENTAL /ILK:"cmTC_96785.dir\\Debug\\cmTC_96785.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uwv2cn/Debug/cmTC_96785.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/work/project/CodeMap/external/Vigine/build_test/CMakeFiles/CMakeScratch/TryCompile-uwv2cn/Debug/cmTC_96785.lib" /MACHINE:X64  /machine:x64 cmTC_96785.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthread.lib' [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\cmTC_96785.vcxproj]
+        Done Building Project "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\cmTC_96785.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\cmTC_96785.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthread.lib' [D:\\work\\project\\CodeMap\\external\\Vigine\\build_test\\CMakeFiles\\CMakeScratch\\TryCompile-uwv2cn\\cmTC_96785.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.34
+        
+      exitCode: 1
+...
