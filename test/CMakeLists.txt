@@ -283,14 +283,22 @@ add_executable(${REACTIVESTREAM_SMOKE_TARGET}
 
 target_include_directories(${REACTIVESTREAM_SMOKE_TARGET}
 =======
-# ====================== ActorHost Smoke Target =======================
-set(ACTORHOST_SMOKE_TARGET actorhost-smoke)
+# ====================== ActorHost Smoke Target ================set(ACTORHOST_SMOKE_TARGET actorhost-smoke)
 
 add_executable(${ACTORHOST_SMOKE_TARGET}
     actorhost/smoke_test.cpp
 )
 
 target_include_directories(${ACTORHOST_SMOKE_TARGET}
+=======
+# ====================== PipelineBuilder Smoke Target =======================
+set(PIPELINEBUILDER_SMOKE_TARGET pipelinebuilder-smoke)
+
+add_executable(${PIPELINEBUILDER_SMOKE_TARGET}
+    pipelinebuilder/smoke_test.cpp
+)
+
+target_include_directories(${PIPELINEBUILDER_SMOKE_TARGET}
     PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
@@ -300,6 +308,7 @@ target_include_directories(${ACTORHOST_SMOKE_TARGET}
 target_link_libraries(${REQUESTBUS_SMOKE_TARGET}
 target_link_libraries(${REACTIVESTREAM_SMOKE_TARGET}
 target_link_libraries(${ACTORHOST_SMOKE_TARGET}
+target_link_libraries(${PIPELINEBUILDER_SMOKE_TARGET}
     PRIVATE
     gtest
     gtest_main
@@ -325,6 +334,12 @@ set_target_properties(${ACTORHOST_SMOKE_TARGET} PROPERTIES
 
 gtest_discover_tests(${ACTORHOST_SMOKE_TARGET}
     PROPERTIES LABELS "actorhost-smoke"
+set_target_properties(${PIPELINEBUILDER_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${PIPELINEBUILDER_SMOKE_TARGET}
+    PROPERTIES LABELS "pipelinebuilder-smoke"
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
