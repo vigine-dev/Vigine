@@ -369,6 +369,26 @@ set(SOURCES_STATEMACHINE_CORE
     ${SRC_DIR}/statemachine/factory.cpp
 )
 
+# Level-1 task flow wrapper (R.4.4) -- public surface.
+set(HEADER_TASKFLOW_CORE
+    ${INCLUDE_DIR}/vigine/taskflow/taskid.h
+    ${INCLUDE_DIR}/vigine/taskflow/resultcode.h
+    ${INCLUDE_DIR}/vigine/taskflow/routemode.h
+    ${INCLUDE_DIR}/vigine/taskflow/itaskflow.h
+    ${INCLUDE_DIR}/vigine/taskflow/abstracttaskflow.h
+    ${INCLUDE_DIR}/vigine/taskflow/factory.h
+)
+
+# Level-1 task flow wrapper (R.4.4) -- internal orchestrator + base impl.
+set(SOURCES_TASKFLOW_CORE
+    ${SRC_DIR}/taskflow/taskorchestrator.h
+    ${SRC_DIR}/taskflow/taskorchestrator.cpp
+    ${SRC_DIR}/taskflow/abstracttaskflow.cpp
+    ${SRC_DIR}/taskflow/defaulttaskflow.h
+    ${SRC_DIR}/taskflow/defaulttaskflow.cpp
+    ${SRC_DIR}/taskflow/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -449,6 +469,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_ECS_CORE}
     ${HEADER_STATEMACHINE_CORE}
     ${SOURCES_STATEMACHINE_CORE}
+    ${HEADER_TASKFLOW_CORE}
+    ${SOURCES_TASKFLOW_CORE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
