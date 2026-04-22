@@ -529,6 +529,21 @@ set(SOURCES_ACTORHOST
     ${SRC_DIR}/actorhost/abstractactorhost.cpp
     ${SRC_DIR}/actorhost/defaultactorhost.cpp
     ${SRC_DIR}/actorhost/factory.cpp
+# Pipeline-builder facade (R.3.3.2.4 / plan_22) -- public surface.
+set(HEADER_PIPELINEBUILDER
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipelinestage.h
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipeline.h
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipelinebuilder.h
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/abstractpipelinebuilder.h
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/defaultpipelinebuilder.h
+    ${INCLUDE_DIR}/vigine/pipelinebuilder/factory.h
+)
+
+# Pipeline-builder facade (R.3.3.2.4 / plan_22) -- internal concrete + factory.
+set(SOURCES_PIPELINEBUILDER
+    ${SRC_DIR}/pipelinebuilder/abstractpipelinebuilder.cpp
+    ${SRC_DIR}/pipelinebuilder/defaultpipelinebuilder.cpp
+    ${SRC_DIR}/pipelinebuilder/factory.cpp
 )
 
 # Add source files
@@ -629,6 +644,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_REACTIVESTREAM}
     ${HEADER_ACTORHOST}
     ${SOURCES_ACTORHOST}
+    ${HEADER_PIPELINEBUILDER}
+    ${SOURCES_PIPELINEBUILDER}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
