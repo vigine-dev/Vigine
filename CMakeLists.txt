@@ -513,6 +513,22 @@ set(HEADER_REACTIVESTREAM
 set(SOURCES_REACTIVESTREAM
     ${SRC_DIR}/reactivestream/abstractreactivestream.cpp
     ${SRC_DIR}/reactivestream/defaultreactivestream.cpp
+# Actor-host facade (R.3.3.2.3 / plan_21) -- public surface.
+set(HEADER_ACTORHOST
+    ${INCLUDE_DIR}/vigine/actorhost/actorid.h
+    ${INCLUDE_DIR}/vigine/actorhost/iactor.h
+    ${INCLUDE_DIR}/vigine/actorhost/iactormailbox.h
+    ${INCLUDE_DIR}/vigine/actorhost/iactorhost.h
+    ${INCLUDE_DIR}/vigine/actorhost/abstractactorhost.h
+    ${INCLUDE_DIR}/vigine/actorhost/defaultactorhost.h
+    ${INCLUDE_DIR}/vigine/actorhost/factory.h
+)
+
+# Actor-host facade (R.3.3.2.3 / plan_21) -- internal concrete + factory.
+set(SOURCES_ACTORHOST
+    ${SRC_DIR}/actorhost/abstractactorhost.cpp
+    ${SRC_DIR}/actorhost/defaultactorhost.cpp
+    ${SRC_DIR}/actorhost/factory.cpp
 )
 
 # Add source files
@@ -611,6 +627,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_REQUESTBUS}
     ${HEADER_REACTIVESTREAM}
     ${SOURCES_REACTIVESTREAM}
+    ${HEADER_ACTORHOST}
+    ${SOURCES_ACTORHOST}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
