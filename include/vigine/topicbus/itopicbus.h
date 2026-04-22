@@ -60,8 +60,11 @@ class ITopicBus
      * @brief Registers (or retrieves) a named topic and returns its stable id.
      *
      * Idempotent: two calls with identical @p name return the same
-     * @ref TopicId. An empty @p name is rejected with
-     * @ref vigine::Result::Code::Error and the returned id has @c value == 0.
+     * @ref TopicId. An empty @p name is rejected — the method
+     * returns `TopicId{0}`, the reserved invalid sentinel. (The
+     * method returns @ref TopicId, not @ref vigine::Result; the
+     * previous doc mentioned a @ref vigine::Result::Code::Error
+     * return path the signature does not provide.)
      */
     [[nodiscard]] virtual TopicId createTopic(std::string_view name) = 0;
 
