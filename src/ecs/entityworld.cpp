@@ -202,9 +202,21 @@ EntityId EntityWorld::createEntity()
     auto                        node = std::make_unique<EntityNode>();
     const vigine::graph::NodeId nid  = addNode(std::move(node));
 
+    // If the `_entities` `push_back` throws (bad_alloc under memory
+    // pressure), the graph has a live node the registry never
+    // records — registry drift that would leak the node forever.
+    // Roll the graph insert back and rethrow so createEntity is
+    // either "all-or-nothing": either a fully-recorded entity or no
+    // state change at all.
+    try
     {
         std::unique_lock lock(_entitiesMutex);
         _entities.push_back(nid);
+    }
+    catch (...)
+    {
+        static_cast<void>(removeNode(nid));
+        throw;
     }
 
     return toEntityId(nid);
