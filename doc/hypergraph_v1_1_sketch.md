@@ -46,17 +46,23 @@ Names, parameter types, and return conventions may change before the
 first real implementation leaf.
 
 ```cpp
-// include/vigine/hypergraph/IHyperGraph.h  (v1.1+, does not exist yet)
+// include/vigine/hypergraph/ihypergraph.h  (v1.1+, does not exist yet)
 
-namespace vigine {
+namespace vigine::hypergraph {
 
 class IHyperGraph {
 public:
     virtual ~IHyperGraph() = default;
 
-    // Register an IGraph instance as a node in the meta-graph.
-    // Returns an opaque HyperNodeId; caller retains ownership of graph.
-    virtual HyperNodeId registerWrapper(IGraph* graph, std::string_view label) = 0;
+    // Register an IGraph instance as a node in the meta-graph. Returns
+    // an opaque HyperNodeId; caller retains ownership of the graph.
+    //
+    // Lifetime: the caller guarantees the passed `IGraph` outlives its
+    // hypergraph registration. Call `unregisterWrapper(id)` before
+    // destroying the wrapped graph, otherwise meta-edges that reference
+    // the freed graph become dangling.
+    virtual HyperNodeId registerWrapper(vigine::graph::IGraph *graph,
+                                        std::string_view       label) = 0;
 
     // Add a directed meta-edge between two wrapper nodes.
     virtual HyperEdgeId link(HyperNodeId from, HyperNodeId to) = 0;
@@ -64,18 +70,21 @@ public:
     // Remove a previously registered wrapper and all its meta-edges.
     virtual void unregisterWrapper(HyperNodeId id) = 0;
 
-    // Export the entire meta-graph in Graphviz DOT format.
-    virtual std::string exportGraphViz() const = 0;
+    // Export the entire meta-graph in Graphviz DOT format. The signature
+    // matches `vigine::graph::IGraph::exportGraphViz` — caller-owned
+    // buffer, Result error path, no I/O on the interface.
+    virtual vigine::Result exportGraphViz(std::string &out) const = 0;
 
-    // Return all cycle paths in the meta-graph (depth-first).
-    // Each inner vector is one cycle expressed as a sequence of HyperNodeIds.
+    // Return all cycle paths in the meta-graph (depth-first). Each inner
+    // vector is one cycle expressed as a sequence of HyperNodeIds.
     virtual std::vector<std::vector<HyperNodeId>> findCycles() const = 0;
 
     // Iterate registered wrapper nodes.
-    virtual void forEachWrapper(std::function<void(HyperNodeId, IGraph*)> fn) const = 0;
+    virtual void forEachWrapper(
+        std::function<void(HyperNodeId, vigine::graph::IGraph *)> fn) const = 0;
 };
 
-} // namespace vigine
+} // namespace vigine::hypergraph
 ```
 
 The engine would expose `IHyperGraph` through `Context` or a dedicated
@@ -115,7 +124,7 @@ Key design invariants:
 |--------|------|
 | Ownership | `IHyperGraph` does **not** own the `IGraph` instances it references. Ownership stays with the wrapper. |
 | Node granularity | One `IGraph` = one `HyperNode`. Sub-graph groupings within a single `IGraph` are not exposed at the meta-level. |
-| Edge semantics | A `HyperEdge` records a directed dependency between wrappers (e.g., "W1 consumes output from W2"). Its meaning is caller-defined; `IHyperGraph` does not interpret it. |
+| Edge semantics | A `HyperEdge` records a directed dependency between wrappers (e.g., "W1 consumes output from W2"). Meta-tools such as `findCycles()` and the cascade-delete motivating use cases DO interpret it — all edges are treated as dependency edges for ordering and reachability. Callers that want to attach additional payload (a reason string, a tag) can do so through a caller-defined sidecar map keyed on `HyperEdgeId`; the interface itself stays narrow. Edge labels, weights, or non-dependency semantics are out of scope for v1.1; they would land in a later revision. |
 | Concurrency | Not specified in this sketch; left for Q-HG4. |
 
 The plain `IGraph` interface is **unchanged**. An `IGraph` has no
@@ -169,9 +178,11 @@ abstraction and avoids introducing a separate adjacency-list
 implementation.
 
 For deeper background on why this design was deferred and what
-alternatives were considered, see
-[theory/theory_hypergraph_future.md](../theory/theory_hypergraph_future.md)
-(forthcoming artefact; will be created during the v1.1 analysis phase).
+alternatives were considered, see the analysis artefact that will
+accompany the first v1.1 implementation leaf. (Previous revisions of
+this doc linked at a path in a separate repository; that cross-repo
+link has been removed — the background document will live alongside
+the implementation inside this engine tree when it lands.)
 
 ---
 
