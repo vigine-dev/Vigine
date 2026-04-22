@@ -196,9 +196,29 @@ void AbstractThreadManager::markShutDown() noexcept
     _shutDown.store(true, std::memory_order_release);
 }
 
-void AbstractThreadManager::acquireDedicatedSlot() noexcept
+bool AbstractThreadManager::acquireDedicatedSlot() noexcept
 {
-    _dedicatedCount.fetch_add(1, std::memory_order_acq_rel);
+    // CAS loop honouring the `maxDedicatedThreads` cap. Two concurrent
+    // callers racing at the cap boundary are serialised through the
+    // atomic compare-exchange: only one can bump the counter from
+    // `cap - 1` to `cap`; the other observes the updated value and
+    // returns false.
+    const std::size_t cap = _config.maxDedicatedThreads;
+    std::size_t current   = _dedicatedCount.load(std::memory_order_acquire);
+    while (true)
+    {
+        if (current >= cap)
+        {
+            return false;
+        }
+        if (_dedicatedCount.compare_exchange_weak(
+                current, current + 1,
+                std::memory_order_acq_rel,
+                std::memory_order_acquire))
+        {
+            return true;
+        }
+    }
 }
 
 void AbstractThreadManager::releaseDedicatedSlot() noexcept

@@ -138,13 +138,19 @@ class AbstractThreadManager : public IThreadManager
     void markShutDown() noexcept;
 
     /**
-     * @brief Bumps the live dedicated-thread counter.
+     * @brief Tries to reserve a live dedicated-thread slot under the
+     *        configured `maxDedicatedThreads` cap.
      *
-     * Derived classes call this when they lazily allocate a dedicated
-     * thread for a caller; the matching @ref releaseDedicatedSlot call
-     * drops the counter.
+     * Returns `true` when the caller owns a new slot — the counter
+     * has been bumped and the caller must pair the acquisition with
+     * a matching @ref releaseDedicatedSlot when the thread retires.
+     * Returns `false` when the cap is already at its limit; the
+     * counter is left untouched and the caller must refuse the
+     * dedicated-thread allocation (typically by settling the task
+     * handle with an error `Result`). Atomic CAS loop — safe to
+     * call concurrently.
      */
-    void acquireDedicatedSlot() noexcept;
+    [[nodiscard]] bool acquireDedicatedSlot() noexcept;
 
     /**
      * @brief Drops the live dedicated-thread counter by one.
