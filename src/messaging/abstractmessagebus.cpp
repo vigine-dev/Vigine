@@ -319,15 +319,14 @@ AbstractMessageBus::subscribe(const MessageFilter &filter, ISubscriber *subscrib
         std::unique_lock<std::shared_mutex> lock{_registryMutex};
         serial = _nextSerial++;
         SubscriptionSlot slot{};
-        slot.subscriber   = subscriber;
-        slot.filter       = filter;
-        slot.serial       = serial;
-        slot.active       = true;
-        // One mutex per slot, shared across every snapshot copy so
-        // the dispatch path can serialise `onMessage` calls for the
-        // same subscriber without a global delivery mutex (which
-        // would serialise unrelated subscribers too).
-        slot.deliverMutex = std::make_shared<std::mutex>();
+        slot.subscriber  = subscriber;
+        slot.filter      = filter;
+        slot.serial      = serial;
+        slot.active      = true;
+        // One SlotState per slot, shared across every snapshot copy so
+        // the lifecycle mutex and delivery mutex remain the same object
+        // regardless of how many snapshot copies of this slot exist.
+        slot.slotState = std::make_shared<SlotState>();
         _subscriptions.emplace(serial, std::move(slot));
     }
 
@@ -340,13 +339,44 @@ void AbstractMessageBus::removeSubscription(std::uint64_t serial) noexcept
     {
         return;
     }
-    std::unique_lock<std::shared_mutex> lock{_registryMutex};
-    auto it = _subscriptions.find(serial);
-    if (it == _subscriptions.end())
+
+    // Capture the SlotState shared_ptr BEFORE erasing the registry slot
+    // so the lifecycle mutex survives the map removal.
+    std::shared_ptr<SlotState> state;
     {
-        return;
+        std::unique_lock<std::shared_mutex> lock{_registryMutex};
+        auto it = _subscriptions.find(serial);
+        if (it == _subscriptions.end())
+        {
+            return;
+        }
+        state = it->second.slotState;
+        _subscriptions.erase(it);
     }
-    _subscriptions.erase(it);
+
+    // --- Dtor-blocks contract (FF-69) ---
+    //
+    // After the registry erase above, no new snapshot will include this
+    // slot.  However, dispatch threads that already copied the slot into a
+    // snapshot (before our exclusive registry lock above) may still call
+    // `deliver()` and invoke `onMessage`.  We must not return until all
+    // such calls finish.
+    //
+    // Acquiring `lifecycleMutex` exclusively here blocks until every
+    // concurrent `deliver()` that holds a shared lock on `lifecycleMutex`
+    // has released it.  Once we hold the exclusive lock we set `cancelled`
+    // so that any snapshot copies still waiting to enter `deliver()` will
+    // check the flag, see it is true, and return without calling
+    // `onMessage`.  We then release the exclusive lock and return.
+    //
+    // `state` is null for inert tokens (serial == 0 path is caught above;
+    // this covers legacy bare-SubscriptionSlot test fixtures that skip
+    // `subscribe()`).
+    if (state)
+    {
+        std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
+        state->cancelled = true;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -491,18 +521,63 @@ DispatchResult AbstractMessageBus::deliver(const SubscriptionSlot &slot,
     {
         return DispatchResult::Pass;
     }
-    // Optional per-slot mutex. `shared_ptr` lets the slot value-copy
-    // inside `snapshotRegistry()` point at the same mutex the
-    // registry holds, so serialisation actually works through the
-    // snapshot path. A missing mutex (legacy test fixtures that
-    // construct a bare `SubscriptionSlot` without going through
-    // `subscribe()`) falls through to an unlocked call — preserves
-    // pre-existing behaviour for those edge cases.
-    std::unique_lock<std::mutex> lock;
-    if (slot.deliverMutex)
+
+    // `slotState` is present for every slot created through `subscribe()`.
+    // Legacy test fixtures that construct a bare `SubscriptionSlot` without
+    // `subscribe()` carry a null pointer and fall through to an unlocked,
+    // untracked call — preserves pre-existing behaviour for those edge cases.
+    SlotState *const state = slot.slotState.get();
+
+    // --- Dtor-blocks contract (FF-69) and per-subscriber serialisation (FF-70) ---
+    //
+    // Step 1: acquire `lifecycleMutex` in SHARED mode.
+    //
+    //   Multiple dispatch threads can hold the shared lock simultaneously
+    //   (one per subscriber slot in concurrent FanOut), so unrelated
+    //   subscribers are not serialised against each other.
+    //
+    //   `removeSubscription()` tries to acquire `lifecycleMutex` in
+    //   EXCLUSIVE mode, which blocks until every shared holder has released.
+    //   This is the dtor-blocks guarantee: `cancel()` / the token destructor
+    //   cannot return while any `onMessage` call is still executing.
+    //
+    //   After acquiring the exclusive lock, `removeSubscription()` sets
+    //   `cancelled = true` and releases.  Any subsequent `deliver()` call
+    //   that acquires the shared lock after that point will see the flag and
+    //   return Pass without calling `onMessage`, preventing use-after-free
+    //   on a subscriber object that might be destroyed right after `cancel()`
+    //   returns.
+    //
+    // Step 2: check `cancelled`.
+    //
+    //   The slot may have been erased from the registry while this snapshot
+    //   copy was waiting.  If `cancelled` is true we skip `onMessage`.
+    //
+    // Step 3: acquire `deliverMutex` in EXCLUSIVE mode (FF-70).
+    //
+    //   The delivery mutex serialises concurrent `onMessage` calls to the
+    //   same subscriber.  It is held for the full duration of `onMessage`
+    //   while the shared `lifecycleMutex` lock is also held, so the nesting
+    //   order is always: lifecycleMutex(shared) -> deliverMutex(exclusive).
+    //   `removeSubscription()` only ever acquires lifecycleMutex(exclusive)
+    //   and never touches deliverMutex, so there is no lock-order inversion.
+
+    std::shared_lock<std::shared_mutex> lifeLock;
+    if (state != nullptr)
     {
-        lock = std::unique_lock<std::mutex>{*slot.deliverMutex};
+        lifeLock = std::shared_lock<std::shared_mutex>{state->lifecycleMutex};
+        if (state->cancelled)
+        {
+            return DispatchResult::Pass;
+        }
     }
+
+    std::unique_lock<std::mutex> deliverLock;
+    if (state != nullptr)
+    {
+        deliverLock = std::unique_lock<std::mutex>{state->deliverMutex};
+    }
+
     try
     {
         return slot.subscriber->onMessage(message);

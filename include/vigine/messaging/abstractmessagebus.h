@@ -119,26 +119,61 @@ class AbstractMessageBus
   private:
     // ------ Internal types ------
 
+    /// @brief Shared mutable state that survives slot value-copies.
+    ///
+    /// The dispatch path takes a VALUE snapshot of each `SubscriptionSlot`
+    /// before the bus releases its registry lock, so any object that must
+    /// remain the same instance across all copies lives behind a `shared_ptr`.
+    ///
+    /// `SlotState` implements both guarantees that `ISubscriptionToken`
+    /// advertises:
+    ///
+    ///   - FF-70 (per-subscriber serialisation): `deliverMutex` is held
+    ///     exclusively by `deliver()` for the full duration of `onMessage`,
+    ///     so no two dispatch threads can run `onMessage` concurrently for
+    ///     the same subscriber.
+    ///
+    ///   - FF-69 (dtor-blocks contract): `lifecycleMutex` is a
+    ///     `std::shared_mutex`.  `deliver()` acquires it in SHARED mode
+    ///     before calling `onMessage` and releases it after.
+    ///     `removeSubscription()` acquires it in EXCLUSIVE mode, which
+    ///     blocks until every concurrent `deliver()` holding a shared
+    ///     lock has returned.  A `cancelled` flag set under the exclusive
+    ///     lock prevents new `deliver()` calls (from snapshot copies that
+    ///     pre-date the erase) from firing `onMessage` after the token
+    ///     has been cancelled — they acquire the shared lock, see
+    ///     `cancelled == true`, and return `Pass` without calling
+    ///     `onMessage`.
+    struct SlotState
+    {
+        /// Serialises concurrent `onMessage` calls to the same subscriber.
+        std::mutex              deliverMutex;
+        /// Guards the slot's active lifetime; shared for dispatch, exclusive
+        /// for cancellation.  See class comment above.
+        std::shared_mutex       lifecycleMutex;
+        /// Set to `true` under the exclusive `lifecycleMutex` by
+        /// `removeSubscription()`.  `deliver()` checks this flag under the
+        /// shared lock and skips `onMessage` when true.
+        bool                    cancelled{false};
+    };
+
     /// @brief One registry entry. Holds the raw subscriber pointer, the
     ///        filter, a serial id stamped when the slot is created, and
-    ///        a shared per-slot delivery mutex that serialises calls
-    ///        into this subscriber's `onMessage`.
+    ///        a shared per-slot `SlotState` that carries the delivery mutex
+    ///        and the lifecycle (dtor-blocks) shared_mutex.
     ///
-    /// The delivery mutex is `shared_ptr`-owned on purpose: the
-    /// dispatch path takes a VALUE snapshot of each slot before the
-    /// bus unlocks its registry, so a per-slot `std::mutex` inside the
-    /// slot body would copy into an unrelated instance per snapshot.
-    /// Sharing the mutex through `shared_ptr` keeps every copy
-    /// pointing at the same object, so the real "no concurrent
-    /// onMessage per subscriber" guarantee holds across all five
-    /// routing modes.
+    /// `slotState` is `shared_ptr`-owned on purpose: the dispatch path
+    /// takes a VALUE snapshot of each slot before the bus unlocks its
+    /// registry, and `std::mutex` / `std::shared_mutex` are not copyable.
+    /// Sharing through `shared_ptr` keeps every copy pointing at the same
+    /// live object, so both guarantees hold even through the snapshot path.
     struct SubscriptionSlot
     {
         ISubscriber                  *subscriber{nullptr};
         MessageFilter                 filter{};
         std::uint64_t                 serial{0};
         bool                          active{true};
-        std::shared_ptr<std::mutex>   deliverMutex;
+        std::shared_ptr<SlotState>    slotState;
     };
 
     /// @brief Queue entry. Owns the envelope plus the scheduled-for
