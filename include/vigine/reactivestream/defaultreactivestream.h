@@ -112,16 +112,14 @@ class DefaultReactiveStream final : public AbstractReactiveStream
     std::unique_ptr<Impl> _impl;
 };
 
-/**
- * @brief Factory function — the sole entry point for creating a
- *        reactive-stream facade.
- *
- * Returns a @c std::unique_ptr<IReactiveStream> so the caller owns the
- * facade exclusively (FF-1, INV-9). Both @p bus and @p threadManager
- * must outlive the returned facade.
- */
-[[nodiscard]] std::unique_ptr<IReactiveStream>
-    createReactiveStream(vigine::messaging::IMessageBus    &bus,
-                         vigine::threading::IThreadManager &threadManager);
-
 } // namespace vigine::reactivestream
+
+// The factory declaration lives in a dedicated
+// `include/vigine/reactivestream/factory.h` header, matching the
+// convention used by every other facade: a factory-only public
+// entry point that does NOT pull the concrete class body into
+// callers' translation units. Callers that want just the factory
+// include `factory.h`; callers that need to name the concrete
+// `DefaultReactiveStream` (tests, engineering) continue to
+// include this header.
+#include "vigine/reactivestream/factory.h"
