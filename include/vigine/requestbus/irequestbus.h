@@ -38,12 +38,17 @@ namespace vigine::requestbus
  *   - The bus routes the reply to the pending future; @ref IFuture::wait
  *     unblocks and transfers payload ownership to the caller.
  *
- * TTL / late-reply protection (UD-5, Q-MF4):
+ * TTL / late-reply protection:
  *   - Each request carries a TTL computed from @ref RequestConfig. After
  *     the TTL expires the correlation id is invalidated and any
  *     arriving late reply is silently dropped (logged at debug).
- *   - Default TTL = @c RequestConfig::timeout * 2 when
- *     @ref RequestConfig::ttl is zero.
+ *   - Default TTL when @ref RequestConfig::ttl is zero:
+ *     - Finite @c timeout → `timeout * 2`.
+ *     - Infinite @c timeout (the default
+ *       `std::chrono::milliseconds::max()`) → falls back to 10
+ *       seconds so the pending map cannot grow without bound on
+ *       never-answered requests. Callers that need a longer
+ *       window must set @ref RequestConfig::ttl explicitly.
  *
  * Ownership:
  *   - @ref request takes unique ownership of the payload.
