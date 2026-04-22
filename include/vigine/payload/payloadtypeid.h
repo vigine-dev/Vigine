@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 
 namespace vigine::payload
 {
@@ -19,7 +21,11 @@ namespace vigine::payload
  * first use.
  *
  * The type is a plain aggregate: trivially copyable, comparable, and
- * usable as a key in ordered and hash-based associative containers.
+ * usable as a key in ordered and hash-based associative containers. A
+ * specialisation of @c std::hash is provided at the bottom of this
+ * header so that @c std::unordered_map and @c std::unordered_set accept
+ * @ref PayloadTypeId keys without requiring each caller to write their
+ * own hasher.
  */
 struct PayloadTypeId
 {
@@ -45,3 +51,17 @@ struct PayloadTypeId
 };
 
 } // namespace vigine::payload
+
+// std::hash specialisation — the doc-comment on PayloadTypeId advertises
+// hash-container usability; shipping the specialisation here keeps that
+// promise. Keyed off the wrapped uint32_t and delegated to the std::hash
+// for uint32_t so the quality matches the standard library's default.
+template <>
+struct std::hash<vigine::payload::PayloadTypeId>
+{
+    [[nodiscard]] std::size_t
+    operator()(vigine::payload::PayloadTypeId id) const noexcept
+    {
+        return std::hash<std::uint32_t>{}(id.value);
+    }
+};

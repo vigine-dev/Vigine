@@ -82,7 +82,15 @@ class IGraph
     [[nodiscard]] virtual EdgeId addEdge(std::unique_ptr<IEdge> edge) = 0;
 
     /**
-     * @brief Removes the edge addressed by @p id. Idempotent.
+     * @brief Removes the edge addressed by @p id.
+     *
+     * Symmetric with @ref removeNode: removing a stale identifier
+     * reports a @ref Result::Code::Error status without side effects.
+     * On success returns a default-constructed (Success) @ref Result.
+     * Calling with the id of an edge that was already removed is a
+     * "stale identifier" case and therefore Errors, not a silent
+     * no-op — this makes the two remove surfaces behave identically
+     * and lets wrappers treat the outcome uniformly.
      */
     virtual Result removeEdge(EdgeId id) = 0;
 
