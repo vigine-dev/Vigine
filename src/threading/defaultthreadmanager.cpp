@@ -278,11 +278,14 @@ struct DefaultThreadManager::Impl
     WorkQueue                pool;
     std::vector<std::thread> poolWorkers;
 
-    // Dedicated slots: lazy per-caller FIFO threads. Keyed by an opaque
-    // uintptr_t derived from the caller's IRunnable pointer class. For
-    // this leaf every Dedicated schedule gets its own slot, which is the
-    // simplest semantics that keeps FIFO intact per caller (the caller
-    // identity wiring via IContext is a later leaf).
+    // Dedicated slots: one fresh OS thread + one queue per schedule
+    // call. The slots live in an append-only vector — there is no
+    // caller-identity lookup yet, so the vector index is the only
+    // handle. The caller-keyed FIFO-reuse (with a cap from
+    // `ThreadManagerConfig::maxDedicatedThreads`) is deferred to a
+    // later leaf; until it lands, per-caller FIFO is achieved by
+    // reusing a single `NamedThreadId` through
+    // `scheduleOnNamed(runnable, id)` instead of `Dedicated`.
     struct DedicatedSlot
     {
         std::unique_ptr<WorkQueue> queue;
