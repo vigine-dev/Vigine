@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vigine/graph/kind.h>
+#include <vigine/graph/kind.h>  // INV-11 EXEMPTION: kind.h maps wrapper constants onto graph substrate ranges
 
 // wrapper-kind-waiver: engine-concept kind constants in a wrapper subspace.
 
@@ -15,7 +15,7 @@ namespace vigine::taskflow
  */
 namespace kind
 {
-inline constexpr vigine::graph::NodeKind Task = 64;
+inline constexpr vigine::graph::NodeKind Task = 64;       // INV-11 EXEMPTION: kind constant mapping
 } // namespace kind
 
 /**
@@ -25,7 +25,7 @@ inline constexpr vigine::graph::NodeKind Task = 64;
  */
 namespace edge_kind
 {
-inline constexpr vigine::graph::EdgeKind Transition = 64;
+inline constexpr vigine::graph::EdgeKind Transition = 64; // INV-11 EXEMPTION: kind constant mapping
 } // namespace edge_kind
 
 } // namespace vigine::taskflow
