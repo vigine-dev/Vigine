@@ -450,6 +450,22 @@ elseif(APPLE)
     )
 endif()
 
+# Topic-bus facade (R.3.3.1.3 / plan_17) -- public surface.
+set(HEADER_TOPICBUS
+    ${INCLUDE_DIR}/vigine/topicbus/topicid.h
+    ${INCLUDE_DIR}/vigine/topicbus/itopicbus.h
+    ${INCLUDE_DIR}/vigine/topicbus/abstracttopicbus.h
+    ${INCLUDE_DIR}/vigine/topicbus/defaulttopicbus.h
+    ${INCLUDE_DIR}/vigine/topicbus/factory.h
+)
+
+# Topic-bus facade (R.3.3.1.3 / plan_17) -- internal concrete + factory.
+set(SOURCES_TOPICBUS
+    ${SRC_DIR}/topicbus/abstracttopicbus.cpp
+    ${SRC_DIR}/topicbus/defaulttopicbus.cpp
+    ${SRC_DIR}/topicbus/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -538,6 +554,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_SIGNALEMITTER}
     ${HEADER_EVENTSCHEDULER}
     ${SOURCES_EVENTSCHEDULER}
+    ${HEADER_TOPICBUS}
+    ${SOURCES_TOPICBUS}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
