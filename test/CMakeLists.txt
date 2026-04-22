@@ -205,3 +205,38 @@ gtest_discover_tests(${EVENTSCHEDULER_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Topic-Bus Smoke Target =======================
+# Smoke coverage for ITopicBus: publish/subscribe round-trip, stable
+# topic id, topicByName for unknown names, empty-name rejection, and
+# publish-to-invalid-id rejection.
+set(TOPICBUS_SMOKE_TARGET topicbus-smoke)
+
+add_executable(${TOPICBUS_SMOKE_TARGET}
+    topicbus/smoke_test.cpp
+)
+
+target_include_directories(${TOPICBUS_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${TOPICBUS_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${TOPICBUS_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${TOPICBUS_SMOKE_TARGET}
+    PROPERTIES LABELS "topicbus-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
