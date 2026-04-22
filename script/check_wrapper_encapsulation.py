@@ -170,16 +170,16 @@ def scan_file(
 
     lines = text.splitlines()
     violations: list[str] = []
-    skip_until: int = -1  # End index (inclusive) of a waiived class body.
+    skip_until: int = -1  # End index (inclusive) of a waived class body.
 
     idx = 0
     while idx < len(lines):
-        # Skip waiived class body (set below when a class carries the marker).
+        # Skip waived class body (set below when a class carries the marker).
         if skip_until >= 0 and idx <= skip_until:
             idx += 1
             continue
 
-        skip_until = -1  # Reset once past the waiived block.
+        skip_until = -1  # Reset once past the waived block.
         raw    = lines[idx]
         lineno = idx + 1
 
