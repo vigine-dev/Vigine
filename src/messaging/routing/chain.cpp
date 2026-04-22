@@ -34,7 +34,7 @@ void AbstractMessageBus::dispatchChain(
         {
             continue;
         }
-        const auto result = deliver(*slot.subscriber, message);
+        const auto result = deliver(slot, message);
         if (result == DispatchResult::Handled || result == DispatchResult::Stop)
         {
             return;

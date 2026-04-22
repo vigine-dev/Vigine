@@ -120,13 +120,25 @@ class AbstractMessageBus
     // ------ Internal types ------
 
     /// @brief One registry entry. Holds the raw subscriber pointer, the
-    ///        filter, and a serial id stamped when the slot is created.
+    ///        filter, a serial id stamped when the slot is created, and
+    ///        a shared per-slot delivery mutex that serialises calls
+    ///        into this subscriber's `onMessage`.
+    ///
+    /// The delivery mutex is `shared_ptr`-owned on purpose: the
+    /// dispatch path takes a VALUE snapshot of each slot before the
+    /// bus unlocks its registry, so a per-slot `std::mutex` inside the
+    /// slot body would copy into an unrelated instance per snapshot.
+    /// Sharing the mutex through `shared_ptr` keeps every copy
+    /// pointing at the same object, so the real "no concurrent
+    /// onMessage per subscriber" guarantee holds across all five
+    /// routing modes.
     struct SubscriptionSlot
     {
-        ISubscriber  *subscriber{nullptr};
-        MessageFilter filter{};
-        std::uint64_t serial{0};
-        bool          active{true};
+        ISubscriber                  *subscriber{nullptr};
+        MessageFilter                 filter{};
+        std::uint64_t                 serial{0};
+        bool                          active{true};
+        std::shared_ptr<std::mutex>   deliverMutex;
     };
 
     /// @brief Queue entry. Owns the envelope plus the scheduled-for
@@ -197,8 +209,17 @@ class AbstractMessageBus
 
     /// @brief Deliver one message to one subscriber, isolating
     ///        exceptions at the dispatch boundary.
-    [[nodiscard]] static DispatchResult deliver(ISubscriber   &subscriber,
-                                                const IMessage &message) noexcept;
+    ///
+    /// Takes the slot (not just the `ISubscriber`) so the per-slot
+    /// `deliverMutex` can serialise concurrent dispatches into the
+    /// same subscriber. Matches the header contract that
+    /// `ISubscriber::onMessage` is never invoked concurrently for
+    /// the same subscriber — previously the five routing drivers
+    /// called through a subscriber-only `deliver` with no
+    /// serialisation, so two posting threads racing the registry
+    /// could interleave on the same slot.
+    [[nodiscard]] static DispatchResult deliver(const SubscriptionSlot &slot,
+                                                const IMessage         &message) noexcept;
 
     /// @brief Builds a snapshot of the registry under the shared lock.
     [[nodiscard]] std::vector<SubscriptionSlot> snapshotRegistry() const;

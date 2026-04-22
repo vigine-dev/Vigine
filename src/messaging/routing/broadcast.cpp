@@ -27,7 +27,7 @@ void AbstractMessageBus::dispatchBroadcast(
         {
             continue;
         }
-        (void)deliver(*slot.subscriber, message);
+        (void)deliver(slot, message);
     }
 }
 
