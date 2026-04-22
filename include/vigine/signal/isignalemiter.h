@@ -29,7 +29,7 @@ namespace vigine
  * @see ISignal
  * @see ISignalBinder
  */
-class ISignalEmiter // INV-10 EXEMPTION: predates convention; carries proxy state; rename tracked separately
+class [[deprecated("Use ISignalEmitter facade (include/vigine/signalemitter/isignalemitter.h)")]] ISignalEmiter // INV-10 EXEMPTION: predates convention; carries proxy state; rename tracked separately
 {
   public:
     /**
