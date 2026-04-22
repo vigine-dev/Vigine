@@ -1,0 +1,178 @@
+name: Sanitizer matrix
+
+on:
+  push:
+    branches: ["main", "feat/**"]
+  pull_request:
+    branches: ["main"]
+
+# All sanitizer jobs run on ubuntu-22.04 + Clang. Three cells cover
+# address safety (ASAN), undefined behaviour (UBSAN), and data races
+# (TSAN). Jobs are continue-on-error until the known-flaky sleep_for-
+# based tests are rewritten around condition-variables (FF-102 backlog).
+
+jobs:
+  sanitizer-asan:
+    name: ASAN (ubuntu-22.04, Debug)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    env:
+      CC: clang
+      CXX: clang++
+      ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:suppressions=${{ github.workspace }}/sanitizer/asan.supp"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Clang + build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            libxcb1-dev \
+            libxcb-xfixes0-dev \
+            libxcb-randr0-dev \
+            libvulkan-dev \
+            vulkan-validationlayers-dev \
+            glslang-tools \
+            libglm-dev
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg
+            ${{ github.workspace }}/build/vcpkg_installed
+          key: vcpkg-ubuntu-22.04-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-ubuntu-22.04-
+
+      - name: Configure (ASAN)
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DVIGINE_SANITIZER=asan
+          -DENABLE_UNITTEST=ON
+          -DENABLE_EXAMPLE=OFF
+
+      - name: Build vigine + test targets
+        run: cmake --build build --config Debug --parallel
+
+      - name: Run contract + smoke tests (ASAN)
+        working-directory: build
+        run: >
+          ctest --output-on-failure
+          -L "graph-contract|messaging-smoke|eventscheduler-smoke|topicbus-smoke|channelfactory-smoke|requestbus-smoke|reactivestream-smoke|actorhost-smoke|pipelinebuilder-smoke"
+
+  sanitizer-ubsan:
+    name: UBSAN (ubuntu-22.04, Debug)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    env:
+      CC: clang
+      CXX: clang++
+      UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Clang + build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            libxcb1-dev \
+            libxcb-xfixes0-dev \
+            libxcb-randr0-dev \
+            libvulkan-dev \
+            vulkan-validationlayers-dev \
+            glslang-tools \
+            libglm-dev
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg
+            ${{ github.workspace }}/build/vcpkg_installed
+          key: vcpkg-ubuntu-22.04-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-ubuntu-22.04-
+
+      - name: Configure (UBSAN)
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DVIGINE_SANITIZER=ubsan
+          -DENABLE_UNITTEST=ON
+          -DENABLE_EXAMPLE=OFF
+
+      - name: Build vigine + test targets
+        run: cmake --build build --config Debug --parallel
+
+      - name: Run contract + smoke tests (UBSAN)
+        working-directory: build
+        run: >
+          ctest --output-on-failure
+          -L "graph-contract|messaging-smoke|eventscheduler-smoke|topicbus-smoke|channelfactory-smoke|requestbus-smoke|reactivestream-smoke|actorhost-smoke|pipelinebuilder-smoke"
+
+  sanitizer-tsan:
+    name: TSAN (ubuntu-22.04, Debug)
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    env:
+      CC: clang
+      CXX: clang++
+      TSAN_OPTIONS: "halt_on_error=1:suppressions=${{ github.workspace }}/sanitizer/tsan.supp"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Clang + build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            libxcb1-dev \
+            libxcb-xfixes0-dev \
+            libxcb-randr0-dev \
+            libvulkan-dev \
+            vulkan-validationlayers-dev \
+            glslang-tools \
+            libglm-dev
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg
+            ${{ github.workspace }}/build/vcpkg_installed
+          key: vcpkg-ubuntu-22.04-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-ubuntu-22.04-
+
+      - name: Configure (TSAN)
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DVIGINE_SANITIZER=tsan
+          -DENABLE_UNITTEST=ON
+          -DENABLE_EXAMPLE=OFF
+
+      - name: Build vigine + test targets
+        run: cmake --build build --config Debug --parallel
+
+      - name: Run threading-sensitive tests (TSAN)
+        working-directory: build
+        run: >
+          ctest --output-on-failure
+          -L "graph-contract|messaging-smoke|topicbus-smoke|channelfactory-smoke|requestbus-smoke|reactivestream-smoke|actorhost-smoke|eventscheduler-smoke"
