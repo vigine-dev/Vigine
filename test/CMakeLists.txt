@@ -171,3 +171,37 @@ gtest_discover_tests(${MESSAGING_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Event-Scheduler Smoke Target =======================
+# Smoke coverage for IEventScheduler: one-shot timer fires once, cancel
+# prevents delivery, and OS signal triggers delivery via mock sources.
+set(EVENTSCHEDULER_SMOKE_TARGET eventscheduler-smoke)
+
+add_executable(${EVENTSCHEDULER_SMOKE_TARGET}
+    eventscheduler/smoke_test.cpp
+)
+
+target_include_directories(${EVENTSCHEDULER_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${EVENTSCHEDULER_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${EVENTSCHEDULER_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${EVENTSCHEDULER_SMOKE_TARGET}
+    PROPERTIES LABELS "eventscheduler-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
