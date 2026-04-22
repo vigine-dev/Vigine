@@ -1,6 +1,5 @@
 #pragma once
 
-#include "vigine/messaging/abstractmessagebus.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/reactivestream/ireactivestream.h"
 
