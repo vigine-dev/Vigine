@@ -268,6 +268,17 @@ add_custom_command(TARGET ${PROJECT_WINDOW_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_WINDOW_NAME}>/assets
 )
 
+# Mirror the engine-root `resource/` tree next to the exe so that
+# LoadTexturesTask finds `resource/img/` when the binary is launched
+# with its own directory as cwd. The task also walks cwd-relative
+# fallbacks, so this copy plus the fallbacks cover every common
+# launch path (engine root, exe dir, build/bin, build/bin/Release).
+add_custom_command(TARGET ${PROJECT_WINDOW_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resource
+    $<TARGET_FILE_DIR:${PROJECT_WINDOW_NAME}>/resource
+)
+
 target_link_libraries(${PROJECT_WINDOW_NAME}
     PRIVATE
     vigine
