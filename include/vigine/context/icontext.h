@@ -57,10 +57,11 @@ namespace vigine
  *   - One user-bus factory (@c createMessageBus) and an id-keyed
  *     lookup (@c messageBus).
  *   - A freeze-after-run boundary (@c freeze, @c isFrozen) that blocks
- *     topology mutation once @c Engine::run starts the main loop. All
- *     mutating calls (createMessageBus, registerService) return
- *     @ref Result::Code::TopologyFrozen after @ref freeze is called.
- *     Read-only accessors stay available.
+ *     topology mutation once @c Engine::run starts the main loop.
+ *     After @ref freeze is called, @c createMessageBus returns
+ *     @c nullptr and @c registerService returns
+ *     @ref Result::Code::TopologyFrozen. Read-only accessors stay
+ *     available.
  *
  * Strict construction order (AD-5 C8, encoded by @ref AbstractContext):
  *   1. @ref threading::IThreadManager (created first).
