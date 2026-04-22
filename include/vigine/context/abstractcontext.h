@@ -237,12 +237,20 @@ class AbstractContext : public IContext
     std::atomic<std::uint32_t> _serviceGeneration{1};
 
     /**
-     * @brief Mutex serialising mutators against each other and against
-     *        @ref freeze.
+     * @brief Mutex serialising mutators against each other, against
+     *        @ref freeze, and against read accessors.
      *
-     * Read accessors take no lock -- @c std::shared_ptr copies are
-     * atomic enough for the registry's lookup use case under the
-     * aggregator's "mutate only before freeze" contract.
+     * Every registry access — including the read-side
+     * @ref messageBus and @ref service paths — acquires this mutex
+     * via `std::scoped_lock`. Previous revisions of this comment
+     * claimed "Read accessors take no lock"; the shipped impl
+     * always did, and callers acted on the lock-free claim could
+     * see shared_ptr copies race the mutator side. The wording
+     * now matches the shipped behaviour. A future change may
+     * promote this to a `std::shared_mutex` so concurrent reads
+     * don't serialise on each other, but that is an optimisation,
+     * not a required correctness step under the "mutate only
+     * before freeze" contract.
      */
     mutable std::mutex _registryMutex;
 
