@@ -38,9 +38,11 @@ if(MSVC)
 endif()
 
 if(WIN32)
-    # Windows 10+ baseline. Pins every Win32 API surface the build
-    # consumes to the Windows 10 (NTDDI_WIN10_VB) feature set; an older
-    # API accidentally used elsewhere would fail to compile here.
+    # Windows 10+ baseline. Pins every Win32 API surface to the
+    # Windows 10 RTM (NTDDI_WIN10, value 0x0A000000); an older API
+    # accidentally used elsewhere would fail to compile here. Bump
+    # `_WIN32_WINNT` + `NTDDI_VERSION` together when a newer feature
+    # set is needed (e.g. NTDDI_WIN10_VB = 0x0A000008 for 1903+).
     add_compile_definitions(
         VK_USE_PLATFORM_WIN32_KHR
         _WIN32_WINNT=0x0A00
@@ -87,9 +89,7 @@ find_package(GLM REQUIRED)
 # 1.2, downgrade with a visible WARNING so the mismatch is audible in
 # configure logs. CI jobs pin SDK 1.3.
 find_package(Vulkan 1.3 QUIET)
-if(Vulkan_FOUND)
-    find_package(Vulkan 1.3 REQUIRED)
-else()
+if(NOT Vulkan_FOUND)
     message(WARNING
         "Vulkan 1.3 SDK not found; falling back to Vulkan >= 1.2. "
         "CI jobs require 1.3 -- install VulkanSDK 1.3+ for a parity build.")
