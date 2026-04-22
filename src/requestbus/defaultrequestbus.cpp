@@ -475,10 +475,24 @@ DefaultRequestBus::request(vigine::topicbus::TopicId                           t
         _impl->pending[raw] = state;
     }
 
-    // Post the request message to the bus.
+    // Post the request message to the bus. If the post fails (queue
+    // full, bus closed, etc.) the responder will never receive the
+    // request, so the caller's future would otherwise wait forever.
+    // Expire the state synchronously and drop the pending entry so the
+    // future's `wait()` returns the Expired terminal state right away
+    // instead of hanging until the TTL cleanup runs.
     auto wrapped = std::make_unique<RequestPayloadWrapper>(std::move(payload));
     auto msg     = std::make_unique<RequestMessage>(topic, std::move(wrapped), corrId);
-    (void)bus().post(std::move(msg));
+    const vigine::Result posted = bus().post(std::move(msg));
+    if (!posted.isSuccess())
+    {
+        {
+            std::unique_lock lk(_impl->pendingMutex);
+            _impl->pending.erase(raw);
+        }
+        state->tryExpire();
+        return std::make_unique<DefaultFuture>(std::move(state));
+    }
 
     // Schedule TTL cleanup.
     const auto effectiveTtl =
