@@ -19,7 +19,7 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:suppressions=${{ github.workspace }}/sanitizer/asan.supp"
+      ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,7 +129,7 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      TSAN_OPTIONS: "halt_on_error=1:suppressions=${{ github.workspace }}/sanitizer/tsan.supp"
+      TSAN_OPTIONS: "halt_on_error=1"
     steps:
       - uses: actions/checkout@v4
         with:

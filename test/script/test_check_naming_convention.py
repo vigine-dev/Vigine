@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts/ to path so the module can be imported directly.
+# Add script/ to path so the module can be imported directly.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
 
 import check_naming_convention as cnc  # noqa: E402

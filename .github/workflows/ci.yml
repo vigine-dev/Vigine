@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run check_graph_purity
-        run: python scripts/check_graph_purity.py --root .
+        run: python script/check_graph_purity.py --root .
 
   naming-convention:
     name: Naming convention check (INV-10)
@@ -33,7 +33,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run check_naming_convention
-        run: python scripts/check_naming_convention.py --root .
+        run: python script/check_naming_convention.py --root .
 
   wrapper-encapsulation:
     name: Wrapper encapsulation check (INV-11)
@@ -47,7 +47,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run check_wrapper_encapsulation
-        run: python scripts/check_wrapper_encapsulation.py --root .
+        run: python script/check_wrapper_encapsulation.py --root .
 
   strict-encapsulation:
     name: Strict encapsulation check (INV-12)
@@ -61,7 +61,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run check_strict_encapsulation
-        run: python scripts/check_strict_encapsulation.py --root .
+        run: python script/check_strict_encapsulation.py --root .
 
   cross-platform-check:
     name: Cross-platform portability check (AD-2)
@@ -75,7 +75,7 @@ jobs:
           python-version: "3.11"
 
       - name: Run check_cross_platform
-        run: python scripts/check_cross_platform.py --root .
+        run: python script/check_cross_platform.py --root .
 
   unit-tests-scripts:
     name: Script unit tests
@@ -92,19 +92,19 @@ jobs:
         run: pip install pytest
 
       - name: Run test_check_graph_purity
-        run: pytest test/scripts/test_check_graph_purity.py -q
+        run: pytest test/script/test_check_graph_purity.py -q
 
       - name: Run test_check_naming_convention
-        run: pytest test/scripts/test_check_naming_convention.py -q
+        run: pytest test/script/test_check_naming_convention.py -q
 
       - name: Run test_check_wrapper_encapsulation
-        run: pytest test/scripts/test_check_wrapper_encapsulation.py -q
+        run: pytest test/script/test_check_wrapper_encapsulation.py -q
 
       - name: Run test_check_strict_encapsulation
-        run: pytest test/scripts/test_check_strict_encapsulation.py -q
+        run: pytest test/script/test_check_strict_encapsulation.py -q
 
       - name: Run test_check_cross_platform
-        run: pytest test/scripts/test_check_cross_platform.py -q
+        run: pytest test/script/test_check_cross_platform.py -q
 
   # Three-OS build matrix. Every cell runs a Debug and a Release build
   # under the project baseline (CMake 3.25, C++23, Vulkan 1.3). vcpkg
