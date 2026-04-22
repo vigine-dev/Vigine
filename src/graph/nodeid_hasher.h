@@ -36,7 +36,10 @@ struct NodeIdHasher
         {
             return static_cast<std::size_t>(key);
         }
-        return static_cast<std::size_t>(key ^ (key >> 32));
+        else
+        {
+            return static_cast<std::size_t>(key ^ (key >> 32));
+        }
     }
 };
 } // namespace vigine::graph::internal
