@@ -49,8 +49,34 @@ NodeId AbstractGraph::addNode(std::unique_ptr<INode> node)
     }
     std::unique_lock lock(_mutex);
 
-    const std::uint32_t index      = _nextNodeIndex++;
-    const std::uint32_t generation = 1;
+    // Prefer a vacated index from the free-list so `_nodes` does not
+    // grow monotonically on every add/remove cycle. Long-running
+    // engines previously leaked an unbounded number of tombstone
+    // slots — the map only ever got bigger, never smaller.
+    std::uint32_t index;
+    std::uint32_t generation;
+    if (!_freeNodeIndices.empty())
+    {
+        index = _freeNodeIndices.back();
+        _freeNodeIndices.pop_back();
+        // The generation tracker carries the next generation for a
+        // recycled slot. If this index has never been removed
+        // before, the tracker returns 1 (default-constructed value
+        // from `operator[]`) — same as the pristine-slot default.
+        auto genIt = _nodeNextGeneration.find(index);
+        generation = (genIt != _nodeNextGeneration.end()) ? genIt->second : 1u;
+        // Wrap-around guard: generation 0 is the invalid sentinel.
+        if (generation == 0u)
+        {
+            generation = 1u;
+        }
+    }
+    else
+    {
+        index      = _nextNodeIndex++;
+        generation = 1u;
+    }
+
     NodeSlot            slot;
     slot.node       = std::move(node);
     slot.generation = generation;
@@ -85,11 +111,17 @@ Result AbstractGraph::removeNode(NodeId id)
         eraseEdgeLocked(eid);
     }
 
-    auto &slot = it->second;
-    slot.node.reset();
-    slot.outEdges.clear();
-    slot.inEdges.clear();
-    ++slot.generation;
+    // Remember the next generation for this index (current + 1,
+    // wrap-around skips the invalid sentinel), push the index onto
+    // the free-list, and erase the slot entirely. Previously the
+    // slot stayed in the map with a null `node` — a tombstone that
+    // leaked memory forever.
+    const std::uint32_t nextGen = (it->second.generation + 1u == 0u)
+                                      ? 1u
+                                      : it->second.generation + 1u;
+    _nodeNextGeneration[id.index] = nextGen;
+    _nodes.erase(it);
+    _freeNodeIndices.push_back(id.index);
     _version.fetch_add(1, std::memory_order_release);
     return Result();
 }
@@ -131,8 +163,26 @@ EdgeId AbstractGraph::addEdge(std::unique_ptr<IEdge> edge)
         return EdgeId{};
     }
 
-    const std::uint32_t index      = _nextEdgeIndex++;
-    const std::uint32_t generation = 1;
+    // Symmetric free-list reuse (see addNode for the motivation).
+    std::uint32_t index;
+    std::uint32_t generation;
+    if (!_freeEdgeIndices.empty())
+    {
+        index = _freeEdgeIndices.back();
+        _freeEdgeIndices.pop_back();
+        auto genIt = _edgeNextGeneration.find(index);
+        generation = (genIt != _edgeNextGeneration.end()) ? genIt->second : 1u;
+        if (generation == 0u)
+        {
+            generation = 1u;
+        }
+    }
+    else
+    {
+        index      = _nextEdgeIndex++;
+        generation = 1u;
+    }
+
     EdgeSlot            slot;
     slot.edge       = std::move(edge);
     slot.generation = generation;
@@ -308,8 +358,14 @@ bool AbstractGraph::eraseEdgeLocked(EdgeId id)
     detach(fromId, /*outgoing=*/true);
     detach(toId, /*outgoing=*/false);
 
-    it->second.edge.reset();
-    ++it->second.generation;
+    // Mirror the addEdge free-list semantics: remember the next
+    // generation, erase the slot outright, push the freed index.
+    const std::uint32_t nextGen = (it->second.generation + 1u == 0u)
+                                      ? 1u
+                                      : it->second.generation + 1u;
+    _edgeNextGeneration[id.index] = nextGen;
+    _edges.erase(it);
+    _freeEdgeIndices.push_back(id.index);
     return true;
 }
 
