@@ -9,9 +9,7 @@ Five test cases per plan_27:
   5. Path missing handled gracefully -- non-existent path exits 1 with a message.
 """
 
-import io
 import sys
-import tempfile
 import textwrap
 from pathlib import Path
 
