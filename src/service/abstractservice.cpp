@@ -49,12 +49,12 @@ std::vector<IService *> AbstractService::dependencies() const
 
 bool AbstractService::isInitialised() const noexcept
 {
-    return _initialised;
+    return _initialised.load(std::memory_order_acquire);
 }
 
 void AbstractService::setInitialised(bool value) noexcept
 {
-    _initialised = value;
+    _initialised.store(value, std::memory_order_release);
 }
 
 void AbstractService::addDependency(IService *dependency)
