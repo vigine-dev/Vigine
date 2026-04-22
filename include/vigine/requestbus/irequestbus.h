@@ -93,7 +93,12 @@ class IRequestBus
      * @ref vigine::messaging::CorrelationId from the incoming message
      * and the reply payload.
      *
-     * A null @p subscriber returns an inert token.
+     * A null @p subscriber or a shut-down bus returns @c nullptr —
+     * callers must null-check the returned pointer before using it.
+     * (Previous revisions of this doc described an inert-token
+     * return; the sibling facade subscribe surfaces return inert
+     * tokens, but the request-bus responder path is stricter about
+     * invalid input.)
      */
     [[nodiscard]] virtual std::unique_ptr<vigine::messaging::ISubscriptionToken>
         respondTo(vigine::topicbus::TopicId                topic,
