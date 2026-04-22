@@ -29,17 +29,24 @@ namespace
 }
 
 // Returns true when the range `[min, max]` sits entirely inside the
-// engine-bundled half (`[0, kReservedEnd]`).
-[[nodiscard]] bool isEntirelyEngineHalf(std::uint32_t min,
-                                        std::uint32_t max) noexcept
+// engine-bundled half (`[0, kReservedEnd]`). Only `max` participates
+// in the check — the range is well-formed (min <= max) by the
+// caller's invariant, so an upper-bound check suffices. The
+// `min` parameter is kept for signature symmetry with
+// `isEntirelyUserHalf` so the two call sites read uniformly.
+[[nodiscard]] bool isEntirelyEngineHalf([[maybe_unused]] std::uint32_t min,
+                                        std::uint32_t                 max) noexcept
 {
     return max <= kReservedEnd;
 }
 
 // Returns true when the range `[min, max]` sits entirely inside the
-// user-registered half (`[kUserBegin, ..)`).
-[[nodiscard]] bool isEntirelyUserHalf(std::uint32_t min,
-                                      std::uint32_t max) noexcept
+// user-registered half (`[kUserBegin, ..)`). Only `min` participates —
+// the upper bound is unconstrained in the user half. The `max`
+// parameter is kept for signature symmetry with
+// `isEntirelyEngineHalf`.
+[[nodiscard]] bool isEntirelyUserHalf(std::uint32_t                 min,
+                                      [[maybe_unused]] std::uint32_t max) noexcept
 {
     return min >= kUserBegin;
 }
