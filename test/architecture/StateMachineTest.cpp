@@ -146,7 +146,8 @@ TEST(StateMachineTest, method_destructor)
 TEST(StateMachineTest, addState)
 {
     vigine::Engine eng;
-    auto *stateMachine         = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine         = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
     auto someState             = std::make_unique<SomeState>();
     SomeState *rawPtrSomeState = someState.get();
 
@@ -160,7 +161,8 @@ TEST(StateMachineTest, addTransition)
     vigine::Engine eng;
     // Engine::state() returns IStateMachine& after R.3.1.1; the rich
     // StateMachine surface lands on the interface in a later leaf.
-    auto *stateMachine = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
 
     // Add states
     auto state1            = std::make_unique<SomeState>();
@@ -191,7 +193,8 @@ TEST(StateMachineTest, hasStatesToRun)
     vigine::Engine eng;
     // Engine::state() returns IStateMachine& after R.3.1.1; the rich
     // StateMachine surface lands on the interface in a later leaf.
-    auto *stateMachine = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
 
     // Check without state
     ASSERT_FALSE(stateMachine->hasStatesToRun());
@@ -211,7 +214,8 @@ TEST(StateMachineTest, runCurrentState_without_transition)
     vigine::Engine eng;
     // Engine::state() returns IStateMachine& after R.3.1.1; the rich
     // StateMachine surface lands on the interface in a later leaf.
-    auto *stateMachine = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
 
     // Add state
     auto state    = std::make_unique<SomeState>();
@@ -231,7 +235,8 @@ TEST(StateMachineTest, changeStateTo)
     vigine::Engine eng;
     // Engine::state() returns IStateMachine& after R.3.1.1; the rich
     // StateMachine surface lands on the interface in a later leaf.
-    auto *stateMachine = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
 
     // Add states
     auto state1    = std::make_unique<SomeState>();
@@ -256,7 +261,8 @@ TEST(StateMachineTest, currentState)
     vigine::Engine eng;
     // Engine::state() returns IStateMachine& after R.3.1.1; the rich
     // StateMachine surface lands on the interface in a later leaf.
-    auto *stateMachine = static_cast<StateMachine *>(&eng.state());
+    auto *stateMachine = dynamic_cast<StateMachine *>(&eng.state());
+    ASSERT_NE(nullptr, stateMachine);
 
     // Initially should be nullptr
     ASSERT_EQ(nullptr, stateMachine->currentState());
