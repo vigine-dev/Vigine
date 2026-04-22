@@ -390,6 +390,23 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
             // should reuse a single NamedThreadId through
             // scheduleOnNamed() instead.
             //
+            // Cap enforcement: reserve the slot via
+            // `acquireDedicatedSlot()` BEFORE allocating any thread
+            // state. The call honours `maxDedicatedThreads` from
+            // `ThreadManagerConfig` and returns false when the cap
+            // is already at limit; refuse the schedule in that case
+            // instead of silently creating a new thread. Previously
+            // the increment fired AFTER the allocation, so the cap
+            // was never consulted at decision time and the manager
+            // leaked threads under churn.
+            if (!acquireDedicatedSlot())
+            {
+                handle->settle(Result{
+                    Result::Code::Error,
+                    "threading: dedicated-thread cap reached"});
+                break;
+            }
+
             // Publication ordering matters. The worker thread must
             // become visible to `shutdown()` before it is started,
             // otherwise a concurrent shutdown between thread-start
@@ -417,7 +434,6 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
                 handle->settle(
                     Result{Result::Code::Error, "threading: dedicated queue closed"});
             }
-            acquireDedicatedSlot();
             break;
         }
 
