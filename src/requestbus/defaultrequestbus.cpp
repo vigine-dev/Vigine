@@ -100,6 +100,25 @@ struct FutureState
 };
 
 // -----------------------------------------------------------------
+// PendingRegistry — the correlation-id map carried on a shared owner
+// so the TTL-cleanup runnable can erase its entry after wake-up even
+// if it fires after the bus itself has been destroyed.
+//
+// The bus holds the sole `std::shared_ptr`; each runnable carries a
+// `std::weak_ptr`. When the bus goes away the weak_ptr stops
+// locking and the cleanup path becomes a no-op. Without this, an
+// earlier version of `TtlCleanupRunnable::run` flipped the shared
+// FutureState to Expired but left the correlation id in the map
+// forever — memory grew by one entry per request that timed out.
+// -----------------------------------------------------------------
+
+struct PendingRegistry
+{
+    std::mutex                                                       mutex;
+    std::unordered_map<std::uint64_t, std::shared_ptr<FutureState>>  entries;
+};
+
+// -----------------------------------------------------------------
 // DefaultFuture — IFuture handed to the caller of request().
 // Holds a shared_ptr to FutureState; the bus's pending map holds the
 // other shared_ptr half so either side can outlive the other safely.
@@ -421,9 +440,13 @@ class ReplyMessage final : public vigine::messaging::IMessage
 class TtlCleanupRunnable final : public vigine::threading::IRunnable
 {
   public:
-    TtlCleanupRunnable(std::shared_ptr<FutureState>           state,
-                       std::chrono::milliseconds              delay)
-        : _state(std::move(state))
+    TtlCleanupRunnable(std::weak_ptr<PendingRegistry>  registry,
+                       std::shared_ptr<FutureState>    state,
+                       std::uint64_t                   corrId,
+                       std::chrono::milliseconds       delay)
+        : _registry(std::move(registry))
+        , _state(std::move(state))
+        , _corrId(corrId)
         , _delay(delay)
     {
     }
@@ -431,13 +454,29 @@ class TtlCleanupRunnable final : public vigine::threading::IRunnable
     [[nodiscard]] vigine::Result run() override
     {
         std::this_thread::sleep_for(_delay);
+        // CAS the shared state to Expired. If a reply or a caller
+        // cancellation already claimed the state this is a no-op.
         _state->tryExpire();
+        // Unlink the correlation id from the registry regardless of
+        // whether we won the CAS; erase-by-key is idempotent, and if
+        // the reply arrived in time the reply subscriber already
+        // removed the entry. The weak_ptr guard handles the case
+        // where the bus was destroyed before the runnable fired —
+        // without it, a raw pointer into the map would dangle and
+        // touching `entries` would be undefined behaviour.
+        if (auto reg = _registry.lock())
+        {
+            std::unique_lock lk(reg->mutex);
+            reg->entries.erase(_corrId);
+        }
         return vigine::Result{vigine::Result::Code::Success};
     }
 
   private:
-    std::shared_ptr<FutureState>  _state;
-    std::chrono::milliseconds     _delay;
+    std::weak_ptr<PendingRegistry>   _registry;
+    std::shared_ptr<FutureState>     _state;
+    std::uint64_t                    _corrId;
+    std::chrono::milliseconds        _delay;
 };
 
 } // namespace
@@ -453,9 +492,11 @@ struct DefaultRequestBus::Impl
     std::atomic<std::uint64_t>   corrCounter{1};
     std::atomic<bool>            shutdown{false};
 
-    // Pending correlation map: corrId -> shared FutureState.
-    std::mutex                                                         pendingMutex;
-    std::unordered_map<std::uint64_t, std::shared_ptr<FutureState>>   pending;
+    // Pending correlation map, carried on a shared owner so each
+    // TTL-cleanup runnable can erase its entry on expiry — even if
+    // the runnable wakes after the bus is gone. See the
+    // `PendingRegistry` comment for the full contract.
+    std::shared_ptr<PendingRegistry>  pendingRegistry{std::make_shared<PendingRegistry>()};
 
     // Internal reply subscriber — listens for TopicPublish with known corrIds.
     // Declared separately to break the circular reference that would arise if
@@ -490,15 +531,16 @@ struct DefaultRequestBus::Impl
             // Find and remove the pending entry.
             std::shared_ptr<FutureState> state;
             {
-                std::unique_lock lk(owner->pendingMutex);
-                auto it = owner->pending.find(corrId.value);
-                if (it == owner->pending.end())
+                auto &reg = *owner->pendingRegistry;
+                std::unique_lock lk(reg.mutex);
+                auto it = reg.entries.find(corrId.value);
+                if (it == reg.entries.end())
                 {
                     // Expired or already responded.
                     return vigine::messaging::DispatchResult::Pass;
                 }
                 state = it->second;
-                owner->pending.erase(it);
+                reg.entries.erase(it);
             }
 
             // We need a non-const pointer to take the payload out.
@@ -570,8 +612,9 @@ DefaultRequestBus::request(vigine::topicbus::TopicId                           t
     auto state = std::make_shared<FutureState>();
 
     {
-        std::unique_lock lk(_impl->pendingMutex);
-        _impl->pending[raw] = state;
+        auto &reg = *_impl->pendingRegistry;
+        std::unique_lock lk(reg.mutex);
+        reg.entries[raw] = state;
     }
 
     // Post the request message to the bus. If the post fails (queue
@@ -586,8 +629,9 @@ DefaultRequestBus::request(vigine::topicbus::TopicId                           t
     if (!posted.isSuccess())
     {
         {
-            std::unique_lock lk(_impl->pendingMutex);
-            _impl->pending.erase(raw);
+            auto &reg = *_impl->pendingRegistry;
+            std::unique_lock lk(reg.mutex);
+            reg.entries.erase(raw);
         }
         state->tryExpire();
         return std::make_unique<DefaultFuture>(std::move(state));
@@ -601,8 +645,11 @@ DefaultRequestBus::request(vigine::topicbus::TopicId                           t
                    : cfg.timeout * 2)
             : cfg.ttl;
 
-    auto cleanupRunnable =
-        std::make_unique<TtlCleanupRunnable>(state, effectiveTtl);
+    auto cleanupRunnable = std::make_unique<TtlCleanupRunnable>(
+        std::weak_ptr<PendingRegistry>{_impl->pendingRegistry},
+        state,
+        raw,
+        effectiveTtl);
     (void)_impl->threadManager.schedule(std::move(cleanupRunnable));
 
     return std::make_unique<DefaultFuture>(std::move(state));
@@ -701,12 +748,13 @@ vigine::Result DefaultRequestBus::shutdown()
 
     // Cancel every pending future.
     {
-        std::unique_lock lk(_impl->pendingMutex);
-        for (auto &[key, state] : _impl->pending)
+        auto &reg = *_impl->pendingRegistry;
+        std::unique_lock lk(reg.mutex);
+        for (auto &[key, state] : reg.entries)
         {
             state->tryCancel();
         }
-        _impl->pending.clear();
+        reg.entries.clear();
     }
 
     // Release the internal reply subscription.
