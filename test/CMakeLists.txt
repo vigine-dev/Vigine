@@ -395,7 +395,8 @@ gtest_discover_tests(${PIPELINEBUILDER_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
-# ====================== Engine Smoke Target ================# Smoke coverage for IEngine lifecycle: construct-without-run, run +
+# ====================== Engine Smoke Target ============================
+# Smoke coverage for IEngine lifecycle: construct-without-run, run +
 # shutdown-from-other-thread, shutdown-from-main-thread-callback, and
 # double-shutdown idempotency. Also exercises the freeze-after-run
 # boundary that blocks context mutation once the pump is live.
@@ -413,6 +414,23 @@ target_include_directories(${ENGINE_SMOKE_TARGET}
 )
 
 target_link_libraries(${ENGINE_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ENGINE_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${ENGINE_SMOKE_TARGET}
+    PROPERTIES LABELS "engine-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== Full-Stack Contract Suite =======================
 # End-to-end contract coverage for the unified substrate: engine
 # lifecycle, threading primitives, messaging bus, every Level-2 facade
@@ -455,15 +473,16 @@ target_link_libraries(${FULL_CONTRACT_TARGET}
     ${GLM_LIBRARIES}
 )
 
-set_target_properties(${ENGINE_SMOKE_TARGET} PROPERTIES
+set_target_properties(${FULL_CONTRACT_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-gtest_discover_tests(${ENGINE_SMOKE_TARGET}
-    PROPERTIES LABELS "engine-smoke"
+gtest_discover_tests(${FULL_CONTRACT_TARGET}
+    PROPERTIES LABELS "full-contract"
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
+
 # ====================== Linux Platform Smoke Target =======================
 # Three scenarios: XCB window open/close, SIGTERM self-pipe delivery,
 # SIGUSR1/SIGUSR2 subscribe succeeds. Gated to Linux only; invisible to
@@ -503,14 +522,4 @@ if(UNIX AND NOT APPLE)
         DISCOVERY_MODE PRE_TEST
     )
 endif() # UNIX AND NOT APPLE
-=======
-set_target_properties(${FULL_CONTRACT_TARGET} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-gtest_discover_tests(${FULL_CONTRACT_TARGET}
-    PROPERTIES LABELS "full-contract"
-    DISCOVERY_TIMEOUT 60
-    DISCOVERY_MODE PRE_TEST
-)
 

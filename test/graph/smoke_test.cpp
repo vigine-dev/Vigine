@@ -39,7 +39,7 @@ class RecordingVisitor final : public IGraphVisitor
 
 TEST(DefaultGraphSmoke, CreateAndAddNodes)
 {
-    std::shared_ptr<IGraph> graph = createGraph();
+    std::unique_ptr<IGraph> graph = createGraph();
     ASSERT_NE(graph, nullptr);
 
     const NodeId n1 = graph->addNode(internal::makeNode(kind::Generic));
@@ -55,7 +55,7 @@ TEST(DefaultGraphSmoke, CreateAndAddNodes)
 
 TEST(DefaultGraphSmoke, AddEdgeAndTraverseDfs)
 {
-    std::shared_ptr<IGraph> graph = createGraph();
+    std::unique_ptr<IGraph> graph = createGraph();
     const NodeId            a     = graph->addNode(internal::makeNode(kind::Generic));
     const NodeId            b     = graph->addNode(internal::makeNode(kind::Generic));
     const EdgeId            e     = graph->addEdge(internal::makeEdge(a, b, edge_kind::Generic));
@@ -72,7 +72,7 @@ TEST(DefaultGraphSmoke, AddEdgeAndTraverseDfs)
 
 TEST(DefaultGraphSmoke, RemoveNodeCascadesEdges)
 {
-    std::shared_ptr<IGraph> graph = createGraph();
+    std::unique_ptr<IGraph> graph = createGraph();
     const NodeId            a     = graph->addNode(internal::makeNode(kind::Generic));
     const NodeId            b     = graph->addNode(internal::makeNode(kind::Generic));
     const EdgeId            e     = graph->addEdge(internal::makeEdge(a, b, edge_kind::Generic));
@@ -87,7 +87,7 @@ TEST(DefaultGraphSmoke, RemoveNodeCascadesEdges)
 
 TEST(DefaultGraphSmoke, ExportGraphVizRoundTrip)
 {
-    std::shared_ptr<IGraph> graph = createGraph();
+    std::unique_ptr<IGraph> graph = createGraph();
     const NodeId            a     = graph->addNode(internal::makeNode(kind::Generic));
     const NodeId            b     = graph->addNode(internal::makeNode(kind::Generic));
     static_cast<void>(graph->addEdge(internal::makeEdge(a, b, edge_kind::Generic)));
@@ -101,7 +101,7 @@ TEST(DefaultGraphSmoke, ExportGraphVizRoundTrip)
 
 TEST(DefaultGraphSmoke, TopologicalOrderAndCycleDetection)
 {
-    std::shared_ptr<IGraph> graph = createGraph();
+    std::unique_ptr<IGraph> graph = createGraph();
     const NodeId            a     = graph->addNode(internal::makeNode(kind::Generic));
     const NodeId            b     = graph->addNode(internal::makeNode(kind::Generic));
     const NodeId            c     = graph->addNode(internal::makeNode(kind::Generic));
