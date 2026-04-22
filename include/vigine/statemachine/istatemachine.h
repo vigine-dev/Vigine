@@ -114,9 +114,13 @@ class IStateMachine
      * @brief Reports whether the state machine currently tracks the
      *        state addressed by @p state.
      *
-     * Useful for pre-flight checks in callers that want to skip
-     * silently rather than error out when a state has been removed by
-     * another path between ticks.
+     * Useful for pre-flight checks in callers that hold a cached
+     * @ref StateId — the wrapper surface is append-only within a
+     * session (there is no `removeState()` surface today), so a
+     * false result means either the id was never issued by this
+     * machine or its generation has been invalidated by a future
+     * recycle path. When @ref StateId state removal does land, this
+     * doc should be revised to cover the stale-id case explicitly.
      */
     [[nodiscard]] virtual bool hasState(StateId state) const noexcept = 0;
 
