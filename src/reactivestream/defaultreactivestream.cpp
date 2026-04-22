@@ -304,14 +304,29 @@ vigine::Result DefaultReactiveStream::publish(
 
         constexpr std::size_t kUnbounded = std::numeric_limits<std::size_t>::max();
         std::size_t current = state->demand.load(std::memory_order_acquire);
-        if (current == 0)
+        bool claimed = false;
+        while (current > 0)
         {
-            continue;
+            if (current == kUnbounded)
+            {
+                // Unbounded demand — no decrement, just claim delivery.
+                claimed = true;
+                break;
+            }
+            if (state->demand.compare_exchange_weak(
+                    current, current - 1,
+                    std::memory_order_acq_rel,
+                    std::memory_order_acquire))
+            {
+                claimed = true;
+                break;
+            }
+            // current was refreshed by compare_exchange_weak; loop again.
         }
-
-        if (current != kUnbounded)
+        if (!claimed)
         {
-            state->demand.fetch_sub(1, std::memory_order_release);
+            // Demand was 0 (or raced to 0) — try the next subscriber.
+            continue;
         }
 
         state->subscriber->onNext(std::move(payload));
