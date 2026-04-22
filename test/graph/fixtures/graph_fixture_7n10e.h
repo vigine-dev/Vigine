@@ -29,7 +29,7 @@ namespace vigine::graph::contract
  * concrete IGraph implementation plugs into the same suite by registering
  * another factory with INSTANTIATE_TEST_SUITE_P.
  */
-using GraphFactory = std::function<std::shared_ptr<IGraph>()>;
+using GraphFactory = std::function<std::unique_ptr<IGraph>()>;
 
 /**
  * @brief Reserved edge kind for ChildOf relations used by the HSM-style
@@ -196,7 +196,7 @@ inline EdgeId addTestEdge(IGraph                   &graph,
  */
 struct SevenNodeFixture
 {
-    std::shared_ptr<IGraph> graph;
+    std::unique_ptr<IGraph> graph;
     std::array<NodeId, 7>   nodes{};
     std::array<EdgeId, 10>  edges{};
 
@@ -264,7 +264,7 @@ struct SevenNodeFixture
 class ContractFixture : public ::testing::TestWithParam<GraphFactory>
 {
   protected:
-    std::shared_ptr<IGraph> makeGraph() const { return GetParam()(); }
+    std::unique_ptr<IGraph> makeGraph() const { return GetParam()(); }
 };
 
 /**

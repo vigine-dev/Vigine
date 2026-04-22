@@ -28,9 +28,12 @@ namespace vigine::graph
  *   - @ref addNode and @ref addEdge take unique ownership of the
  *     implementation objects.
  *   - @ref node and @ref edge return non-owning raw pointers. Returned
- *     pointers are valid until the next mutation of the graph from any
- *     thread; callers that need longer-lived references should copy the
- *     identifier and re-resolve.
+ *     pointers are valid until the next mutation of the graph; callers
+ *     that need longer-lived references should copy the identifier and
+ *     re-resolve. The base interface does not offer a thread-safety
+ *     guarantee: concurrent access (read + mutate, or mutate + mutate)
+ *     requires external synchronization unless a concrete implementation
+ *     documents stronger guarantees.
  *   - Identifiers are generational (@ref NodeId, @ref EdgeId). Stale
  *     identifiers never alias live slots after removal.
  */
@@ -92,9 +95,12 @@ class IGraph
      * @brief Walks the graph starting at @p startNode under @p mode and
      *        reports each visited vertex and edge to @p visitor.
      *
-     * Returns a successful @ref Result on normal completion, an error
-     * @ref Result when the visitor requested a stop or when
-     * @ref TraverseMode::Topological encounters a cycle.
+     * Returns a successful @ref Result on normal completion AND when the
+     * visitor requested an early exit via @ref VisitResult::Stop — the
+     * stop signal is a normal control-flow outcome, not an error. Returns
+     * an error @ref Result only when @ref TraverseMode::Topological
+     * encounters a cycle or when an implementation-defined failure (e.g.
+     * @p startNode is stale) prevents the walk.
      */
     virtual Result traverse(NodeId startNode, TraverseMode mode, IGraphVisitor &visitor) = 0;
 
