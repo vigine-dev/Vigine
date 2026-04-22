@@ -466,6 +466,25 @@ set(SOURCES_TOPICBUS
     ${SRC_DIR}/topicbus/factory.cpp
 )
 
+# Channel factory facade (R.3.3.1.4 / plan_18) -- public surface.
+set(HEADER_CHANNELFACTORY
+    ${INCLUDE_DIR}/vigine/channelfactory/channelkind.h
+    ${INCLUDE_DIR}/vigine/channelfactory/ichannel.h
+    ${INCLUDE_DIR}/vigine/channelfactory/ichannelfactory.h
+    ${INCLUDE_DIR}/vigine/channelfactory/abstractchannelfactory.h
+    ${INCLUDE_DIR}/vigine/channelfactory/defaultchannelfactory.h
+    ${INCLUDE_DIR}/vigine/channelfactory/factory.h
+)
+
+# Channel factory facade (R.3.3.1.4 / plan_18) -- internal concrete + factory.
+set(SOURCES_CHANNELFACTORY
+    ${SRC_DIR}/channelfactory/abstractchannelfactory.cpp
+    ${SRC_DIR}/channelfactory/defaultchannel.h
+    ${SRC_DIR}/channelfactory/defaultchannel.cpp
+    ${SRC_DIR}/channelfactory/defaultchannelfactory.cpp
+    ${SRC_DIR}/channelfactory/factory.cpp
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -556,6 +575,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_EVENTSCHEDULER}
     ${HEADER_TOPICBUS}
     ${SOURCES_TOPICBUS}
+    ${HEADER_CHANNELFACTORY}
+    ${SOURCES_CHANNELFACTORY}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
