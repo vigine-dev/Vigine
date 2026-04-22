@@ -438,7 +438,10 @@ set(SOURCES_SIGNALEMITTER
     ${SRC_DIR}/signalemitter/defaultsignalemitter.cpp
 )
 
-# Event-scheduler facade (R.3.3.1.2 / plan_16) -- public surface.
+# Event-scheduler facade -- public surface. The concrete
+# DefaultEventScheduler type is NOT in the public tree; callers reach
+# the scheduler exclusively through `createEventScheduler` from
+# factory.h, which returns a `std::unique_ptr<IEventScheduler>`.
 set(HEADER_EVENTSCHEDULER
     ${INCLUDE_DIR}/vigine/eventscheduler/ossignal.h
     ${INCLUDE_DIR}/vigine/eventscheduler/eventconfig.h
@@ -447,15 +450,16 @@ set(HEADER_EVENTSCHEDULER
     ${INCLUDE_DIR}/vigine/eventscheduler/iossignalsource.h
     ${INCLUDE_DIR}/vigine/eventscheduler/ieventscheduler.h
     ${INCLUDE_DIR}/vigine/eventscheduler/abstracteventscheduler.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/defaulteventscheduler.h
+    ${INCLUDE_DIR}/vigine/eventscheduler/factory.h
 )
 
-# Event-scheduler facade (R.3.3.1.2 / plan_16) -- internal concrete + platform.
+# Event-scheduler facade -- internal concrete + platform.
 set(SOURCES_EVENTSCHEDULER
     ${SRC_DIR}/eventscheduler/abstracteventscheduler.cpp
+    ${SRC_DIR}/eventscheduler/defaulteventscheduler.h
+    ${SRC_DIR}/eventscheduler/defaulteventscheduler.cpp
     ${SRC_DIR}/eventscheduler/itimersource_default.h
     ${SRC_DIR}/eventscheduler/itimersource_default.cpp
-    ${SRC_DIR}/eventscheduler/defaulteventscheduler.cpp
 )
 
 if(WIN32)
