@@ -431,6 +431,43 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== StateMachine Smoke Target =======================
+# Smoke coverage for the IStateMachine Level-1 wrapper: default state
+# auto-provisioning, addState / setInitial / transition happy paths,
+# stale-id rejection, hierarchy round trips (addChildState + parent +
+# isAncestorOf), single-parent invariant, cycle detection at the
+# addChildState boundary, and RouteMode getter/setter.
+set(STATEMACHINE_SMOKE_TARGET statemachine-smoke)
+
+add_executable(${STATEMACHINE_SMOKE_TARGET}
+    statemachine/smoke_test.cpp
+)
+
+target_include_directories(${STATEMACHINE_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${STATEMACHINE_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${STATEMACHINE_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${STATEMACHINE_SMOKE_TARGET}
+    PROPERTIES LABELS "statemachine-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== ECS Smoke Target ================================
 # Smoke coverage for the ECS Level-1 wrapper: create + attach churn
 # across 1k entities, component lookup round-trip, entitiesWith
