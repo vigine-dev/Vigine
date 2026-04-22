@@ -551,6 +551,25 @@ void DefaultRequestBus::respond(
     }
 
     // Wrap the reply and post it so the internal ReplySubscriber picks it up.
+    //
+    // Design note on discriminator choice:
+    //   ReplyMessage uses MessageKind::TopicPublish + RouteMode::FanOut, which
+    //   is the same shape as regular topic-bus traffic. That is intentional --
+    //   the reply is not distinguished by MessageKind or RouteMode, but by the
+    //   payload wrapper type. Only ReplyPayloadWrapper-typed payloads are
+    //   considered replies by the bus's internal ReplySubscriber (see
+    //   ReplySubscriber::onMessage, which performs dynamic_cast<const
+    //   ReplyPayloadWrapper*> and returns DispatchResult::Pass if the cast
+    //   fails). A third-party subscriber listening on the same bus that
+    //   receives this message will see an IMessagePayload whose concrete type
+    //   is ReplyPayloadWrapper -- a type it cannot meaningfully interpret
+    //   (no public accessor for the inner payload from outside this TU), so
+    //   it will ignore it. Conversely, the reply subscriber will refuse any
+    //   message whose payload is not a ReplyPayloadWrapper. This makes the
+    //   wrapper the sole discriminator for reply traffic; the TopicPublish
+    //   kind is shared with unrelated publishes on purpose so the reply
+    //   flows through the same dispatch path without a dedicated message
+    //   kind enumerant.
     auto wrapped = std::make_unique<ReplyPayloadWrapper>(std::move(payload));
     auto msg     = std::make_unique<ReplyMessage>(std::move(wrapped), corrId);
     (void)bus().post(std::move(msg));
