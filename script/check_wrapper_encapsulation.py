@@ -184,13 +184,18 @@ def scan_file(
         lineno = idx + 1
 
         # A line with the waiver marker is always safe.  If the marker appears
-        # on a class declaration line we also skip the entire class body so
-        # nested types cannot trigger false reports.
+        # on a CLASS / STRUCT declaration line we also skip the entire class
+        # body so nested types cannot trigger false reports. Previously any
+        # line carrying the marker activated the class-body-swallow walk,
+        # which let a marker on an unrelated `#include` or `namespace` line
+        # brace-count straight through a neighbouring namespace and skip
+        # legitimate checks. Gating on `_CLASS_OPEN_RE` restricts the walk
+        # to the intended placement site.
         if WAIVER_MARKER in raw:
-            # Try to swallow the class body that follows (if this is a class decl).
-            end = _find_class_body_end(lines, idx)
-            if end is not None:
-                skip_until = end
+            if _CLASS_OPEN_RE.match(raw):
+                end = _find_class_body_end(lines, idx)
+                if end is not None:
+                    skip_until = end
             idx += 1
             continue
 
