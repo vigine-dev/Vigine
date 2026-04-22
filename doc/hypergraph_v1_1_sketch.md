@@ -4,6 +4,8 @@
 > Nothing described here is shipped in v1. It records the intended
 > direction so v1 authors know what the meta-layer will look like and
 > can avoid locking in patterns that would conflict with it.
+>
+> _Last hygiene scan: 2026-04-22._
 
 ---
 
