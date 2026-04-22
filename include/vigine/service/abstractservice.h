@@ -71,6 +71,21 @@ class AbstractService : public IService
                             dependencies() const override;
     [[nodiscard]] bool      isInitialised() const noexcept override;
 
+    /**
+     * @brief Overwrites the stored @ref ServiceId for this service.
+     *
+     * Intended for the container / aggregator to stamp the freshly
+     * allocated id during registration — the aggregator cast-checks
+     * whether the `IService` it holds is also an `AbstractService`
+     * and invokes this setter. The concrete service itself never
+     * calls it; test fixtures that construct a service without a
+     * container use it to produce a non-sentinel id for assertion
+     * purposes. Exposed on the wrapper base (not on the `IService`
+     * interface) so callers that only see `IService *` cannot stamp
+     * ids.
+     */
+    void setId(ServiceId id) noexcept;
+
     AbstractService(const AbstractService &)            = delete;
     AbstractService &operator=(const AbstractService &) = delete;
     AbstractService(AbstractService &&)                 = delete;
@@ -108,17 +123,6 @@ class AbstractService : public IService
      * silently ignored (matches the previous shared_ptr contract).
      */
     void addDependency(IService *dependency);
-
-    /**
-     * @brief Overwrites the stored @ref ServiceId for this service.
-     *
-     * The container stamps the id during registration; concrete
-     * services do not call the setter themselves. It is exposed as
-     * @c protected so that test fixtures can construct a service in
-     * isolation (without going through a container) and still produce
-     * a non-sentinel id for assertion purposes.
-     */
-    void setId(ServiceId id) noexcept;
 
   private:
     /**

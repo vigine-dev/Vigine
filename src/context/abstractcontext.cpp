@@ -5,6 +5,7 @@
 
 #include "vigine/ecs/factory.h"
 #include "vigine/messaging/factory.h"
+#include "vigine/service/abstractservice.h"
 #include "vigine/statemachine/factory.h"
 #include "vigine/taskflow/factory.h"
 #include "vigine/threading/factory.h"
@@ -167,15 +168,21 @@ Result AbstractContext::registerService(std::shared_ptr<service::IService> servi
 
     // The aggregator stamps a fresh id on every registration; concrete
     // services expose the stamped id through their own id() accessor
-    // after registration. The @c AbstractService base supplies a
-    // @c protected setter that concrete closers wire through their
-    // container; that plumbing is outside the context's scope, so the
-    // aggregator holds the shared_ptr unchanged and lets the service
-    // respond to future id() calls with its own default sentinel until
-    // a later leaf introduces the container. The registry uses the
-    // locally-allocated index as the lookup key so lookup does not
-    // depend on id() agreeing with what we stamped.
+    // after registration. When the registered service derives from
+    // `AbstractService` (the common case — the base carries the id
+    // storage), we call the public `setId` so subsequent `id()`
+    // reads return what we stamped. When the service is only an
+    // `IService` (no AbstractService base), the aggregator keeps
+    // the registry key working as the lookup and the caller-visible
+    // id() falls back to whatever the concrete implementation
+    // returns. The registry uses the locally-allocated index as the
+    // lookup key so lookup does not depend on id() agreeing with
+    // what we stamped.
     const service::ServiceId stamped = allocateServiceId();
+    if (auto *abstractService = dynamic_cast<service::AbstractService *>(service.get()))
+    {
+        abstractService->setId(stamped);
+    }
     _services.emplace(stamped.index, std::move(service));
     return Result{};
 }
