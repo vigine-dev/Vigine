@@ -384,23 +384,38 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
 
         case ThreadAffinity::Dedicated:
         {
-            // Allocate a fresh dedicated slot per schedule call: the caller
-            // identity wiring (mapping caller → slot via IContext) lands
-            // in a later leaf. FIFO per caller is preserved because a
-            // caller that wants FIFO semantics should reuse a single
-            // NamedThreadId instead of using Dedicated for now.
+            // Fresh dedicated slot per schedule call. Caller-keyed
+            // FIFO reuse (with a cap) is on the backlog; until it
+            // lands, callers that need predictable per-caller FIFO
+            // should reuse a single NamedThreadId through
+            // scheduleOnNamed() instead.
+            //
+            // Publication ordering matters. The worker thread must
+            // become visible to `shutdown()` before it is started,
+            // otherwise a concurrent shutdown between thread-start
+            // and slot-registration would run past an orphan thread
+            // that nothing joins. Hence: under `dedicatedMutex`,
+            // register the slot FIRST, then start its worker. Because
+            // shutdown acquires the same mutex to snapshot the
+            // vector, it either runs entirely before we enter the
+            // critical section (no slot yet, nothing to join) or
+            // entirely after we leave (sees the slot with a
+            // joinable worker).
             auto slot   = std::make_unique<Impl::DedicatedSlot>();
             slot->queue = std::make_unique<WorkQueue>();
             WorkQueue *q = slot->queue.get();
-            slot->worker = std::thread([q] { workerLoop(*q); });
+
+            {
+                std::lock_guard<std::mutex> lock(_impl->dedicatedMutex);
+                _impl->dedicatedSlots.push_back(std::move(slot));
+                Impl::DedicatedSlot *slotRef = _impl->dedicatedSlots.back().get();
+                slotRef->worker = std::thread([q] { workerLoop(*q); });
+            }
+
             if (!q->push(std::move(entry)))
             {
                 handle->settle(
                     Result{Result::Code::Error, "threading: dedicated queue closed"});
-            }
-            {
-                std::lock_guard<std::mutex> lock(_impl->dedicatedMutex);
-                _impl->dedicatedSlots.push_back(std::move(slot));
             }
             acquireDedicatedSlot();
             break;
