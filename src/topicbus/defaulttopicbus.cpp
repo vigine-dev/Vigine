@@ -78,11 +78,12 @@ class TopicPublishMessage final : public vigine::messaging::IMessage
 
     [[nodiscard]] vigine::payload::PayloadTypeId payloadTypeId() const noexcept override
     {
-        if (_payload)
-        {
-            return _payload->typeId();
-        }
-        return vigine::payload::PayloadTypeId{};
+        // Smuggle the topic id into the payload-type-id slot so the bus's
+        // per-subscriber filter (which matches on PayloadTypeId) can route
+        // publishes to the right subscriber. The inner user payload's real
+        // type id is still reachable via payload()->typeId() through the
+        // TopicPublishPayload wrapper.
+        return vigine::payload::PayloadTypeId{_topic.value};
     }
 
     [[nodiscard]] const vigine::messaging::IMessagePayload *payload() const noexcept override
@@ -289,6 +290,10 @@ DefaultTopicBus::subscribe(TopicId topic, vigine::messaging::ISubscriber *subscr
     vigine::messaging::MessageFilter filter{};
     filter.kind          = vigine::messaging::MessageKind::TopicPublish;
     filter.expectedRoute = vigine::messaging::RouteMode::FanOut;
+    // Scope the subscription to this topic: TopicPublishMessage reports
+    // PayloadTypeId{topic.value} in payloadTypeId(), so the underlying bus
+    // delivers only publishes that match this subscriber's topic.
+    filter.typeId        = vigine::payload::PayloadTypeId{topic.value};
 
     return bus().subscribe(filter, subscriber);
 }

@@ -240,9 +240,7 @@ TEST_F(TopicBusSmoke, PublishToOneTopicDoesNotDeliverToOtherTopic)
     ASSERT_TRUE(result.isSuccess())
         << "publish to topicA should succeed; got: " << result.message();
 
-    // Assert: only the A-subscriber should have fired. Gated until the
-    // DefaultTopicBus::subscribe topic-filter fix lands.
-    GTEST_SKIP() << "pending DefaultTopicBus::subscribe topic-filter fix";
+    // Assert: only the A-subscriber should have fired.
     EXPECT_EQ(subA.callCount.load(), 1)
         << "topicA subscriber should have been called exactly once";
     EXPECT_EQ(subB.callCount.load(), 0)
