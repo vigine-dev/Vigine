@@ -149,29 +149,9 @@ TEST_F(EventSchedulerRoundTrip, OneShotTimerFiresAndCancels)
     ASSERT_NE(handle, nullptr);
     EXPECT_TRUE(handle->active());
 
-    // Drive the timer synchronously; the scheduler posts to its
-    // internal bus, which ought to route to target.onMessage.
+    // Drive the timer synchronously; the scheduler delivers directly to
+    // target.onMessage (bypassing the internal bus, which has no subscribers).
     timer.triggerAll();
-
-    // The wrapper -> bus -> target delivery path has a pending gap:
-    // AbstractMessageBus::deliver only calls ISubscriber::onMessage,
-    // never AbstractMessageTarget::onMessage directly. Without a
-    // matching filter.target subscription, a target addressed through
-    // IMessage::target() receives nothing. The eventscheduler smoke
-    // test (test/eventscheduler/smoke_test.cpp) exhibits the same
-    // failure on origin/main; the suite skips here pending the fix
-    // rather than silently asserting false. The cancel path below is
-    // still observable on the handle itself.
-    if (target.count() == 0u)
-    {
-        handle->cancel();
-        EXPECT_FALSE(handle->active())
-            << "handle must report inactive after cancel";
-        GTEST_SKIP()
-            << "pending event-scheduler-to-target delivery fix: target "
-               "count stays at 0 because the bus dispatches only to "
-               "ISubscriber, not to AbstractMessageTarget directly";
-    }
 
     EXPECT_GE(target.count(), 1u)
         << "target must receive at least one Event delivery";
