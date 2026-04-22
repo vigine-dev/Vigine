@@ -110,6 +110,17 @@ class IMessageBus
      * via @ref IConnectionToken / @ref AbstractMessageTarget to keep
      * targets alive for the full lifetime of every in-flight message.
      *
+     * Concurrency: the bus guarantees that
+     * @ref ISubscriber::onMessage is never invoked concurrently for
+     * the SAME subscriber, even when multiple worker threads drain
+     * the queue or when @c post is called from several producer
+     * threads at once. Each subscription slot carries a per-slot
+     * mutex that the dispatch path acquires around the
+     * @c onMessage call, so subscribers may treat the callback as
+     * single-threaded with respect to their own state. Calls on
+     * DIFFERENT subscribers still run in parallel; the bus does
+     * not serialise across subscribers.
+     *
      * Returns a success @ref Result when the message was accepted.
      * Returns @ref Result::Code::Error when the bus is shut down, when
      * validation fails, or when the @ref BackpressurePolicy::Error path
