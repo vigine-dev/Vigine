@@ -56,7 +56,7 @@ class TestService final : public vigine::service::IService
         return vigine::Result{};
     }
 
-    [[nodiscard]] std::vector<std::shared_ptr<vigine::service::IService>>
+    [[nodiscard]] std::vector<vigine::service::IService *>
         dependencies() const override
     {
         return {};

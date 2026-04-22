@@ -31,16 +31,18 @@ Result AbstractService::onInit(IContext & /*context*/)
 
 Result AbstractService::onShutdown(IContext & /*context*/)
 {
-    // Default teardown: flip the flag and clear the cross-service
-    // ownership edges so a dependency target is not kept alive longer
-    // than its dependent needs it. Concrete services chain up after
-    // releasing their own domain resources.
+    // Default teardown: flip the flag and drop the cross-service
+    // references so the dependency list does not outlive its purpose.
+    // Dependency lifetime itself sits on the container (unique_ptr),
+    // not on this vector — clearing it is purely a bookkeeping step.
+    // Concrete services chain up after releasing their own domain
+    // resources.
     setInitialised(false);
     _dependencies.clear();
     return Result{};
 }
 
-std::vector<std::shared_ptr<IService>> AbstractService::dependencies() const
+std::vector<IService *> AbstractService::dependencies() const
 {
     return _dependencies;
 }
@@ -55,12 +57,12 @@ void AbstractService::setInitialised(bool value) noexcept
     _initialised = value;
 }
 
-void AbstractService::addDependency(std::shared_ptr<IService> dependency)
+void AbstractService::addDependency(IService *dependency)
 {
     if (!dependency)
         return;
 
-    _dependencies.push_back(std::move(dependency));
+    _dependencies.push_back(dependency);
 }
 
 void AbstractService::setId(ServiceId identifier) noexcept
