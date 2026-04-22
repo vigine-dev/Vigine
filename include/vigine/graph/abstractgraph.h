@@ -190,6 +190,22 @@ class AbstractGraph : public IGraph
     std::unordered_map<std::uint32_t, EdgeSlot>       _edges;
     std::uint32_t                                     _nextNodeIndex{1};
     std::uint32_t                                     _nextEdgeIndex{1};
+    // Free-lists of vacant indices. `removeNode` / `eraseEdgeLocked`
+    // push the index onto the matching free-list and erase the slot
+    // from the map; `addNode` / `addEdge` pop from the free-list
+    // first and only bump `_nextNodeIndex` / `_nextEdgeIndex` when
+    // the free-list is empty. Generation is carried on the slot
+    // itself (not on the index), so a reused slot still fails the
+    // generational check for stale handles that remember the old
+    // generation number.
+    std::vector<std::uint32_t>                        _freeNodeIndices;
+    std::vector<std::uint32_t>                        _freeEdgeIndices;
+    // Per-index generation trackers for reused slots. A slot that
+    // has been erased and later recycled carries a generation
+    // higher than the original — stale ids from before the erase
+    // still fail the generational equality check.
+    std::unordered_map<std::uint32_t, std::uint32_t>  _nodeNextGeneration;
+    std::unordered_map<std::uint32_t, std::uint32_t>  _edgeNextGeneration;
     std::atomic<std::uint64_t>                        _version{0};
     QueryImpl                                         _query;
 
