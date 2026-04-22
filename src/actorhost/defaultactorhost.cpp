@@ -359,6 +359,17 @@ vigine::Result DefaultActorHost::tell(
         return vigine::Result{vigine::Result::Code::Error, "invalid actor id"};
     }
 
+    // Reject a null message up front. The actor's receive() loop
+    // dereferences every dequeued entry; pushing `nullptr` into the
+    // mailbox would turn into a null deref inside the worker
+    // thread with no obvious link back to the caller. Fail fast on
+    // the caller's thread with a clear Result so the bad input is
+    // visible at the point of entry.
+    if (!message)
+    {
+        return vigine::Result{vigine::Result::Code::Error, "null message"};
+    }
+
     if (_impl->shutdownFlag.load(std::memory_order_acquire))
     {
         return vigine::Result{vigine::Result::Code::Error, "actor host shut down"};
