@@ -22,8 +22,10 @@ namespace vigine::threading
  *
  * A @c unique_ptr is used — not a @c shared_ptr — because the manager
  * is a singular owner inside the engine construction chain. Callers
- * that need shared ownership can downcast the returned pointer into a
- * @c shared_ptr at the call site.
+ * that need shared ownership can transfer the returned pointer into a
+ * @c shared_ptr at the call site
+ * (`std::shared_ptr<IThreadManager>(std::move(uniquePtr))`). That is an
+ * ownership transfer, not a downcast.
  */
 [[nodiscard]] std::unique_ptr<IThreadManager>
     createThreadManager(const ThreadManagerConfig &config = {});
