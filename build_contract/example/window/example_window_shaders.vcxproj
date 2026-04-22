@@ -1,0 +1,1512 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BCC15F02-140B-33E7-9231-A31152887859}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>example_window_shaders</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\cube.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/cube.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/cube.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/cube.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/cube.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\cube.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/cube.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/cube.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/cube.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/cube.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/cube.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/cube.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\cube.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\glyph.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/glyph.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/glyph.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/glyph.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/glyph.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\glyph.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/glyph.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/glyph.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/glyph.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/glyph.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\glyph_sdf.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/glyph_sdf.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/glyph_sdf.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/glyph_sdf.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/glyph_sdf.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\glyph_sdf.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/glyph_sdf.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/glyph_sdf.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/glyph_sdf.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/glyph_sdf.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/glyph_sdf.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/glyph_sdf.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\glyph_sdf.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\grid.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/grid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/grid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/grid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/grid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\grid.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/grid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/grid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/grid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/grid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/grid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/grid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\grid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\panel.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/panel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/panel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/panel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/panel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\panel.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/panel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/panel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/panel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/panel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/panel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/panel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\panel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\pyramid.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/pyramid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/pyramid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/pyramid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/pyramid.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\pyramid.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/pyramid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/pyramid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/pyramid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/pyramid.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/pyramid.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/pyramid.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\pyramid.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\sphere.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/sphere.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/sphere.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/sphere.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/sphere.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\sphere.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/sphere.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/sphere.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/sphere.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/sphere.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sphere.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sphere.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sphere.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\sun.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/sun.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/sun.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/sun.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/sun.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\sun.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/sun.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/sun.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/sun.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/sun.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/sun.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/sun.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\sun.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\textured_plane.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/textured_plane.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/textured_plane.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/textured_plane.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/textured_plane.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\textured_plane.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/textured_plane.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/textured_plane.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/textured_plane.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/textured_plane.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textured_plane.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textured_plane.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textured_plane.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\textvoxel.frag.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/textvoxel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/textvoxel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/textvoxel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/textvoxel.frag.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.frag -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.frag.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.frag;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\30e9458060f33be62232d17bad8553ed\textvoxel.vert.spv.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating ../../bin/shaders/textvoxel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating ../../bin/shaders/textvoxel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating ../../bin/shaders/textvoxel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating ../../bin/shaders/textvoxel.vert.spv</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E make_directory D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders
+if %errorlevel% neq 0 goto :cmEnd
+C:\VulkanSDK\1.4.341.1\Bin\glslc.exe D:/work/project/CodeMap/external/Vigine/example/window/shader/textvoxel.vert -o D:/work/project/CodeMap/external/Vigine/build_contract/bin/shaders/textvoxel.vert.spv
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\example\window\shader\textvoxel.vert;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\build_contract\CMakeFiles\da2f72a38ed55d08cf920f7f0445d108\example_window_shaders.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\example_window_shaders</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\example_window_shaders</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\example_window_shaders</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\cube.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textvoxel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\panel.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\pyramid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\grid.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sun.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\sphere.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\glyph_sdf.frag.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.vert.spv;D:\work\project\CodeMap\external\Vigine\build_contract\bin\shaders\textured_plane.frag.spv;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\example_window_shaders</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\work\project\CodeMap\external\Vigine\example\window\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/work/project/CodeMap/external/Vigine/example/window/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/work/project/CodeMap/external/Vigine -BD:/work/project/CodeMap/external/Vigine/build_contract --check-stamp-file D:/work/project/CodeMap/external/Vigine/build_contract/example/window/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/work/project/CodeMap/external/Vigine/example/window/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/work/project/CodeMap/external/Vigine -BD:/work/project/CodeMap/external/Vigine/build_contract --check-stamp-file D:/work/project/CodeMap/external/Vigine/build_contract/example/window/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/work/project/CodeMap/external/Vigine/example/window/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/work/project/CodeMap/external/Vigine -BD:/work/project/CodeMap/external/Vigine/build_contract --check-stamp-file D:/work/project/CodeMap/external/Vigine/build_contract/example/window/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/work/project/CodeMap/external/Vigine/example/window/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/work/project/CodeMap/external/Vigine -BD:/work/project/CodeMap/external/Vigine/build_contract --check-stamp-file D:/work/project/CodeMap/external/Vigine/build_contract/example/window/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\work\project\CodeMap\external\Vigine\build_contract\example\window\CMakeFiles\example_window_shaders">
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\work\project\CodeMap\external\Vigine\build_contract\ZERO_CHECK.vcxproj">
+      <Project>{D18775CF-9A35-3983-9C08-03AAD2F34EC3}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

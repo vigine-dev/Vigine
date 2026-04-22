@@ -1,0 +1,1 @@
+include("D:/work/project/CodeMap/external/Vigine/build_debug/test/messaging-smoke[1]_include.cmake")

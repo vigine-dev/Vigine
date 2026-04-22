@@ -1,0 +1,14 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/work/project/CodeMap/external/Vigine/build_rel/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/external/freetype/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/_deps/glm/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/_deps/glm/glm/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/test/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/googletest/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/googletest/googlemock/cmake_install.cmake",
+		"D:/work/project/CodeMap/external/Vigine/build_rel/googletest/googletest/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

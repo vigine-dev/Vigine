@@ -395,8 +395,7 @@ gtest_discover_tests(${PIPELINEBUILDER_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
-# ====================== Engine Smoke Target =======================
-# Smoke coverage for IEngine lifecycle: construct-without-run, run +
+# ====================== Engine Smoke Target ================# Smoke coverage for IEngine lifecycle: construct-without-run, run +
 # shutdown-from-other-thread, shutdown-from-main-thread-callback, and
 # double-shutdown idempotency. Also exercises the freeze-after-run
 # boundary that blocks context mutation once the pump is live.
@@ -430,3 +429,44 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
+=======
+# ====================== Linux Platform Smoke Target =======================
+# Three scenarios: XCB window open/close, SIGTERM self-pipe delivery,
+# SIGUSR1/SIGUSR2 subscribe succeeds. Gated to Linux only; invisible to
+# Windows/macOS CI jobs.
+if(UNIX AND NOT APPLE)
+    set(LINUX_PLATFORM_SMOKE_TARGET linux-platform-smoke)
+
+    add_executable(${LINUX_PLATFORM_SMOKE_TARGET}
+        platform/linux_smoke_test.cpp
+    )
+
+    target_include_directories(${LINUX_PLATFORM_SMOKE_TARGET}
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${XCB_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(${LINUX_PLATFORM_SMOKE_TARGET}
+        PRIVATE
+        gtest
+        gtest_main
+        vigine
+        ${GLM_LIBRARIES}
+        ${XCB_LIBRARIES}
+    )
+
+    set_target_properties(${LINUX_PLATFORM_SMOKE_TARGET} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
+    include(GoogleTest)
+    gtest_discover_tests(${LINUX_PLATFORM_SMOKE_TARGET}
+        PROPERTIES LABELS "linux-platform-smoke"
+        DISCOVERY_TIMEOUT 60
+        DISCOVERY_MODE PRE_TEST
+    )
+endif() # UNIX AND NOT APPLE
+

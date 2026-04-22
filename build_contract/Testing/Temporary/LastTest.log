@@ -1,0 +1,639 @@
+Start testing: Apr 22 09:02 FLE Daylight Time
+----------------------------------------------------------
+11/33 Testing: EngineLifecycle.ConstructsAllFirstLevelResources
+11/33 Test: EngineLifecycle.ConstructsAllFirstLevelResources
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=EngineLifecycle.ConstructsAllFirstLevelResources" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"EngineLifecycle.ConstructsAllFirstLevelResources" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = EngineLifecycle.ConstructsAllFirstLevelResources
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from EngineLifecycle
+[ RUN      ] EngineLifecycle.ConstructsAllFirstLevelResources
+[       OK ] EngineLifecycle.ConstructsAllFirstLevelResources (1 ms)
+[----------] 1 test from EngineLifecycle (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"EngineLifecycle.ConstructsAllFirstLevelResources" end time: Apr 22 09:02 FLE Daylight Time
+"EngineLifecycle.ConstructsAllFirstLevelResources" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/33 Testing: EngineLifecycle.FreezeTogglesTopologyFlag
+12/33 Test: EngineLifecycle.FreezeTogglesTopologyFlag
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=EngineLifecycle.FreezeTogglesTopologyFlag" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"EngineLifecycle.FreezeTogglesTopologyFlag" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = EngineLifecycle.FreezeTogglesTopologyFlag
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from EngineLifecycle
+[ RUN      ] EngineLifecycle.FreezeTogglesTopologyFlag
+[       OK ] EngineLifecycle.FreezeTogglesTopologyFlag (1 ms)
+[----------] 1 test from EngineLifecycle (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"EngineLifecycle.FreezeTogglesTopologyFlag" end time: Apr 22 09:02 FLE Daylight Time
+"EngineLifecycle.FreezeTogglesTopologyFlag" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/33 Testing: ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess
+13/33 Test: ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadingRoundTrip
+[ RUN      ] ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess
+[       OK ] ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess (1 ms)
+[----------] 1 test from ThreadingRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess" end time: Apr 22 09:02 FLE Daylight Time
+"ThreadingRoundTrip.ScheduleRunnableFinishesWithSuccess" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/33 Testing: ThreadingRoundTrip.MutexLockUnlockIsOrdered
+14/33 Test: ThreadingRoundTrip.MutexLockUnlockIsOrdered
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ThreadingRoundTrip.MutexLockUnlockIsOrdered" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ThreadingRoundTrip.MutexLockUnlockIsOrdered" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ThreadingRoundTrip.MutexLockUnlockIsOrdered
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadingRoundTrip
+[ RUN      ] ThreadingRoundTrip.MutexLockUnlockIsOrdered
+[       OK ] ThreadingRoundTrip.MutexLockUnlockIsOrdered (1 ms)
+[----------] 1 test from ThreadingRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadingRoundTrip.MutexLockUnlockIsOrdered" end time: Apr 22 09:02 FLE Daylight Time
+"ThreadingRoundTrip.MutexLockUnlockIsOrdered" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/33 Testing: ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire
+15/33 Test: ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadingRoundTrip
+[ RUN      ] ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire
+[       OK ] ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire (16 ms)
+[----------] 1 test from ThreadingRoundTrip (16 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (16 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire" end time: Apr 22 09:02 FLE Daylight Time
+"ThreadingRoundTrip.SemaphoreReleaseUnblocksAcquire" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/33 Testing: ThreadingRoundTrip.BarrierArriveAndWaitRendezvous
+16/33 Test: ThreadingRoundTrip.BarrierArriveAndWaitRendezvous
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ThreadingRoundTrip.BarrierArriveAndWaitRendezvous" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ThreadingRoundTrip.BarrierArriveAndWaitRendezvous" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ThreadingRoundTrip.BarrierArriveAndWaitRendezvous
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadingRoundTrip
+[ RUN      ] ThreadingRoundTrip.BarrierArriveAndWaitRendezvous
+[       OK ] ThreadingRoundTrip.BarrierArriveAndWaitRendezvous (1 ms)
+[----------] 1 test from ThreadingRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadingRoundTrip.BarrierArriveAndWaitRendezvous" end time: Apr 22 09:02 FLE Daylight Time
+"ThreadingRoundTrip.BarrierArriveAndWaitRendezvous" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/33 Testing: ThreadingRoundTrip.MessageChannelSendReceive
+17/33 Test: ThreadingRoundTrip.MessageChannelSendReceive
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ThreadingRoundTrip.MessageChannelSendReceive" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ThreadingRoundTrip.MessageChannelSendReceive" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ThreadingRoundTrip.MessageChannelSendReceive
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ThreadingRoundTrip
+[ RUN      ] ThreadingRoundTrip.MessageChannelSendReceive
+[       OK ] ThreadingRoundTrip.MessageChannelSendReceive (1 ms)
+[----------] 1 test from ThreadingRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ThreadingRoundTrip.MessageChannelSendReceive" end time: Apr 22 09:02 FLE Daylight Time
+"ThreadingRoundTrip.MessageChannelSendReceive" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/33 Testing: MessagingRoundTrip.PostReachesMatchingSubscriber
+18/33 Test: MessagingRoundTrip.PostReachesMatchingSubscriber
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=MessagingRoundTrip.PostReachesMatchingSubscriber" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"MessagingRoundTrip.PostReachesMatchingSubscriber" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = MessagingRoundTrip.PostReachesMatchingSubscriber
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MessagingRoundTrip
+[ RUN      ] MessagingRoundTrip.PostReachesMatchingSubscriber
+[       OK ] MessagingRoundTrip.PostReachesMatchingSubscriber (1 ms)
+[----------] 1 test from MessagingRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"MessagingRoundTrip.PostReachesMatchingSubscriber" end time: Apr 22 09:02 FLE Daylight Time
+"MessagingRoundTrip.PostReachesMatchingSubscriber" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/33 Testing: MessagingRoundTrip.ShutdownRejectsSubsequentPost
+19/33 Test: MessagingRoundTrip.ShutdownRejectsSubsequentPost
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=MessagingRoundTrip.ShutdownRejectsSubsequentPost" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"MessagingRoundTrip.ShutdownRejectsSubsequentPost" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = MessagingRoundTrip.ShutdownRejectsSubsequentPost
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MessagingRoundTrip
+[ RUN      ] MessagingRoundTrip.ShutdownRejectsSubsequentPost
+[       OK ] MessagingRoundTrip.ShutdownRejectsSubsequentPost (2 ms)
+[----------] 1 test from MessagingRoundTrip (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"MessagingRoundTrip.ShutdownRejectsSubsequentPost" end time: Apr 22 09:02 FLE Daylight Time
+"MessagingRoundTrip.ShutdownRejectsSubsequentPost" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/33 Testing: SignalEmitter.EmitReturnsSuccessForValidPayload
+20/33 Test: SignalEmitter.EmitReturnsSuccessForValidPayload
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=SignalEmitter.EmitReturnsSuccessForValidPayload" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"SignalEmitter.EmitReturnsSuccessForValidPayload" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = SignalEmitter.EmitReturnsSuccessForValidPayload
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SignalEmitter
+[ RUN      ] SignalEmitter.EmitReturnsSuccessForValidPayload
+[       OK ] SignalEmitter.EmitReturnsSuccessForValidPayload (1 ms)
+[----------] 1 test from SignalEmitter (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"SignalEmitter.EmitReturnsSuccessForValidPayload" end time: Apr 22 09:02 FLE Daylight Time
+"SignalEmitter.EmitReturnsSuccessForValidPayload" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/33 Testing: SignalEmitter.EmitRejectsNullPayload
+21/33 Test: SignalEmitter.EmitRejectsNullPayload
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=SignalEmitter.EmitRejectsNullPayload" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"SignalEmitter.EmitRejectsNullPayload" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = SignalEmitter.EmitRejectsNullPayload
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SignalEmitter
+[ RUN      ] SignalEmitter.EmitRejectsNullPayload
+[       OK ] SignalEmitter.EmitRejectsNullPayload (1 ms)
+[----------] 1 test from SignalEmitter (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"SignalEmitter.EmitRejectsNullPayload" end time: Apr 22 09:02 FLE Daylight Time
+"SignalEmitter.EmitRejectsNullPayload" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/33 Testing: EventSchedulerRoundTrip.OneShotTimerFiresAndCancels
+22/33 Test: EventSchedulerRoundTrip.OneShotTimerFiresAndCancels
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=EventSchedulerRoundTrip.OneShotTimerFiresAndCancels" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"EventSchedulerRoundTrip.OneShotTimerFiresAndCancels" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = EventSchedulerRoundTrip.OneShotTimerFiresAndCancels
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from EventSchedulerRoundTrip
+[ RUN      ] EventSchedulerRoundTrip.OneShotTimerFiresAndCancels
+D:\work\project\CodeMap\external\Vigine\test\contract\scenario_05_event_scheduler.cpp(170): Skipped
+pending event-scheduler-to-target delivery fix: target count stays at 0 because the bus dispatches only to ISubscriber, not to AbstractMessageTarget directly
+
+[  SKIPPED ] EventSchedulerRoundTrip.OneShotTimerFiresAndCancels (1 ms)
+[----------] 1 test from EventSchedulerRoundTrip (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 0 tests.
+[  SKIPPED ] 1 test, listed below:
+[  SKIPPED ] EventSchedulerRoundTrip.OneShotTimerFiresAndCancels
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Skip regular expression found in output. Regex=[\[  SKIPPED \]]
+"EventSchedulerRoundTrip.OneShotTimerFiresAndCancels" end time: Apr 22 09:02 FLE Daylight Time
+"EventSchedulerRoundTrip.OneShotTimerFiresAndCancels" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/33 Testing: TopicIsolation.TwoTopicsDoNotCrossTalk
+23/33 Test: TopicIsolation.TwoTopicsDoNotCrossTalk
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=TopicIsolation.TwoTopicsDoNotCrossTalk" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"TopicIsolation.TwoTopicsDoNotCrossTalk" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = TopicIsolation.TwoTopicsDoNotCrossTalk
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TopicIsolation
+[ RUN      ] TopicIsolation.TwoTopicsDoNotCrossTalk
+D:\work\project\CodeMap\external\Vigine\test\contract\scenario_06_topic_isolation.cpp(70): Skipped
+pending FF-95: topic isolation currently leaks across topics
+
+[  SKIPPED ] TopicIsolation.TwoTopicsDoNotCrossTalk (2 ms)
+[----------] 1 test from TopicIsolation (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 0 tests.
+[  SKIPPED ] 1 test, listed below:
+[  SKIPPED ] TopicIsolation.TwoTopicsDoNotCrossTalk
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Pass Reason:
+Skip regular expression found in output. Regex=[\[  SKIPPED \]]
+"TopicIsolation.TwoTopicsDoNotCrossTalk" end time: Apr 22 09:02 FLE Daylight Time
+"TopicIsolation.TwoTopicsDoNotCrossTalk" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/33 Testing: ChannelBackpressure.BoundedChannelEnforcesCapacity
+24/33 Test: ChannelBackpressure.BoundedChannelEnforcesCapacity
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ChannelBackpressure.BoundedChannelEnforcesCapacity" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ChannelBackpressure.BoundedChannelEnforcesCapacity" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ChannelBackpressure.BoundedChannelEnforcesCapacity
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ChannelBackpressure
+[ RUN      ] ChannelBackpressure.BoundedChannelEnforcesCapacity
+[       OK ] ChannelBackpressure.BoundedChannelEnforcesCapacity (26 ms)
+[----------] 1 test from ChannelBackpressure (26 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (26 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"ChannelBackpressure.BoundedChannelEnforcesCapacity" end time: Apr 22 09:02 FLE Daylight Time
+"ChannelBackpressure.BoundedChannelEnforcesCapacity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/33 Testing: RequestResponse.RoundTripResolvesFuture
+25/33 Test: RequestResponse.RoundTripResolvesFuture
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=RequestResponse.RoundTripResolvesFuture" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"RequestResponse.RoundTripResolvesFuture" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = RequestResponse.RoundTripResolvesFuture
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RequestResponse
+[ RUN      ] RequestResponse.RoundTripResolvesFuture
+[       OK ] RequestResponse.RoundTripResolvesFuture (1012 ms)
+[----------] 1 test from RequestResponse (1012 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1012 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   1.02 sec
+----------------------------------------------------------
+Test Passed.
+"RequestResponse.RoundTripResolvesFuture" end time: Apr 22 09:02 FLE Daylight Time
+"RequestResponse.RoundTripResolvesFuture" time elapsed: 00:00:01
+----------------------------------------------------------
+
+26/33 Testing: RequestResponse.UnservicedRequestTimesOut
+26/33 Test: RequestResponse.UnservicedRequestTimesOut
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=RequestResponse.UnservicedRequestTimesOut" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"RequestResponse.UnservicedRequestTimesOut" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = RequestResponse.UnservicedRequestTimesOut
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from RequestResponse
+[ RUN      ] RequestResponse.UnservicedRequestTimesOut
+[       OK ] RequestResponse.UnservicedRequestTimesOut (50 ms)
+[----------] 1 test from RequestResponse (50 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (50 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"RequestResponse.UnservicedRequestTimesOut" end time: Apr 22 09:02 FLE Daylight Time
+"RequestResponse.UnservicedRequestTimesOut" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/33 Testing: ReactivePipeline.DemandControlledDeliveryAndComplete
+27/33 Test: ReactivePipeline.DemandControlledDeliveryAndComplete
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ReactivePipeline.DemandControlledDeliveryAndComplete" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ReactivePipeline.DemandControlledDeliveryAndComplete" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ReactivePipeline.DemandControlledDeliveryAndComplete
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ReactivePipeline
+[ RUN      ] ReactivePipeline.DemandControlledDeliveryAndComplete
+[       OK ] ReactivePipeline.DemandControlledDeliveryAndComplete (2 ms)
+[----------] 1 test from ReactivePipeline (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ReactivePipeline.DemandControlledDeliveryAndComplete" end time: Apr 22 09:02 FLE Daylight Time
+"ReactivePipeline.DemandControlledDeliveryAndComplete" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/33 Testing: ActorLifecycle.SpawnTellStopRoundTrip
+28/33 Test: ActorLifecycle.SpawnTellStopRoundTrip
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ActorLifecycle.SpawnTellStopRoundTrip" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ActorLifecycle.SpawnTellStopRoundTrip" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ActorLifecycle.SpawnTellStopRoundTrip
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ActorLifecycle
+[ RUN      ] ActorLifecycle.SpawnTellStopRoundTrip
+[       OK ] ActorLifecycle.SpawnTellStopRoundTrip (2 ms)
+[----------] 1 test from ActorLifecycle (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ActorLifecycle.SpawnTellStopRoundTrip" end time: Apr 22 09:02 FLE Daylight Time
+"ActorLifecycle.SpawnTellStopRoundTrip" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/33 Testing: PipelineBuilder.TwoStagePipelineDelivers
+29/33 Test: PipelineBuilder.TwoStagePipelineDelivers
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=PipelineBuilder.TwoStagePipelineDelivers" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"PipelineBuilder.TwoStagePipelineDelivers" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = PipelineBuilder.TwoStagePipelineDelivers
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PipelineBuilder
+[ RUN      ] PipelineBuilder.TwoStagePipelineDelivers
+[       OK ] PipelineBuilder.TwoStagePipelineDelivers (1 ms)
+[----------] 1 test from PipelineBuilder (2 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"PipelineBuilder.TwoStagePipelineDelivers" end time: Apr 22 09:02 FLE Daylight Time
+"PipelineBuilder.TwoStagePipelineDelivers" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/33 Testing: ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails
+30/33 Test: ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ServiceLifecycle
+[ RUN      ] ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails
+[       OK ] ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails (1 ms)
+[----------] 1 test from ServiceLifecycle (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails" end time: Apr 22 09:02 FLE Daylight Time
+"ServiceLifecycle.RegisterSucceedsAndLookupByNullIdFails" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/33 Testing: ServiceLifecycle.FreezeBlocksRegistration
+31/33 Test: ServiceLifecycle.FreezeBlocksRegistration
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=ServiceLifecycle.FreezeBlocksRegistration" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"ServiceLifecycle.FreezeBlocksRegistration" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = ServiceLifecycle.FreezeBlocksRegistration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ServiceLifecycle
+[ RUN      ] ServiceLifecycle.FreezeBlocksRegistration
+[       OK ] ServiceLifecycle.FreezeBlocksRegistration (1 ms)
+[----------] 1 test from ServiceLifecycle (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"ServiceLifecycle.FreezeBlocksRegistration" end time: Apr 22 09:02 FLE Daylight Time
+"ServiceLifecycle.FreezeBlocksRegistration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/33 Testing: EcsLifecycle.CreateAttachIterateDestroy
+32/33 Test: EcsLifecycle.CreateAttachIterateDestroy
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=EcsLifecycle.CreateAttachIterateDestroy" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"EcsLifecycle.CreateAttachIterateDestroy" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = EcsLifecycle.CreateAttachIterateDestroy
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from EcsLifecycle
+[ RUN      ] EcsLifecycle.CreateAttachIterateDestroy
+[       OK ] EcsLifecycle.CreateAttachIterateDestroy (1 ms)
+[----------] 1 test from EcsLifecycle (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"EcsLifecycle.CreateAttachIterateDestroy" end time: Apr 22 09:02 FLE Daylight Time
+"EcsLifecycle.CreateAttachIterateDestroy" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/33 Testing: StateMachineHsm.HierarchyAncestorAndTransition
+33/33 Test: StateMachineHsm.HierarchyAncestorAndTransition
+Command: "D:/work/project/CodeMap/external/Vigine/build_contract/bin/Release/full-contract.exe" "--gtest_filter=StateMachineHsm.HierarchyAncestorAndTransition" "--gtest_also_run_disabled_tests"
+Directory: D:/work/project/CodeMap/external/Vigine/build_contract/test
+"StateMachineHsm.HierarchyAncestorAndTransition" start time: Apr 22 09:02 FLE Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from D:\work\project\CodeMap\external\Vigine\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = StateMachineHsm.HierarchyAncestorAndTransition
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from StateMachineHsm
+[ RUN      ] StateMachineHsm.HierarchyAncestorAndTransition
+[       OK ] StateMachineHsm.HierarchyAncestorAndTransition (1 ms)
+[----------] 1 test from StateMachineHsm (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"StateMachineHsm.HierarchyAncestorAndTransition" end time: Apr 22 09:02 FLE Daylight Time
+"StateMachineHsm.HierarchyAncestorAndTransition" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Apr 22 09:02 FLE Daylight Time
+
+full-contract =   1.44 sec*proc
+

@@ -1,0 +1,49 @@
+name: Linux build
+
+on:
+  push:
+    branches: ["main", "feat/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  linux-build:
+    name: Ubuntu 22.04 — XCB + POSIX signals + Vulkan surface
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libxcb1-dev \
+            libxcb-util0-dev \
+            libvulkan-dev \
+            vulkan-validationlayers-dev \
+            libpqxx-dev \
+            libglm-dev \
+            googletest \
+            libgtest-dev
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DENABLE_UNITTEST=ON
+          -DENABLE_EXAMPLE=OFF
+          -DENABLE_POSTGRESQL=OFF
+
+      - name: Build vigine
+        run: cmake --build build --target vigine -- -j$(nproc)
+
+      - name: Build Linux platform smoke test
+        run: cmake --build build --target linux-platform-smoke -- -j$(nproc)
+
+      - name: Run Linux platform smoke tests
+        run: ctest --test-dir build -L linux-platform-smoke --output-on-failure

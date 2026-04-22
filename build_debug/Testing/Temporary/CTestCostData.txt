@@ -1,0 +1,5 @@
+ChannelFactorySmoke.SendReceiveRoundTrip 1 0.0139067
+ChannelFactorySmoke.CloseWakesBlockedReceiver 1 0.0401209
+ChannelFactorySmoke.BoundedZeroCapacityRejected 1 0.0134113
+ChannelFactorySmoke.UnboundedNonZeroCapacityRejected 1 0.0142094
+---

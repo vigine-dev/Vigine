@@ -1,0 +1,1 @@
+include("D:/work/project/CodeMap/external/Vigine/build_r51_debug/test/graph-contract[1]_include-${CTEST_CONFIGURATION_TYPE}.cmake")
