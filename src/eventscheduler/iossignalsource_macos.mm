@@ -7,6 +7,7 @@
 #include <cerrno>
 #include <csignal>
 #include <cstring>
+#include <fcntl.h>
 #include <mutex>
 #include <thread>
 #include <unistd.h>
@@ -82,6 +83,14 @@ MacOsSignalSource::MacOsSignalSource()
         return;
     }
 
+    // Make the write end non-blocking so the async-signal-safe handler never
+    // stalls if the pipe buffer is full — it drops the byte instead of blocking.
+    int flags = ::fcntl(_pipeFd[1], F_GETFL, 0);
+    if (flags >= 0)
+    {
+        (void)::fcntl(_pipeFd[1], F_SETFL, flags | O_NONBLOCK);
+    }
+
     g_instance = this;
 
     // Install handlers for all five signals.
@@ -129,6 +138,14 @@ vigine::Result MacOsSignalSource::subscribe(OsSignal signal, IOsSignalListener *
     {
         return vigine::Result{vigine::Result::Code::Error,
                               "subscribe: null listener"};
+    }
+    // If pipe() failed in the constructor, signal delivery is impossible.
+    // Surface the error rather than silently accepting a subscription that
+    // will never fire.
+    if (_pipeFd[0] < 0 || _pipeFd[1] < 0)
+    {
+        return vigine::Result{vigine::Result::Code::Error,
+                              "subscribe: pipe initialisation failed; signal delivery unavailable"};
     }
     {
         std::unique_lock lock(_mutex);
