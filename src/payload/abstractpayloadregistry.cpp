@@ -5,6 +5,7 @@
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -54,10 +55,30 @@ void AbstractPayloadRegistry::bootstrapEngineRanges()
     // Runs on the constructing thread before the instance is handed
     // out, so no locking is needed. The helper still goes through
     // registerRangeLocked so every invariant check lives in one place.
-    static_cast<void>(registerRangeLocked(kControlBegin, kControlEnd, kEngineOwner));
-    static_cast<void>(registerRangeLocked(kSystemBegin, kSystemEnd, kEngineOwner));
-    static_cast<void>(registerRangeLocked(kSystemExtBegin, kSystemExtEnd, kEngineOwner));
-    static_cast<void>(registerRangeLocked(kReservedBegin, kReservedEnd, kEngineOwner));
+    //
+    // Results MUST be checked. The engine-range constants are adjacent,
+    // non-overlapping, and sit inside the engine half by construction,
+    // so these calls cannot fail under a valid configuration — but
+    // that is exactly why a silent failure would be disastrous. If a
+    // future change drifts the constants (e.g. `kSystemExtEnd >=
+    // kReservedBegin`) the registry would ship with engine ranges
+    // missing and every later `registerRange()` that lands inside
+    // those ranges would succeed where it should have failed. Escalate
+    // through `std::logic_error` so the registry construction halts
+    // deterministically with a locatable stack trace, rather than
+    // leaving the engine in a broken-invariant state.
+    const auto check = [](const Result &r, const char *label) {
+        if (!r.isSuccess())
+        {
+            throw std::logic_error(
+                std::string{"payload: engine bootstrap failed for "} +
+                label + " range: " + std::string{r.message()});
+        }
+    };
+    check(registerRangeLocked(kControlBegin,   kControlEnd,   kEngineOwner), "Control");
+    check(registerRangeLocked(kSystemBegin,    kSystemEnd,    kEngineOwner), "System");
+    check(registerRangeLocked(kSystemExtBegin, kSystemExtEnd, kEngineOwner), "SystemExt");
+    check(registerRangeLocked(kReservedBegin,  kReservedEnd,  kEngineOwner), "Reserved");
 }
 
 Result AbstractPayloadRegistry::registerRange(PayloadTypeId    min,
@@ -119,18 +140,16 @@ std::optional<std::string>
 
 bool AbstractPayloadRegistry::isRegistered(PayloadTypeId id) const noexcept
 {
-    try
-    {
-        std::shared_lock<std::shared_mutex> lock(_mutex);
-        return findContainingLocked(id.value) != nullptr;
-    }
-    catch (...)
-    {
-        // Honouring the noexcept surface on the pure-virtual: a failed
-        // shared-lock acquisition translates to a conservative "not
-        // registered" answer rather than a crash.
-        return false;
-    }
+    // `noexcept` by contract — if the shared-lock construction or any
+    // downstream call somehow throws (std::bad_alloc from an exotic
+    // allocator, a custom-mutex deadlock trap, etc.) the runtime
+    // translates the escape into `std::terminate` per the standard.
+    // That is loud and locatable. The previous `catch(...)` branch
+    // turned every unexpected exception into a silent `false`, which
+    // collapsed real bugs into wrong answers the caller could not
+    // distinguish from a genuine "unregistered" result.
+    std::shared_lock<std::shared_mutex> lock(_mutex);
+    return findContainingLocked(id.value) != nullptr;
 }
 
 Result AbstractPayloadRegistry::unregister(std::string_view owner)
