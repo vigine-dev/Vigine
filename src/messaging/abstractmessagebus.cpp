@@ -52,7 +52,25 @@ void AbstractMessageBus::SubscriptionToken::cancel() noexcept
 
 bool AbstractMessageBus::SubscriptionToken::active() const noexcept
 {
-    return !_cancelled.load(std::memory_order_acquire);
+    // Three-way conjunction, matching the header contract:
+    //   1. The token points at a real bus (inert tokens carry
+    //      _bus == nullptr and _serial == 0 and are never active).
+    //   2. The token has not been cancelled (RAII teardown or an
+    //      explicit cancel() flipped the flag).
+    //   3. The bus itself has not been shut down. A bus that
+    //      finished its shutdown handshake marks every existing
+    //      subscription as inert; reporting active == true on a
+    //      shut-down bus would invite a caller to unsubscribe a
+    //      slot the bus no longer tracks.
+    if (_bus == nullptr || _serial == 0)
+    {
+        return false;
+    }
+    if (_cancelled.load(std::memory_order_acquire))
+    {
+        return false;
+    }
+    return !_bus->_shutdown.load(std::memory_order_acquire);
 }
 
 // ---------------------------------------------------------------------------
