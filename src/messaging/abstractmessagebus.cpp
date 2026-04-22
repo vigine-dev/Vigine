@@ -411,6 +411,7 @@ void AbstractMessageBus::drainQueue(bool untilShutdown)
     while (true)
     {
         QueuedMessage item;
+        bool          haveItem = false;
         {
             std::unique_lock<std::mutex> lock{_queueMutex};
             if (_queue.empty())
@@ -438,23 +439,39 @@ void AbstractMessageBus::drainQueue(bool untilShutdown)
                     return;
                 }
             }
-            item = std::move(_queue.front());
-            _queue.pop_front();
+
+            // Look for the first ready-to-dispatch item. Future-
+            // scheduled messages (deadline > now) stay in place and
+            // wait for a later drain pass — the previous impl popped
+            // the head, saw it was future, pushed it to the back,
+            // and returned, which starved every later-ready message
+            // behind a single future-scheduled one (and, for
+            // untilShutdown = true paths, never completed the drain).
+            const auto now = std::chrono::steady_clock::now();
+            for (auto it = _queue.begin(); it != _queue.end(); ++it)
+            {
+                if (it->deadline <= now)
+                {
+                    item     = std::move(*it);
+                    _queue.erase(it);
+                    haveItem = true;
+                    break;
+                }
+            }
+
+            if (!haveItem)
+            {
+                // Queue carries only future-scheduled work. Return so
+                // the caller can re-poll (drainQueue is called from
+                // post() and from shutdown()); spinning here would
+                // burn CPU on deadlines that have not arrived.
+                return;
+            }
         }
         _queueCv.notify_one();
 
         if (item.message)
         {
-            const auto now = std::chrono::steady_clock::now();
-            if (item.deadline > now)
-            {
-                // Requeue for later delivery. This keeps the dispatch
-                // loop non-blocking while respecting scheduled
-                // delivery times without a separate timer thread.
-                std::unique_lock<std::mutex> lock{_queueMutex};
-                _queue.push_back(std::move(item));
-                return;
-            }
             dispatchOne(*item.message);
         }
     }
