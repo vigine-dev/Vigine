@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 
 #include "vigine/graph/abstractgraph.h"
 #include "vigine/graph/nodeid.h"
@@ -137,6 +138,21 @@ class StateTopology final : public vigine::graph::AbstractGraph
     [[nodiscard]] static StateId toStateId(vigine::graph::NodeId node) noexcept;
 
   private:
+    /**
+     * @brief Serialises the probe+add sequence inside
+     *        @ref addChildEdge.
+     *
+     * `addChildEdge` runs three separate graph operations (ancestor
+     * check, existing-parent probe, edge insertion). The underlying
+     * graph takes an exclusive lock per call, but nothing stops two
+     * racing callers from both seeing "no existing parent" and
+     * both inserting a `ChildOf` edge — violating the single-parent
+     * invariant the wrapper advertises. This mutex groups the three
+     * operations into one atomic critical section on the wrapper
+     * side.
+     */
+    mutable std::mutex _hierarchyMutex;
+
     /**
      * @brief Maximum depth the ancestor walk traverses before
      *        bailing out.

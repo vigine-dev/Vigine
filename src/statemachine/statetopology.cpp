@@ -170,6 +170,15 @@ Result StateTopology::addChildEdge(StateId parent, StateId child)
         return Result(Result::Code::Error, "state cannot be its own parent");
     }
 
+    // Serialise the probe-existing-parent + add-edge sequence under
+    // the wrapper-side hierarchy mutex. The graph layer takes its
+    // own lock per individual call, but without this outer mutex two
+    // racing callers could both pass the `existingParents.empty()`
+    // gate and both insert a `ChildOf` edge on the same child —
+    // which violates the single-parent invariant every downstream
+    // dispatch path relies on.
+    std::lock_guard<std::mutex> lock{_hierarchyMutex};
+
     const vigine::graph::NodeId parentNode = toNodeId(parent);
     const vigine::graph::NodeId childNode  = toNodeId(child);
 
