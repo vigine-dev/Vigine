@@ -4,6 +4,7 @@
 #include "vigine/ecs/abstractsystem.h"
 #include <vigine/abstractservice.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -77,7 +78,11 @@ class Context : public IContext
     std::unordered_map<ServiceId, ServiceInstancesContainer> _services;
     std::unordered_map<SystemId, SystemInstancesContainer> _systems;
     EntityManager *_entityManager{nullptr};
-    bool _frozen{false};
+    // Atomic because `isFrozen()` is documented as safe from any
+    // thread and runs alongside lifecycle transitions. A plain bool
+    // here would be a TSAN-observable data race even though the
+    // flag is narrow.
+    std::atomic<bool> _frozen{false};
 
     friend class Engine;
 };
