@@ -18,9 +18,10 @@ namespace vigine::payload
  * Reserved — see @ref payloadrange.h); application code registers
  * additional ranges at runtime before first use. Every registration is
  * validated against the current table: overlap with an already-registered
- * range is rejected with @ref Result::Code::DuplicatePayloadId; a request
- * outside the valid 32-bit window or straddling the Reserved/User gap is
- * rejected with @ref Result::Code::OutOfRange.
+ * range is rejected with @ref Result::Code::DuplicatePayloadId; an
+ * ill-formed range (`min > max`) or one that straddles the engine-bundled
+ * half (`[0, 0xFFFF]`) and the user half (`[0x10000, ...]`) is rejected
+ * with @ref Result::Code::OutOfRange.
  *
  * Thread-safety: implementations must be safe to call from any thread.
  * Mutating entry points take an exclusive lock on an internal
@@ -44,9 +45,11 @@ class IPayloadRegistry
      * Returns a success @ref Result when the range was installed cleanly.
      * Returns @ref Result::Code::DuplicatePayloadId when any identifier
      * in the requested range is already covered by another registration.
-     * Returns @ref Result::Code::OutOfRange when @p min > @p max, when
-     * the range crosses the Reserved/User gap, or when the range
-     * straddles the engine-bundled half and the user-registered half.
+     * Returns @ref Result::Code::OutOfRange when @p min > @p max or when
+     * the range straddles the engine-bundled half (`[0, 0xFFFF]`) and
+     * the user-registered half (`[0x10000, ...]`). The two halves meet
+     * at the 16-bit boundary — there is no unallocated "gap" between
+     * them.
      *
      * @p owner is copied; an empty @p owner is a programming error and
      * the call is rejected with @ref Result::Code::OutOfRange.

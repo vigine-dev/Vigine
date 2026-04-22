@@ -345,8 +345,12 @@ TEST_P(TraversalContract, TopologicalReportsErrorOnCycle)
     RecordingVisitor visitor;
     const Result     r = fixture.graph->traverse(
         fixture.nodes[SevenNodeFixture::A], TraverseMode::Topological, visitor);
+    // The public contract on topological traversal only specifies that
+    // a cycle produces an error Result. The exact message text is an
+    // implementation detail of DefaultGraph — a future concrete
+    // IGraph that reports "topological invariant broken" (or similar)
+    // is still spec-compliant.
     EXPECT_TRUE(r.isError());
-    EXPECT_NE(r.message().find("cycle"), std::string::npos);
 }
 
 // -----------------------------------------------------------------------------

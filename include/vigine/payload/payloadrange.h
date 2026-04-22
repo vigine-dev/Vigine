@@ -30,10 +30,10 @@ namespace vigine::payload
  *     half is performed at runtime through
  *     @ref IPayloadRegistry::registerRange.
  *
- * The `0x8000..0xFFFF` range and the `0x10000` boundary are deliberately
- * disjoint: identifiers in `[0x10000 ..)` are legal user territory; the
- * small gap between the Reserved end and the User begin exists only
- * because the constants split naturally at the 16-bit boundary.
+ * `kReservedEnd = 0xFFFF` and `kUserBegin = 0x10000` are adjacent:
+ * the engine-bundled half covers `[0x0000 .. 0xFFFF]` and the user
+ * half starts immediately after at `0x10000`. There is no gap between
+ * them — the split is at the 16-bit boundary.
  */
 
 inline constexpr std::uint32_t kControlBegin   = 0x0000u;

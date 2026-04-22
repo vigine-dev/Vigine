@@ -173,7 +173,15 @@ inline EdgeId addTestEdge(IGraph                   &graph,
     auto        rawEdge = std::make_unique<TestEdge>(from, to, kind, std::move(data));
     TestEdge   *raw     = rawEdge.get();
     const EdgeId id     = graph.addEdge(std::move(rawEdge));
-    raw->stampId(id);
+    // When `addEdge` rejects the endpoints (invalid ids, impl-specific
+    // cycle check, etc.) the moved-in unique_ptr has already been
+    // destroyed by the implementation, which means `raw` now dangles.
+    // Only stamp the id when the graph accepted the edge; negative-path
+    // tests need this guard to avoid use-after-free.
+    if (id.valid())
+    {
+        raw->stampId(id);
+    }
     return id;
 }
 

@@ -35,8 +35,9 @@ TEST(DefaultPayloadRegistrySmoke, EngineRangesPreRegisteredAtBootstrap)
     EXPECT_TRUE(registry->isRegistered(PayloadTypeId{kReservedBegin}));
     EXPECT_TRUE(registry->isRegistered(PayloadTypeId{kReservedEnd}));
 
-    // Identifiers above the Reserved end but below kUserBegin fall in
-    // the gap and must stay unregistered.
+    // `kUserBegin` (0x10000) is the first identifier in the user half
+    // of the split. Until the application registers a range that
+    // covers it, it reports as not-registered.
     EXPECT_FALSE(registry->isRegistered(PayloadTypeId{kUserBegin}));
 
     const auto owner = registry->resolve(PayloadTypeId{kControlBegin});
