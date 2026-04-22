@@ -37,6 +37,16 @@ ConnectionToken::~ConnectionToken()
 
 bool ConnectionToken::active() const noexcept
 {
+    // An inert token (subscribe returned early on invalid input or on
+    // shutdown) carries a default-constructed ConnectionId whose
+    // generation is the zero sentinel. Such a token must report
+    // active == false even when the bus is still alive, otherwise a
+    // caller guarding an unsubscribe with `if (token.active())` would
+    // happily call unsubscribe on an id the bus never handed out.
+    if (!_id.valid())
+    {
+        return false;
+    }
     auto ctrl = _control.lock();
     return static_cast<bool>(ctrl) && ctrl->isAlive();
 }
