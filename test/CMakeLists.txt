@@ -267,13 +267,38 @@ gtest_discover_tests(${CHANNELFACTORY_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
-# ====================== RequestBus Smoke Target ================set(REQUESTBUS_SMOKE_TARGET requestbus-smoke)
+# ====================== RequestBus Smoke Target =======================
+set(REQUESTBUS_SMOKE_TARGET requestbus-smoke)
 
 add_executable(${REQUESTBUS_SMOKE_TARGET}
     requestbus/smoke_test.cpp
 )
 
 target_include_directories(${REQUESTBUS_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${REQUESTBUS_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${REQUESTBUS_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${REQUESTBUS_SMOKE_TARGET}
+    PROPERTIES LABELS "requestbus-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== ReactiveStream Smoke Target =======================
 set(REACTIVESTREAM_SMOKE_TARGET reactivestream-smoke)
 
@@ -282,15 +307,62 @@ add_executable(${REACTIVESTREAM_SMOKE_TARGET}
 )
 
 target_include_directories(${REACTIVESTREAM_SMOKE_TARGET}
-=======
-# ====================== ActorHost Smoke Target ================set(ACTORHOST_SMOKE_TARGET actorhost-smoke)
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${REACTIVESTREAM_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${REACTIVESTREAM_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${REACTIVESTREAM_SMOKE_TARGET}
+    PROPERTIES LABELS "reactivestream-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
+# ====================== ActorHost Smoke Target =======================
+set(ACTORHOST_SMOKE_TARGET actorhost-smoke)
 
 add_executable(${ACTORHOST_SMOKE_TARGET}
     actorhost/smoke_test.cpp
 )
 
 target_include_directories(${ACTORHOST_SMOKE_TARGET}
-=======
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${ACTORHOST_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ACTORHOST_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${ACTORHOST_SMOKE_TARGET}
+    PROPERTIES LABELS "actorhost-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== PipelineBuilder Smoke Target =======================
 set(PIPELINEBUILDER_SMOKE_TARGET pipelinebuilder-smoke)
 
@@ -305,9 +377,6 @@ target_include_directories(${PIPELINEBUILDER_SMOKE_TARGET}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(${REQUESTBUS_SMOKE_TARGET}
-target_link_libraries(${REACTIVESTREAM_SMOKE_TARGET}
-target_link_libraries(${ACTORHOST_SMOKE_TARGET}
 target_link_libraries(${PIPELINEBUILDER_SMOKE_TARGET}
     PRIVATE
     gtest
@@ -316,24 +385,6 @@ target_link_libraries(${PIPELINEBUILDER_SMOKE_TARGET}
     ${GLM_LIBRARIES}
 )
 
-set_target_properties(${REQUESTBUS_SMOKE_TARGET} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-gtest_discover_tests(${REQUESTBUS_SMOKE_TARGET}
-    PROPERTIES LABELS "requestbus-smoke"
-set_target_properties(${REACTIVESTREAM_SMOKE_TARGET} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-gtest_discover_tests(${REACTIVESTREAM_SMOKE_TARGET}
-    PROPERTIES LABELS "reactivestream-smoke"
-set_target_properties(${ACTORHOST_SMOKE_TARGET} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-gtest_discover_tests(${ACTORHOST_SMOKE_TARGET}
-    PROPERTIES LABELS "actorhost-smoke"
 set_target_properties(${PIPELINEBUILDER_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
@@ -344,3 +395,38 @@ gtest_discover_tests(${PIPELINEBUILDER_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== Engine Smoke Target =======================
+# Smoke coverage for IEngine lifecycle: construct-without-run, run +
+# shutdown-from-other-thread, shutdown-from-main-thread-callback, and
+# double-shutdown idempotency. Also exercises the freeze-after-run
+# boundary that blocks context mutation once the pump is live.
+set(ENGINE_SMOKE_TARGET engine-smoke)
+
+add_executable(${ENGINE_SMOKE_TARGET}
+    engine/smoke_test.cpp
+)
+
+target_include_directories(${ENGINE_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${ENGINE_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ENGINE_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${ENGINE_SMOKE_TARGET}
+    PROPERTIES LABELS "engine-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)

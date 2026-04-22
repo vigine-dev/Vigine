@@ -499,6 +499,8 @@ set(HEADER_REQUESTBUS
 set(SOURCES_REQUESTBUS
     ${SRC_DIR}/requestbus/abstractrequestbus.cpp
     ${SRC_DIR}/requestbus/defaultrequestbus.cpp
+)
+
 # Reactive-stream facade (R.3.3.2.2 / plan_20) -- public surface.
 set(HEADER_REACTIVESTREAM
     ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscription.h
@@ -513,6 +515,8 @@ set(HEADER_REACTIVESTREAM
 set(SOURCES_REACTIVESTREAM
     ${SRC_DIR}/reactivestream/abstractreactivestream.cpp
     ${SRC_DIR}/reactivestream/defaultreactivestream.cpp
+)
+
 # Actor-host facade (R.3.3.2.3 / plan_21) -- public surface.
 set(HEADER_ACTORHOST
     ${INCLUDE_DIR}/vigine/actorhost/actorid.h
@@ -529,6 +533,8 @@ set(SOURCES_ACTORHOST
     ${SRC_DIR}/actorhost/abstractactorhost.cpp
     ${SRC_DIR}/actorhost/defaultactorhost.cpp
     ${SRC_DIR}/actorhost/factory.cpp
+)
+
 # Pipeline-builder facade (R.3.3.2.4 / plan_22) -- public surface.
 set(HEADER_PIPELINEBUILDER
     ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipelinestage.h
@@ -544,6 +550,22 @@ set(SOURCES_PIPELINEBUILDER
     ${SRC_DIR}/pipelinebuilder/abstractpipelinebuilder.cpp
     ${SRC_DIR}/pipelinebuilder/defaultpipelinebuilder.cpp
     ${SRC_DIR}/pipelinebuilder/factory.cpp
+)
+
+# Engine runtime + lifecycle (R.5.1 / plan_23) -- public surface.
+set(HEADER_ENGINE
+    ${INCLUDE_DIR}/vigine/engine/engineconfig.h
+    ${INCLUDE_DIR}/vigine/engine/iengine.h
+    ${INCLUDE_DIR}/vigine/engine/abstractengine.h
+    ${INCLUDE_DIR}/vigine/engine/defaultengine.h
+    ${INCLUDE_DIR}/vigine/engine/factory.h
+)
+
+# Engine runtime + lifecycle (R.5.1 / plan_23) -- internal concrete + factory.
+set(SOURCES_ENGINE
+    ${SRC_DIR}/engine/abstractengine.cpp
+    ${SRC_DIR}/engine/defaultengine.cpp
+    ${SRC_DIR}/engine/factory.cpp
 )
 
 # Add source files
@@ -646,6 +668,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_ACTORHOST}
     ${HEADER_PIPELINEBUILDER}
     ${SOURCES_PIPELINEBUILDER}
+    ${HEADER_ENGINE}
+    ${SOURCES_ENGINE}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
