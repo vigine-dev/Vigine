@@ -11,6 +11,7 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/property.h"
 #include "vigine/result.h"
+#include "vigine/threading/ithreadmanager.h"
 #include "vigine/service/databaseservice.h"
 #include "vigine/service/graphicsservice.h"
 #include "vigine/service/iservice.h"
@@ -59,7 +60,12 @@ vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemN
     return retVal;
 }
 
-vigine::Context::Context(EntityManager *entityManager) { _entityManager = entityManager; }
+vigine::Context::Context(EntityManager            *entityManager,
+                         threading::IThreadManager *threadManager)
+{
+    _entityManager  = entityManager;
+    _threadManager  = threadManager;
+}
 
 // COPILOT_TODO: Додати фабричні гілки для всіх систем, що вже оголошені в API, зокрема Render;
 // зараз частина запитів через Context приречена на nullptr.
@@ -208,8 +214,13 @@ vigine::taskflow::ITaskFlow &vigine::Context::taskFlow()
 
 vigine::threading::IThreadManager &vigine::Context::threadManager()
 {
-    throw std::logic_error{
-        "legacy vigine::Context has no thread manager; use vigine::context::createContext"};
+    if (_threadManager == nullptr)
+    {
+        throw std::logic_error{
+            "legacy vigine::Context was built without a thread manager; "
+            "construct Engine via its default ctor so the thread manager is plumbed through"};
+    }
+    return *_threadManager;
 }
 
 std::shared_ptr<vigine::service::IService>
