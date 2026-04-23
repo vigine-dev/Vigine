@@ -125,12 +125,13 @@ TEST_F(MessagingRoundTrip, TokenOutlivesBusWithoutHangOrCrash)
         ASSERT_NE(token, nullptr);
         EXPECT_TRUE(token->active());
 
-        // Inner scope exit destroys `stack` (bus first, then thread
-        // manager) AND the `subscriber` local. `token` is held by the
-        // outer scope and survives. The bus's shared_ptr to the
-        // control block drops with the bus; since tokens hold only a
-        // weak_ptr, the control block destructs alongside the bus and
-        // the weak_ptr lock after this point returns null.
+        // Inner scope exit first destroys the `subscriber` local, then
+        // destroys `stack` (and with it the bus, then the thread
+        // manager). `token` is held by the outer scope and survives.
+        // The bus's shared_ptr to the control block drops with the
+        // bus; since tokens hold only a weak_ptr, the control block
+        // destructs alongside the bus and the weak_ptr lock after this
+        // point returns null.
     }
 
     // The bus and its control block are gone. active() must report
