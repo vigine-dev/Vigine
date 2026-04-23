@@ -32,9 +32,11 @@ class RenderSystem
 class PostgreSQLSystem
 class IWindowEventHandler
 
-class ISignal
-class ISignalEmiter
-class ISignalBinder
+class ISignalEmitter
+class ISignalPayload
+class IMessagePayload
+class ISubscriber
+class IMessageBus
 
 class GraphicsBackend
 class VulkanAPI
@@ -51,7 +53,7 @@ Engine *-- EntityManager
 StateMachine o-- AbstractState : stores
 AbstractState *-- TaskFlow : owns
 TaskFlow o-- AbstractTask : stores
-TaskFlow ..> ISignalBinder : signal routing
+TaskFlow ..> ISignalEmitter : subscribes handlers by PayloadTypeId
 
 AbstractTask --|> ContextHolder
 AbstractService --|> ContextHolder
@@ -78,8 +80,10 @@ PlatformService --> IWindowEventHandler
 GraphicsService --> RenderSystem
 DatabaseService --> PostgreSQLSystem
 
-ISignalEmiter ..> ISignal
-ISignalBinder ..> AbstractTask
+ISignalEmitter ..> IMessageBus : posts Signal envelopes
+ISignalEmitter ..> ISignalPayload : emits
+ISignalEmitter ..> ISubscriber : routes by MessageFilter
+ISignalPayload --|> IMessagePayload
 
 VulkanAPI --|> GraphicsBackend
 VulkanAPI *-- VulkanDevice

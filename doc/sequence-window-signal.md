@@ -2,28 +2,30 @@
 
 ```mermaid
 sequenceDiagram
-participant Main as createInitTaskFlow
+participant Main as main.cpp
 participant TF as TaskFlow
-participant MB as MouseEventSignalBinder
-participant KB as KeyEventSignalBinder
+participant Emitter as ISignalEmitter
+participant Bus as IMessageBus
 participant Run as RunWindowTask
 participant Handler as WindowEventHandler
 participant Disp as WindowEventDispatcher
-participant Proxy as ISignalEmiter::SignalEmiterProxy
 participant Proc as ProcessInputEventTask
 participant Render as RenderSystem/VulkanAPI
 
-Main->>TF: signal(Run, Proc, MB)
-TF->>MB: check(Run, Proc)
-MB->>Run: setProxyEmiter(lambda)
-MB-->>TF: true
+Main->>TF: setSignalEmitter(emitter)
+Main->>TF: signal(Run, Proc, kMouseButtonDownPayloadTypeId)
+TF->>Emitter: subscribeSignal({Signal, kMouseButtonDownPayloadTypeId}, Proc)
+Emitter->>Bus: subscribe(filter, Proc)
+Bus-->>Emitter: ISubscriptionToken
+Emitter-->>TF: ISubscriptionToken
 
-Main->>TF: signal(Run, Proc, KB)
-TF->>KB: check(Run, Proc)
-KB->>Run: setProxyEmiter(lambda)
-KB-->>TF: true
+Main->>TF: signal(Run, Proc, kKeyDownPayloadTypeId)
+TF->>Emitter: subscribeSignal({Signal, kKeyDownPayloadTypeId}, Proc)
+Emitter->>Bus: subscribe(filter, Proc)
+Bus-->>Emitter: ISubscriptionToken
+Emitter-->>TF: ISubscriptionToken
 
-Note over TF,KB: TaskFlow::signal() currently validates binder compatibility and installs emitter proxies.
+Note over TF,Emitter: TaskFlow::signal stores the tokens and keeps ProcessInputEventTask subscribed until the flow is destroyed.
 
 Run->>Handler: setMouseButtonDownCallback(lambda)
 Run->>Handler: setKeyDownCallback(lambda)
@@ -31,10 +33,10 @@ Run->>Handler: setKeyUpCallback(lambda)
 
 Disp->>Handler: onMouseButtonDown(button,x,y)
 Handler-->>Run: callback(button,x,y)
-Run->>Run: emitMouseButtonDownSignal(...)
 Run->>Render: beginCameraDrag(x,y) for left button
-Run->>Proxy: proxyEmiter()(new MouseButtonDownSignal)
-Proxy->>Proc: onMouseButtonDownSignal(signal)
+Run->>Emitter: emit(make_unique<MouseButtonDownPayload>(...))
+Emitter->>Bus: post(SignalMessage)
+Bus->>Proc: onMessage(SignalMessage)
 
 Disp->>Handler: onMouseMove(x,y)
 Handler-->>Run: callback(x,y)
@@ -52,9 +54,9 @@ Disp->>Handler: onKeyDown(event)
 Handler-->>Run: callback(event)
 Run->>Render: setMoveForward/Back/Left/Right(true) for WASD
 Run->>Render: setMoveUp/Down(true) for E/Q, setSprint(true) for Shift
-Run->>Run: emitKeyDownSignal(event)
-Run->>Proxy: proxyEmiter()(new KeyDownSignal)
-Proxy->>Proc: onKeyDownSignal(signal)
+Run->>Emitter: emit(make_unique<KeyDownPayload>(...))
+Emitter->>Bus: post(SignalMessage)
+Bus->>Proc: onMessage(SignalMessage)
 
 Disp->>Handler: onKeyUp(event)
 Handler-->>Run: callback(event)

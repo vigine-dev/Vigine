@@ -11,7 +11,8 @@ If a task description does not include the project folder layout, use this secti
 - `include/vigine/` public engine API and core abstractions.
 - `include/vigine/base/` basic shared types and helpers.
 - `include/vigine/service/` public service interfaces and implementations exposed through `Context`.
-- `include/vigine/signal/` signal contracts used by `TaskFlow`.
+- `include/vigine/signalemitter/` `ISignalEmitter` facade over `IMessageBus` for the signal-slot pattern used by `TaskFlow`.
+- `include/vigine/messaging/` `IMessageBus`, `ISubscriber`, `MessageFilter`, and the message envelope contracts the facade posts onto.
 - `include/vigine/ecs/` ECS-facing engine types.
 - `include/vigine/ecs/platform/` platform-agnostic window and input interfaces.
 - `include/vigine/ecs/render/` rendering interfaces and systems.
@@ -29,7 +30,7 @@ If a task description does not include the project folder layout, use this secti
 - `Context` creates and stores service and system instances and gives access to `EntityManager`.
 - `StateMachine` stores `AbstractState` instances and transitions between them by `Result::Code`.
 - `AbstractState` owns one `TaskFlow` and drives `enter()` / `exit()` lifecycle hooks.
-- `TaskFlow` stores `AbstractTask` instances, routes them by `Result::Code`, and can connect tasks through `ISignalBinder`.
+- `TaskFlow` stores `AbstractTask` instances, routes them by `Result::Code`, and connects tasks by subscribing the receiver on an `ISignalEmitter` for a given `PayloadTypeId`.
 - `Result` is the shared execution result type for states, tasks, and transitions.
 - `EntityManager` owns engine entities.
 - `Entity` is the base runtime entity type.
@@ -77,9 +78,9 @@ If a task description does not include the project folder layout, use this secti
 
 ### Supporting contracts
 
-- `ISignal` is the base signal interface.
-- `ISignalEmiter` is implemented by tasks that emit signals.
-- `ISignalBinder` validates whether two tasks may be connected by a signal route.
+- `ISignalPayload` is the base payload interface carried by signal messages; each payload declares its `PayloadTypeId`.
+- `ISignalEmitter` is the facade that posts payloads onto the underlying `IMessageBus` and exposes `subscribeSignal` for handlers.
+- `TaskFlow::signal(from, to, PayloadTypeId, ThreadAffinity)` connects two tasks by subscribing the receiver (as `ISubscriber`) for a payload id, with an optional thread-affinity for the delivery hop.
 - `IWindowEventHandlerComponent` defines the window input and lifecycle callback interface.
 - `AbstractComponent` and `AbstractEntity` are base ECS abstractions kept for component/entity specializations.
 - Window Vulkan example init flow includes `SetupTextTask` and `SetupTextEditTask` to render voxelized text and set up an in-world text editor.
