@@ -82,10 +82,19 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
  *
  * Mirrors the internal default used by @ref DefaultSignalEmitter's
  * no-config constructor, but with
- * @ref vigine::messaging::ThreadingPolicy::Shared so dispatch runs on the
- * thread manager's shared worker pool instead of the caller thread. The
- * @c name field distinguishes this variant from the inline default so
- * diagnostics can tell the two apart.
+ * @ref vigine::messaging::ThreadingPolicy::Shared and a distinct @c name
+ * field so diagnostics can tell the two apart.
+ *
+ * Current threading reality: @c ThreadingPolicy::Shared is intended to
+ * dispatch the signal on a bus worker thread, but today
+ * @ref vigine::messaging::AbstractMessageBus::post drains @c Shared
+ * queues on the posting thread (the dedicated worker pump is deferred
+ * to a later lifecycle change). A caller that needs a guaranteed
+ * thread hop should pair this config with a deliberate
+ * @ref vigine::threading::IThreadManager::schedule on the producer
+ * side, or use the non-@c Any @ref threading::ThreadAffinity path on
+ * @ref TaskFlow::signal which wraps the subscription in an adapter
+ * that re-posts onto the thread manager.
  */
 [[nodiscard]] vigine::messaging::BusConfig sharedBusConfig() noexcept;
 

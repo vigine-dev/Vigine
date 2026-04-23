@@ -77,9 +77,10 @@ class TaskFlow
      * the currently installed @ref signalemitter::ISignalEmitter for messages
      * whose @ref messaging::MessageFilter matches
      * @ref messaging::MessageKind::Signal and the supplied @p signalType.
-     * @p from is validated as registered in this flow; it is recorded only
-     * for diagnostics — the actual emission is driven by whichever code
-     * calls the emitter's @c emit with a matching @c PayloadTypeId.
+     * @p from is validated as registered in this flow but is not persisted
+     * anywhere — the edge's producer identity is not retained. The actual
+     * emission is driven by whichever code calls the emitter's @c emit
+     * with a matching @c PayloadTypeId.
      *
      * Threading:
      *   - @p affinity defaults to @ref threading::ThreadAffinity::Any.
