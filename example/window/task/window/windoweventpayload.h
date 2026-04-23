@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <vigine/ecs/platform/iwindoweventhandler.h>
 #include <vigine/payload/payloadtypeid.h>
 #include <vigine/signalemitter/isignalpayload.h>
@@ -55,6 +57,12 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
         return kMouseButtonDownPayloadTypeId;
     }
 
+    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+        clone() const override
+    {
+        return std::make_unique<MouseButtonDownPayload>(_button, _x, _y);
+    }
+
     [[nodiscard]] vigine::platform::MouseButton button() const noexcept { return _button; }
     [[nodiscard]] int                           x() const noexcept { return _x; }
     [[nodiscard]] int                           y() const noexcept { return _y; }
@@ -84,6 +92,12 @@ class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
     [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override
     {
         return kKeyDownPayloadTypeId;
+    }
+
+    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+        clone() const override
+    {
+        return std::make_unique<KeyDownPayload>(_event);
     }
 
     [[nodiscard]] const vigine::platform::KeyEvent &event() const noexcept { return _event; }

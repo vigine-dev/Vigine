@@ -51,10 +51,11 @@ public:
                     messaging::RouteMode routeMode,
                     messaging::CorrelationId correlationId,
                     const messaging::AbstractMessageTarget *target,
-                    std::chrono::steady_clock::time_point scheduledFor)
+                    std::chrono::steady_clock::time_point scheduledFor,
+                    std::unique_ptr<signalemitter::ISignalPayload> payload)
       : _kind(kind), _payloadTypeId(payloadTypeId), _routeMode(routeMode),
         _correlationId(correlationId), _target(target),
-        _scheduledFor(scheduledFor) {}
+        _scheduledFor(scheduledFor), _payload(std::move(payload)) {}
 
   [[nodiscard]] messaging::MessageKind kind() const noexcept override {
     return _kind;
@@ -66,7 +67,7 @@ public:
 
   [[nodiscard]] const messaging::IMessagePayload *
   payload() const noexcept override {
-    return nullptr;
+    return _payload.get();
   }
 
   [[nodiscard]] const messaging::AbstractMessageTarget *
@@ -95,6 +96,11 @@ private:
   messaging::CorrelationId _correlationId;
   const messaging::AbstractMessageTarget *_target;
   std::chrono::steady_clock::time_point _scheduledFor;
+  // Heap-owned payload clone. ISignalPayload::clone() is called inside
+  // ScheduledDelivery::onMessage before the source IMessage's dispatch
+  // frame unwinds, so by the time the worker thread invokes the target
+  // the envelope owns everything the subscriber needs to read.
+  std::unique_ptr<signalemitter::ISignalPayload> _payload;
 };
 
 // ---------------------------------------------------------------------
@@ -152,10 +158,21 @@ public:
     // Snapshot everything the target will read. The source message dies
     // when the bus's dispatch frame unwinds; the scheduled runnable can
     // only safely touch memory it owns outright. IMessage deletes copy
-    // / move so the envelope has to live on the heap.
+    // / move so the envelope lives on the heap; the payload is cloned
+    // through ISignalPayload::clone() so the worker thread sees its
+    // own copy of the data, independent of the bus's lifetime.
+    std::unique_ptr<signalemitter::ISignalPayload> clonedPayload;
+    if (const auto *raw = message.payload()) {
+      if (const auto *signalPayload =
+              dynamic_cast<const signalemitter::ISignalPayload *>(raw)) {
+        clonedPayload = signalPayload->clone();
+      }
+    }
+
     auto envelope = std::make_unique<ScheduledEnvelope>(
         message.kind(), message.payloadTypeId(), message.routeMode(),
-        message.correlationId(), message.target(), message.scheduledFor());
+        message.correlationId(), message.target(), message.scheduledFor(),
+        std::move(clonedPayload));
 
     auto runnable =
         std::make_unique<DeliverRunnable>(_target, std::move(envelope));
