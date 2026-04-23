@@ -583,6 +583,52 @@ void RenderSystem::setMoveDownActive(bool active) { _camera.setMoveDownActive(ac
 
 void RenderSystem::setSprintActive(bool active) { _camera.setSprintActive(active); }
 
+void RenderSystem::setCameraMode(CameraMode mode) { _camera.setCameraMode(mode); }
+
+CameraMode RenderSystem::cameraMode() const { return _camera.cameraMode(); }
+
+void RenderSystem::toggleCameraMode()
+{
+    if (_camera.cameraMode() == CameraMode::FreeLook)
+        _camera.setCameraMode(CameraMode::Orbit);
+    else
+        _camera.setCameraMode(CameraMode::FreeLook);
+}
+
+void RenderSystem::setCameraOrbitTarget(const glm::vec3 &target) { _camera.setOrbitTarget(target); }
+
+void RenderSystem::panCamera(float deltaX, float deltaY) { _camera.pan(deltaX, deltaY); }
+
+void RenderSystem::rotateCameraYawStep(float angleDeg) { _camera.rotateYawStep(angleDeg); }
+
+void RenderSystem::rotateCameraPitchStep(float angleDeg) { _camera.rotatePitchStep(angleDeg); }
+
+void RenderSystem::setRotateCameraYawLeftActive(bool a) { _camera.setRotateYawLeftActive(a); }
+void RenderSystem::setRotateCameraYawRightActive(bool a) { _camera.setRotateYawRightActive(a); }
+void RenderSystem::setRotateCameraPitchUpActive(bool a) { _camera.setRotatePitchUpActive(a); }
+void RenderSystem::setRotateCameraPitchDownActive(bool a) { _camera.setRotatePitchDownActive(a); }
+void RenderSystem::setPanCameraLeftActive(bool a) { _camera.setPanLeftActive(a); }
+void RenderSystem::setPanCameraRightActive(bool a) { _camera.setPanRightActive(a); }
+void RenderSystem::setPanCameraUpActive(bool a) { _camera.setPanUpActive(a); }
+void RenderSystem::setPanCameraDownActive(bool a) { _camera.setPanDownActive(a); }
+void RenderSystem::setZoomCameraInActive(bool a) { _camera.setZoomInActive(a); }
+void RenderSystem::setZoomCameraOutActive(bool a) { _camera.setZoomOutActive(a); }
+
+void RenderSystem::resetCameraPosition() { _camera.resetPosition(); }
+
+void RenderSystem::resetCameraRotation() { _camera.resetRotation(); }
+
+void RenderSystem::resetCameraView() { _camera.resetView(); }
+
+void RenderSystem::frameCameraOnTarget(const glm::vec3 &center, float radius)
+{
+    _camera.frameTarget(center, radius);
+}
+
+glm::vec3 RenderSystem::cameraPosition() const { return _camera.position(); }
+
+void RenderSystem::setCameraSpeedModifier(SpeedModifier mod) { _camera.setSpeedModifier(mod); }
+
 void RenderSystem::setBillboardEnabled(bool enabled) { _billboardEnabled = enabled; }
 
 bool RenderSystem::isBillboardEnabled() const { return _billboardEnabled; }

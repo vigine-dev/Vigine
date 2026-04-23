@@ -42,7 +42,7 @@ class WinAPIComponent : public WindowComponent
     std::array<char, 256> _gpuName{"Unknown"};
     std::array<char, 512> _overlayText{"FPS: --"};
     uint64_t _renderedVertexCount{0};
-    bool _overlayVisible{true};
+    bool _overlayVisible{false};
 };
 } // namespace platform
 } // namespace vigine

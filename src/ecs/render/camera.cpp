@@ -5,6 +5,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace vigine
 {
@@ -29,12 +30,25 @@ void Camera::updateDrag(int x, int y)
     if (!_dragActive)
         return;
 
-    const int deltaX  = x - _lastPointerX;
-    const int deltaY  = y - _lastPointerY;
+    const int deltaX = x - _lastPointerX;
+    const int deltaY = y - _lastPointerY;
 
-    _yaw             -= static_cast<float>(deltaX) * _config.mouseLookSensitivity;
-    _pitch        = std::clamp(_pitch + static_cast<float>(deltaY) * _config.mouseLookSensitivity,
-                               -_config.pitchLimitRad, _config.pitchLimitRad);
+    if (_mode == CameraMode::Orbit)
+    {
+        _yaw   -= static_cast<float>(deltaX) * _config.mouseLookSensitivity;
+        _pitch  = std::clamp(_pitch + static_cast<float>(deltaY) * _config.mouseLookSensitivity,
+                             -_config.pitchLimitRad, _config.pitchLimitRad);
+
+        const float dist = glm::length(_position - _orbitTarget);
+        _position        = _orbitTarget - glm::vec3(dist * std::cos(_pitch) * std::sin(_yaw),
+                                                    dist * std::sin(_pitch),
+                                                    -dist * std::cos(_pitch) * std::cos(_yaw));
+    } else
+    {
+        _yaw   -= static_cast<float>(deltaX) * _config.mouseLookSensitivity;
+        _pitch  = std::clamp(_pitch + static_cast<float>(deltaY) * _config.mouseLookSensitivity,
+                             -_config.pitchLimitRad, _config.pitchLimitRad);
+    }
 
     _lastPointerX = x;
     _lastPointerY = y;
@@ -61,6 +75,104 @@ void Camera::setMoveUpActive(bool active) { _moveUpActive = active; }
 void Camera::setMoveDownActive(bool active) { _moveDownActive = active; }
 
 void Camera::setSprintActive(bool active) { _sprintActive = active; }
+
+void Camera::setRotateYawLeftActive(bool active) { _rotateYawLeftActive = active; }
+void Camera::setRotateYawRightActive(bool active) { _rotateYawRightActive = active; }
+void Camera::setRotatePitchUpActive(bool active) { _rotatePitchUpActive = active; }
+void Camera::setRotatePitchDownActive(bool active) { _rotatePitchDownActive = active; }
+
+void Camera::setPanLeftActive(bool active) { _panLeftActive = active; }
+void Camera::setPanRightActive(bool active) { _panRightActive = active; }
+void Camera::setPanUpActive(bool active) { _panUpActive = active; }
+void Camera::setPanDownActive(bool active) { _panDownActive = active; }
+
+void Camera::setZoomInActive(bool active) { _zoomInActive = active; }
+void Camera::setZoomOutActive(bool active) { _zoomOutActive = active; }
+
+void Camera::setSpeedModifier(SpeedModifier mod) { _speedModifier = mod; }
+SpeedModifier Camera::speedModifier() const { return _speedModifier; }
+
+void Camera::setCameraMode(CameraMode mode)
+{
+    if (mode == CameraMode::Orbit && _mode != CameraMode::Orbit)
+    {
+        // Place orbit target along the current look direction so the view doesn't jump.
+        float dist = glm::length(_position - _orbitTarget);
+        if (dist < 0.5f)
+            dist = 10.0f;
+        _orbitTarget = _position + cameraForward() * dist;
+    }
+    _mode = mode;
+}
+CameraMode Camera::cameraMode() const { return _mode; }
+
+void Camera::setOrbitTarget(const glm::vec3 &t) { _orbitTarget = t; }
+const glm::vec3 &Camera::orbitTarget() const { return _orbitTarget; }
+
+void Camera::pan(float deltaX, float deltaY)
+{
+    const glm::vec3 offset  = right() * deltaX + up() * deltaY;
+    _position              += offset;
+    _orbitTarget           += offset;
+}
+
+void Camera::rotateYawStep(float angleDeg)
+{
+    const float rad  = glm::radians(angleDeg);
+    _yaw            += rad;
+
+    if (_mode == CameraMode::Orbit)
+    {
+        const float dist = glm::length(_position - _orbitTarget);
+        _position        = _orbitTarget - glm::vec3(dist * std::cos(_pitch) * std::sin(_yaw),
+                                                    dist * std::sin(_pitch),
+                                                    -dist * std::cos(_pitch) * std::cos(_yaw));
+    }
+}
+
+void Camera::rotatePitchStep(float angleDeg)
+{
+    const float rad = glm::radians(angleDeg);
+    _pitch          = std::clamp(_pitch + rad, -_config.pitchLimitRad, _config.pitchLimitRad);
+
+    if (_mode == CameraMode::Orbit)
+    {
+        const float dist = glm::length(_position - _orbitTarget);
+        _position        = _orbitTarget - glm::vec3(dist * std::cos(_pitch) * std::sin(_yaw),
+                                                    dist * std::sin(_pitch),
+                                                    -dist * std::cos(_pitch) * std::cos(_yaw));
+    }
+}
+
+void Camera::resetPosition()
+{
+    _position = glm::vec3(0.0f, 1.6f, 4.5f);
+    _velocity = glm::vec3(0.0f);
+}
+
+void Camera::resetRotation()
+{
+    _yaw   = 0.0f;
+    _pitch = -0.2f;
+}
+
+void Camera::resetView()
+{
+    resetPosition();
+    resetRotation();
+    _orbitTarget = glm::vec3(0.0f);
+}
+
+void Camera::frameTarget(const glm::vec3 &center, float radius)
+{
+    const float fovRad = glm::radians(_config.fovDegrees);
+    float dist         = radius / std::tan(fovRad * 0.5f);
+    dist               = std::max(dist, _config.nearPlane * 2.0f);
+
+    _orbitTarget       = center;
+    _position          = center - cameraForward() * dist;
+    _velocity          = glm::vec3(0.0f);
+}
 
 void Camera::update(float deltaSeconds)
 {
@@ -90,9 +202,24 @@ void Camera::update(float deltaSeconds)
     glm::vec3 desiredVelocity(0.0f);
     if (glm::dot(desiredDirection, desiredDirection) > 0.0f)
     {
-        const float sprintFactor = _sprintActive ? _config.sprintMultiplier : 1.0f;
+        float speedFactor = 1.0f;
+        switch (_speedModifier)
+        {
+        case SpeedModifier::Slow:
+            speedFactor = 0.3f;
+            break;
+        case SpeedModifier::Fast:
+            speedFactor = _config.sprintMultiplier;
+            break;
+        default:
+            break;
+        }
+        // Legacy _sprintActive still works as Fast
+        if (_sprintActive && _speedModifier == SpeedModifier::Normal)
+            speedFactor = _config.sprintMultiplier;
+
         desiredVelocity =
-            glm::normalize(desiredDirection) * (_config.moveSpeedUnitsPerSec * sprintFactor);
+            glm::normalize(desiredDirection) * (_config.moveSpeedUnitsPerSec * speedFactor);
     }
 
     // Smooth velocity interpolation
@@ -104,11 +231,54 @@ void Camera::update(float deltaSeconds)
         _velocity = glm::vec3(0.0f);
 
     // Update position
-    _position += _velocity * deltaSeconds;
+    const glm::vec3 positionDelta  = _velocity * deltaSeconds;
+    _position                     += positionDelta;
+    if (_mode == CameraMode::Orbit)
+        _orbitTarget += positionDelta;
+
+    // Continuous rotation (Numpad-style, frame-rate based)
+    if (_rotateYawLeftActive || _rotateYawRightActive || _rotatePitchUpActive ||
+        _rotatePitchDownActive)
+    {
+        const float rotDelta = glm::radians(_config.rotateSpeedDegreesPerSec) * deltaSeconds;
+        if (_rotateYawLeftActive)
+            rotateYawStep(-glm::degrees(rotDelta));
+        if (_rotateYawRightActive)
+            rotateYawStep(+glm::degrees(rotDelta));
+        if (_rotatePitchUpActive)
+            rotatePitchStep(-glm::degrees(rotDelta));
+        if (_rotatePitchDownActive)
+            rotatePitchStep(+glm::degrees(rotDelta));
+    }
+
+    // Continuous pan (Shift+Numpad-style, frame-rate based)
+    if (_panLeftActive || _panRightActive || _panUpActive || _panDownActive)
+    {
+        const float panDelta = _config.panSpeedUnitsPerSec * deltaSeconds;
+        if (_panLeftActive)
+            pan(-panDelta, 0.0f);
+        if (_panRightActive)
+            pan(+panDelta, 0.0f);
+        if (_panUpActive)
+            pan(0.0f, +panDelta);
+        if (_panDownActive)
+            pan(0.0f, -panDelta);
+    }
+
+    if (_zoomInActive || _zoomOutActive)
+    {
+        const float zoomDelta = _config.zoomSpeedUnitsPerSec * deltaSeconds;
+        if (_zoomInActive)
+            _position += cameraForward() * zoomDelta;
+        if (_zoomOutActive)
+            _position -= cameraForward() * zoomDelta;
+    }
 }
 
 glm::mat4 Camera::viewMatrix() const
 {
+    if (_mode == CameraMode::Orbit)
+        return glm::lookAt(_position, _orbitTarget, glm::vec3(0.0f, 1.0f, 0.0f));
     const glm::vec3 forward = cameraForward();
     return glm::lookAt(_position, _position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
 }

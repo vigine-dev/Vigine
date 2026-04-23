@@ -60,6 +60,34 @@ class RenderSystem : public AbstractSystem
     void setBillboardEnabled(bool enabled);
     bool isBillboardEnabled() const;
     void toggleBillboard();
+
+    // Camera mode & advanced controls (Phase 2)
+    void setCameraMode(CameraMode mode);
+    CameraMode cameraMode() const;
+    void toggleCameraMode();
+    void setCameraOrbitTarget(const glm::vec3 &target);
+    void panCamera(float deltaX, float deltaY);
+    void rotateCameraYawStep(float angleDeg);
+    void rotateCameraPitchStep(float angleDeg);
+    void setRotateCameraYawLeftActive(bool active);
+    void setRotateCameraYawRightActive(bool active);
+    void setRotateCameraPitchUpActive(bool active);
+    void setRotateCameraPitchDownActive(bool active);
+    void setPanCameraLeftActive(bool active);
+    void setPanCameraRightActive(bool active);
+    void setPanCameraUpActive(bool active);
+    void setPanCameraDownActive(bool active);
+    void setZoomCameraInActive(bool active);
+    void setZoomCameraOutActive(bool active);
+    void resetCameraPosition();
+    void resetCameraRotation();
+    void resetCameraView();
+    void frameCameraOnTarget(const glm::vec3 &center, float radius);
+    glm::vec3 cameraPosition() const;
+
+    // Speed modifier (Phase 3)
+    void setCameraSpeedModifier(SpeedModifier mod);
+
     [[nodiscard]] glm::vec3 cameraForwardDirection() const;
     [[nodiscard]] bool screenPointToRay(int x, int y, glm::vec3 &rayOrigin,
                                         glm::vec3 &rayDirection) const;

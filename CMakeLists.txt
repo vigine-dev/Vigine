@@ -270,6 +270,7 @@ set(SOURCES
     ${SRC_DIR}/ecs/render/texturecomponent.cpp
     ${SRC_DIR}/ecs/render/pipelinecache.cpp
     ${SRC_DIR}/ecs/entity.cpp
+    ${SRC_DIR}/ecs/abstractcomponent.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/contextholder.cpp
@@ -633,6 +634,18 @@ endif()
 
 set(HEADER_PLATFORM
     ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/inputaction.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/inputmap.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/inputprofilecomponent.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/blenderclassicprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/blendermodernprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/mayaprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/max3dsprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/unrealprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/unityprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/sourceengineprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/godotprofile.h
+    ${INCLUDE_DIR}/vigine/ecs/platform/profiles/cinema4dprofile.h
     ${SRC_DIR}/ecs/platform/windowcomponent.h
     ${SRC_DIR}/ecs/platform/windoweventdispatcher.h
 )
@@ -641,6 +654,17 @@ set(SOURCES_PLATFORM
     ${SRC_DIR}/ecs/platform/windowsystem.cpp
     ${SRC_DIR}/ecs/platform/windowcomponent.cpp
     ${SRC_DIR}/ecs/platform/windoweventdispatcher.cpp
+    ${SRC_DIR}/ecs/platform/inputmap.cpp
+    ${SRC_DIR}/ecs/platform/inputprofilecomponent.cpp
+    ${SRC_DIR}/ecs/platform/profiles/blenderclassicprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/blendermodernprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/mayaprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/max3dsprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/unrealprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/unityprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/sourceengineprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/godotprofile.cpp
+    ${SRC_DIR}/ecs/platform/profiles/cinema4dprofile.cpp
 )
 
 if(WIN32)

@@ -32,6 +32,44 @@ constexpr unsigned int keyScanCode(LPARAM lParam)
     return static_cast<unsigned int>((lParam >> 16) & 0xFFu);
 }
 
+// When NumLock is OFF, numpad keys arrive as navigation VK codes (VK_LEFT etc.)
+// without the extended-key bit (bit 24). Real arrow/nav keys always have that
+// bit set. Remap the non-extended navigation codes back to VK_NUMPADx so that
+// the input layer can always rely on VK_NUMPADx for discrete camera rotation.
+constexpr unsigned int remapNumpadFromLParam(unsigned int vk, LPARAM lParam)
+{
+    const bool extended = (lParam & (1 << 24)) != 0;
+    if (extended)
+        return vk; // real arrow / nav key — leave untouched
+    switch (vk)
+    {
+    case VK_LEFT:
+        return VK_NUMPAD4; // 0x64
+    case VK_RIGHT:
+        return VK_NUMPAD6; // 0x66
+    case VK_UP:
+        return VK_NUMPAD8; // 0x68
+    case VK_DOWN:
+        return VK_NUMPAD2; // 0x62
+    case VK_HOME:
+        return VK_NUMPAD7; // 0x67
+    case VK_END:
+        return VK_NUMPAD1; // 0x61
+    case VK_PRIOR:
+        return VK_NUMPAD9; // 0x69  (Page Up)
+    case VK_NEXT:
+        return VK_NUMPAD3; // 0x63  (Page Down)
+    case VK_INSERT:
+        return VK_NUMPAD0; // 0x60
+    case VK_DELETE:
+        return VK_DECIMAL; // 0x6E
+    case VK_CLEAR:
+        return VK_NUMPAD5; // 0x65
+    default:
+        return vk;
+    }
+}
+
 unsigned int queryModifiers()
 {
     using namespace vigine::platform;
@@ -308,7 +346,7 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
         }
 
         eventHandler->onKeyDown(vigine::platform::KeyEvent{
-            .keyCode     = static_cast<unsigned int>(wParam),
+            .keyCode     = remapNumpadFromLParam(static_cast<unsigned int>(wParam), lParam),
             .scanCode    = keyScanCode(lParam),
             .modifiers   = queryModifiers(),
             .repeatCount = keyRepeatCount(lParam),
@@ -317,8 +355,13 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
         return 0;
     case WM_KEYUP:
     case WM_SYSKEYUP:
+        // Windows sends a fake WM_KEYUP for held keys (e.g. numpad keys) when a modifier
+        // key (Ctrl/Shift) is pressed alongside them.  GetAsyncKeyState reflects actual
+        // hardware state and tells us the key is still physically held → skip the event.
+        if (GetAsyncKeyState(static_cast<int>(wParam)) & 0x8000)
+            return 0;
         eventHandler->onKeyUp(vigine::platform::KeyEvent{
-            .keyCode     = static_cast<unsigned int>(wParam),
+            .keyCode     = remapNumpadFromLParam(static_cast<unsigned int>(wParam), lParam),
             .scanCode    = keyScanCode(lParam),
             .modifiers   = queryModifiers(),
             .repeatCount = keyRepeatCount(lParam),
@@ -398,15 +441,13 @@ void vigine::platform::WinAPIComponent::createFpsOverlay()
 
     _fpsLabelHandle =
         CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE, "STATIC",
-                        _overlayText.data(), WS_POPUP | WS_VISIBLE | SS_LEFT, 0, 0, kOverlayWidth,
+                        _overlayText.data(), WS_POPUP | SS_LEFT, 0, 0, kOverlayWidth,
                         kOverlayHeight, _windowHandle, nullptr, GetModuleHandleA(nullptr), nullptr);
 
     if (_fpsLabelHandle)
     {
         SendMessageA(_fpsLabelHandle, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
-        updateFpsOverlayPosition();
-        SetWindowPos(_fpsLabelHandle, HWND_TOPMOST, 0, 0, kOverlayWidth, kOverlayHeight,
-                     SWP_NOMOVE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        ShowWindow(_fpsLabelHandle, SW_HIDE);
     }
 
     const auto gpuName = queryGpuNameForWindow(_windowHandle);
@@ -484,7 +525,7 @@ void vigine::platform::WinAPIComponent::updateFpsOverlayPosition()
     POINT topLeft{8, 8};
     ClientToScreen(_windowHandle, &topLeft);
     SetWindowPos(_fpsLabelHandle, HWND_TOPMOST, topLeft.x, topLeft.y, kOverlayWidth, kOverlayHeight,
-                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
+                 SWP_NOACTIVATE | SWP_NOREDRAW);
 }
 
 void vigine::platform::WinAPIComponent::toggleOverlayVisibility()
@@ -498,7 +539,8 @@ void vigine::platform::WinAPIComponent::runFrame()
 {
     runFrameCallback();
     updateFpsOverlay();
-    updateFpsOverlayPosition();
+    if (_overlayVisible)
+        updateFpsOverlayPosition();
 }
 
 void vigine::platform::WinAPIComponent::show()

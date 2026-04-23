@@ -25,7 +25,16 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
     task/vulkan/rendercubetask.h task/vulkan/rendercubetask.cpp)
 
 set(EXAMPLE_WINDOW_SYSTEM_SOURCES
-    system/texteditorsystem.h system/texteditorsystem.cpp)
+    system/texteditorsystem.h system/texteditorsystem.cpp
+    system/selectionsystem.h system/selectionsystem.cpp
+    system/manipulationsystem.h system/manipulationsystem.cpp
+    system/uisystem.h system/uisystem.cpp)
+
+set(EXAMPLE_WINDOW_SERVICE_SOURCES
+    service/uiservice.h service/uiservice.cpp)
+
+set(EXAMPLE_WINDOW_COMPONENT_SOURCES
+    component/settingspanelcomponent.h)
 
 set(EXAMPLE_WINDOW_STATE_SOURCES
     state/initstate.h state/initstate.cpp
@@ -258,6 +267,8 @@ add_executable(${PROJECT_WINDOW_NAME}
     ${EXAMPLE_WINDOW_HANDLER_SOURCES}
     ${EXAMPLE_WINDOW_TASK_SOURCES}
     ${EXAMPLE_WINDOW_SYSTEM_SOURCES}
+    ${EXAMPLE_WINDOW_SERVICE_SOURCES}
+    ${EXAMPLE_WINDOW_COMPONENT_SOURCES}
     ${EXAMPLE_WINDOW_STATE_SOURCES})
 
 add_dependencies(${PROJECT_WINDOW_NAME} example_window_shaders)
