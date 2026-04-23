@@ -191,6 +191,15 @@ private:
   threading::ThreadAffinity _affinity;
 };
 
+// Out-of-line TaskFlow constructor and destructor. Declared here (not
+// in the header) because the `_scheduledDeliveries` container holds
+// `unique_ptr<ScheduledDelivery>` with ScheduledDelivery only
+// forward-declared in taskflow.h. The defaulted member functions only
+// compile in a TU that has the full ScheduledDelivery definition in
+// scope, which is exactly this file.
+TaskFlow::TaskFlow()  = default;
+TaskFlow::~TaskFlow() = default;
+
 AbstractTask *TaskFlow::addTask(TaskUPtr task) {
   if (!task)
     return nullptr;

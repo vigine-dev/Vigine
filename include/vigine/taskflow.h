@@ -50,8 +50,15 @@ class TaskFlow
     using ScheduledContainer    = std::vector<ScheduledDeliveryUPtr>;
 
   public:
-    TaskFlow()          = default;
-    virtual ~TaskFlow() = default;
+    // Constructor and destructor are out-of-line because _scheduledDeliveries
+    // holds unique_ptr<ScheduledDelivery> with ScheduledDelivery only
+    // forward-declared in this header. The definition lives in
+    // src/taskflow.cpp so every TU that instantiates TaskFlow (example/,
+    // tests/, etc.) resolves the hidden destructor call through the
+    // out-of-line defaulted dtor instead of requiring the full
+    // ScheduledDelivery definition inline.
+    TaskFlow();
+    virtual ~TaskFlow();
 
     // Add a task and return pointer to it
     [[nodiscard]] AbstractTask *addTask(TaskUPtr task);
