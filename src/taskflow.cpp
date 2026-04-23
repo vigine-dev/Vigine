@@ -14,7 +14,10 @@
 #include <vigine/threading/threadaffinity.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <cstdio>
+#include <exception>
 #include <memory>
 #include <utility>
 
@@ -107,13 +110,39 @@ private:
 // DeliverRunnable — IRunnable that re-invokes a target ISubscriber's
 // onMessage with a pre-captured ScheduledEnvelope. Holds the envelope
 // by value so the runnable owns everything the target will read.
+//
+// Teardown race protection:
+//   The runnable captures a shared alive-flag that is created by the
+//   owning ScheduledDelivery adapter and flipped to false in the
+//   adapter's destructor. The TaskFlow class orders its members so that
+//   the subscription tokens (which block on in-flight bus dispatch)
+//   destruct BEFORE the ScheduledDelivery containers (which flip the
+//   flags), and before both comes any still-queued runnable on the
+//   thread manager. Once TaskFlow is gone, the flag has been flipped
+//   to false, the runnable's early-out fires, and the target pointer
+//   is never dereferenced. A residual race exists: a runnable already
+//   past the check but not yet inside onMessage can still dereference
+//   the target — full protection would require a second sync barrier
+//   (e.g. a live-runnable counter joined at adapter destruction); see
+//   the comment on the check in run() for the rationale for deferring
+//   that work.
+//
+// Exception isolation:
+//   onMessage is invoked inside a try / catch so that a throwing
+//   subscriber does not escape the thread manager worker. The dispatch
+//   boundary semantics mirror AbstractMessageBus::deliver — catch
+//   std::exception + ..., log a diagnostic on stderr, convert to a
+//   failing Result so the worker loop observes the failure and the
+//   process is not terminated.
 // ---------------------------------------------------------------------
 
 class DeliverRunnable final : public threading::IRunnable {
 public:
   DeliverRunnable(messaging::ISubscriber *target,
-                  std::unique_ptr<ScheduledEnvelope> envelope)
-      : _target(target), _envelope(std::move(envelope)) {}
+                  std::unique_ptr<ScheduledEnvelope> envelope,
+                  std::shared_ptr<std::atomic<bool>> alive)
+      : _target(target), _envelope(std::move(envelope)),
+        _alive(std::move(alive)) {}
 
   [[nodiscard]] Result run() override {
     if (_target == nullptr)
@@ -122,7 +151,35 @@ public:
     if (_envelope == nullptr)
       return Result(Result::Code::Error,
                     "DeliverRunnable has no envelope to deliver");
-    static_cast<void>(_target->onMessage(*_envelope));
+
+    // Teardown check. If the adapter has been destroyed (and with it
+    // the owning TaskFlow), the flag flipped to false and the target
+    // pointer is no longer valid. Skip the dispatch. The load uses
+    // acquire so the flipping store in the adapter destructor happens
+    // before this load from the runnable's point of view. A narrow
+    // window remains between this check passing and the onMessage
+    // call entering the target; closing that window requires an
+    // explicit live-runnable counter on the adapter and is out of
+    // scope for this fix.
+    if (_alive == nullptr
+        || !_alive->load(std::memory_order_acquire))
+      return Result();
+
+    try {
+      static_cast<void>(_target->onMessage(*_envelope));
+    } catch (const std::exception &ex) {
+      std::fprintf(stderr,
+                   "[vigine::TaskFlow] scheduled onMessage threw: %s\n",
+                   ex.what());
+      return Result(Result::Code::Error,
+                    "scheduled onMessage threw std::exception");
+    } catch (...) {
+      std::fprintf(stderr,
+                   "[vigine::TaskFlow] scheduled onMessage threw a "
+                   "non-std::exception object\n");
+      return Result(Result::Code::Error,
+                    "scheduled onMessage threw non-std::exception");
+    }
     return Result();
   }
 
@@ -133,6 +190,12 @@ private:
   // Heap allocation keeps the runnable itself movable (IThreadManager
   // takes ownership via unique_ptr<IRunnable>).
   std::unique_ptr<ScheduledEnvelope> _envelope;
+  // Shared alive-flag with the owning ScheduledDelivery adapter. The
+  // adapter creates this flag at construction, captures it in every
+  // runnable it schedules, and flips it to false in its destructor.
+  // shared_ptr keeps the atomic alive even if the adapter has been
+  // torn down before the runnable runs.
+  std::shared_ptr<std::atomic<bool>> _alive;
 };
 
 } // namespace
@@ -151,7 +214,17 @@ public:
   ScheduledDelivery(messaging::ISubscriber *target,
                     threading::IThreadManager &threadManager,
                     threading::ThreadAffinity affinity)
-      : _target(target), _threadManager(threadManager), _affinity(affinity) {}
+      : _target(target), _threadManager(threadManager), _affinity(affinity),
+        _alive(std::make_shared<std::atomic<bool>>(true)) {}
+
+  ~ScheduledDelivery() override {
+    // Flip the shared alive-flag so any DeliverRunnable still queued
+    // on the thread manager (or mid-way through its own run()) sees
+    // false and early-exits without touching the now-dead target.
+    // release-order matches the acquire-load on the runnable side.
+    if (_alive != nullptr)
+      _alive->store(false, std::memory_order_release);
+  }
 
   [[nodiscard]] messaging::DispatchResult
   onMessage(const messaging::IMessage &message) override {
@@ -174,8 +247,8 @@ public:
         message.correlationId(), message.target(), message.scheduledFor(),
         std::move(clonedPayload));
 
-    auto runnable =
-        std::make_unique<DeliverRunnable>(_target, std::move(envelope));
+    auto runnable = std::make_unique<DeliverRunnable>(
+        _target, std::move(envelope), _alive);
     static_cast<void>(
         _threadManager.schedule(std::move(runnable), _affinity));
 
@@ -189,6 +262,12 @@ private:
   messaging::ISubscriber *_target;
   threading::IThreadManager &_threadManager;
   threading::ThreadAffinity _affinity;
+  // Shared alive-flag passed into every runnable this adapter schedules.
+  // The flag is flipped to false in the adapter destructor; runnables
+  // still pending on the thread manager observe the flip through an
+  // acquire-load before dereferencing the (possibly already dead)
+  // target subscriber. See DeliverRunnable for the residual-race note.
+  std::shared_ptr<std::atomic<bool>> _alive;
 };
 
 // Out-of-line TaskFlow constructor and destructor. Declared here (not
