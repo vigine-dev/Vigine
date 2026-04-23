@@ -50,9 +50,8 @@ class AbstractSignalEmitter : public ISignalEmitter, protected AbstractMessageBu
      * @brief Subscribes @p subscriber to signals of the payload type
      *        recorded in @p filter on this emitter's internal bus.
      *
-     * Convenience entry point so callers that hold an
-     * @ref AbstractSignalEmitter can subscribe without a separate bus
-     * handle. The filter's @c kind field is forced to
+     * Implements @ref ISignalEmitter::subscribeSignal. The filter's
+     * @c kind field is forced to
      * @ref vigine::messaging::MessageKind::Signal before forwarding to
      * @ref vigine::messaging::AbstractMessageBus::subscribe so the
      * subscription is always scoped to signal traffic.
@@ -61,8 +60,8 @@ class AbstractSignalEmitter : public ISignalEmitter, protected AbstractMessageBu
      * token cancels the subscription.
      */
     [[nodiscard]] std::unique_ptr<vigine::messaging::ISubscriptionToken>
-        subscribeSignal(vigine::messaging::MessageFilter                       filter,
-                        vigine::messaging::ISubscriber                        *subscriber);
+        subscribeSignal(vigine::messaging::MessageFilter  filter,
+                        vigine::messaging::ISubscriber   *subscriber) override;
 
     AbstractSignalEmitter(const AbstractSignalEmitter &)            = delete;
     AbstractSignalEmitter &operator=(const AbstractSignalEmitter &) = delete;

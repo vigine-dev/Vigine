@@ -20,18 +20,25 @@ namespace vigine::signalemitter
  * @brief Pure-virtual facade for the Signal dispatch pattern.
  *
  * @ref ISignalEmitter is the Level-2 facade over @ref vigine::messaging::IMessageBus
- * for the signal-slot pattern (plan_15). It encapsulates the two
- * operations that signal producers need:
+ * for the signal-slot pattern. It encapsulates the three operations that
+ * signal producers and subscribers need:
  *
- *   - @ref emit   — broadcast a payload to all matching subscribers on
- *                   the bound bus (@ref vigine::messaging::RouteMode::FanOut).
- *   - @ref emitTo — target-scoped emit to subscribers registered against
- *                   a specific @ref vigine::messaging::AbstractMessageTarget
- *                   (@ref vigine::messaging::RouteMode::FirstMatch).
+ *   - @ref emit            — broadcast a payload to all matching subscribers
+ *                            on the bound bus
+ *                            (@ref vigine::messaging::RouteMode::FanOut).
+ *   - @ref emitTo          — target-scoped emit to subscribers registered
+ *                            against a specific
+ *                            @ref vigine::messaging::AbstractMessageTarget
+ *                            (@ref vigine::messaging::RouteMode::FirstMatch).
+ *   - @ref subscribeSignal — register an @ref vigine::messaging::ISubscriber
+ *                            against a filter on the emitter's internal
+ *                            bus; returns an
+ *                            @ref vigine::messaging::ISubscriptionToken
+ *                            that cancels the subscription when dropped.
  *
- * Subscribers register via the underlying @ref vigine::messaging::IMessageBus
- * directly; the signal facade does not expose its own subscribe surface,
- * keeping the subscription contract on @ref IMessageBus.
+ * Exposing @ref subscribeSignal on the facade lets callers that only hold
+ * an @c ISignalEmitter* register subscribers without reaching for a
+ * separate @ref vigine::messaging::IMessageBus handle.
  *
  * Invariants:
  *   - INV-1: no template parameters in the public surface.
@@ -77,6 +84,23 @@ class ISignalEmitter
     [[nodiscard]] virtual vigine::Result
         emitTo(const vigine::messaging::AbstractMessageTarget *target,
                std::unique_ptr<ISignalPayload>                 payload) = 0;
+
+    /**
+     * @brief Subscribes @p subscriber to signals matching @p filter on the
+     *        emitter's internal bus.
+     *
+     * The filter's @c kind field is forced to
+     * @ref vigine::messaging::MessageKind::Signal before forwarding, so
+     * the subscription is always scoped to signal traffic regardless of
+     * what the caller placed there.
+     *
+     * Returns an @ref vigine::messaging::ISubscriptionToken; dropping the
+     * token cancels the subscription. A null @p subscriber returns a null
+     * token.
+     */
+    [[nodiscard]] virtual std::unique_ptr<vigine::messaging::ISubscriptionToken>
+        subscribeSignal(vigine::messaging::MessageFilter  filter,
+                        vigine::messaging::ISubscriber   *subscriber) = 0;
 
     ISignalEmitter(const ISignalEmitter &)            = delete;
     ISignalEmitter &operator=(const ISignalEmitter &) = delete;
