@@ -13,6 +13,11 @@
 namespace vigine
 {
 
+namespace threading
+{
+class IThreadManager;
+} // namespace threading
+
 enum class Property;
 class EntityManager;
 
@@ -70,7 +75,7 @@ class Context : public IContext
     [[nodiscard]] bool isFrozen() const noexcept override;
 
   private:
-    Context(EntityManager *entityManager);
+    Context(EntityManager *entityManager, threading::IThreadManager *threadManager);
     AbstractServiceUPtr createService(const ServiceId &id, const Name &name);
     AbstractSystemUPtr createSystem(const SystemId &id, const SystemName &name);
 
@@ -78,6 +83,12 @@ class Context : public IContext
     std::unordered_map<ServiceId, ServiceInstancesContainer> _services;
     std::unordered_map<SystemId, SystemInstancesContainer> _systems;
     EntityManager *_entityManager{nullptr};
+    // Non-owning pointer into the engine-owned IThreadManager. Set by
+    // Engine::Engine before any task-flow wiring runs; surfaced to
+    // callers through threadManager() so TaskFlow::signal's non-Any
+    // path and any other context-driven scheduling works on the
+    // legacy Engine front door.
+    threading::IThreadManager *_threadManager{nullptr};
     // Atomic because `isFrozen()` is documented as safe from any
     // thread and runs alongside lifecycle transitions. A plain bool
     // here would be a TSAN-observable data race even though the

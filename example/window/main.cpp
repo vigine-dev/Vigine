@@ -27,9 +27,10 @@
 #include <vigine/payload/payloadtypeid.h>
 #include <vigine/signalemitter/defaultsignalemitter.h>
 #include <vigine/signalemitter/isignalemitter.h>
-#include <vigine/threading/factory.h>
 #include <vigine/threading/ithreadmanager.h>
 #include <vigine/threading/threadaffinity.h>
+
+#include <vigine/context.h>
 
 #include <cassert>
 #include <memory>
@@ -38,10 +39,16 @@
 using namespace vigine;
 
 std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *signalEmitter,
+                                             Context *context,
                                              std::shared_ptr<TextEditState> textEditState,
                                              std::shared_ptr<TextEditorSystem> textEditorSystem)
 {
     auto taskFlow             = std::make_unique<TaskFlow>();
+    // Task flow needs the concrete legacy Context so its signal()
+    // non-Any branch can reach the engine-owned IThreadManager (see
+    // TaskFlow::signal and the accompanying code comment). The
+    // downcast happens once in main(); here we simply install it.
+    taskFlow->setContext(context);
 
     auto *initWindow          = taskFlow->addTask(std::make_unique<InitWindowTask>());
     auto *initVulkan          = taskFlow->addTask(std::make_unique<InitVulkanTask>());
@@ -69,24 +76,20 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *sign
     static_cast<void>(taskFlow->route(loadTextures, setupTexturedPlanes));
     static_cast<void>(taskFlow->route(setupTexturedPlanes, setupTextEdit));
     static_cast<void>(taskFlow->route(setupTextEdit, runWindow));
-    // ThreadAffinity::Any keeps the subscriber wired directly to the bus
-    // (no TaskFlow-side re-post through IThreadManager). The emitter is
-    // built with sharedBusConfig() below to signal architectural intent,
-    // but the current AbstractMessageBus::post implementation drains the
-    // Shared queue on the posting thread, so the handler actually lands
-    // on the Win32 pump thread today. A real cross-thread hop will land
-    // once the bus worker pump is wired in a later lifecycle change;
-    // until then callers who want a guaranteed hop must use a non-Any
-    // ThreadAffinity on TaskFlow::signal, which wires the subscription
-    // through IThreadManager::schedule. Pool affinity is not used here
-    // because the legacy vigine::Engine does not route IThreadManager
-    // into TaskFlow's context.
+    // Pool affinity wraps the subscriber in a scheduled-delivery adapter
+    // that hands the clone to IThreadManager::schedule. The engine's
+    // Context owns a real IThreadManager (Engine::Engine plumbs it on
+    // construction), so TaskFlow::signal can reach it through
+    // setContext(&engine.legacyContext()) called from main. Input
+    // handlers therefore run on a pool worker thread, off the Win32
+    // message pump thread, and clicking the window does not stall
+    // rendering if the handler grows heavier later.
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kMouseButtonDownPayloadTypeId,
-                                       threading::ThreadAffinity::Any));
+                                       threading::ThreadAffinity::Pool));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kKeyDownPayloadTypeId,
-                                       threading::ThreadAffinity::Any));
+                                       threading::ThreadAffinity::Pool));
 
     taskFlow->changeCurrentTaskTo(initWindow);
 
@@ -109,10 +112,27 @@ std::unique_ptr<TaskFlow> createCloseTaskFlow() { return std::make_unique<TaskFl
 
 int main()
 {
-    // Thread manager owns the pool that drains the shared bus below. It
-    // must outlive the emitter and is declared before the Engine so its
-    // destructor runs last in the reverse-of-declaration order.
-    auto threadManager    = vigine::threading::createThreadManager();
+    // The engine owns the thread manager and wires it through its
+    // Context on construction. The signal emitter and the TaskFlow's
+    // non-Any signal path both reach into that single manager, so the
+    // pool bank is shared across the whole example.
+    Engine engine;
+
+    // Engine::state() returns IStateMachine&; downcast back to the
+    // concrete StateMachine for the rich state-machine API. The cast
+    // is temporary scaffolding that will disappear once addState /
+    // addTransition move onto the interface in a later change.
+    StateMachine *stMachine = dynamic_cast<StateMachine *>(&engine.state());
+    assert(stMachine != nullptr &&
+           "Engine::state() must be a concrete StateMachine until the "
+           "rich API lifts onto IStateMachine");
+
+    // Engine::context() returns IContext&; the task flow still takes
+    // the concrete legacy Context*, so downcast once here.
+    Context *legacyCtx = dynamic_cast<Context *>(&engine.context());
+    assert(legacyCtx != nullptr &&
+           "Engine::context() must be backed by the legacy Context until "
+           "the task flow migrates to the IContext surface");
 
     // Payload registry is stack-local for the example. Register the two
     // user-range payload ids used by the window input pipeline; the
@@ -128,21 +148,12 @@ int main()
 
     // Shared-pool bus so dispatch to ProcessInputEventTask::onMessage
     // lands on a pool worker, off the Win32 message pump thread. The
-    // TaskFlow::signal wiring below uses ThreadAffinity::Any; the
-    // cross-thread hop is provided by the bus policy, not by
-    // ScheduledDelivery.
+    // bus and the TaskFlow::signal non-Any scheduler both share the
+    // single IThreadManager that the engine plumbs through its
+    // Context — see TaskFlow::signal and Engine::Engine.
     auto signalEmitter    = vigine::signalemitter::createSignalEmitter(
-        *threadManager, vigine::signalemitter::sharedBusConfig());
-
-    Engine engine;
-    // Engine::state() now returns IStateMachine&; downcast back to the
-    // concrete StateMachine for the rich state-machine API. The cast
-    // is temporary scaffolding that will disappear once addState /
-    // addTransition move onto the interface in a later leaf.
-    StateMachine *stMachine = dynamic_cast<StateMachine *>(&engine.state());
-    assert(stMachine != nullptr &&
-           "Engine::state() must be a concrete StateMachine until the "
-           "rich API lifts onto IStateMachine");
+        engine.context().threadManager(),
+        vigine::signalemitter::sharedBusConfig());
 
     auto textEditState    = std::make_shared<TextEditState>();
     auto textEditorSystem = std::make_shared<TextEditorSystem>(textEditState);
@@ -158,7 +169,7 @@ int main()
     auto closePtr         = stMachine->addState(std::move(closeState));
 
     initPtr->setTaskFlow(
-        createInitTaskFlow(signalEmitter.get(), textEditState, textEditorSystem));
+        createInitTaskFlow(signalEmitter.get(), legacyCtx, textEditState, textEditorSystem));
     workPtr->setTaskFlow(createWorkTaskFlow());
     errorPtr->setTaskFlow(createErrorTaskFlow());
     closePtr->setTaskFlow(createCloseTaskFlow());
