@@ -60,6 +60,12 @@ class SignalPayload final : public vigine::signalemitter::ISignalPayload
         return _id;
     }
 
+    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+        clone() const override
+    {
+        return std::make_unique<SignalPayload>(_id);
+    }
+
   private:
     vigine::payload::PayloadTypeId _id;
 };
