@@ -1,9 +1,8 @@
 #pragma once
 
-#include "windoweventsignal.h"
-
 #include <vigine/abstracttask.h>
 #include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/signalemitter/isignalemitter.h>
 
 #include "../../system/texteditorsystem.h"
 
@@ -27,9 +26,7 @@ class RenderSystem;
 } // namespace graphics
 } // namespace vigine
 
-class RunWindowTask : public vigine::AbstractTask,
-                      public IMouseEventSignalEmiter,
-                      public IKeyEventSignalEmiter
+class RunWindowTask final : public vigine::AbstractTask
 {
   public:
     RunWindowTask();
@@ -46,6 +43,7 @@ class RunWindowTask : public vigine::AbstractTask,
     void onChar(const vigine::platform::TextEvent &event);
 
     void setTextEditorSystem(std::shared_ptr<TextEditorSystem> editorSystem);
+    void setSignalEmitter(vigine::signalemitter::ISignalEmitter *emitter) noexcept;
 
   private:
     enum MovementKeyMask : uint8_t
@@ -71,6 +69,7 @@ class RunWindowTask : public vigine::AbstractTask,
     void updateObjectDrag(int x, int y, bool suppressZDelta = true);
     void endObjectDrag();
 
+    vigine::signalemitter::ISignalEmitter *_signalEmitter{nullptr};
     vigine::platform::PlatformService *_platformService{nullptr};
     vigine::graphics::GraphicsService *_graphicsService{nullptr};
     vigine::graphics::RenderSystem *_renderSystem{nullptr};
