@@ -1,6 +1,9 @@
 #include "messaging/ibuscontrolblock_default.h"
 
 #include <mutex>
+#include <utility>
+
+#include "vigine/messaging/isubscriber.h"
 
 namespace vigine::messaging
 {
@@ -116,6 +119,120 @@ void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
     _nextGenerationByIndex[id.index] = nextGen;
     _registry.erase(it);
     _freeIndices.push_back(id.index);
+}
+
+std::uint64_t DefaultBusControlBlock::registerSubscription(
+    ISubscriber               *subscriber,
+    MessageFilter              filter,
+    std::shared_ptr<SlotState> slotState)
+{
+    if (subscriber == nullptr)
+    {
+        return 0;
+    }
+    if (!slotState)
+    {
+        return 0;
+    }
+    if (!_alive.load(std::memory_order_acquire))
+    {
+        return 0;
+    }
+
+    std::unique_lock<std::shared_mutex> lock{_subscriptionRegistryMutex};
+
+    // Re-check under the lock: a concurrent markDead may have raced
+    // ahead between the fast-path read and the lock. Without the re-
+    // check a bus caught mid-shutdown could still hand out a serial
+    // that the bus's subscribe() wraps in a token, with no one left
+    // to drain it.
+    if (!_alive.load(std::memory_order_acquire))
+    {
+        return 0;
+    }
+
+    std::uint64_t serial = _nextSerial++;
+    // Wrap-around guard: serial 0 is the inert sentinel that the
+    // token path uses to short-circuit active() / cancel(). Skip it
+    // on overflow so the registry never emits it for a live slot.
+    if (serial == 0)
+    {
+        serial      = _nextSerial++;
+    }
+
+    SubscriptionSlot slot{};
+    slot.subscriber = subscriber;
+    slot.filter     = std::move(filter);
+    slot.serial     = serial;
+    slot.active     = true;
+    slot.slotState  = std::move(slotState);
+
+    _subscriptions.emplace(serial, std::move(slot));
+    return serial;
+}
+
+void DefaultBusControlBlock::unregisterSubscription(std::uint64_t serial) noexcept
+{
+    if (serial == 0)
+    {
+        return;
+    }
+    if (!_alive.load(std::memory_order_acquire))
+    {
+        // Fast-path after markDead: the control block's destructor
+        // reclaims the whole subscription map en masse. Running the
+        // per-slot drain here against a dead block is pointless —
+        // the bus is gone, no dispatcher can still be looking at
+        // these slots.
+        return;
+    }
+
+    // Capture the SlotState shared_ptr BEFORE erasing the registry
+    // entry so the lifecycle mutex survives the map removal. A
+    // snapshot copy still in flight through the dispatch path owns
+    // its own shared_ptr to the same SlotState; after this capture
+    // AND the erase, the lifecycle mutex below serialises against
+    // every such in-flight deliver() before we return — which is the
+    // dtor-blocks guarantee that the token contract advertises.
+    std::shared_ptr<SlotState> state;
+    {
+        std::unique_lock<std::shared_mutex> lock{_subscriptionRegistryMutex};
+        auto it = _subscriptions.find(serial);
+        if (it == _subscriptions.end())
+        {
+            return;
+        }
+        state = it->second.slotState;
+        _subscriptions.erase(it);
+    }
+
+    if (state)
+    {
+        // Acquire lifecycleMutex EXCLUSIVELY. Every concurrent
+        // deliver() holds it SHARED for the duration of onMessage, so
+        // the exclusive acquisition blocks until all of them have
+        // returned. Once we hold the lock we flip `cancelled` so that
+        // any snapshot copy still waiting to enter the shared region
+        // will observe the flag and skip onMessage without running
+        // the subscriber.
+        std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
+        state->cancelled = true;
+    }
+}
+
+std::vector<SubscriptionSlot> DefaultBusControlBlock::snapshotSubscriptions() const
+{
+    std::vector<SubscriptionSlot>       snapshot;
+    std::shared_lock<std::shared_mutex> lock{_subscriptionRegistryMutex};
+    snapshot.reserve(_subscriptions.size());
+    for (const auto &entry : _subscriptions)
+    {
+        if (entry.second.active)
+        {
+            snapshot.push_back(entry.second);
+        }
+    }
+    return snapshot;
 }
 
 DefaultBusControlBlock::LookupGuard

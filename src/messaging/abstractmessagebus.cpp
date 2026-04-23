@@ -27,16 +27,19 @@ namespace vigine::messaging
 // SubscriptionToken -- RAII handle returned from AbstractMessageBus::subscribe
 // ---------------------------------------------------------------------------
 
-AbstractMessageBus::SubscriptionToken::SubscriptionToken(AbstractMessageBus *bus,
-                                                         std::uint64_t       serial) noexcept
-    : _bus(bus)
+AbstractMessageBus::SubscriptionToken::SubscriptionToken(
+    std::weak_ptr<IBusControlBlock> control,
+    std::uint64_t                   serial) noexcept
+    : _control(std::move(control))
     , _serial(serial)
 {
 }
 
 AbstractMessageBus::SubscriptionToken::~SubscriptionToken()
 {
-    // Idempotent: the cancel path handles the dead-bus case cleanly.
+    // Idempotent: the cancel path handles both the dead-bus case
+    // (weak_ptr.lock() returns null, or isAlive() reports false) and
+    // the already-cancelled case (the atomic exchange short-circuits).
     cancel();
 }
 
@@ -46,25 +49,45 @@ void AbstractMessageBus::SubscriptionToken::cancel() noexcept
     {
         return;
     }
-    if (_bus != nullptr)
+    if (_serial == 0)
     {
-        _bus->removeSubscription(_serial);
+        // Inert token (built from a shutdown or rejected subscribe).
+        // No slot to reach; nothing to unregister.
+        return;
     }
+
+    // Lock the weak_ptr into a temporary shared_ptr for the duration of
+    // the call. That keeps the control block alive through the
+    // unregister even if the bus is racing through its own destructor
+    // on another thread: either we observe isAlive() == false and skip
+    // the call, or we observe it == true and the block is guaranteed
+    // to outlive our call because `block` here holds a shared
+    // reference.
+    if (auto block = _control.lock())
+    {
+        if (block->isAlive())
+        {
+            block->unregisterSubscription(_serial);
+        }
+    }
+    // weak_ptr.lock() == null or isAlive() == false: the bus is gone
+    // or going, the control block's destructor (or markDead + dtor on
+    // the map) reclaims the slot; nothing to do here.
 }
 
 bool AbstractMessageBus::SubscriptionToken::active() const noexcept
 {
     // Three-way conjunction, matching the header contract:
-    //   1. The token points at a real bus (inert tokens carry
-    //      _bus == nullptr and _serial == 0 and are never active).
+    //   1. The token points at a real slot (inert tokens carry
+    //      _serial == 0 and an empty _control; they are never active).
     //   2. The token has not been cancelled (RAII teardown or an
     //      explicit cancel() flipped the flag).
-    //   3. The bus itself has not been shut down. A bus that
-    //      finished its shutdown handshake marks every existing
-    //      subscription as inert; reporting active == true on a
-    //      shut-down bus would invite a caller to unsubscribe a
-    //      slot the bus no longer tracks.
-    if (_bus == nullptr || _serial == 0)
+    //   3. The control block is reachable AND alive. A bus that
+    //      finished its shutdown handshake has called markDead on the
+    //      block; reporting active == true in that state would invite
+    //      a caller to unsubscribe a slot the bus has stopped
+    //      dispatching to.
+    if (_serial == 0)
     {
         return false;
     }
@@ -72,7 +95,12 @@ bool AbstractMessageBus::SubscriptionToken::active() const noexcept
     {
         return false;
     }
-    return !_bus->_shutdown.load(std::memory_order_acquire);
+    auto block = _control.lock();
+    if (!block)
+    {
+        return false;
+    }
+    return block->isAlive();
 }
 
 // ---------------------------------------------------------------------------
@@ -310,73 +338,33 @@ AbstractMessageBus::subscribe(const MessageFilter &filter, ISubscriber *subscrib
         || !validKind(filter.kind))
     {
         // Inert token: active() always false, destructor is a no-op
-        // because the serial points at no live slot.
-        return std::make_unique<SubscriptionToken>(nullptr, 0);
+        // because the serial points at no live slot and the weak_ptr
+        // is empty.
+        return std::make_unique<SubscriptionToken>(
+            std::weak_ptr<IBusControlBlock>{}, 0);
     }
 
-    std::uint64_t serial = 0;
-    {
-        std::unique_lock<std::shared_mutex> lock{_registryMutex};
-        serial = _nextSerial++;
-        SubscriptionSlot slot{};
-        slot.subscriber  = subscriber;
-        slot.filter      = filter;
-        slot.serial      = serial;
-        slot.active      = true;
-        // One SlotState per slot, shared across every snapshot copy so
-        // the lifecycle mutex and delivery mutex remain the same object
-        // regardless of how many snapshot copies of this slot exist.
-        slot.slotState = std::make_shared<SlotState>();
-        _subscriptions.emplace(serial, std::move(slot));
-    }
+    // One SlotState per slot, shared across every snapshot copy so
+    // the lifecycle mutex and delivery mutex remain the same object
+    // regardless of how many snapshot copies of this slot exist.
+    auto slotState = std::make_shared<SlotState>();
 
-    return std::make_unique<SubscriptionToken>(this, serial);
-}
-
-void AbstractMessageBus::removeSubscription(std::uint64_t serial) noexcept
-{
+    // Delegate to the control block. It owns the subscription
+    // registry and assigns the serial under its own exclusive lock,
+    // so the bus does not need to maintain a parallel registry mutex.
+    // A zero serial back means the block refused the registration
+    // (subscriber null or block already dead); fall through to an
+    // inert token so the caller sees a token that is safe to drop.
+    const std::uint64_t serial =
+        _control->registerSubscription(subscriber, filter, std::move(slotState));
     if (serial == 0)
     {
-        return;
+        return std::make_unique<SubscriptionToken>(
+            std::weak_ptr<IBusControlBlock>{}, 0);
     }
 
-    // Capture the SlotState shared_ptr BEFORE erasing the registry slot
-    // so the lifecycle mutex survives the map removal.
-    std::shared_ptr<SlotState> state;
-    {
-        std::unique_lock<std::shared_mutex> lock{_registryMutex};
-        auto it = _subscriptions.find(serial);
-        if (it == _subscriptions.end())
-        {
-            return;
-        }
-        state = it->second.slotState;
-        _subscriptions.erase(it);
-    }
-
-    // --- Dtor-blocks contract (FF-69) ---
-    //
-    // After the registry erase above, no new snapshot will include this
-    // slot.  However, dispatch threads that already copied the slot into a
-    // snapshot (before our exclusive registry lock above) may still call
-    // `deliver()` and invoke `onMessage`.  We must not return until all
-    // such calls finish.
-    //
-    // Acquiring `lifecycleMutex` exclusively here blocks until every
-    // concurrent `deliver()` that holds a shared lock on `lifecycleMutex`
-    // has released it.  Once we hold the exclusive lock we set `cancelled`
-    // so that any snapshot copies still waiting to enter `deliver()` will
-    // check the flag, see it is true, and return without calling
-    // `onMessage`.  We then release the exclusive lock and return.
-    //
-    // `state` is null for inert tokens (serial == 0 path is caught above;
-    // this covers legacy bare-SubscriptionSlot test fixtures that skip
-    // `subscribe()`).
-    if (state)
-    {
-        std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
-        state->cancelled = true;
-    }
+    return std::make_unique<SubscriptionToken>(
+        std::weak_ptr<IBusControlBlock>(_control), serial);
 }
 
 // ---------------------------------------------------------------------------
@@ -405,16 +393,25 @@ Result AbstractMessageBus::shutdown()
     // pick up the shutdown flag on their next loop iteration and exit.
     drainQueue(true);
 
-    // Clear the subscription registry so that subsequent subscribe
-    // calls return inert tokens and existing SubscriptionToken
-    // destructors find nothing to remove.
-    {
-        std::unique_lock<std::shared_mutex> lock{_registryMutex};
-        _subscriptions.clear();
-    }
-
-    // Mark the control block dead so any outstanding ConnectionToken
-    // destructors become safe no-ops.
+    // Mark the control block dead. This does three things:
+    //   1. Every outstanding ConnectionToken destructor becomes a safe
+    //      no-op (unchanged behaviour).
+    //   2. Every outstanding SubscriptionToken destructor becomes a
+    //      safe no-op too — tokens lock the weak_ptr, observe
+    //      isAlive() == false, and skip the unregister call.
+    //   3. Any subsequent `subscribe()` on this bus is short-circuited
+    //      earlier by the `_shutdown` flag check, but a truly
+    //      concurrent subscribe that already passed that check gets a
+    //      second refusal inside registerSubscription() via its own
+    //      alive re-check under the registry lock.
+    //
+    // The subscription registry itself is NOT cleared here — it is
+    // owned by the control block, and the block's destructor reclaims
+    // the whole map en masse once the bus drops its shared_ptr. Clearing
+    // under shutdown would be racing the dispatch snapshots that are
+    // still walking the current snapshot copies; we would gain nothing
+    // from it because nothing can reach into the registry after markDead
+    // (post() is shut, subscribe() is refused, tokens no-op).
     if (_control)
     {
         _control->markDead();
@@ -427,20 +424,19 @@ Result AbstractMessageBus::shutdown()
 // AbstractMessageBus -- dispatch helpers
 // ---------------------------------------------------------------------------
 
-std::vector<AbstractMessageBus::SubscriptionSlot>
+std::vector<SubscriptionSlot>
 AbstractMessageBus::snapshotRegistry() const
 {
-    std::vector<SubscriptionSlot> snapshot;
-    std::shared_lock<std::shared_mutex> lock{_registryMutex};
-    snapshot.reserve(_subscriptions.size());
-    for (const auto &entry : _subscriptions)
+    // Thin wrapper: the control block owns the subscription registry
+    // and does the locked copy. Keeping this method on the bus lets
+    // the dispatch driver call a bus-local name (via the class scope
+    // the dispatchFirstMatch / FanOut / Chain / Bubble / Broadcast
+    // helpers already use) without knowing the registry moved.
+    if (!_control)
     {
-        if (entry.second.active)
-        {
-            snapshot.push_back(entry.second);
-        }
+        return {};
     }
-    return snapshot;
+    return _control->snapshotSubscriptions();
 }
 
 void AbstractMessageBus::drainQueue(bool untilShutdown)
@@ -536,12 +532,12 @@ DispatchResult AbstractMessageBus::deliver(const SubscriptionSlot &slot,
     //   (one per subscriber slot in concurrent FanOut), so unrelated
     //   subscribers are not serialised against each other.
     //
-    //   `removeSubscription()` tries to acquire `lifecycleMutex` in
+    //   `IBusControlBlock::unregisterSubscription()` tries to acquire `lifecycleMutex` in
     //   EXCLUSIVE mode, which blocks until every shared holder has released.
     //   This is the dtor-blocks guarantee: `cancel()` / the token destructor
     //   cannot return while any `onMessage` call is still executing.
     //
-    //   After acquiring the exclusive lock, `removeSubscription()` sets
+    //   After acquiring the exclusive lock, `unregisterSubscription()` sets
     //   `cancelled = true` and releases.  Any subsequent `deliver()` call
     //   that acquires the shared lock after that point will see the flag and
     //   return Pass without calling `onMessage`, preventing use-after-free
@@ -559,7 +555,7 @@ DispatchResult AbstractMessageBus::deliver(const SubscriptionSlot &slot,
     //   same subscriber.  It is held for the full duration of `onMessage`
     //   while the shared `lifecycleMutex` lock is also held, so the nesting
     //   order is always: lifecycleMutex(shared) -> deliverMutex(exclusive).
-    //   `removeSubscription()` only ever acquires lifecycleMutex(exclusive)
+    //   `unregisterSubscription()` only ever acquires lifecycleMutex(exclusive)
     //   and never touches deliverMutex, so there is no lock-order inversion.
 
     std::shared_lock<std::shared_mutex> lifeLock;

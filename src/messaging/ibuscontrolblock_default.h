@@ -2,15 +2,20 @@
 
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <shared_mutex>
 #include <unordered_map>
+#include <vector>
 
 #include "vigine/messaging/connectionid.h"
 #include "vigine/messaging/ibuscontrolblock.h"
+#include "vigine/messaging/messagefilter.h"
+#include "vigine/messaging/subscriptionslot.h"
 
 namespace vigine::messaging
 {
 class AbstractMessageTarget;
+class ISubscriber;
 
 /**
  * @brief Reference implementation of @ref IBusControlBlock used by the
@@ -41,6 +46,14 @@ class DefaultBusControlBlock final : public IBusControlBlock
     [[nodiscard]] ConnectionId
         allocateSlot(AbstractMessageTarget *target) override;
     void unregisterTarget(ConnectionId id) noexcept override;
+
+    [[nodiscard]] std::uint64_t
+        registerSubscription(ISubscriber               *subscriber,
+                             MessageFilter              filter,
+                             std::shared_ptr<SlotState> slotState) override;
+    void unregisterSubscription(std::uint64_t serial) noexcept override;
+    [[nodiscard]] std::vector<SubscriptionSlot>
+        snapshotSubscriptions() const override;
 
     /**
      * @brief RAII pair holding the registry's shared lock alongside
@@ -102,6 +115,18 @@ class DefaultBusControlBlock final : public IBusControlBlock
     std::vector<std::uint32_t>                       _freeIndices;
     std::unordered_map<std::uint32_t, std::uint32_t> _nextGenerationByIndex;
     std::atomic<bool>                             _alive{true};
+
+    // Subscription registry. Kept on the control block (not on the
+    // bus) so that `SubscriptionToken` can drop its slot by locking a
+    // `weak_ptr<IBusControlBlock>` exactly the way `ConnectionToken`
+    // drops target slots. A bus destroyed before its tokens observes
+    // the weak_ptr.lock() returning null (or isAlive() returning
+    // false when the block is still reachable through another shared
+    // owner) and the token becomes a no-op — no more reaching into a
+    // freed bus pointer.
+    mutable std::shared_mutex                           _subscriptionRegistryMutex;
+    std::unordered_map<std::uint64_t, SubscriptionSlot> _subscriptions;
+    std::uint64_t                                       _nextSerial{1};
 };
 
 } // namespace vigine::messaging

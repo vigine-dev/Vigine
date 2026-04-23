@@ -229,6 +229,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/messaging/messagekind.h
     ${INCLUDE_DIR}/vigine/messaging/routemode.h
     ${INCLUDE_DIR}/vigine/messaging/messagefilter.h
+    ${INCLUDE_DIR}/vigine/messaging/subscriptionslot.h
     ${INCLUDE_DIR}/vigine/messaging/imessagepayload.h
     ${INCLUDE_DIR}/vigine/messaging/imessage.h
     ${INCLUDE_DIR}/vigine/messaging/isubscriber.h
