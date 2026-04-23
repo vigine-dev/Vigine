@@ -111,12 +111,38 @@ class SignalMessage final : public vigine::messaging::IMessage
 } // namespace
 
 // -----------------------------------------------------------------
+// sharedBusConfig — public sibling of inlineBusConfig.
+// Same shape as the inline default, but uses ThreadingPolicy::Shared
+// so dispatch lands on the thread manager's shared worker pool.
+// The distinct name keeps diagnostics unambiguous.
+// -----------------------------------------------------------------
+
+vigine::messaging::BusConfig sharedBusConfig() noexcept
+{
+    return vigine::messaging::BusConfig{
+        /* id           */ vigine::messaging::BusId{},
+        /* name         */ std::string_view{"signal-emitter-bus-shared"},
+        /* priority     */ vigine::messaging::BusPriority::Normal,
+        /* threading    */ vigine::messaging::ThreadingPolicy::Shared,
+        /* capacity     */ vigine::messaging::QueueCapacity{256, true},
+        /* backpressure */ vigine::messaging::BackpressurePolicy::Error,
+    };
+}
+
+// -----------------------------------------------------------------
 // DefaultSignalEmitter
 // -----------------------------------------------------------------
 
 DefaultSignalEmitter::DefaultSignalEmitter(
     vigine::threading::IThreadManager &threadManager)
     : AbstractSignalEmitter{inlineBusConfig(), threadManager}
+{
+}
+
+DefaultSignalEmitter::DefaultSignalEmitter(
+    vigine::threading::IThreadManager &threadManager,
+    vigine::messaging::BusConfig       config)
+    : AbstractSignalEmitter{std::move(config), threadManager}
 {
 }
 
@@ -154,6 +180,14 @@ DefaultSignalEmitter::emitTo(
     return vigine::messaging::AbstractMessageBus::post(std::move(msg));
 }
 
+std::unique_ptr<vigine::messaging::ISubscriptionToken>
+DefaultSignalEmitter::subscribeSignal(
+    vigine::messaging::MessageFilter  filter,
+    vigine::messaging::ISubscriber   *subscriber)
+{
+    return AbstractSignalEmitter::subscribeSignal(filter, subscriber);
+}
+
 // -----------------------------------------------------------------
 // Factory
 // -----------------------------------------------------------------
@@ -162,6 +196,13 @@ std::unique_ptr<ISignalEmitter>
 createSignalEmitter(vigine::threading::IThreadManager &threadManager)
 {
     return std::make_unique<DefaultSignalEmitter>(threadManager);
+}
+
+std::unique_ptr<ISignalEmitter>
+createSignalEmitter(vigine::threading::IThreadManager &threadManager,
+                    vigine::messaging::BusConfig       config)
+{
+    return std::make_unique<DefaultSignalEmitter>(threadManager, std::move(config));
 }
 
 } // namespace vigine::signalemitter
