@@ -92,5 +92,99 @@ TEST_F(MessagingRoundTrip, ShutdownRejectsSubsequentPost)
         << "post after shutdown must report an error Result";
 }
 
+// Pins the contract that a SubscriptionToken can safely outlive the bus
+// that produced it. The token holds a std::weak_ptr to the bus control
+// block (not a raw pointer to the bus itself), so when the bus is
+// destroyed first the token's cancel() path observes the locked weak_ptr
+// returning null and becomes a no-op instead of chasing a dangling bus
+// pointer into freed memory.
+//
+// The previous shape of the token stored the bus by raw pointer and
+// called bus->removeSubscription(serial) unconditionally from its
+// destructor; if the bus had already been freed (which is easy to
+// arrange when an emitter in the application layer is declared after
+// the engine that owns the bus), the call landed on freed memory and
+// locked on a stale registry mutex -- the close-window hang that
+// motivated this rework.
+TEST_F(MessagingRoundTrip, TokenOutlivesBusWithoutHangOrCrash)
+{
+    std::unique_ptr<vigine::messaging::ISubscriptionToken> token;
+
+    {
+        auto stack = makePrivateStack(/*inlineOnly=*/true);
+        ASSERT_TRUE(stack.valid());
+
+        CountingSubscriber subscriber{
+            vigine::messaging::DispatchResult::Handled};
+
+        vigine::messaging::MessageFilter filter{};
+        filter.kind   = vigine::messaging::MessageKind::Signal;
+        filter.typeId = vigine::payload::PayloadTypeId{0x10102u};
+
+        token = stack.bus().subscribe(filter, &subscriber);
+        ASSERT_NE(token, nullptr);
+        EXPECT_TRUE(token->active());
+
+        // Inner scope exit destroys `stack` (bus first, then thread
+        // manager) AND the `subscriber` local. `token` is held by the
+        // outer scope and survives. The bus's shared_ptr to the
+        // control block drops with the bus; since tokens hold only a
+        // weak_ptr, the control block destructs alongside the bus and
+        // the weak_ptr lock after this point returns null.
+    }
+
+    // The bus and its control block are gone. active() must report
+    // false (the weak_ptr lock returns null), and dropping the token
+    // must not chase a freed pointer.
+    EXPECT_FALSE(token->active())
+        << "token must report inactive once the bus is destroyed";
+
+    // The destructor running here is the original bug site: previously
+    // it called bus->removeSubscription() on a dangling pointer. Under
+    // the new design, cancel() locks the weak_ptr, sees it is empty,
+    // and returns without touching anything. Reaching the next line
+    // without a crash or a hang is the pass condition.
+    token.reset();
+    SUCCEED() << "SubscriptionToken destructor survived bus destruction";
+}
+
+// Pins the contract that a token whose bus has been shut down (but not
+// yet destroyed) also cancels cleanly. shutdown() calls markDead on the
+// control block, and active() observes that through the
+// IBusControlBlock::isAlive() check; the cancel path also short-
+// circuits on the same check, so no unregister call reaches the
+// already-drained registry.
+TEST_F(MessagingRoundTrip, TokenCancelAfterShutdownIsNoOp)
+{
+    auto stack = makePrivateStack(/*inlineOnly=*/true);
+    ASSERT_TRUE(stack.valid());
+    auto &bus = stack.bus();
+
+    CountingSubscriber subscriber{vigine::messaging::DispatchResult::Handled};
+
+    vigine::messaging::MessageFilter filter{};
+    filter.kind   = vigine::messaging::MessageKind::Signal;
+    filter.typeId = vigine::payload::PayloadTypeId{0x10103u};
+
+    auto token = bus.subscribe(filter, &subscriber);
+    ASSERT_NE(token, nullptr);
+    EXPECT_TRUE(token->active());
+
+    const vigine::Result shut = bus.shutdown();
+    EXPECT_TRUE(shut.isSuccess());
+
+    // After shutdown, active() must report false because the control
+    // block's alive flag is down.
+    EXPECT_FALSE(token->active())
+        << "token must report inactive after the bus is shut down";
+
+    // Dropping the token here runs cancel(); the cancel must take the
+    // dead-path (no unregister call) without touching the bus internal
+    // state. Reaching the line after the reset is the pass condition.
+    token.reset();
+    SUCCEED()
+        << "SubscriptionToken destructor survived bus shutdown before bus death";
+}
+
 } // namespace
 } // namespace vigine::contract
