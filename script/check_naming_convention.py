@@ -344,7 +344,7 @@ def scan_file(path: Path, quiet: bool) -> list[str]:
         lineno = idx + 1
 
         # A waiver marker placed on a class-open line (the idiomatic
-        # placement — see `ISignalEmiter`, `IHasState`) skips the WHOLE
+        # placement — see `IHasState`) skips the WHOLE
         # class body, not just the marker line. Without this, nested
         # types inside a waivered class (`class Inner { ... };`) would
         # be re-checked at the outer scope and produce spurious

@@ -28,18 +28,13 @@ class IWindowEventHandler
 class PlatformService
 class DatabaseService
 
-class MouseButtonDownSignal
-class KeyDownSignal
-class ISignal
+class MouseButtonDownPayload
+class KeyDownPayload
+class ISignalPayload
 
-class IMouseEventSignalEmiter
-class IKeyEventSignalEmiter
-class IMouseEventSignalHandler
-class IKeyEventSignalHandler
-class MouseEventSignalBinder
-class KeyEventSignalBinder
-class ISignalEmiter
-class ISignalBinder
+class ISignalEmitter
+class ISubscriber
+class IMessageBus
 
 InitState --|> AbstractState
 WorkState --|> AbstractState
@@ -63,23 +58,15 @@ RunWindowTask --> TextEditorSystem : uses
 SetupTextEditTask --> TextEditorSystem : configures
 TextEditorSystem --> TextEditState : owns/updates
 
-RunWindowTask --|> IMouseEventSignalEmiter
-RunWindowTask --|> IKeyEventSignalEmiter
-ProcessInputEventTask --|> IMouseEventSignalHandler
-ProcessInputEventTask --|> IKeyEventSignalHandler
+RunWindowTask --> ISignalEmitter : emits via injected pointer
+ProcessInputEventTask --|> ISubscriber
 
-MouseButtonDownSignal --|> ISignal
-KeyDownSignal --|> ISignal
+MouseButtonDownPayload --|> ISignalPayload
+KeyDownPayload --|> ISignalPayload
 
-IMouseEventSignalEmiter --|> ISignalEmiter
-IKeyEventSignalEmiter --|> ISignalEmiter
-MouseEventSignalBinder --|> ISignalBinder
-KeyEventSignalBinder --|> ISignalBinder
-
-MouseEventSignalBinder ..> IMouseEventSignalEmiter : validates route
-MouseEventSignalBinder ..> IMouseEventSignalHandler : validates route
-KeyEventSignalBinder ..> IKeyEventSignalEmiter : validates route
-KeyEventSignalBinder ..> IKeyEventSignalHandler : validates route
+ISignalEmitter ..> IMessageBus : posts Signal envelopes
+ISignalEmitter ..> ISignalPayload : emits
+ISignalEmitter ..> ISubscriber : routes by MessageFilter
 
 InitBDTask --> DatabaseService
 CheckBDShecmeTask --> DatabaseService
