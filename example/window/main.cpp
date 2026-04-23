@@ -69,14 +69,18 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *sign
     static_cast<void>(taskFlow->route(loadTextures, setupTexturedPlanes));
     static_cast<void>(taskFlow->route(setupTexturedPlanes, setupTextEdit));
     static_cast<void>(taskFlow->route(setupTextEdit, runWindow));
-    // ThreadAffinity::Any keeps the subscriber wired directly to the bus.
-    // The emitter is built with sharedBusConfig() below, so the shared
-    // bus drains dispatch on a pool worker and the handler still lands
-    // off the Win32 pump thread. ThreadAffinity::Pool would require the
-    // TaskFlow's context to expose IThreadManager, which the legacy
-    // vigine::Engine does not wire; sharedBusConfig + Any reaches the
-    // same "handler off the pump thread" outcome without touching the
-    // engine's construction chain.
+    // ThreadAffinity::Any keeps the subscriber wired directly to the bus
+    // (no TaskFlow-side re-post through IThreadManager). The emitter is
+    // built with sharedBusConfig() below to signal architectural intent,
+    // but the current AbstractMessageBus::post implementation drains the
+    // Shared queue on the posting thread, so the handler actually lands
+    // on the Win32 pump thread today. A real cross-thread hop will land
+    // once the bus worker pump is wired in a later lifecycle change;
+    // until then callers who want a guaranteed hop must use a non-Any
+    // ThreadAffinity on TaskFlow::signal, which wires the subscription
+    // through IThreadManager::schedule. Pool affinity is not used here
+    // because the legacy vigine::Engine does not route IThreadManager
+    // into TaskFlow's context.
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kMouseButtonDownPayloadTypeId,
                                        threading::ThreadAffinity::Any));

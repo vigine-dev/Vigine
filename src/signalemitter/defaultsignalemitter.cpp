@@ -112,9 +112,15 @@ class SignalMessage final : public vigine::messaging::IMessage
 
 // -----------------------------------------------------------------
 // sharedBusConfig — public sibling of inlineBusConfig.
-// Same shape as the inline default, but uses ThreadingPolicy::Shared
-// so dispatch lands on the thread manager's shared worker pool.
-// The distinct name keeps diagnostics unambiguous.
+// Same shape as the inline default but with ThreadingPolicy::Shared
+// and a distinct name for diagnostics. Note: the `Shared` policy is
+// defined as "dispatch on a bus worker", but the current
+// AbstractMessageBus::post implementation drains Shared queues on the
+// posting thread (the bus worker pump is deferred). Callers who need
+// a real thread hop must either post from the desired thread already
+// or combine this config with an IThreadManager::schedule on the
+// producer side. TaskFlow::signal handles that automatically for
+// non-Any ThreadAffinity values.
 // -----------------------------------------------------------------
 
 vigine::messaging::BusConfig sharedBusConfig() noexcept

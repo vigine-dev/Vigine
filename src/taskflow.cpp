@@ -34,15 +34,18 @@ namespace vigine {
 // everything the target subscriber needs BEFORE returning — otherwise
 // the target would dereference dangling memory on the worker thread.
 //
-// IMessagePayload does not expose a generic clone contract, so a
-// wrapper that only sees IMessagePayload* cannot deep-copy the
-// polymorphic payload. ScheduledEnvelope therefore preserves only the
-// routing / identity metadata (kind, payloadTypeId, routeMode,
-// correlationId, target, scheduledFor) and reports a null payload on
-// the delivered envelope. Any target that needs payload data on a
-// deferred edge must rely on out-of-band state (for example a queue
-// filled by the sending task) or on a future extension of
-// ISignalPayload that adds a shared-ownership clone contract.
+// ScheduledDelivery::onMessage deep-copies the payload through
+// ISignalPayload::clone() before returning. The returned unique_ptr is
+// moved into ScheduledEnvelope, which owns the clone for the rest of
+// the runnable's life. The envelope preserves the same routing /
+// identity metadata the source carried (kind, payloadTypeId,
+// routeMode, correlationId, target, scheduledFor) and exposes the
+// cloned payload through payload(), so the target subscriber sees
+// real data on the worker thread — independent of the source bus's
+// dispatch frame. Payloads that do not derive from ISignalPayload
+// fall through as a null payload() because clone() is only defined on
+// the signal-payload interface; that matches the TaskFlow::signal
+// contract, which is scoped to signal traffic.
 // ---------------------------------------------------------------------
 
 namespace {
@@ -202,11 +205,18 @@ private:
 
 // ---------------------------------------------------------------------
 // TaskFlow::ScheduledDelivery — private subscriber adapter installed on
-// non-Any signal edges. The emitter's bus calls onMessage on this
-// adapter inline on the emitter's thread (the signal bus is
-// InlineOnly). The adapter captures a metadata-only envelope and hands
-// the re-delivery off to IThreadManager::schedule so the emitter
-// thread returns immediately.
+// non-Any signal edges. TaskFlow accepts any ISignalEmitter, so the
+// bus backing that emitter may dispatch onMessage on any thread — the
+// adapter does not assume InlineOnly or any other ThreadingPolicy.
+//
+// What the contract guarantees is the work done before onMessage
+// returns: the adapter deep-copies the payload through
+// ISignalPayload::clone(), builds a self-contained ScheduledEnvelope,
+// wraps it in a DeliverRunnable, and hands the runnable off to
+// IThreadManager::schedule. All of that finishes before the source
+// bus's dispatch frame unwinds, so the worker thread owns everything
+// the target subscriber will read and never chases the source
+// envelope's lifetime.
 // ---------------------------------------------------------------------
 
 class TaskFlow::ScheduledDelivery final : public messaging::ISubscriber {
