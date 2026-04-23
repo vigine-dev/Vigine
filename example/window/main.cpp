@@ -79,11 +79,11 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *sign
     // Pool affinity wraps the subscriber in a scheduled-delivery adapter
     // that hands the clone to IThreadManager::schedule. The engine's
     // Context owns a real IThreadManager (Engine::Engine plumbs it on
-    // construction), so TaskFlow::signal can reach it through
-    // setContext(&engine.legacyContext()) called from main. Input
-    // handlers therefore run on a pool worker thread, off the Win32
-    // message pump thread, and clicking the window does not stall
-    // rendering if the handler grows heavier later.
+    // construction), and main() hands that concrete Context* into
+    // createInitTaskFlow, which installs it via taskFlow->setContext(context)
+    // above. Input handlers therefore run on a pool worker thread, off
+    // the Win32 message pump thread, and clicking the window does not
+    // stall rendering if the handler grows heavier later.
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kMouseButtonDownPayloadTypeId,
                                        threading::ThreadAffinity::Pool));

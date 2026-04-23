@@ -11,7 +11,6 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/property.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
 #include "vigine/service/databaseservice.h"
 #include "vigine/service/graphicsservice.h"
 #include "vigine/service/iservice.h"
