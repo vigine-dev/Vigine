@@ -19,9 +19,7 @@ class IMessage;
  * @brief Window-example task that receives input-event signals as an
  *        @ref vigine::messaging::ISubscriber.
  *
- * The task no longer inherits from the legacy handler interfaces
- * (@c IMouseEventSignalHandler, @c IKeyEventSignalHandler). Instead it
- * implements @ref vigine::messaging::ISubscriber so an
+ * The task implements @ref vigine::messaging::ISubscriber so an
  * @ref vigine::signalemitter::ISignalEmitter can register it against
  * @ref kMouseButtonDownPayloadTypeId and @ref kKeyDownPayloadTypeId
  * directly. Subscription tokens are owned here through @ref

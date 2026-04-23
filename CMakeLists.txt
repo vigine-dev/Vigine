@@ -162,9 +162,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/statemachine.h
     ${INCLUDE_DIR}/vigine/abstractstate.h
     ${INCLUDE_DIR}/vigine/taskflow.h
-    ${INCLUDE_DIR}/vigine/signal/isignal.h
-    ${INCLUDE_DIR}/vigine/signal/isignalemiter.h
-    ${INCLUDE_DIR}/vigine/signal/isignalbinder.h
     ${INCLUDE_DIR}/vigine/abstracttask.h
     ${INCLUDE_DIR}/vigine/abstractservice.h
     ${INCLUDE_DIR}/vigine/context.h
@@ -273,7 +270,6 @@ set(SOURCES
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/contextholder.cpp
-    ${SRC_DIR}/signal/isignalemiter.cpp
     ${SRC_DIR}/ecs/entitymanager.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
