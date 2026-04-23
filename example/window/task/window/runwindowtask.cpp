@@ -14,11 +14,13 @@
 
 #include "../../handler/windoweventhandler.h"
 #include "ecs/platform/windowcomponent.h"
+#include "windoweventpayload.h"
 
 #include <cstring>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
+#include <memory>
 
 #ifdef _WIN32
 #include "ecs/platform/winapicomponent.h"
@@ -308,7 +310,11 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
 
     std::cout << "[RunWindowTask::onMouseButtonDown] button=" << static_cast<int>(button)
               << ", x=" << x << ", y=" << y << std::endl;
-    emitMouseButtonDownSignal(button, x, y);
+    if (_signalEmitter)
+    {
+        static_cast<void>(_signalEmitter->emit(
+            std::make_unique<MouseButtonDownPayload>(button, x, y)));
+    }
 }
 
 void RunWindowTask::onMouseButtonUp(vigine::platform::MouseButton button, int x, int y)
@@ -433,7 +439,10 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     if (!event.isRepeat)
         std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
                   << ", scanCode=" << event.scanCode << std::endl;
-    emitKeyDownSignal(event);
+    if (_signalEmitter)
+    {
+        static_cast<void>(_signalEmitter->emit(std::make_unique<KeyDownPayload>(event)));
+    }
 }
 
 void RunWindowTask::onKeyUp(const vigine::platform::KeyEvent &event)
@@ -515,6 +524,11 @@ void RunWindowTask::setTextEditorSystem(std::shared_ptr<TextEditorSystem> editor
     _textEditorSystem = std::move(editorSystem);
     if (_textEditorSystem)
         _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
+}
+
+void RunWindowTask::setSignalEmitter(vigine::signalemitter::ISignalEmitter *emitter) noexcept
+{
+    _signalEmitter = emitter;
 }
 
 void RunWindowTask::onChar(const vigine::platform::TextEvent &event)
