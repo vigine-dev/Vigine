@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * @file databaseconfiguration.h
+ * @brief Declares the @c DatabaseConfiguration aggregate that couples
+ *        a list of expected @c Table definitions with the
+ *        @c ConnectionData needed to reach the PostgreSQL server.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/postgresql/column.h"
 #include "vigine/ecs/postgresql/connectiondata.h"
@@ -11,6 +18,18 @@ namespace vigine
 {
 namespace postgresql
 {
+/**
+ * @brief Aggregate describing the database a @c PostgreSQLSystem
+ *        connects to.
+ *
+ * Carries two pieces: the owned @c ConnectionData (how to reach the
+ * server) and the list of @c Table definitions the engine expects to
+ * find (used by scheme-check and DDL-create paths). Ownership of the
+ * connection data is held through a @c std::unique_ptr; the table
+ * list is owned by value. The service that uses this configuration
+ * (see @c DatabaseService) is responsible for populating it before
+ * calling connect.
+ */
 class DatabaseConfiguration
 {
   public:

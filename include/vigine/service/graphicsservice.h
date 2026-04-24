@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * @file graphicsservice.h
+ * @brief Concrete service that wires graphics-side rendering
+ *        (render system, render and texture components) into the
+ *        engine service container.
+ */
+
 #include "vigine/abstractservice.h"
 #include "vigine/base/macros.h"
 
@@ -11,6 +18,16 @@ class RenderComponent;
 class RenderSystem;
 class TextureComponent;
 
+/**
+ * @brief Graphics service: owns a @c RenderSystem and exposes render
+ *        initialisation plus access to render and texture components.
+ *
+ * Instantiated by the engine and registered against a bound entity.
+ * @ref initializeRender boots the underlying render backend against a
+ * native window handle and a surface size; the accessors
+ * @ref renderComponent and @ref textureComponent expose the per-entity
+ * render data for other services / systems to consume.
+ */
 class GraphicsService : public AbstractService
 {
   public:

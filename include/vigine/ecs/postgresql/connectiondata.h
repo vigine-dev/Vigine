@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * @file connectiondata.h
+ * @brief Declares the @c ConnectionData value object that bundles the
+ *        PostgreSQL connection parameters (host, port, database name,
+ *        user name, password) handed to the @c PostgreSQLSystem.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/base/name.h"
 #include "vigine/base/password.h"
@@ -13,6 +20,17 @@ namespace postgresql
 using Host = std::string;
 using Port = std::string;
 
+/**
+ * @brief Holds the parameters required to open a PostgreSQL
+ *        connection: host, port, database name, user name, and
+ *        password.
+ *
+ * Plain data container: fields are set via setters and read through
+ * matching accessors. The @c Password type (declared under
+ * @c vigine/base) wraps the secret so it is not printed accidentally.
+ * Owned by the @c DatabaseConfiguration that carries it into the
+ * @c PostgreSQLSystem at connect time.
+ */
 class ConnectionData
 {
   public:

@@ -1,5 +1,14 @@
 #pragma once
 
+/**
+ * @file postgresqlsystem.h
+ * @brief Declares @c PostgreSQLSystem, the ECS system that wraps the
+ *        @c libpqxx client: owns the database configuration and the
+ *        per-entity @c PostgreSQLComponent map, and exposes the
+ *        connect / schema-check / DDL / query entry points the
+ *        database service delegates to.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 #include "vigine/ecs/postgresql/postgresqlresult.h"
@@ -15,6 +24,19 @@ namespace postgresql
 class PostgreSQLComponent;
 class DatabaseConfiguration;
 
+/**
+ * @brief ECS system that talks to a PostgreSQL server through
+ *        @c libpqxx and exposes connect / schema / query operations.
+ *
+ * Hooks into the ECS lifecycle via @ref hasComponents,
+ * @ref createComponents, and @ref destroyComponents to track one
+ * @c PostgreSQLComponent per bound entity. The public engine API
+ * surfaces the database configuration aggregate
+ * (@ref dbConfiguration), connection bootstrap (@ref connect), schema
+ * validation (@ref checkTablesScheme), and table / query execution
+ * helpers. The @c DatabaseService is the usual client and keeps this
+ * system off the user-facing surface.
+ */
 class PostgreSQLSystem : public AbstractSystem
 {
   public:
