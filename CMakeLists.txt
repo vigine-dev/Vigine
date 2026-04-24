@@ -598,6 +598,15 @@ set(SOURCES_ENGINE
     ${SRC_DIR}/engine/factory.cpp
 )
 
+# Engine-token scaffolding (#220) -- pure interface + thin abstract
+# base only. No concrete EngineToken, no factory, no FSM invalidation
+# hook; those land in follow-up issues under the #197 umbrella.
+set(HEADER_ENGINE_TOKEN
+    ${INCLUDE_DIR}/vigine/api/engine/iengine_token.h
+    ${INCLUDE_DIR}/vigine/api/engine/abstractengine_token.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/stateinvalidatedpayload.h
+)
+
 # Add source files
 if(ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
@@ -710,6 +719,7 @@ add_library(${PROJECT_NAME}
     ${SOURCES_PIPELINEBUILDER}
     ${HEADER_ENGINE}
     ${SOURCES_ENGINE}
+    ${HEADER_ENGINE_TOKEN}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
