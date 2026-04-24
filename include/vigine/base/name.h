@@ -1,10 +1,26 @@
 #pragma once
 
+/**
+ * @file name.h
+ * @brief Strongly-typed wrapper around @c std::string used for identifier-
+ *        like values (entity names, tags, keys).
+ */
+
 #include <string>
 #include <utility>
 
 namespace vigine
 {
+/**
+ * @brief Strongly-typed name value backed by @c std::string.
+ *
+ * @ref Name is a thin value wrapper whose sole purpose is to carry name-
+ * kind semantics through the type system: a function taking @c Name cannot
+ * be silently called with an arbitrary @c std::string. It supports the
+ * usual relational and equality comparisons against both @ref Name and
+ * @c std::string, and implicitly converts to @c const @c std::string& and
+ * @c const @c char* for read-only interop with legacy APIs.
+ */
 class Name
 {
   public:
