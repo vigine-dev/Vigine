@@ -1,0 +1,4 @@
+Placeholder so Git keeps this directory.
+Three-layer public API: api/ holds the public surface (interfaces +
+factory entry points) consumers depend on. Source files land in
+follow-up PRs.

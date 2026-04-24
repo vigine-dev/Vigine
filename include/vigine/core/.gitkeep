@@ -1,0 +1,3 @@
+Placeholder so Git keeps this directory.
+Three-layer public API: core/ holds foundational domain types that
+do not depend on higher layers. Source files land in follow-up PRs.

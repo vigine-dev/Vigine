@@ -735,6 +735,7 @@ if(NOT VIGINE_SANITIZER STREQUAL "")
 endif()
 
 # Include directories
+# Three-layer include/src layout: core/ + api/ + impl/ (R-Structure v0.1.0)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
