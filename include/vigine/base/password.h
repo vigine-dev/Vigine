@@ -6,8 +6,7 @@
  *        regex-based validation rule.
  */
 
-#include "macros.h"
-
+#include <memory>
 #include <optional>
 #include <regex>
 #include <string>
@@ -23,9 +22,8 @@ namespace vigine
  * @ref setValidationRule; @ref isValid then returns whether the current
  * value matches the rule (or @c true when no rule has been set).
  *
- * Smart-pointer aliases (see @ref BUILD_SMART_PTR) are emitted alongside
- * the class so call sites can use @c PasswordUPtr / @c PasswordSPtr
- * without redeclaring them.
+ * Smart-pointer aliases @c PasswordUPtr and @c PasswordSPtr are declared
+ * alongside the class so call sites can use them without redeclaring.
  */
 class Password
 {
@@ -64,6 +62,7 @@ class Password
     std::optional<std::regex> _validationRule;
 };
 
-BUILD_SMART_PTR(Password);
+using PasswordUPtr = std::unique_ptr<Password>;
+using PasswordSPtr = std::shared_ptr<Password>;
 
 } // namespace vigine

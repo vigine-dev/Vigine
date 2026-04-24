@@ -7,10 +7,10 @@
  *        user name, password) handed to the @c PostgreSQLSystem.
  */
 
-#include "vigine/base/macros.h"
 #include "vigine/base/name.h"
 #include "vigine/base/password.h"
 
+#include <memory>
 #include <string>
 
 namespace vigine
@@ -56,6 +56,7 @@ class ConnectionData
     Password _password;
 };
 
-BUILD_SMART_PTR(ConnectionData);
+using ConnectionDataUPtr = std::unique_ptr<ConnectionData>;
+using ConnectionDataSPtr = std::shared_ptr<ConnectionData>;
 } // namespace postgresql
 } // namespace vigine

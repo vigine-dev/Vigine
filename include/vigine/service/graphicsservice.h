@@ -8,7 +8,8 @@
  */
 
 #include "vigine/abstractservice.h"
-#include "vigine/base/macros.h"
+
+#include <memory>
 
 namespace vigine
 {
@@ -51,7 +52,8 @@ class GraphicsService : public AbstractService
     RenderSystem *_renderSystem{nullptr};
 };
 
-BUILD_SMART_PTR(GraphicsService);
+using GraphicsServiceUPtr = std::unique_ptr<GraphicsService>;
+using GraphicsServiceSPtr = std::shared_ptr<GraphicsService>;
 
 } // namespace graphics
 } // namespace vigine

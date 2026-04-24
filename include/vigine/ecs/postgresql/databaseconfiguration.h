@@ -45,6 +45,7 @@ class DatabaseConfiguration
     ConnectionDataUPtr _connectionData;
 };
 
-BUILD_SMART_PTR(DatabaseConfiguration);
+using DatabaseConfigurationUPtr = std::unique_ptr<DatabaseConfiguration>;
+using DatabaseConfigurationSPtr = std::shared_ptr<DatabaseConfiguration>;
 } // namespace postgresql
 } // namespace vigine

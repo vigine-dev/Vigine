@@ -66,6 +66,7 @@ class TableRows
 };
 
 BUILD_PTR(TableRows);
-BUILD_SMART_PTR(TableRows);
+using TableRowsUPtr = std::unique_ptr<TableRows>;
+using TableRowsSPtr = std::shared_ptr<TableRows>;
 } // namespace postgresql
 } // namespace vigine

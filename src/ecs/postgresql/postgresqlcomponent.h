@@ -60,7 +60,8 @@ class PostgreSQLComponent
     PostgreSQLTypeConverterUPtr _pgTypeConverter;
 };
 
-BUILD_SMART_PTR(PostgreSQLComponent);
+using PostgreSQLComponentUPtr = std::unique_ptr<PostgreSQLComponent>;
+using PostgreSQLComponentSPtr = std::shared_ptr<PostgreSQLComponent>;
 
 } // namespace postgresql
 } // namespace vigine

@@ -71,7 +71,7 @@ void vigine::postgresql::PostgreSQLResult::buildResultData(const pqxx::result &d
     {
         for (auto const &rowData : data)
         {
-            auto row = make_RowUPtr();
+            auto row = std::make_unique<Row>();
             for (int i = 0; i < data.columns(); ++i)
             {
                 auto colTypeOID = data.column_type(i);

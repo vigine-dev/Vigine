@@ -102,7 +102,8 @@ class ShaderComponent
     bool _hasTextureBinding{false};
 };
 
-BUILD_SMART_PTR(ShaderComponent);
+using ShaderComponentUPtr = std::unique_ptr<ShaderComponent>;
+using ShaderComponentSPtr = std::shared_ptr<ShaderComponent>;
 
 } // namespace graphics
 } // namespace vigine

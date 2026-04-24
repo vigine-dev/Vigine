@@ -5,8 +5,6 @@
  * @brief Status / error return type used across the engine API surface.
  */
 
-#include "vigine/base/macros.h"
-
 #include <memory>
 #include <string>
 
@@ -75,6 +73,7 @@ class Result
     std::string _message;
 };
 
-BUILD_SMART_PTR(Result);
+using ResultUPtr = std::unique_ptr<Result>;
+using ResultSPtr = std::shared_ptr<Result>;
 
 } // namespace vigine

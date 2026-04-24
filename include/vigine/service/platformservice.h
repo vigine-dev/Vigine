@@ -8,10 +8,10 @@
  */
 
 #include "vigine/abstractservice.h"
-#include "vigine/base/macros.h"
 #include "vigine/ecs/platform/iwindoweventhandler.h"
 #include "vigine/result.h"
 
+#include <memory>
 #include <vector>
 
 namespace vigine
@@ -58,7 +58,8 @@ class PlatformService : public AbstractService
     WindowSystem *_windowSystem{nullptr};
 };
 
-BUILD_SMART_PTR(PlatformService);
+using PlatformServiceUPtr = std::unique_ptr<PlatformService>;
+using PlatformServiceSPtr = std::shared_ptr<PlatformService>;
 
 } // namespace platform
 } // namespace vigine

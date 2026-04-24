@@ -186,7 +186,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
     ${INCLUDE_DIR}/vigine/base/constant.h
-    ${INCLUDE_DIR}/vigine/base/function.h
     ${INCLUDE_DIR}/vigine/graph/nodeid.h
     ${INCLUDE_DIR}/vigine/graph/edgeid.h
     ${INCLUDE_DIR}/vigine/graph/traverse_mode.h

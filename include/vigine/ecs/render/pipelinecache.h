@@ -52,7 +52,8 @@ class PipelineCache
     std::unordered_map<uint64_t, CacheEntry> _cache;
 };
 
-BUILD_SMART_PTR(PipelineCache);
+using PipelineCacheUPtr = std::unique_ptr<PipelineCache>;
+using PipelineCacheSPtr = std::shared_ptr<PipelineCache>;
 
 } // namespace graphics
 } // namespace vigine
