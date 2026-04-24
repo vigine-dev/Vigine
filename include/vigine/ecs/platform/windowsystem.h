@@ -66,7 +66,8 @@ class WindowSystem : public AbstractSystem
     std::unordered_map<Entity *, std::vector<WindowComponent *>> _entityWindows;
 };
 
-BUILD_SMART_PTR(WindowSystem);
+using WindowSystemUPtr = std::unique_ptr<WindowSystem>;
+using WindowSystemSPtr = std::shared_ptr<WindowSystem>;
 
 } // namespace platform
 } // namespace vigine

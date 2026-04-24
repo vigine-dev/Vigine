@@ -73,7 +73,8 @@ class Row
     std::vector<ColumnData> _columnsData;
 };
 
-BUILD_SMART_PTR(Row);
+using RowUPtr = std::unique_ptr<Row>;
+using RowSPtr = std::shared_ptr<Row>;
 BUILD_PTR_VECTOR_VECTOR(Row);
 } // namespace postgresql
 } // namespace vigine

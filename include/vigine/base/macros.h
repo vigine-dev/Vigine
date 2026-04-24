@@ -4,10 +4,9 @@
  * @file macros.h
  * @brief Boilerplate-generating preprocessor macros used across the engine.
  *
- * Each macro expands into a fixed set of @c using aliases (and, for the
- * smart-pointer variant, matching @c make_ helpers) so that individual
- * headers stay short and the naming convention stays uniform. Macros are
- * the only public symbols in this header.
+ * Each macro expands into a fixed set of @c using aliases so that
+ * individual headers stay short and the naming convention stays uniform.
+ * Macros are the only public symbols in this header.
  */
 
 /**
@@ -42,34 +41,12 @@
     using className##CRefVector = std::vector<const className &>
 
 /**
- * @brief Declares smart-pointer aliases plus matching factory helpers for
- *        @p className.
- *
- * Expands to the @c classNameUPtr / @c classNameSPtr aliases and the
- * @c make_classNameUPtr / @c make_classNameSPtr forwarding helpers that
- * perfect-forward their arguments into @c std::make_unique and
- * @c std::make_shared respectively.
- */
-#define BUILD_SMART_PTR(className)                                                                 \
-    using className##UPtr = std::unique_ptr<className>;                                            \
-    using className##SPtr = std::shared_ptr<className>;                                            \
-    template <typename... Args>                                                                    \
-    inline className##UPtr make_##className##UPtr(Args &&...args)                                  \
-    {                                                                                              \
-        return std::make_unique<className>(std::forward<Args>(args)...);                           \
-    }                                                                                              \
-    template <typename... Args>                                                                    \
-    inline className##SPtr make_##className##SPtr(Args &&...args)                                  \
-    {                                                                                              \
-        return std::make_shared<className>(std::forward<Args>(args)...);                           \
-    }
-
-/**
  * @brief Declares the canonical owning-container alias for @p className.
  *
  * Expands to @c classNameUPtrContainer, a @c std::vector of
- * @c std::unique_ptr<className>. Assumes @ref BUILD_SMART_PTR has already
- * been expanded for the same class so that @c classNameUPtr exists.
+ * @c std::unique_ptr<className>. Assumes that @c classNameUPtr has
+ * already been declared (typically as
+ * @c "using classNameUPtr = std::unique_ptr<className>;").
  */
 #define BUILD_SMART_PTR_CONTAINER(className)                                                       \
     using className##UPtrContainer = std::vector<className##UPtr>;

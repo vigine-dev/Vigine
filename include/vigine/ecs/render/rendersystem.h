@@ -104,7 +104,8 @@ class RenderSystem : public AbstractSystem
     uint32_t _lastSwapchainGeneration{0};
 };
 
-BUILD_SMART_PTR(RenderSystem);
+using RenderSystemUPtr = std::unique_ptr<RenderSystem>;
+using RenderSystemSPtr = std::shared_ptr<RenderSystem>;
 
 } // namespace graphics
 } // namespace vigine

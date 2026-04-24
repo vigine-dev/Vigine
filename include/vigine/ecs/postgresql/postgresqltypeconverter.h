@@ -50,6 +50,7 @@ class PostgreSQLTypeConverter
 };
 
 BUILD_PTR(PostgreSQLTypeConverter);
-BUILD_SMART_PTR(PostgreSQLTypeConverter);
+using PostgreSQLTypeConverterUPtr = std::unique_ptr<PostgreSQLTypeConverter>;
+using PostgreSQLTypeConverterSPtr = std::shared_ptr<PostgreSQLTypeConverter>;
 } // namespace postgresql
 } // namespace vigine

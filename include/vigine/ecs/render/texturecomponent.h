@@ -121,7 +121,8 @@ class TextureComponent
     bool _dirty{true};
 };
 
-BUILD_SMART_PTR(TextureComponent);
+using TextureComponentUPtr = std::unique_ptr<TextureComponent>;
+using TextureComponentSPtr = std::shared_ptr<TextureComponent>;
 
 } // namespace graphics
 } // namespace vigine

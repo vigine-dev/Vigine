@@ -35,7 +35,7 @@ vigine::ResultUPtr vigine::DatabaseService::checkDatabaseScheme()
 
 vigine::ResultUPtr vigine::DatabaseService::createDatabaseScheme()
 {
-    vigine::ResultUPtr result = make_ResultUPtr();
+    vigine::ResultUPtr result = std::make_unique<Result>();
 
     return result;
 }
@@ -91,7 +91,7 @@ vigine::ResultUPtr vigine::DatabaseService::connectToDb()
     } catch (const std::exception &e)
     {
         std::cerr << "DB error: " << e.what() << '\n';
-        result = make_ResultUPtr(Result::Code::Error, e.what());
+        result = std::make_unique<Result>(Result::Code::Error, e.what());
     }
 
     return result;

@@ -38,7 +38,7 @@ void validateQueryExecution(const pqxx::connection *connection, const std::strin
 } // namespace
 
 vigine::postgresql::PostgreSQLComponent::PostgreSQLComponent()
-    : _dbConfig{make_DatabaseConfigurationUPtr()}
+    : _dbConfig{std::make_unique<DatabaseConfiguration>()}
 {
 }
 
@@ -76,13 +76,13 @@ vigine::postgresql::PostgreSQLComponent::exec(const query::QueryBuilder &queryBu
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent::connect()
 {
     if (!_dbConfig)
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         "database configuration is not initialized");
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "database configuration is not initialized");
 
     auto *connectionData = _dbConfig->connectionData();
     if (!connectionData)
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         "database connection data is not configured");
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "database connection data is not configured");
 
     try
     {
@@ -90,17 +90,17 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent
     } catch (const std::exception &e)
     {
         _connection.reset();
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         std::string("PostgreSQL connect failed: ") + e.what());
+        return std::make_unique<PostgreSQLResult>(
+            Result::Code::Error, std::string("PostgreSQL connect failed: ") + e.what());
     }
 
     initTypeConverter();
 
     if (!_pgTypeConverter)
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         "postgreSQL type converter should be initialize");
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "postgreSQL type converter should be initialize");
 
-    return make_PostgreSQLResultUPtr();
+    return std::make_unique<PostgreSQLResult>();
 }
 
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent::exec()
@@ -114,15 +114,15 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLComponent
         commit();
 
         if (!pgTypeConverter())
-            return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                             "PostgreSQL type converter is not initialized");
+            return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                      "PostgreSQL type converter is not initialized");
 
-        return make_PostgreSQLResultUPtr(pgxxResult, pgTypeConverter());
+        return std::make_unique<PostgreSQLResult>(pgxxResult, pgTypeConverter());
     } catch (const std::exception &e)
     {
         _work.reset();
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         std::string("PostgreSQL query failed: ") + e.what());
+        return std::make_unique<PostgreSQLResult>(
+            Result::Code::Error, std::string("PostgreSQL query failed: ") + e.what());
     }
 }
 

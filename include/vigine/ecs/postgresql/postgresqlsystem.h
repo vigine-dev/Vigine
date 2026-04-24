@@ -9,11 +9,11 @@
  *        database service delegates to.
  */
 
-#include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 #include "vigine/ecs/postgresql/postgresqlresult.h"
 #include "vigine/ecs/postgresql/postgresqltypeconverter.h"
 
+#include <memory>
 #include <pqxx/pqxx>
 #include <unordered_map>
 
@@ -71,7 +71,8 @@ class PostgreSQLSystem : public AbstractSystem
     PostgreSQLComponent *_boundEntityComponent;
 };
 
-BUILD_SMART_PTR(PostgreSQLSystem);
+using PostgreSQLSystemUPtr = std::unique_ptr<PostgreSQLSystem>;
+using PostgreSQLSystemSPtr = std::shared_ptr<PostgreSQLSystem>;
 
 }; // namespace postgresql
 }; // namespace vigine

@@ -32,7 +32,7 @@ vigine::Result InitBDTask::execute()
 
     _dbService->bindEntity(ent);
     {
-        auto connectionDataUPtr = vigine::postgresql::make_ConnectionDataUPtr();
+        auto connectionDataUPtr = std::make_unique<vigine::postgresql::ConnectionData>();
         connectionDataUPtr->setHost("localhost");
         connectionDataUPtr->setPort("5432");
         connectionDataUPtr->setDbName(vigine::Name("postgres"));

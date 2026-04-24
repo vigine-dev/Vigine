@@ -53,7 +53,8 @@ class TransformComponent
     bool _billboard{false};
 };
 
-BUILD_SMART_PTR(TransformComponent);
+using TransformComponentUPtr = std::unique_ptr<TransformComponent>;
+using TransformComponentSPtr = std::shared_ptr<TransformComponent>;
 
 } // namespace graphics
 } // namespace vigine

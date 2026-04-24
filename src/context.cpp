@@ -72,14 +72,14 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 {
     if (id == "Window")
     {
-        auto windowSystem = vigine::platform::make_WindowSystemUPtr(name);
+        auto windowSystem = std::make_unique<vigine::platform::WindowSystem>(name);
 
         return std::move(windowSystem);
     }
 
     if (id == "Render")
     {
-        auto renderSystem = vigine::graphics::make_RenderSystemUPtr(name);
+        auto renderSystem = std::make_unique<vigine::graphics::RenderSystem>(name);
 
         return std::move(renderSystem);
     }
@@ -87,7 +87,7 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 #if VIGINE_POSTGRESQL
     if (id == "PostgreSQL")
     {
-        auto postgreSQLSystem = vigine::postgresql::make_PostgreSQLSystemUPtr(name);
+        auto postgreSQLSystem = std::make_unique<vigine::postgresql::PostgreSQLSystem>(name);
 
         return std::move(postgreSQLSystem);
     }
@@ -140,7 +140,7 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
 {
     if (id == "Platform")
     {
-        auto platformService = vigine::platform::make_PlatformServiceUPtr(name);
+        auto platformService = std::make_unique<vigine::platform::PlatformService>(name);
         platformService->setContext(this);
 
         return std::move(platformService);
@@ -148,7 +148,7 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
 
     if (id == "Graphics")
     {
-        auto graphicsService = vigine::graphics::make_GraphicsServiceUPtr(name);
+        auto graphicsService = std::make_unique<vigine::graphics::GraphicsService>(name);
         graphicsService->setContext(this);
 
         return std::move(graphicsService);
@@ -156,7 +156,7 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
 
     if (id == "Database")
     {
-        auto dbServ = make_DatabaseServiceUPtr(name);
+        auto dbServ = std::make_unique<DatabaseService>(name);
         dbServ->setContext(this);
 
         return std::move(dbServ);

@@ -93,7 +93,8 @@ class MeshComponent
     bool _dirty{true};
 };
 
-BUILD_SMART_PTR(MeshComponent);
+using MeshComponentUPtr = std::unique_ptr<MeshComponent>;
+using MeshComponentSPtr = std::shared_ptr<MeshComponent>;
 
 } // namespace graphics
 } // namespace vigine

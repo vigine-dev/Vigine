@@ -11,9 +11,8 @@
 #include "textcomponent.h"
 #include "transformcomponent.h"
 
-#include "vigine/base/macros.h"
-
 #include <glm/mat4x4.hpp>
+#include <memory>
 #include <vector>
 
 namespace vigine
@@ -118,7 +117,8 @@ class RenderComponent
     float _cachedAnchorY{1e30f};
 };
 
-BUILD_SMART_PTR(RenderComponent);
+using RenderComponentUPtr = std::unique_ptr<RenderComponent>;
+using RenderComponentSPtr = std::shared_ptr<RenderComponent>;
 
 } // namespace graphics
 } // namespace vigine

@@ -12,7 +12,6 @@
  */
 
 #include "vigine/abstractservice.h"
-#include "vigine/base/macros.h"
 #include "vigine/ecs/entity.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/ecs/postgresql/column.h"
@@ -21,6 +20,7 @@
 #endif
 #include "vigine/result.h"
 
+#include <memory>
 #include <vector>
 
 namespace vigine
@@ -76,6 +76,7 @@ class DatabaseService : public AbstractService
 #endif
 };
 
-BUILD_SMART_PTR(DatabaseService);
+using DatabaseServiceUPtr = std::unique_ptr<DatabaseService>;
+using DatabaseServiceSPtr = std::shared_ptr<DatabaseService>;
 
 } // namespace vigine

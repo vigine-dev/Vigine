@@ -35,8 +35,8 @@ void vigine::postgresql::PostgreSQLSystem::createComponents(Entity *entity)
 
     // TODO: check correct work of this method
 
-    auto pgComponent     = make_PostgreSQLComponentUPtr();
-    auto pgTypeConverter = make_PostgreSQLTypeConverterUPtr();
+    auto pgComponent     = std::make_unique<PostgreSQLComponent>();
+    auto pgTypeConverter = std::make_unique<PostgreSQLTypeConverter>();
 
     pgComponent->setPgTypeConverter(std::move(pgTypeConverter));
 
@@ -58,13 +58,13 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::m
     if (auto res = selectInternalPgTypes(); res.size() > 0)
     {
         if (res.empty())
-            return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                             "Didn't select internal postgres types");
+            return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                      "Didn't select internal postgres types");
 
-        auto typeConverter = make_PostgreSQLTypeConverterUPtr();
+        auto typeConverter = std::make_unique<PostgreSQLTypeConverter>();
         if (!typeConverter)
-            return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                             "Didn't create postgres type converter");
+            return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                      "Didn't create postgres type converter");
 
         for (const auto &item : res)
         {
@@ -73,13 +73,13 @@ vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::m
         }
 
         if (typeConverter->empty())
-            return make_PostgreSQLResultUPtr(
+            return std::make_unique<PostgreSQLResult>(
                 Result::Code::Error, "Type converter is empty. You can't continue working.");
 
         _boundEntityComponent->setPgTypeConverter(std::move(typeConverter));
     }
 
-    return make_PostgreSQLResultUPtr();
+    return std::make_unique<PostgreSQLResult>();
 }
 
 // COPILOT_TODO: Перевіряти _boundEntityComponent перед доступом до dbConfiguration()/exec(), інакше
@@ -176,7 +176,7 @@ vigine::postgresql::PostgreSQLSystem::checkTablesScheme() const
 
     const auto code = (hasError) ? vigine::Result::Code::Error : vigine::Result::Code::Success;
 
-    return make_PostgreSQLResultUPtr(code, errorMessage);
+    return std::make_unique<PostgreSQLResult>(code, errorMessage);
 }
 
 // COPILOT_TODO: Захистити цей accessor від nullptr або змінити контракт так, щоб без bindEntity()
@@ -194,8 +194,8 @@ vigine::postgresql::DatabaseConfiguration *vigine::postgresql::PostgreSQLSystem:
 vigine::postgresql::PostgreSQLResultUPtr vigine::postgresql::PostgreSQLSystem::connect()
 {
     if (!_boundEntityComponent)
-        return make_PostgreSQLResultUPtr(Result::Code::Error,
-                                         "PostgreSQL entity component is not bound");
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "PostgreSQL entity component is not bound");
 
     auto result = _boundEntityComponent->connect();
 

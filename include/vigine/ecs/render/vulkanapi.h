@@ -129,7 +129,8 @@ class VulkanAPI : public GraphicsBackend
     std::unique_ptr<VulkanFrameRenderer> _vulkanFrameRenderer;
 };
 
-BUILD_SMART_PTR(VulkanAPI);
+using VulkanAPIUPtr = std::unique_ptr<VulkanAPI>;
+using VulkanAPISPtr = std::shared_ptr<VulkanAPI>;
 
 } // namespace graphics
 } // namespace vigine

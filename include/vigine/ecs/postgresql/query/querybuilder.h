@@ -97,7 +97,8 @@ class QueryBuilder
     std::deque<std::string> _parts;
 };
 
-BUILD_SMART_PTR(QueryBuilder);
+using QueryBuilderUPtr = std::unique_ptr<QueryBuilder>;
+using QueryBuilderSPtr = std::shared_ptr<QueryBuilder>;
 
 std::string operator+(const std::string &lhs, const QueryBuilder &rhs);
 std::string operator+(const QueryBuilder &lhs, const std::string &rhs);

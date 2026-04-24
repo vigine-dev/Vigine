@@ -69,7 +69,8 @@ class PostgreSQLResult : public vigine::Result
     RowUPtrVector _rows;
 };
 
-BUILD_SMART_PTR(PostgreSQLResult);
+using PostgreSQLResultUPtr = std::unique_ptr<PostgreSQLResult>;
+using PostgreSQLResultSPtr = std::shared_ptr<PostgreSQLResult>;
 
 } // namespace postgresql
 } // namespace vigine
