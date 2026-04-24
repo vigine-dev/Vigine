@@ -23,7 +23,7 @@ namespace vigine::taskflow
  * (@ref vigine::ecs::createECS), the service factory
  * (@ref vigine::service::createService), the state machine factory
  * (@ref vigine::statemachine::createStateMachine), the thread manager
- * factory (@ref vigine::threading::createThreadManager), the payload
+ * factory (@ref vigine::core::threading::createThreadManager), the payload
  * registry factory, and the message bus factory
  * (@ref vigine::messaging::createMessageBus).
  *

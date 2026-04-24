@@ -27,13 +27,13 @@
 // ---------------------------------------------------------------------------
 
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/namedthreadid.h"
-#include "vigine/threading/threadaffinity.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/namedthreadid.h"
+#include "vigine/core/threading/threadaffinity.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -43,13 +43,13 @@
 #include <thread>
 
 using vigine::Result;
-using vigine::threading::createThreadManager;
-using vigine::threading::IRunnable;
-using vigine::threading::ITaskHandle;
-using vigine::threading::IThreadManager;
-using vigine::threading::NamedThreadId;
-using vigine::threading::ThreadAffinity;
-using vigine::threading::ThreadManagerConfig;
+using vigine::core::threading::createThreadManager;
+using vigine::core::threading::IRunnable;
+using vigine::core::threading::ITaskHandle;
+using vigine::core::threading::IThreadManager;
+using vigine::core::threading::NamedThreadId;
+using vigine::core::threading::ThreadAffinity;
+using vigine::core::threading::ThreadManagerConfig;
 
 namespace
 {

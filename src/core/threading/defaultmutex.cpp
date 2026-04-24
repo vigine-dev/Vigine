@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 DefaultMutex::DefaultMutex() noexcept = default;
 
@@ -37,4 +37,4 @@ void DefaultMutex::unlock()
     _mutex.unlock();
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

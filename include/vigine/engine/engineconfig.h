@@ -17,7 +17,7 @@ namespace vigine::engine
  *                       OS main thread) on the thread manager's main
  *                       pump until @ref IEngine::shutdown returns. Every
  *                       post-back submitted through
- *                       @ref threading::IThreadManager::postToMainThread
+ *                       @ref core::threading::IThreadManager::postToMainThread
  *                       is drained by the pump tick.
  *   - @c Background  -- same pump semantics as @c Foreground, but the
  *                       caller is expected to be a dedicated worker

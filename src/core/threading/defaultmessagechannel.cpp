@@ -4,7 +4,7 @@
 #include <mutex>
 #include <utility>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 namespace
 {
@@ -149,4 +149,4 @@ std::size_t DefaultMessageChannel::capacity() const
     return _capacity;
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

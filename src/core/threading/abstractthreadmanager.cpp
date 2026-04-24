@@ -1,4 +1,4 @@
-#include "vigine/threading/abstractthreadmanager.h"
+#include "vigine/core/threading/abstractthreadmanager.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -7,7 +7,7 @@
 #include <thread>
 #include <utility>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 namespace
 {
@@ -237,4 +237,4 @@ void AbstractThreadManager::releaseDedicatedSlot() noexcept
     }
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

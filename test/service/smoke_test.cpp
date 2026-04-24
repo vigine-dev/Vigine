@@ -66,7 +66,7 @@ class ThrowingContext final : public vigine::IContext
         throw std::runtime_error{"smoke ThrowingContext: taskFlow called"};
     }
 
-    [[nodiscard]] vigine::threading::IThreadManager &threadManager() override
+    [[nodiscard]] vigine::core::threading::IThreadManager &threadManager() override
     {
         throw std::runtime_error{"smoke ThrowingContext: threadManager called"};
     }

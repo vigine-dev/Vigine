@@ -30,10 +30,10 @@
 #include "vigine/signalemitter/defaultsignalemitter.h"
 #include "vigine/signalemitter/isignalemitter.h"
 #include "vigine/signalemitter/isignalpayload.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadaffinity.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadaffinity.h"
 
 #include <gtest/gtest.h>
 
@@ -117,7 +117,7 @@ class ThreadRecordingSubscriber final : public vigine::messaging::ISubscriber
  * non-owning raw pointer kept stable by the test fixture's stack-local
  * unique_ptr.
  */
-class EmitRunnable final : public vigine::threading::IRunnable
+class EmitRunnable final : public vigine::core::threading::IRunnable
 {
   public:
     EmitRunnable(vigine::signalemitter::ISignalEmitter *emitter,
@@ -205,7 +205,7 @@ TEST_F(SignalEmitter, AsyncDeliveryCrossesThreadBoundaries)
     // thread throughout the dispatch, and that caller can be a worker.
     auto handle = context().threadManager().schedule(
         std::make_unique<EmitRunnable>(emitter.get(), kTestPayloadTypeId),
-        vigine::threading::ThreadAffinity::Pool);
+        vigine::core::threading::ThreadAffinity::Pool);
     ASSERT_NE(handle, nullptr);
 
     // Bounded wait on the scheduled emit. 1 s is generous; the pool

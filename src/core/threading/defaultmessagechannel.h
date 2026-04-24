@@ -7,9 +7,9 @@
 #include <mutex>
 
 #include "vigine/result.h"
-#include "vigine/threading/imessagechannel.h"
+#include "vigine/core/threading/imessagechannel.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Default @ref IMessageChannel implementation — a bounded FIFO
@@ -62,4 +62,4 @@ class DefaultMessageChannel final : public IMessageChannel
     bool                    _closed;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

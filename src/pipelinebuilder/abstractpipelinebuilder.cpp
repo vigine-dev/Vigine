@@ -5,7 +5,7 @@ namespace vigine::pipelinebuilder
 
 AbstractPipelineBuilder::AbstractPipelineBuilder(
     vigine::messaging::IMessageBus       &bus,
-    vigine::threading::IThreadManager    &threadManager,
+    vigine::core::threading::IThreadManager    &threadManager,
     vigine::channelfactory::IChannelFactory &channelFactory)
     : _bus(bus)
     , _threadManager(threadManager)
@@ -18,7 +18,7 @@ vigine::messaging::IMessageBus &AbstractPipelineBuilder::bus() noexcept
     return _bus;
 }
 
-vigine::threading::IThreadManager &AbstractPipelineBuilder::threadManager() noexcept
+vigine::core::threading::IThreadManager &AbstractPipelineBuilder::threadManager() noexcept
 {
     return _threadManager;
 }

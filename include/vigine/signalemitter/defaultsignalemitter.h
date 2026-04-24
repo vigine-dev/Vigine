@@ -5,10 +5,10 @@
 #include "vigine/messaging/busconfig.h"
 #include "vigine/signalemitter/abstractsignalemitter.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::signalemitter
 {
@@ -43,7 +43,7 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
      * synchronous on the caller's thread, which is the historical
      * default and the shape exercised by the facade contract case.
      */
-    explicit DefaultSignalEmitter(vigine::threading::IThreadManager &threadManager);
+    explicit DefaultSignalEmitter(vigine::core::threading::IThreadManager &threadManager);
 
     /**
      * @brief Constructs the emitter using the caller-supplied @p config
@@ -53,7 +53,7 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
      * example the config returned by @ref sharedBusConfig to put dispatch
      * on the thread manager's shared worker pool.
      */
-    DefaultSignalEmitter(vigine::threading::IThreadManager &threadManager,
+    DefaultSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                          vigine::messaging::BusConfig       config);
 
     ~DefaultSignalEmitter() override = default;
@@ -91,8 +91,8 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
  * queues on the posting thread (the dedicated worker pump is deferred
  * to a later lifecycle change). A caller that needs a guaranteed
  * thread hop should pair this config with a deliberate
- * @ref vigine::threading::IThreadManager::schedule on the producer
- * side, or use the non-@c Any @ref threading::ThreadAffinity path on
+ * @ref vigine::core::threading::IThreadManager::schedule on the producer
+ * side, or use the non-@c Any @ref core::threading::ThreadAffinity path on
  * @ref TaskFlow::signal which wraps the subscription in an adapter
  * that re-posts onto the thread manager.
  */
@@ -107,7 +107,7 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
  * must outlive the returned emitter.
  */
 [[nodiscard]] std::unique_ptr<ISignalEmitter>
-    createSignalEmitter(vigine::threading::IThreadManager &threadManager);
+    createSignalEmitter(vigine::core::threading::IThreadManager &threadManager);
 
 /**
  * @brief Factory overload that creates a signal-emitter facade with a
@@ -118,7 +118,7 @@ class DefaultSignalEmitter final : public AbstractSignalEmitter
  * emitter. @p threadManager must outlive the returned emitter.
  */
 [[nodiscard]] std::unique_ptr<ISignalEmitter>
-    createSignalEmitter(vigine::threading::IThreadManager &threadManager,
+    createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                         vigine::messaging::BusConfig       config);
 
 } // namespace vigine::signalemitter

@@ -4,10 +4,10 @@
 
 #include "vigine/requestbus/abstractrequestbus.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::requestbus
 {
@@ -27,7 +27,7 @@ namespace vigine::requestbus
  *     @c MessageKind::TopicPublish with known correlation ids and
  *     resolves the matching promise.
  *   - TTL cleanup: after the effective TTL (UD-5 configurable, default
- *     @c timeout * 2) a task posted via @ref vigine::threading::IThreadManager
+ *     @c timeout * 2) a task posted via @ref vigine::core::threading::IThreadManager
  *     removes the correlation id so late replies are dropped.
  *
  * Callers obtain instances exclusively through @ref createRequestBus --
@@ -51,7 +51,7 @@ class DefaultRequestBus final : public AbstractRequestBus
      * @p bus and @p threadManager must outlive this facade instance.
      */
     DefaultRequestBus(vigine::messaging::IMessageBus           &bus,
-                      vigine::threading::IThreadManager        &threadManager);
+                      vigine::core::threading::IThreadManager        &threadManager);
 
     ~DefaultRequestBus() override;
 
@@ -90,6 +90,6 @@ class DefaultRequestBus final : public AbstractRequestBus
  */
 [[nodiscard]] std::unique_ptr<IRequestBus>
     createRequestBus(vigine::messaging::IMessageBus    &bus,
-                     vigine::threading::IThreadManager &threadManager);
+                     vigine::core::threading::IThreadManager &threadManager);
 
 } // namespace vigine::requestbus

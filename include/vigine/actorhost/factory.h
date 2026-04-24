@@ -9,10 +9,10 @@ namespace vigine::messaging
 class IMessageBus;
 } // namespace vigine::messaging
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::actorhost
 {
@@ -34,6 +34,6 @@ namespace vigine::actorhost
  */
 [[nodiscard]] std::unique_ptr<IActorHost>
     createActorHost(vigine::messaging::IMessageBus    &bus,
-                    vigine::threading::IThreadManager &threadManager);
+                    vigine::core::threading::IThreadManager &threadManager);
 
 } // namespace vigine::actorhost

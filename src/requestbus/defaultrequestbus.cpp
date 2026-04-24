@@ -23,8 +23,8 @@
 #include "vigine/requestbus/ifuture.h"
 #include "vigine/requestbus/requestconfig.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/irunnable.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
 #include "vigine/topicbus/topicid.h"
 
 namespace vigine::requestbus
@@ -437,7 +437,7 @@ class ReplyMessage final : public vigine::messaging::IMessage
 // logs at debug.
 // -----------------------------------------------------------------
 
-class TtlCleanupRunnable final : public vigine::threading::IRunnable
+class TtlCleanupRunnable final : public vigine::core::threading::IRunnable
 {
   public:
     TtlCleanupRunnable(std::weak_ptr<PendingRegistry>  registry,
@@ -487,7 +487,7 @@ class TtlCleanupRunnable final : public vigine::threading::IRunnable
 
 struct DefaultRequestBus::Impl
 {
-    vigine::threading::IThreadManager &threadManager;
+    vigine::core::threading::IThreadManager &threadManager;
 
     std::atomic<std::uint64_t>   corrCounter{1};
     std::atomic<bool>            shutdown{false};
@@ -562,7 +562,7 @@ struct DefaultRequestBus::Impl
     ReplySubscriber                                    replySubscriber;
     std::unique_ptr<vigine::messaging::ISubscriptionToken> replyToken;
 
-    explicit Impl(vigine::threading::IThreadManager &tm) : threadManager(tm)
+    explicit Impl(vigine::core::threading::IThreadManager &tm) : threadManager(tm)
     {
         replySubscriber.owner = this;
     }
@@ -573,7 +573,7 @@ struct DefaultRequestBus::Impl
 // -----------------------------------------------------------------
 
 DefaultRequestBus::DefaultRequestBus(vigine::messaging::IMessageBus    &bus,
-                                     vigine::threading::IThreadManager  &threadManager)
+                                     vigine::core::threading::IThreadManager  &threadManager)
     : AbstractRequestBus{bus}
     , _impl(std::make_unique<Impl>(threadManager))
 {
@@ -773,7 +773,7 @@ vigine::Result DefaultRequestBus::shutdown()
 
 std::unique_ptr<IRequestBus>
 createRequestBus(vigine::messaging::IMessageBus    &bus,
-                 vigine::threading::IThreadManager &threadManager)
+                 vigine::core::threading::IThreadManager &threadManager)
 {
     return std::make_unique<DefaultRequestBus>(bus, threadManager);
 }

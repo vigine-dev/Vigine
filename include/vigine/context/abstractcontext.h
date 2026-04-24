@@ -17,7 +17,7 @@
 #include "vigine/service/serviceid.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::context
 {
@@ -40,7 +40,7 @@ namespace vigine::context
  *
  * Construction order (encoded by member declaration order in the
  * private block below):
- *   1. @ref threading::IThreadManager -- created first so every
+ *   1. @ref core::threading::IThreadManager -- created first so every
  *      downstream component can depend on it.
  *   2. @ref messaging::IMessageBus (system) -- created second; takes
  *      a reference to the thread manager.
@@ -99,7 +99,7 @@ class AbstractContext : public IContext
 
     // ------ IContext: threading ------
 
-    [[nodiscard]] threading::IThreadManager &threadManager() override;
+    [[nodiscard]] core::threading::IThreadManager &threadManager() override;
 
     // ------ IContext: service registry ------
 
@@ -171,7 +171,7 @@ class AbstractContext : public IContext
      * bus workers and sync primitives before the thread manager joins
      * its pool.
      */
-    std::unique_ptr<threading::IThreadManager> _threadManager;
+    std::unique_ptr<core::threading::IThreadManager> _threadManager;
 
     /**
      * @brief Second member: the engine-wide system bus.

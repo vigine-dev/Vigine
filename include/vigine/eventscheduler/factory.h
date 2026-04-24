@@ -6,10 +6,10 @@
 #include "vigine/eventscheduler/iossignalsource.h"
 #include "vigine/eventscheduler/itimersource.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::eventscheduler
 {
@@ -31,7 +31,7 @@ namespace vigine::eventscheduler
  *   unsubscribe.
  */
 [[nodiscard]] std::unique_ptr<IEventScheduler>
-    createEventScheduler(vigine::threading::IThreadManager &threadManager,
+    createEventScheduler(vigine::core::threading::IThreadManager &threadManager,
                          ITimerSource                      &timerSource,
                          IOsSignalSource                   &osSignalSource);
 

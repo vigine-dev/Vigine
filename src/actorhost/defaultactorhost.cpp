@@ -22,10 +22,10 @@
 #include "vigine/messaging/messagekind.h"
 #include "vigine/messaging/routemode.h"
 #include "vigine/result.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/namedthreadid.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/namedthreadid.h"
 
 namespace vigine::actorhost
 {
@@ -88,8 +88,8 @@ struct ActorEntry
     ActorId                                   id;
     std::unique_ptr<IActor>                   actor;
     std::shared_ptr<ActorMailQueue>           queue;
-    vigine::threading::NamedThreadId          namedThread;
-    std::unique_ptr<vigine::threading::ITaskHandle> taskHandle;
+    vigine::core::threading::NamedThreadId          namedThread;
+    std::unique_ptr<vigine::core::threading::ITaskHandle> taskHandle;
     std::atomic<bool>                         stopped{false};
 };
 
@@ -97,7 +97,7 @@ struct ActorEntry
 // MailboxRunnable — the drain loop executed on the actor's named thread.
 // ---------------------------------------------------------------------------
 
-class MailboxRunnable final : public vigine::threading::IRunnable
+class MailboxRunnable final : public vigine::core::threading::IRunnable
 {
   public:
     MailboxRunnable(std::shared_ptr<ActorMailQueue> queue,
@@ -250,7 +250,7 @@ class DefaultActorMailbox final : public IActorMailbox
 struct DefaultActorHost::Impl
 {
     vigine::messaging::IMessageBus    &bus;
-    vigine::threading::IThreadManager &threadManager;
+    vigine::core::threading::IThreadManager &threadManager;
 
     mutable std::mutex                              registryMutex;
     std::unordered_map<std::uint32_t, ActorEntry *> registry; // ActorId::value -> entry
@@ -258,7 +258,7 @@ struct DefaultActorHost::Impl
     std::atomic<bool>                               shutdownFlag{false};
 
     explicit Impl(vigine::messaging::IMessageBus    &bus_,
-                  vigine::threading::IThreadManager &tm_)
+                  vigine::core::threading::IThreadManager &tm_)
         : bus(bus_)
         , threadManager(tm_)
     {
@@ -276,7 +276,7 @@ struct DefaultActorHost::Impl
 // ---------------------------------------------------------------------------
 
 DefaultActorHost::DefaultActorHost(vigine::messaging::IMessageBus    &bus,
-                                   vigine::threading::IThreadManager &threadManager)
+                                   vigine::core::threading::IThreadManager &threadManager)
     : AbstractActorHost(bus, threadManager)
     , _impl(std::make_unique<Impl>(bus, threadManager))
 {
@@ -511,7 +511,7 @@ void DefaultActorHost::shutdown()
 
 std::unique_ptr<IActorHost>
 createActorHost(vigine::messaging::IMessageBus    &bus,
-                vigine::threading::IThreadManager &threadManager)
+                vigine::core::threading::IThreadManager &threadManager)
 {
     return std::make_unique<DefaultActorHost>(bus, threadManager);
 }

@@ -5,10 +5,10 @@
 #include "vigine/reactivestream/abstractreactivestream.h"
 #include "vigine/reactivestream/ireactivesubscription.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::reactivestream
 {
@@ -53,7 +53,7 @@ class DefaultReactiveStream final : public AbstractReactiveStream
      * @p bus and @p threadManager must outlive this facade instance.
      */
     DefaultReactiveStream(vigine::messaging::IMessageBus    &bus,
-                          vigine::threading::IThreadManager &threadManager);
+                          vigine::core::threading::IThreadManager &threadManager);
 
     ~DefaultReactiveStream() override;
 

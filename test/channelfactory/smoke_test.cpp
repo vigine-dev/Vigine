@@ -9,9 +9,9 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -73,7 +73,7 @@ class ChannelFactorySmoke : public ::testing::Test
 
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         BusConfig cfg;
         cfg.threading    = ThreadingPolicy::InlineOnly;
@@ -99,7 +99,7 @@ class ChannelFactorySmoke : public ::testing::Test
         }
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<IMessageBus>                       _bus;
     std::unique_ptr<IChannelFactory>                   _factory;
 };

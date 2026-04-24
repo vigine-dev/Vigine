@@ -3,7 +3,7 @@
 #include "vigine/channelfactory/ichannelfactory.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/pipelinebuilder/ipipelinebuilder.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::pipelinebuilder
 {
@@ -15,7 +15,7 @@ namespace vigine::pipelinebuilder
  * recipe.  It inherits @ref IPipelineBuilder @c public so the builder
  * surface sits at offset zero for zero-cost up-casts, and holds
  * references to the underlying @ref vigine::messaging::IMessageBus,
- * @ref vigine::threading::IThreadManager, and
+ * @ref vigine::core::threading::IThreadManager, and
  * @ref vigine::channelfactory::IChannelFactory @c protected so subclass
  * wiring can reach them without exposing the raw surfaces in the public
  * builder API.
@@ -54,7 +54,7 @@ class AbstractPipelineBuilder : public IPipelineBuilder
      * references outlive this facade instance.
      */
     AbstractPipelineBuilder(vigine::messaging::IMessageBus       &bus,
-                            vigine::threading::IThreadManager    &threadManager,
+                            vigine::core::threading::IThreadManager    &threadManager,
                             vigine::channelfactory::IChannelFactory &channelFactory);
 
     /**
@@ -65,7 +65,7 @@ class AbstractPipelineBuilder : public IPipelineBuilder
     /**
      * @brief Returns the thread manager reference for subclass wiring.
      */
-    [[nodiscard]] vigine::threading::IThreadManager &threadManager() noexcept;
+    [[nodiscard]] vigine::core::threading::IThreadManager &threadManager() noexcept;
 
     /**
      * @brief Returns the channel factory reference for subclass wiring.
@@ -74,7 +74,7 @@ class AbstractPipelineBuilder : public IPipelineBuilder
 
   private:
     vigine::messaging::IMessageBus       &_bus;
-    vigine::threading::IThreadManager    &_threadManager;
+    vigine::core::threading::IThreadManager    &_threadManager;
     vigine::channelfactory::IChannelFactory &_channelFactory;
 };
 

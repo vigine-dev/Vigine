@@ -43,7 +43,7 @@ class DefaultActorHost final : public AbstractActorHost
      * Both @p bus and @p threadManager must outlive this facade instance.
      */
     DefaultActorHost(vigine::messaging::IMessageBus    &bus,
-                     vigine::threading::IThreadManager &threadManager);
+                     vigine::core::threading::IThreadManager &threadManager);
 
     ~DefaultActorHost() override;
 
@@ -79,6 +79,6 @@ class DefaultActorHost final : public AbstractActorHost
  */
 [[nodiscard]] std::unique_ptr<IActorHost>
     createActorHost(vigine::messaging::IMessageBus    &bus,
-                    vigine::threading::IThreadManager &threadManager);
+                    vigine::core::threading::IThreadManager &threadManager);
 
 } // namespace vigine::actorhost

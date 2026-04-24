@@ -12,9 +12,9 @@
 #include "vigine/messaging/systemmessagebus.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -144,8 +144,8 @@ struct MessagingSmoke : public ::testing::Test
 {
     void SetUp() override
     {
-        _threadManager = vigine::threading::createThreadManager(
-            vigine::threading::ThreadManagerConfig{});
+        _threadManager = vigine::core::threading::createThreadManager(
+            vigine::core::threading::ThreadManagerConfig{});
         ASSERT_TRUE(_threadManager);
     }
 
@@ -165,7 +165,7 @@ struct MessagingSmoke : public ::testing::Test
         return cfg;
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _threadManager;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _threadManager;
 };
 
 // ---------------------------------------------------------------------------

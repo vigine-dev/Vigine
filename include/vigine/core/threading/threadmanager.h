@@ -2,14 +2,14 @@
 
 #include <memory>
 
-#include "vigine/threading/abstractthreadmanager.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/namedthreadid.h"
-#include "vigine/threading/threadaffinity.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/abstractthreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/namedthreadid.h"
+#include "vigine/core/threading/threadaffinity.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Default concrete @ref IThreadManager implementation.
@@ -32,11 +32,11 @@ namespace vigine::threading
  * object returns. Explicit @ref shutdown is equivalent; calling it more
  * than once is a no-op.
  */
-class DefaultThreadManager final : public AbstractThreadManager
+class ThreadManager final : public AbstractThreadManager
 {
   public:
-    explicit DefaultThreadManager(ThreadManagerConfig config);
-    ~DefaultThreadManager() override;
+    explicit ThreadManager(ThreadManagerConfig config);
+    ~ThreadManager() override;
 
     [[nodiscard]] std::unique_ptr<ITaskHandle>
         schedule(std::unique_ptr<IRunnable> runnable, ThreadAffinity affinity) override;
@@ -56,4 +56,4 @@ class DefaultThreadManager final : public AbstractThreadManager
     std::unique_ptr<Impl> _impl;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

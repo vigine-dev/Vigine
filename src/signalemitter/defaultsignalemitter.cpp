@@ -14,7 +14,7 @@
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
 #include "vigine/signalemitter/isignalpayload.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::signalemitter
 {
@@ -140,13 +140,13 @@ vigine::messaging::BusConfig sharedBusConfig() noexcept
 // -----------------------------------------------------------------
 
 DefaultSignalEmitter::DefaultSignalEmitter(
-    vigine::threading::IThreadManager &threadManager)
+    vigine::core::threading::IThreadManager &threadManager)
     : AbstractSignalEmitter{inlineBusConfig(), threadManager}
 {
 }
 
 DefaultSignalEmitter::DefaultSignalEmitter(
-    vigine::threading::IThreadManager &threadManager,
+    vigine::core::threading::IThreadManager &threadManager,
     vigine::messaging::BusConfig       config)
     : AbstractSignalEmitter{std::move(config), threadManager}
 {
@@ -199,13 +199,13 @@ DefaultSignalEmitter::subscribeSignal(
 // -----------------------------------------------------------------
 
 std::unique_ptr<ISignalEmitter>
-createSignalEmitter(vigine::threading::IThreadManager &threadManager)
+createSignalEmitter(vigine::core::threading::IThreadManager &threadManager)
 {
     return std::make_unique<DefaultSignalEmitter>(threadManager);
 }
 
 std::unique_ptr<ISignalEmitter>
-createSignalEmitter(vigine::threading::IThreadManager &threadManager,
+createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                     vigine::messaging::BusConfig       config)
 {
     return std::make_unique<DefaultSignalEmitter>(threadManager, std::move(config));

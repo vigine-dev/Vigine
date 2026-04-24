@@ -22,10 +22,10 @@
 #include "vigine/messaging/subscriptionslot.h"
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::messaging
 {
@@ -47,7 +47,7 @@ class DefaultBusControlBlock;
  * naming convention rather than the @c I pure-virtual prefix. Everything
  * is @c private: the control block, the subscription registry, the
  * queue, the dispatch mutex, the shutdown flag, and the handle to the
- * injected @ref vigine::threading::IThreadManager. Concrete subclasses
+ * injected @ref vigine::core::threading::IThreadManager. Concrete subclasses
  * extend the chain (for example @ref SystemMessageBus) to pin a specific
  * @ref BusConfig shape; they do not override behaviour.
  *
@@ -63,7 +63,7 @@ class DefaultBusControlBlock;
  *     a safe no-op on destruction. When a subscriber or target is
  *     destroyed first, its token drains its slot through the control
  *     block so the bus's registries never see a dangling pointer.
- *   - The injected @ref vigine::threading::IThreadManager is referenced
+ *   - The injected @ref vigine::core::threading::IThreadManager is referenced
  *     by pointer; the engine guarantees the manager outlives every bus
  *     it hands a reference to.
  *
@@ -108,7 +108,7 @@ class AbstractMessageBus
      * lifetime of the bus; the caller (typically the engine) guarantees
      * the manager outlives every bus it owns.
      */
-    AbstractMessageBus(BusConfig config, vigine::threading::IThreadManager &threadManager);
+    AbstractMessageBus(BusConfig config, vigine::core::threading::IThreadManager &threadManager);
 
     // Forwarded to subclasses so concrete constructors can inspect the
     // chosen config before falling through to user code (for example
@@ -235,7 +235,7 @@ class AbstractMessageBus
     // ------ State ------
 
     BusConfig                                      _config;
-    vigine::threading::IThreadManager             *_threadManager;
+    vigine::core::threading::IThreadManager             *_threadManager;
     // The control block owns BOTH registries: the connection (target)
     // registry AND the subscription registry. The bus keeps this
     // shared_ptr alive for the lifetime of the bus; every

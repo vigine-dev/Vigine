@@ -28,13 +28,13 @@ namespace
 }
 } // namespace
 
-SystemMessageBus::SystemMessageBus(vigine::threading::IThreadManager &threadManager)
+SystemMessageBus::SystemMessageBus(vigine::core::threading::IThreadManager &threadManager)
     : AbstractMessageBus{systemPreset(), threadManager}
 {
 }
 
 SystemMessageBus::SystemMessageBus(BusConfig                          config,
-                                   vigine::threading::IThreadManager &threadManager)
+                                   vigine::core::threading::IThreadManager &threadManager)
     : AbstractMessageBus{std::move(config), threadManager}
 {
 }

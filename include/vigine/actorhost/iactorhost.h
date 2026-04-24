@@ -18,7 +18,7 @@ namespace vigine::actorhost
  * R.3.3.2.3).  It manages a collection of isolated @ref IActor instances, each
  * with its own FIFO mailbox processed by a single dedicated thread.  The
  * invariant that @ref IActor::receive is never called concurrently for the same
- * actor is enforced by the host through @ref vigine::threading::IThreadManager.
+ * actor is enforced by the host through @ref vigine::core::threading::IThreadManager.
  *
  * Ownership:
  *   - @ref spawn takes unique ownership of the supplied @ref IActor and returns

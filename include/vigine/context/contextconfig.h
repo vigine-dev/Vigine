@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/messaging/busconfig.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 namespace vigine::context
 {
@@ -33,7 +33,7 @@ struct ContextConfig
     /**
      * @brief Threading substrate configuration consumed first.
      */
-    threading::ThreadManagerConfig threading{};
+    core::threading::ThreadManagerConfig threading{};
 
     /**
      * @brief System bus configuration consumed second.

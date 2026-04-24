@@ -1,4 +1,4 @@
-#include "vigine/threading/defaultthreadmanager.h"
+#include "vigine/core/threading/threadmanager.h"
 
 #include <algorithm>
 #include <atomic>
@@ -17,14 +17,14 @@
 #include <vector>
 
 #include "vigine/result.h"
-#include "vigine/threading/abstractthreadmanager.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/namedthreadid.h"
-#include "vigine/threading/threadaffinity.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/abstractthreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/namedthreadid.h"
+#include "vigine/core/threading/threadaffinity.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 namespace
 {
@@ -272,7 +272,7 @@ void drainStoppedQueue(WorkQueue &queue, const char *reason)
 // =========================================================================
 // Impl — the per-manager state, kept opaque to the header.
 // =========================================================================
-struct DefaultThreadManager::Impl
+struct ThreadManager::Impl
 {
     // Worker pool: N identical workers draining the same queue.
     WorkQueue                pool;
@@ -320,7 +320,7 @@ struct DefaultThreadManager::Impl
 // =========================================================================
 // Construction / destruction.
 // =========================================================================
-DefaultThreadManager::DefaultThreadManager(ThreadManagerConfig config)
+ThreadManager::ThreadManager(ThreadManagerConfig config)
     : AbstractThreadManager(config), _impl{std::make_unique<Impl>()}
 {
     const std::size_t workers = AbstractThreadManager::config().poolSize;
@@ -331,7 +331,7 @@ DefaultThreadManager::DefaultThreadManager(ThreadManagerConfig config)
     }
 }
 
-DefaultThreadManager::~DefaultThreadManager()
+ThreadManager::~ThreadManager()
 {
     // shutdown() is idempotent and handles the already-shut-down case;
     // calling it from the dtor guarantees deterministic cleanup.
@@ -341,7 +341,7 @@ DefaultThreadManager::~DefaultThreadManager()
 // =========================================================================
 // IThreadManager: schedule.
 // =========================================================================
-std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
+std::unique_ptr<ITaskHandle> ThreadManager::schedule(
     std::unique_ptr<IRunnable> runnable, ThreadAffinity affinity)
 {
     auto handle = std::make_shared<TaskHandle>();
@@ -456,7 +456,7 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::schedule(
     return result;
 }
 
-std::unique_ptr<ITaskHandle> DefaultThreadManager::scheduleOnNamed(
+std::unique_ptr<ITaskHandle> ThreadManager::scheduleOnNamed(
     std::unique_ptr<IRunnable> runnable, NamedThreadId named)
 {
     auto handle = std::make_shared<TaskHandle>();
@@ -512,7 +512,7 @@ std::unique_ptr<ITaskHandle> DefaultThreadManager::scheduleOnNamed(
 // =========================================================================
 // IThreadManager: main-thread pump.
 // =========================================================================
-void DefaultThreadManager::postToMainThread(std::unique_ptr<IRunnable> runnable)
+void ThreadManager::postToMainThread(std::unique_ptr<IRunnable> runnable)
 {
     // `postToMainThread` returns `void` — callers cannot observe
     // success, failure, or completion through the function boundary.
@@ -541,7 +541,7 @@ void DefaultThreadManager::postToMainThread(std::unique_ptr<IRunnable> runnable)
     _impl->mainQueue.push_back(std::move(entry));
 }
 
-void DefaultThreadManager::runMainThreadPump()
+void ThreadManager::runMainThreadPump()
 {
     std::deque<QueueEntry> drained;
     {
@@ -558,7 +558,7 @@ void DefaultThreadManager::runMainThreadPump()
 // Named unregister: forward to the base for registry bookkeeping, then
 // tear down the associated queue/worker.
 // =========================================================================
-void DefaultThreadManager::unregisterNamedThread(NamedThreadId id)
+void ThreadManager::unregisterNamedThread(NamedThreadId id)
 {
     // Capture the slot index before the base forgets the generation.
     const std::size_t slotIndex = resolveNamedSlot(id);
@@ -595,7 +595,7 @@ void DefaultThreadManager::unregisterNamedThread(NamedThreadId id)
 // =========================================================================
 // Shutdown.
 // =========================================================================
-void DefaultThreadManager::shutdown()
+void ThreadManager::shutdown()
 {
     if (!_impl)
     {
@@ -692,4 +692,4 @@ void DefaultThreadManager::shutdown()
     // the CAS, not via a plain load after the teardown completes.
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

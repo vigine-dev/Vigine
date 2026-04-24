@@ -16,7 +16,7 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 #include "vigine/vigine.h"
 
 #include <gtest/gtest.h>

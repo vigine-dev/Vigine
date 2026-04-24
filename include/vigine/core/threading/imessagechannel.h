@@ -8,7 +8,7 @@
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Owning wrapper around one payload byte buffer carried through
@@ -181,4 +181,4 @@ class IMessageChannel
     IMessageChannel() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

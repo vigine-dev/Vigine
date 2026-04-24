@@ -5,10 +5,10 @@
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/imessagebus.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::messaging
 {
@@ -29,7 +29,7 @@ namespace vigine::messaging
  * shared ownership wrap the result in a @c std::shared_ptr at the call
  * site; shared ownership is not the factory's concern. This mirrors the
  * thread manager's factory (see
- * @ref vigine::threading::createThreadManager) and the payload
+ * @ref vigine::core::threading::createThreadManager) and the payload
  * registry's factory (see @ref vigine::payload::createPayloadRegistry).
  *
  * Lifetime: the returned bus retains a reference to @p threadManager.
@@ -39,6 +39,6 @@ namespace vigine::messaging
  */
 [[nodiscard]] std::unique_ptr<IMessageBus>
     createMessageBus(const BusConfig                  &config,
-                     vigine::threading::IThreadManager &threadManager);
+                     vigine::core::threading::IThreadManager &threadManager);
 
 } // namespace vigine::messaging

@@ -21,7 +21,7 @@ namespace vigine::ecs
  * call site; shared ownership is not the factory's concern. This
  * mirrors the shape used by the service factory
  * (@ref vigine::service::createService), the thread manager factory
- * (@ref vigine::threading::createThreadManager), the payload registry
+ * (@ref vigine::core::threading::createThreadManager), the payload registry
  * factory, and the message bus factory
  * (@ref vigine::messaging::createMessageBus).
  *

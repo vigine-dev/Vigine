@@ -5,7 +5,7 @@
 
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Pure-virtual counting semaphore produced by
@@ -80,4 +80,4 @@ class ISemaphore
     ISemaphore() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

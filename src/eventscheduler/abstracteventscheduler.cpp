@@ -7,7 +7,7 @@ namespace vigine::eventscheduler
 
 AbstractEventScheduler::AbstractEventScheduler(
     vigine::messaging::BusConfig      config,
-    vigine::threading::IThreadManager &threadManager)
+    vigine::core::threading::IThreadManager &threadManager)
     : vigine::messaging::AbstractMessageBus{std::move(config), threadManager}
 {
 }

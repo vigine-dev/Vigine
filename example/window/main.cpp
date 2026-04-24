@@ -27,8 +27,8 @@
 #include <vigine/payload/payloadtypeid.h>
 #include <vigine/signalemitter/defaultsignalemitter.h>
 #include <vigine/signalemitter/isignalemitter.h>
-#include <vigine/threading/ithreadmanager.h>
-#include <vigine/threading/threadaffinity.h>
+#include <vigine/core/threading/ithreadmanager.h>
+#include <vigine/core/threading/threadaffinity.h>
 
 #include <vigine/context.h>
 
@@ -86,10 +86,10 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *sign
     // stall rendering if the handler grows heavier later.
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kMouseButtonDownPayloadTypeId,
-                                       threading::ThreadAffinity::Pool));
+                                       core::threading::ThreadAffinity::Pool));
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kKeyDownPayloadTypeId,
-                                       threading::ThreadAffinity::Pool));
+                                       core::threading::ThreadAffinity::Pool));
 
     taskFlow->changeCurrentTaskTo(initWindow);
 

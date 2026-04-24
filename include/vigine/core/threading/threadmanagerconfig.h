@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Configuration POD consumed by the threading factory.
@@ -51,4 +51,4 @@ struct ThreadManagerConfig
     std::size_t maxNamedThreads{1024};
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

@@ -2,7 +2,7 @@
 
 #include "vigine/actorhost/iactorhost.h"
 #include "vigine/messaging/imessagebus.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::actorhost
 {
@@ -13,7 +13,7 @@ namespace vigine::actorhost
  * @ref AbstractActorHost is Level-4 of the five-layer wrapper recipe.  It
  * inherits @ref IActorHost @c public so the actor surface sits at offset zero
  * for zero-cost up-casts, and holds references to the underlying
- * @ref vigine::messaging::IMessageBus and @ref vigine::threading::IThreadManager
+ * @ref vigine::messaging::IMessageBus and @ref vigine::core::threading::IThreadManager
  * @c protected so subclass wiring can reach them without exposing the raw
  * surfaces in the public actor-host API.
  *
@@ -50,7 +50,7 @@ class AbstractActorHost : public IActorHost
      * this facade instance.
      */
     AbstractActorHost(vigine::messaging::IMessageBus    &bus,
-                      vigine::threading::IThreadManager &threadManager);
+                      vigine::core::threading::IThreadManager &threadManager);
 
     /**
      * @brief Returns the underlying bus reference for subclass wiring.
@@ -60,11 +60,11 @@ class AbstractActorHost : public IActorHost
     /**
      * @brief Returns the thread manager reference for subclass wiring.
      */
-    [[nodiscard]] vigine::threading::IThreadManager &threadManager() noexcept;
+    [[nodiscard]] vigine::core::threading::IThreadManager &threadManager() noexcept;
 
   private:
     vigine::messaging::IMessageBus    &_bus;
-    vigine::threading::IThreadManager &_threadManager;
+    vigine::core::threading::IThreadManager &_threadManager;
 };
 
 } // namespace vigine::actorhost

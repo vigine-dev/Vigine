@@ -5,7 +5,7 @@
 
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Pure-virtual reusable barrier produced by
@@ -78,4 +78,4 @@ class IBarrier
     IBarrier() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading
