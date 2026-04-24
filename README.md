@@ -1,66 +1,61 @@
-# vigine
+# Vigine
 
-## Prerequisites
+Vigine is a C++20 game-engine substrate built around a graph-based core,
+an explicit message bus, a finite-state-machine controller, and an ECS
+data layer. It targets Windows, Linux, and macOS through a single CMake
+project, and is currently pre-1.0 — the first tagged release, `v0.1.0`,
+is being prepared under issue #197.
 
-Before compiling the project, you need to install the Vulkan SDK:
+## Quickstart
 
-1. Download and install the Vulkan SDK from the official website:  
-   [https://vulkan.lunarg.com/sdk/home](https://vulkan.lunarg.com/sdk/home)
+See [`doc/quickstart.md`](doc/quickstart.md) for the minimal end-to-end
+path from clone to a running example on Windows, Linux, and macOS.
+CMake presets for each tier-1 platform ship in `CMakePresets.json`.
 
-2. Select the latest version for your platform.
+## Examples
 
-3. After installation, ensure that the `VULKAN_SDK` environment variable is set (usually done automatically by the installer).
+- [`example/window/`](example/window/) — Win32 window with mouse and
+  keyboard signal routing into the engine bus. Builds on Linux and macOS
+  when the Vulkan SDK is present; otherwise the target is skipped at
+  configure time and the core library still builds.
+- [`example/postgresql/`](example/postgresql/) — minimal `libpqxx` round
+  trip, illustrating the storage-layer integration path.
 
-4. If the installer did not set the variable, add the path to the SDK (e.g., `C:\VulkanSDK\1.3.x.x` on Windows) to the `VULKAN_SDK` environment variable.
-
-You also need PostgreSQL client libraries and `libpqxx`:
-
-1. Install PostgreSQL 16 (or compatible) so `libpq` is available.
-
-2. Install `libpqxx` using vcpkg in the project root:
-
-   `vcpkg install --triplet x64-windows`
-
-3. Ensure `vcpkg.json` contains at least the following:
-
-```json
-{
-   "name": "vigine",
-   "version-string": "0.1.0",
-   "dependencies": [
-      "libpqxx"
-   ],
-   "builtin-baseline": "<your-vcpkg-baseline-commit>"
-}
-```
-
-Where `<your-vcpkg-baseline-commit>` is a commit hash from the vcpkg registry that pins package versions for reproducible builds.
-
-How to get it:
-
-1. Run this command in the project root:
-
-   `vcpkg x-update-baseline --add-initial-baseline`
-
-2. vcpkg will automatically write/update the `builtin-baseline` field in `vcpkg.json`.
-
-How to update it later (optional):
-
-`vcpkg x-update-baseline`
-
-4. Keep `vcpkg.json` in the repository and configure CMake with the vcpkg toolchain so `find_package(libpqxx CONFIG REQUIRED)` works.
-
-## Example Window Controls
+### Example window controls
 
 For the `example-window` application:
 
-- `W/S/A/D`: move camera on horizontal plane.
-- `Q/E`: move camera down/up.
-- `Shift` (hold): sprint movement speed multiplier.
-- `Left Mouse Button + Move`: camera look (yaw/pitch).
-- `Mouse Wheel`: move camera forward/backward along current view direction.
+- `W`/`S`/`A`/`D` — move camera on horizontal plane.
+- `Q`/`E` — move camera down/up.
+- `Shift` (hold) — sprint multiplier.
+- Left mouse button + move — camera look (yaw / pitch).
+- Mouse wheel — move camera along current view direction.
 
-Detailed input flow and signal routing are documented in:
+Input flow and signal routing are documented in
+[`doc/sequence-window-signal.md`](doc/sequence-window-signal.md).
 
-- `doc/sequence-window-signal.md`
-- `doc/sequence/window/runwindowtask.md`
+## Threading model
+
+Vigine's FSM controller runs on a single controlling thread; heavy work
+fans out into a thread pool through `IThreadManager::schedule` and
+`scheduleOnNamed`. Signal routing respects `ThreadAffinity` so
+subscribers receive messages on the thread they declared. Detailed
+docs under `doc/threading/` land in follow-up PRs.
+
+## Versioning
+
+Vigine follows [SemVer](https://semver.org). Pre-1.0 minor bumps may
+carry breaking changes. See [`doc/versioning.md`](doc/versioning.md)
+for the full policy, release-branch contract, and experimental-tier
+scope. Release notes live in [`CHANGELOG.md`](CHANGELOG.md).
+
+## Building
+
+The full build baseline — compiler flags, CI matrix, sanitizer notes,
+and the Vulkan fallback policy — is documented in
+[`doc/build.md`](doc/build.md). For a first build, the quickstart is
+the fastest path.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE) at repo root.
