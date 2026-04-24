@@ -1,5 +1,11 @@
 #pragma once
 
+/**
+ * @file password.h
+ * @brief Strongly-typed wrapper around a password string with an optional
+ *        regex-based validation rule.
+ */
+
 #include "macros.h"
 
 #include <optional>
@@ -8,6 +14,19 @@
 
 namespace vigine
 {
+/**
+ * @brief Value type representing a user-supplied password.
+ *
+ * @ref Password carries a @c std::string payload with explicit-only
+ * construction so that arbitrary strings cannot be silently promoted to a
+ * password. An optional @c std::regex validation rule can be attached via
+ * @ref setValidationRule; @ref isValid then returns whether the current
+ * value matches the rule (or @c true when no rule has been set).
+ *
+ * Smart-pointer aliases (see @ref BUILD_SMART_PTR) are emitted alongside
+ * the class so call sites can use @c PasswordUPtr / @c PasswordSPtr
+ * without redeclaring them.
+ */
 class Password
 {
   public:
