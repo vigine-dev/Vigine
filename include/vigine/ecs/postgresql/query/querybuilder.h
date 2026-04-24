@@ -1,5 +1,13 @@
 #pragma once
 
+/**
+ * @file querybuilder.h
+ * @brief Declares the @c QueryBuilder DSL for assembling PostgreSQL
+ *        statements (SELECT, WHERE / AND, JOIN / ON, GROUP BY,
+ *        ORDER BY, HAVING, LIMIT / OFFSET, INSERT INTO, SET) from a
+ *        chain of fluent calls that takes @c Data values directly.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/postgresql/data.h"
 
@@ -22,6 +30,10 @@ namespace query
 {
 class QueryBuilder;
 
+/**
+ * @brief Comparison operator a caller passes to @ref QueryBuilder::SET
+ *        when expressing "column @c op value" fragments.
+ */
 enum class Operation
 {
     equal,
@@ -32,6 +44,19 @@ enum class Operation
     greater_equal
 };
 
+/**
+ * @brief Fluent builder that assembles a PostgreSQL statement out of
+ *        chained clause-shaped calls (@ref SELECT, @ref FROM,
+ *        @ref WHERE, @ref AND, @ref JOIN, @ref ORDER_BY,
+ *        @ref INSERT_INTO, and so on) and renders the final text
+ *        through @ref str.
+ *
+ * Clause methods append to an internal deque of fragments; @ref str
+ * joins the fragments. Value-bearing clauses accept a @ref Data and
+ * route it through @ref escape so callers do not build SQL strings
+ * by hand. @ref isQueryValid exposes a lightweight structural check
+ * intended for call-site sanity asserts, not full SQL validation.
+ */
 class QueryBuilder
 {
   public:

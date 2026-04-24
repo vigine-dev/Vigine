@@ -1,5 +1,13 @@
 #pragma once
 
+/**
+ * @file row.h
+ * @brief Declares @c Row, the engine-side representation of a single
+ *        result or insert row: an ordered sequence of
+ *        (column-name, @c Data) pairs with index- and name-based
+ *        access.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/postgresql/column.h"
 #include "vigine/ecs/postgresql/data.h"
@@ -14,6 +22,18 @@ namespace postgresql
 using ColumnName = vigine::Name;
 using ColumnData = std::pair<ColumnName, Data>;
 
+/**
+ * @brief One database row as an ordered list of
+ *        (@ref ColumnName, @ref Data) pairs, addressable by integer
+ *        index, by @c Column, or by column name.
+ *
+ * Rows are constructed by @c PostgreSQLResult when translating a
+ * @c pqxx::result into engine types, and by callers that assemble
+ * rows for insert paths via @ref set. Access helpers (@ref get,
+ * @ref operator[]) return the matching @c Data; name-based lookup is
+ * linear in the row width. The row has no notion of a schema; each
+ * entry carries its own column name so the row is self-describing.
+ */
 class Row
 {
   public:

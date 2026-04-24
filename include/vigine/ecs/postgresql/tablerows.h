@@ -1,5 +1,11 @@
 #pragma once
 
+/**
+ * @file tablerows.h
+ * @brief Declares @c TableRows, the value object that pairs a
+ *        @c Table description with its concrete @c Row set.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/postgresql/row.h"
 #include "vigine/ecs/postgresql/table.h"
@@ -11,6 +17,15 @@ namespace vigine
 {
 namespace postgresql
 {
+/**
+ * @brief Bundle of a @c Table schema and its ordered @c Row set.
+ *
+ * Used when a caller needs to carry both the table description and
+ * its current rows as a single unit — for example when building an
+ * insert payload or when snapshotting a select result together with
+ * its schema. The rows are owned by value and can be iterated,
+ * indexed, or replaced wholesale via @ref setRows / @ref addRow.
+ */
 class TableRows
 {
   public:

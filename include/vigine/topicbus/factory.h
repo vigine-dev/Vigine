@@ -1,5 +1,17 @@
 #pragma once
 
+/**
+ * @file factory.h
+ * @brief Convenience re-export header for @c createTopicBus.
+ *
+ * Lets callers include a single predictable header to obtain an
+ * owning @c std::unique_ptr<ITopicBus> without naming the concrete
+ * @c DefaultTopicBus type. The function definition itself lives in
+ * @c src/topicbus/defaulttopicbus.cpp alongside the concrete class;
+ * @c src/topicbus/factory.cpp only holds a pointer-comment noting
+ * that location.
+ */
+
 #include "vigine/topicbus/defaulttopicbus.h"
 
 // factory.h is a convenience header that re-exports createTopicBus so

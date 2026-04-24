@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * @file table.h
+ * @brief Declares @c Table, the value object describing a PostgreSQL
+ *        table (name, storage type, schema, and ordered column list)
+ *        used when the engine builds DDL or validates a live schema.
+ */
+
 #include "vigine/base/name.h"
 #include "vigine/ecs/postgresql/column.h"
 
@@ -10,9 +17,28 @@ namespace vigine
 {
 namespace postgresql
 {
+/**
+ * @brief Value object describing one PostgreSQL table: name, storage
+ *        type, schema (namespace), and ordered list of @c Column
+ *        definitions.
+ *
+ * Constructed by callers that declare a database layout; consumed by
+ * @c DatabaseConfiguration and then by @c PostgreSQLSystem when it
+ * emits DDL or validates the live schema matches expectation. The
+ * string conversion operators and @ref str return the table name so
+ * a @c Table can stand in for a table identifier in query string
+ * builders.
+ */
 class Table
 {
   public:
+    /**
+     * @brief PostgreSQL table storage type.
+     *
+     * Mirrors the PostgreSQL concepts the engine has to emit when
+     * creating a table; @ref Regular is the plain persistent table
+     * used by default.
+     */
     enum class Type
     {
         Regular,      // by default
@@ -25,6 +51,13 @@ class Table
         View          // virtual
     };
 
+    /**
+     * @brief PostgreSQL schema (namespace) that owns the table.
+     *
+     * Only the built-in @c public schema is supported today;
+     * @ref Custom is reserved for future user-defined schemas and
+     * currently routes through the same code path as @ref Public.
+     */
     enum class Schema
     {
         Public, // by default

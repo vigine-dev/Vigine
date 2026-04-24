@@ -1,5 +1,13 @@
 #pragma once
 
+/**
+ * @file column.h
+ * @brief Declares the @c Column value type describing a single
+ *        PostgreSQL table column (name, data type, and per-column
+ *        flags such as primary, unique, foreign key, generated,
+ *        default-null).
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/base/name.h"
 #include "vigine/ecs/postgresql/columntype.h"
@@ -10,6 +18,18 @@ namespace vigine
 {
 namespace postgresql
 {
+/**
+ * @brief Value object describing one column of a PostgreSQL table.
+ *
+ * Stores the column name, its @ref DataType, and the per-column
+ * flags the engine needs to emit DDL and to validate read / write
+ * paths: @c primary, @c unique, @c foreignKey, @c generated
+ * (identity), and @c nullByDefault. Columns are plain values: copy,
+ * move, and the default relational operators behave as expected.
+ * The string conversion operators and @ref str return the column
+ * name so a @c Column can stand in for a column identifier in query
+ * string builders.
+ */
 class Column
 {
   public:
