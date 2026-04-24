@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file abstractservice.h
+ * @brief Legacy base class for named services bound to Context and Entity.
+ */
+
 #include "contextholder.h"
 #include "entitybindinghost.h"
 
@@ -15,6 +20,14 @@ using ServiceId = std::string;
 
 class Entity;
 
+/**
+ * @brief Base for services that share a Context and may bind to an Entity.
+ *
+ * Concrete services identify their kind via id() (e.g. "Http") and
+ * carry an instance-level Name supplied at construction. They combine
+ * ContextHolder (for global context access) with EntityBindingHost
+ * (for optional per-Entity binding).
+ */
 class AbstractService : public ContextHolder, public EntityBindingHost
 {
   public:

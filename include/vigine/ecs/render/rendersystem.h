@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file rendersystem.h
+ * @brief ECS system that owns the graphics backend and drives per-frame rendering.
+ */
+
 #include "vigine/base/macros.h"
 #include "vigine/ecs/abstractsystem.h"
 #include "vigine/ecs/render/camera.h"
@@ -20,7 +25,15 @@ class RenderComponent;
 class TextureComponent;
 class GraphicsBackend;
 
-// TODO: create skeleton
+/**
+ * @brief Render system that owns GraphicsBackend, Camera, and pipeline cache.
+ *
+ * Initialises the backend against a native window, resizes with the
+ * swapchain, and renders every frame via update(). Owns RenderComponent
+ * and TextureComponent per Entity, manages camera input (drag, zoom,
+ * WASD, sprint), billboard state, SDF clip planes, and picking helpers
+ * (screenPointToRay, pickFirstIntersectedEntity).
+ */
 class RenderSystem : public AbstractSystem
 {
   public:

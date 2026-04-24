@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file windowsystem.h
+ * @brief ECS system that creates and manages platform window components.
+ */
+
 #include "iwindoweventhandler.h"
 
 #include "vigine/base/macros.h"
@@ -17,6 +22,14 @@ namespace platform
 class WindowComponent;
 class WindowEventDispatcher;
 
+/**
+ * @brief Owns WindowComponent instances and routes events to handlers.
+ *
+ * Derived from AbstractSystem. Creates windows on demand, binds them
+ * to an Entity, shows them, and attaches IWindowEventHandlerComponent
+ * callbacks via an internal WindowEventDispatcher. Exposes read-only
+ * lookups for the windows and handlers owned by a given Entity.
+ */
 class WindowSystem : public AbstractSystem
 {
   public:

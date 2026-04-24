@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file meshcomponent.h
+ * @brief CPU-side mesh storage with GPU-buffer handles for upload.
+ */
+
 #include "graphicshandles.h"
 
 #include "vigine/base/macros.h"
@@ -13,6 +18,9 @@ namespace vigine
 namespace graphics
 {
 
+/**
+ * @brief Single mesh vertex: position, colour, and texture coordinates.
+ */
 struct Vertex
 {
     glm::vec3 position;
@@ -20,6 +28,15 @@ struct Vertex
     glm::vec2 texCoord{0.0f, 0.0f}; // UV coordinates for textures
 };
 
+/**
+ * @brief CPU-side vertex / index data paired with GPU buffer handles.
+ *
+ * Stores a vertex list and optional index list, tracks dirty state
+ * for re-upload, and carries BufferHandles for the uploaded GPU
+ * buffers. Also supports procedural-in-shader meshes, where the
+ * shader generates geometry and no CPU data is uploaded. Provides
+ * factory helpers createCube() and createPlane().
+ */
 class MeshComponent
 {
   public:

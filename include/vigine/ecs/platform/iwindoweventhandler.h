@@ -1,9 +1,17 @@
 #pragma once
 
+/**
+ * @file iwindoweventhandler.h
+ * @brief Platform window-event handler interface and its input event types.
+ */
+
 namespace vigine
 {
 namespace platform
 {
+/**
+ * @brief Mouse buttons reported by window events.
+ */
 enum class MouseButton
 {
     Left,
@@ -13,6 +21,9 @@ enum class MouseButton
     X2,
 };
 
+/**
+ * @brief Bit-flag set describing active keyboard modifiers during an event.
+ */
 enum KeyModifier : unsigned int
 {
     KeyModifierNone    = 0,
@@ -24,6 +35,9 @@ enum KeyModifier : unsigned int
     KeyModifierNum     = 1u << 5,
 };
 
+/**
+ * @brief Snapshot of a single key press / release.
+ */
 struct KeyEvent
 {
     unsigned int keyCode{0};
@@ -33,6 +47,9 @@ struct KeyEvent
     bool isRepeat{false};
 };
 
+/**
+ * @brief Snapshot of a single text-input event (one Unicode code point).
+ */
 struct TextEvent
 {
     unsigned int codePoint{0};
@@ -40,6 +57,14 @@ struct TextEvent
     unsigned int repeatCount{0};
 };
 
+/**
+ * @brief Pure-interface callback for all window-surface input events.
+ *
+ * WindowSystem dispatches platform events to any registered handler
+ * component. Implementers receive window lifecycle notifications,
+ * mouse events (move / wheel / button / enter / leave), and keyboard
+ * events (key down / up, character, dead-key).
+ */
 class IWindowEventHandlerComponent
 {
   public:

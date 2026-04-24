@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file vulkanapi.h
+ * @brief Vulkan implementation of the GraphicsBackend interface.
+ */
+
 #include "graphicsbackend.h"
 
 #include "vigine/base/macros.h"
@@ -26,6 +31,17 @@ class VulkanTextureStore;
 class VulkanPipelineStore;
 class VulkanFrameRenderer;
 
+/**
+ * @brief Vulkan-backed GraphicsBackend.
+ *
+ * Owns the Vulkan instance, physical and logical devices, surface,
+ * swapchain, and frame renderer. Implements the GraphicsBackend
+ * contract (pipeline / buffer / texture / shader creation, push
+ * constants, frame begin / end, draw submit) and adds Vulkan-specific
+ * helpers: setEntityDrawGroups, setSdfGlyphData, setSdfClipY,
+ * descriptor-set creation, and raw vk::Instance / Device accessors
+ * used during gradual refactoring.
+ */
 class VulkanAPI : public GraphicsBackend
 {
   public:
