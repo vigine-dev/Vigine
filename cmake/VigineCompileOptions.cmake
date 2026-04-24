@@ -1,3 +1,4 @@
+# Three-layer include/src layout: core/ + api/ + impl/ (R-Structure v0.1.0)
 # VigineCompileOptions.cmake
 #
 # Central compile-option helper. Provides vigine_apply_compile_options()
