@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file textcomponent.h
+ * @brief Text layout input for the SDF text renderer.
+ */
+
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -10,14 +15,18 @@ namespace vigine
 {
 namespace graphics
 {
-// One vertex of a glyph quad for SDF atlas rendering.
+/**
+ * @brief Single vertex of a glyph quad used by the SDF text shader.
+ */
 struct GlyphQuadVertex
 {
     glm::vec3 pos;
     glm::vec2 uv;
 };
 
-// World-space cursor position produced by the text layout pass.
+/**
+ * @brief World-space cursor position tied to a byte offset in the source text.
+ */
 struct CursorSlot
 {
     std::size_t byteOffset;
@@ -25,6 +34,14 @@ struct CursorSlot
     float worldY;
 };
 
+/**
+ * @brief Describes a renderable text string with layout and cursor state.
+ *
+ * Carries the text content, font path, pixel size, per-voxel scale,
+ * anchor / wrap parameters, cursor byte position and visibility, and
+ * optional per-character voxel offsets. Consumed by RenderComponent
+ * which converts it to glyph quads via the SDF text pipeline.
+ */
 class TextComponent
 {
   public:

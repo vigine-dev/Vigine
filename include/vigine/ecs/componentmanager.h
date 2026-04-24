@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file componentmanager.h
+ * @brief Legacy type-indexed store for ECS components.
+ */
+
 #include <any>
 #include <memory>
 #include <typeindex>
@@ -14,6 +19,14 @@ using ComponentSPtr = std::shared_ptr<T>;
 template <typename T>
 using ComponentContainer = std::vector<ComponentSPtr<T>>;
 
+/**
+ * @brief Stores heterogeneous component containers keyed by std::type_index.
+ *
+ * createComponent<T>(...) allocates a shared T and appends it to the
+ * per-type container. cbegin<T>() / cend<T>() iterate the container for
+ * type T, returning an empty range if none exist. removeComponents<T>()
+ * drops every component of type T; clear() drops all components.
+ */
 class ComponentManager
 {
   public:

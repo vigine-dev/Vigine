@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file graphicshandles.h
+ * @brief Backend-neutral handle types and descriptors for the graphics API.
+ */
+
 #include <cstdint>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -12,24 +17,36 @@ namespace graphics
 {
 
 // Opaque handle types wrapping uint64_t
+/**
+ * @brief Opaque handle identifying a graphics pipeline resource.
+ */
 struct PipelineHandle
 {
     uint64_t value{0};
     bool isValid() const { return value != 0; }
 };
 
+/**
+ * @brief Opaque handle identifying a GPU buffer resource.
+ */
 struct BufferHandle
 {
     uint64_t value{0};
     bool isValid() const { return value != 0; }
 };
 
+/**
+ * @brief Opaque handle identifying a GPU texture resource.
+ */
 struct TextureHandle
 {
     uint64_t value{0};
     bool isValid() const { return value != 0; }
 };
 
+/**
+ * @brief Opaque handle identifying a compiled shader module.
+ */
 struct ShaderModuleHandle
 {
     uint64_t value{0};
@@ -37,6 +54,9 @@ struct ShaderModuleHandle
 };
 
 // Vertex layout description
+/**
+ * @brief Scalar / vector format of a single vertex attribute.
+ */
 enum class VertexFormat
 {
     Float32,
@@ -46,6 +66,9 @@ enum class VertexFormat
     UInt32
 };
 
+/**
+ * @brief Single attribute slot inside a vertex binding (location, format, offset).
+ */
 struct VertexAttribute
 {
     uint32_t location;
@@ -53,6 +76,9 @@ struct VertexAttribute
     uint32_t offset;
 };
 
+/**
+ * @brief Vertex binding description: stride, step rate, and attribute list.
+ */
 struct VertexBindingDesc
 {
     uint32_t binding;
@@ -62,18 +88,27 @@ struct VertexBindingDesc
 };
 
 // Pipeline description
+/**
+ * @brief Blend mode selected by a pipeline (opaque or alpha-blended).
+ */
 enum class BlendMode
 {
     Opaque,
     AlphaBlend
 };
 
+/**
+ * @brief Primitive topology for rasterisation.
+ */
 enum class Topology
 {
     TriangleList,
     LineList
 };
 
+/**
+ * @brief Full pipeline description used to create a PipelineHandle.
+ */
 struct PipelineDesc
 {
     ShaderModuleHandle vertexShader;
@@ -87,6 +122,9 @@ struct PipelineDesc
 };
 
 // Buffer description
+/**
+ * @brief Intended GPU usage of a buffer (vertex / index / uniform / storage).
+ */
 enum class BufferUsage
 {
     Vertex,
@@ -95,6 +133,9 @@ enum class BufferUsage
     Storage
 };
 
+/**
+ * @brief Memory domain of a buffer (GPU-only, upload, readback).
+ */
 enum class MemoryUsage
 {
     GpuOnly,
@@ -102,6 +143,9 @@ enum class MemoryUsage
     GpuToCpu
 };
 
+/**
+ * @brief Buffer description used to create a BufferHandle.
+ */
 struct BufferDesc
 {
     size_t size;
@@ -110,6 +154,9 @@ struct BufferDesc
 };
 
 // Texture description
+/**
+ * @brief Pixel format of a texture (colour / depth).
+ */
 enum class TextureFormat
 {
     R8_UNORM,
@@ -119,12 +166,18 @@ enum class TextureFormat
     D32_SFLOAT
 };
 
+/**
+ * @brief Sampler filter mode used when sampling a texture.
+ */
 enum class TextureFilter
 {
     Nearest,
     Linear
 };
 
+/**
+ * @brief Sampler wrap mode applied outside the [0, 1] UV range.
+ */
 enum class TextureWrapMode
 {
     Repeat,
@@ -132,6 +185,9 @@ enum class TextureWrapMode
     ClampToBorder
 };
 
+/**
+ * @brief Texture description used to create a TextureHandle.
+ */
 struct TextureDesc
 {
     uint32_t width;
@@ -143,7 +199,9 @@ struct TextureDesc
     TextureWrapMode wrapV{TextureWrapMode::Repeat};
 };
 
-// Push constants data structure
+/**
+ * @brief Push-constant payload forwarded to shaders every draw call.
+ */
 struct PushConstantData
 {
     glm::mat4 viewProjection;
@@ -153,7 +211,9 @@ struct PushConstantData
     glm::mat4 modelMatrix;
 };
 
-// Draw call description
+/**
+ * @brief Description of a single draw call submitted to the backend.
+ */
 struct DrawCallDesc
 {
     PipelineHandle pipeline;
@@ -167,7 +227,14 @@ struct DrawCallDesc
     uint32_t indexCount{0}; // 0 = not using indices
 };
 
-// Entity draw group — one group per unique pipeline, used by RenderSystem → VulkanAPI
+/**
+ * @brief Per-pipeline batch of entities drawn together by the backend.
+ *
+ * One EntityDrawGroup per unique pipeline, bundling the texture to
+ * bind, the procedural vertex count, the instancing flag, and the
+ * per-entity model matrices. Produced by RenderSystem and consumed by
+ * VulkanAPI.
+ */
 struct EntityDrawGroup
 {
     PipelineHandle pipeline;

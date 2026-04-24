@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file entitymanager.h
+ * @brief Legacy concrete EntityManager that owns Entity lifetimes.
+ */
+
 #include "vigine/ecs/ientitymanager.h"
 
 #include <map>
@@ -14,6 +19,14 @@ class Entity;
 
 using EntityUPtr = std::unique_ptr<Entity>;
 
+/**
+ * @brief Owns the live set of Entity objects and their string aliases.
+ *
+ * createEntity() allocates a new Entity and keeps it alive until
+ * removeEntity() releases it. Optional string aliases registered via
+ * addAlias() allow lookup by getEntityByAlias(). Instances are created
+ * by Engine.
+ */
 class EntityManager : public IEntityManager
 {
   public:

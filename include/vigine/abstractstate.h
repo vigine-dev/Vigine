@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file abstractstate.h
+ * @brief Legacy base class for a state hosted by StateMachine.
+ */
+
 #include "result.h"
 #include "taskflow.h"
 
@@ -10,6 +15,13 @@ namespace vigine
 
 class Context;
 
+/**
+ * @brief Base for state objects driven by StateMachine.
+ *
+ * A state owns a TaskFlow which is executed between enter() and exit().
+ * The Result returned by exit() is forwarded to StateMachine to pick
+ * the next transition. Concrete states implement enter() and exit().
+ */
 class AbstractState // ENCAP EXEMPTION: legacy; protected _taskFlow/_isActive/_context pending cleanup
 {
   public:

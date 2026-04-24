@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file abstractsystem.h
+ * @brief Legacy base class for ECS systems that create / destroy components.
+ */
+
 #include "vigine/entitybindinghost.h"
 
 #include <memory>
@@ -12,6 +17,14 @@ using SystemName = std::string;
 
 class Entity;
 
+/**
+ * @brief Base for systems that attach components to a bound Entity.
+ *
+ * Derives from EntityBindingHost, so exactly one Entity is bound at a
+ * time. Concrete systems expose a stable kind via id(), carry an
+ * instance Name, and implement create / destroy / has-components
+ * against the bound Entity.
+ */
 class AbstractSystem : public EntityBindingHost
 {
   public:

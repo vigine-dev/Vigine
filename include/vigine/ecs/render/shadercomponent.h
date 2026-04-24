@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file shadercomponent.h
+ * @brief Per-entity shader configuration: SPIR-V sources and pipeline state.
+ */
+
 #include "graphicshandles.h"
 
 #include "vigine/base/macros.h"
@@ -14,6 +19,15 @@ namespace vigine
 namespace graphics
 {
 
+/**
+ * @brief Bundles shader source paths, SPIR-V binaries, and pipeline state.
+ *
+ * Holds the vertex / fragment shader paths, loads and caches their
+ * SPIR-V binaries, and carries every pipeline-relevant setting the
+ * PipelineCache needs to key on: vertex layout, blend mode, depth
+ * test / write, topology, procedural vertex count, instancing, voxel
+ * text layout flag, and texture binding flag.
+ */
 class ShaderComponent
 {
   public:

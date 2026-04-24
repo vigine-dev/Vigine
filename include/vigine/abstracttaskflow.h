@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file abstracttaskflow.h
+ * @brief Legacy task-flow container that sequences AbstractTask instances.
+ */
+
 #include "abstracttask.h"
 #include "result.h"
 
@@ -10,6 +15,14 @@
 namespace vigine
 {
 
+/**
+ * @brief Owns tasks and transitions and drives sequential task execution.
+ *
+ * Tasks are added by addTask(), linked by addTransition(), and run one
+ * at a time via runCurrentTask(). Each task's Result::Code selects the
+ * next task from the transition map. A TaskFlow is typically owned by
+ * an AbstractState.
+ */
 class TaskFlow
 {
     using TaskUPtr            = std::unique_ptr<AbstractTask>;

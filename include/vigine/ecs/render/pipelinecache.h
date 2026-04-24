@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file pipelinecache.h
+ * @brief Content-addressed cache of graphics pipelines keyed by shader state.
+ */
+
 #include "graphicshandles.h"
 
 #include "vigine/base/macros.h"
@@ -17,6 +22,15 @@ namespace graphics
 class GraphicsBackend;
 class ShaderComponent;
 
+/**
+ * @brief Caches created pipelines to avoid redundant backend creation.
+ *
+ * getOrCreate() returns the pipeline for the given ShaderComponent,
+ * allocating a new one from the GraphicsBackend and caching it on
+ * first miss. Keyed on a hash computed from the ShaderComponent's
+ * pipeline-relevant state. invalidate() drops every cached pipeline
+ * (e.g. after device loss).
+ */
 class PipelineCache
 {
   public:

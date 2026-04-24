@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file transformcomponent.h
+ * @brief Position / rotation / scale carrier with optional billboarding.
+ */
+
 #include "vigine/base/macros.h"
 
 #include <glm/glm.hpp>
@@ -13,6 +18,14 @@ namespace vigine
 namespace graphics
 {
 
+/**
+ * @brief Stores position, rotation, and scale for a renderable entity.
+ *
+ * Provides getters and setters for each axis, a rotate() helper that
+ * applies a local-axis rotation, getModelMatrix() for the standard
+ * TRS matrix, and getBillboardModelMatrix() that faces the camera
+ * when the billboard flag is enabled.
+ */
 class TransformComponent
 {
   public:

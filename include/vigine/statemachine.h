@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file statemachine.h
+ * @brief Legacy concrete StateMachine that owns states and their transitions.
+ */
+
 #include "abstractstate.h"
 #include "result.h"
 #include "statemachine/istatemachine.h"
@@ -12,6 +17,14 @@ namespace vigine
 {
 class Engine;
 
+/**
+ * @brief Owns AbstractState instances and drives transitions between them.
+ *
+ * States are added by addState(), linked by addTransition(), and
+ * executed one at a time via runCurrentState(). The current state is
+ * changed based on the Result::Code it produces and the transitions
+ * registered against it. Instances are created by Engine.
+ */
 class StateMachine : public IStateMachine
 {
     using StateUPtr           = std::unique_ptr<AbstractState>;

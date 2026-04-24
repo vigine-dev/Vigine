@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file rendercomponent.h
+ * @brief Per-entity renderable aggregating mesh, transform, text, and shader.
+ */
+
 #include "graphicshandles.h"
 #include "meshcomponent.h"
 #include "shadercomponent.h"
@@ -16,6 +21,16 @@ namespace vigine
 namespace graphics
 {
 
+/**
+ * @brief Render payload for one Entity.
+ *
+ * Bundles mesh, transform, optional text, and shader state for a
+ * single renderable. Exposes getters for each sub-component, a
+ * picking flag, an optional texture binding, and helpers to emit
+ * model matrices and SDF glyph quads. Also manages an incremental
+ * per-visual-line cache for SDF text layout (rebuildSdfGlyphQuads,
+ * incrementalRebuildSdf, scrollVertical, translateGlyphVertices).
+ */
 class RenderComponent
 {
   public:

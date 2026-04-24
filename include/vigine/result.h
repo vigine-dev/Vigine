@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * @file result.h
+ * @brief Status / error return type used across the engine API surface.
+ */
+
 #include "vigine/base/macros.h"
 
 #include <memory>
@@ -7,6 +12,13 @@
 
 namespace vigine
 {
+/**
+ * @brief Carries a status Code and an optional human-readable message.
+ *
+ * Produced by task / state / service / context operations that can
+ * fail. Code values are append-only so callers that persist or
+ * serialise a Result remain compatible across engine versions.
+ */
 class Result
 {
   public:
