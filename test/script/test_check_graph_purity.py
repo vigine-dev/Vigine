@@ -45,9 +45,9 @@ def run(argv: list[str]) -> int:
 
 def test_no_violation(tmp_path: Path) -> None:
     """A directory with only clean headers exits 0 and reports 0 violations."""
-    include_dir = tmp_path / "include" / "vigine" / "graph"
+    include_dir = tmp_path / "include" / "vigine" / "core" / "graph"
     include_dir.mkdir(parents=True)
-    src_dir = tmp_path / "src" / "graph"
+    src_dir = tmp_path / "src" / "core" / "graph"
     src_dir.mkdir(parents=True)
     write_header(
         include_dir,
@@ -55,7 +55,7 @@ def test_no_violation(tmp_path: Path) -> None:
         """\
         #pragma once
         #include <cstdint>
-        namespace vigine::graph { class INode {}; }
+        namespace vigine::core::graph { class INode {}; }
         """,
     )
     code = run(["--root", str(tmp_path), "--quiet"])
@@ -69,7 +69,7 @@ def test_no_violation(tmp_path: Path) -> None:
 
 def test_one_violation_forbidden_include(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """A single forbidden include in a header triggers exit 1."""
-    graph_dir = tmp_path / "include" / "vigine" / "graph"
+    graph_dir = tmp_path / "include" / "vigine" / "core" / "graph"
     graph_dir.mkdir(parents=True)
     write_header(
         graph_dir,
@@ -77,7 +77,7 @@ def test_one_violation_forbidden_include(tmp_path: Path, capsys: pytest.CaptureF
         """\
         #pragma once
         #include <vigine/messaging/kind.h>
-        namespace vigine::graph {}
+        namespace vigine::core::graph {}
         """,
     )
     code = run(["--root", str(tmp_path)])
@@ -94,7 +94,7 @@ def test_one_violation_forbidden_include(tmp_path: Path, capsys: pytest.CaptureF
 
 def test_multiple_violations(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """Multiple forbidden tokens in one file are all reported, exit 1."""
-    graph_dir = tmp_path / "include" / "vigine" / "graph"
+    graph_dir = tmp_path / "include" / "vigine" / "core" / "graph"
     graph_dir.mkdir(parents=True)
     write_header(
         graph_dir,
@@ -103,7 +103,7 @@ def test_multiple_violations(tmp_path: Path, capsys: pytest.CaptureFixture) -> N
         #pragma once
         #include <vigine/ecs/entity.h>
         #include <vigine/fsm/state.h>
-        namespace vigine::graph {}
+        namespace vigine::core::graph {}
         """,
     )
     code = run(["--root", str(tmp_path)])
@@ -121,9 +121,9 @@ def test_multiple_violations(tmp_path: Path, capsys: pytest.CaptureFixture) -> N
 
 def test_waiver_respected(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """Lines containing // INV-9 EXEMPTION: are not reported as violations."""
-    graph_dir = tmp_path / "include" / "vigine" / "graph"
+    graph_dir = tmp_path / "include" / "vigine" / "core" / "graph"
     graph_dir.mkdir(parents=True)
-    src_dir = tmp_path / "src" / "graph"
+    src_dir = tmp_path / "src" / "core" / "graph"
     src_dir.mkdir(parents=True)
     write_header(
         graph_dir,
@@ -131,7 +131,7 @@ def test_waiver_respected(tmp_path: Path, capsys: pytest.CaptureFixture) -> None
         """\
         #pragma once
         #include <vigine/messaging/bus.h>  // INV-9 EXEMPTION: justified by design doc
-        namespace vigine::graph {}
+        namespace vigine::core::graph {}
         """,
     )
     code = run(["--root", str(tmp_path), "--quiet"])

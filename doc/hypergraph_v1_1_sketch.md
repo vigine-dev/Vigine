@@ -63,7 +63,7 @@ public:
     // hypergraph registration. Call `unregisterWrapper(id)` before
     // destroying the wrapped graph, otherwise meta-edges that reference
     // the freed graph become dangling.
-    virtual HyperNodeId registerWrapper(vigine::graph::IGraph *graph,
+    virtual HyperNodeId registerWrapper(vigine::core::graph::IGraph *graph,
                                         std::string_view       label) = 0;
 
     // Add a directed meta-edge between two wrapper nodes.
@@ -73,7 +73,7 @@ public:
     virtual void unregisterWrapper(HyperNodeId id) = 0;
 
     // Export the entire meta-graph in Graphviz DOT format. The signature
-    // matches `vigine::graph::IGraph::exportGraphViz` — caller-owned
+    // matches `vigine::core::graph::IGraph::exportGraphViz` — caller-owned
     // buffer, Result error path, no I/O on the interface.
     virtual vigine::Result exportGraphViz(std::string &out) const = 0;
 
@@ -83,7 +83,7 @@ public:
 
     // Iterate registered wrapper nodes.
     virtual void forEachWrapper(
-        std::function<void(HyperNodeId, vigine::graph::IGraph *)> fn) const = 0;
+        std::function<void(HyperNodeId, vigine::core::graph::IGraph *)> fn) const = 0;
 };
 
 } // namespace vigine::hypergraph

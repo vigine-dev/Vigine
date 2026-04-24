@@ -43,8 +43,8 @@ namespace vigine::signalemitter
  * Invariants:
  *   - INV-1: no template parameters in the public surface.
  *   - INV-10: @c I prefix for this pure-virtual interface (no state).
- *   - INV-11: no graph types (@ref vigine::graph::NodeId,
- *             @ref vigine::graph::INode, etc.) appear in this header.
+ *   - INV-11: no graph types (@ref vigine::core::graph::NodeId,
+ *             @ref vigine::core::graph::INode, etc.) appear in this header.
  *   - FF-1: factory @ref createSignalEmitter returns @c std::unique_ptr.
  *
  * The concrete implementation (@ref DefaultSignalEmitter) is private to

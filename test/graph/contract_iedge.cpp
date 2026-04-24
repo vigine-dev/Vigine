@@ -1,9 +1,9 @@
 #include "fixtures/graph_fixture_7n10e.h"
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
 #include <gtest/gtest.h>
 
@@ -19,7 +19,7 @@
 // guarantee.
 // =============================================================================
 
-namespace vigine::graph::contract
+namespace vigine::core::graph::contract
 {
 
 using EdgeContract = ContractFixture;
@@ -122,4 +122,4 @@ INSTANTIATE_TEST_SUITE_P(contract_iedge,
                          ::testing::Values(defaultGraphFactory()),
                          GraphFactoryNamer{});
 
-} // namespace vigine::graph::contract
+} // namespace vigine::core::graph::contract

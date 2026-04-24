@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/nodeid.h"
 
-namespace vigine::graph::internal
+namespace vigine::core::graph::internal
 {
 // ---------------------------------------------------------------------------
 // Hash adapter so NodeId can be a key in unordered containers.
@@ -42,4 +42,4 @@ struct NodeIdHasher
         }
     }
 };
-} // namespace vigine::graph::internal
+} // namespace vigine::core::graph::internal

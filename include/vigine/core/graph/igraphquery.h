@@ -3,11 +3,11 @@
 #include <optional>
 #include <vector>
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Pure-virtual read-only query surface of an @ref IGraph.
@@ -103,4 +103,4 @@ class IGraphQuery
     IGraphQuery &operator=(IGraphQuery &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

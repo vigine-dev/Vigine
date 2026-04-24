@@ -1,9 +1,9 @@
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/core/graph/abstractgraph.h"
 
 #include <shared_mutex>
 #include <string>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 namespace
 {
@@ -74,4 +74,4 @@ Result AbstractGraph::exportGraphViz(std::string &out) const
     return Result();
 }
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

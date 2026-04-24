@@ -10,13 +10,13 @@
 #include "vigine/ecs/ecstypes.h"
 #include "vigine/ecs/iecs.h"
 #include "vigine/ecs/kind.h"
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 
 namespace vigine::ecs
@@ -40,28 +40,28 @@ namespace
  * to @c id() without a round-trip through the graph.
  */
 class EntityNode final
-    : public vigine::graph::INode
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::INode
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
     EntityNode() = default;
 
-    [[nodiscard]] vigine::graph::NodeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::NodeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::NodeKind kind() const noexcept override
     {
         return vigine::ecs::kind::Entity;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = nodeId;
         (void)edgeId;
     }
 
   private:
-    vigine::graph::NodeId _id{};
+    vigine::core::graph::NodeId _id{};
 };
 
 /**
@@ -72,8 +72,8 @@ class EntityNode final
  * exactly as long as the graph tracks it.
  */
 class ComponentNode final
-    : public vigine::graph::INode
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::INode
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
     explicit ComponentNode(std::unique_ptr<IComponent> component) noexcept
@@ -81,8 +81,8 @@ class ComponentNode final
     {
     }
 
-    [[nodiscard]] vigine::graph::NodeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::NodeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::NodeKind kind() const noexcept override
     {
         return vigine::ecs::kind::Component;
     }
@@ -96,15 +96,15 @@ class ComponentNode final
     [[nodiscard]] const IComponent *component() const noexcept { return _component.get(); }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = nodeId;
         (void)edgeId;
     }
 
   private:
-    vigine::graph::NodeId       _id{};
+    vigine::core::graph::NodeId       _id{};
     std::unique_ptr<IComponent> _component;
 };
 
@@ -116,39 +116,39 @@ class ComponentNode final
  * component node on the @c to() end keeps the component pointer.
  */
 class AttachedEdge final
-    : public vigine::graph::IEdge
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::IEdge
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
-    AttachedEdge(vigine::graph::NodeId from, vigine::graph::NodeId to) noexcept
+    AttachedEdge(vigine::core::graph::NodeId from, vigine::core::graph::NodeId to) noexcept
         : _from{from}, _to{to}
     {
     }
 
-    [[nodiscard]] vigine::graph::EdgeId   id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::EdgeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::EdgeId   id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::EdgeKind kind() const noexcept override
     {
         return vigine::ecs::edge_kind::Attached;
     }
-    [[nodiscard]] vigine::graph::NodeId from() const noexcept override { return _from; }
-    [[nodiscard]] vigine::graph::NodeId to() const noexcept override { return _to; }
-    [[nodiscard]] const vigine::graph::IEdgeData *data() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId from() const noexcept override { return _from; }
+    [[nodiscard]] vigine::core::graph::NodeId to() const noexcept override { return _to; }
+    [[nodiscard]] const vigine::core::graph::IEdgeData *data() const noexcept override
     {
         return nullptr;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = edgeId;
         (void)nodeId;
     }
 
   private:
-    vigine::graph::EdgeId _id{};
-    vigine::graph::NodeId _from{};
-    vigine::graph::NodeId _to{};
+    vigine::core::graph::EdgeId _id{};
+    vigine::core::graph::NodeId _from{};
+    vigine::core::graph::NodeId _to{};
 };
 
 } // namespace
@@ -163,28 +163,28 @@ EntityWorld::~EntityWorld() = default;
 
 // ---------------------------------------------------------------------------
 // POD translation helpers. The @ref EntityId / @ref ComponentHandle
-// layouts are intentionally identical to @c vigine::graph::NodeId so the
+// layouts are intentionally identical to @c vigine::core::graph::NodeId so the
 // translation is a plain field-for-field copy; INV-11 allows it here
 // because the conversion lives entirely inside the wrapper
 // implementation.
 // ---------------------------------------------------------------------------
 
-vigine::graph::NodeId EntityWorld::toNodeId(EntityId entity) noexcept
+vigine::core::graph::NodeId EntityWorld::toNodeId(EntityId entity) noexcept
 {
-    return vigine::graph::NodeId{entity.index, entity.generation};
+    return vigine::core::graph::NodeId{entity.index, entity.generation};
 }
 
-vigine::graph::NodeId EntityWorld::toNodeId(ComponentHandle handle) noexcept
+vigine::core::graph::NodeId EntityWorld::toNodeId(ComponentHandle handle) noexcept
 {
-    return vigine::graph::NodeId{handle.index, handle.generation};
+    return vigine::core::graph::NodeId{handle.index, handle.generation};
 }
 
-EntityId EntityWorld::toEntityId(vigine::graph::NodeId node) noexcept
+EntityId EntityWorld::toEntityId(vigine::core::graph::NodeId node) noexcept
 {
     return EntityId{node.index, node.generation};
 }
 
-ComponentHandle EntityWorld::toComponentHandle(vigine::graph::NodeId node) noexcept
+ComponentHandle EntityWorld::toComponentHandle(vigine::core::graph::NodeId node) noexcept
 {
     return ComponentHandle{node.index, node.generation};
 }
@@ -200,7 +200,7 @@ EntityId EntityWorld::createEntity()
     // @c INode unique_ptr follows the IdStamp handshake — the node
     // captures the assigned id during insert.
     auto                        node = std::make_unique<EntityNode>();
-    const vigine::graph::NodeId nid  = addNode(std::move(node));
+    const vigine::core::graph::NodeId nid  = addNode(std::move(node));
 
     // If the `_entities` `push_back` throws (bad_alloc under memory
     // pressure), the graph has a live node the registry never
@@ -243,12 +243,12 @@ Result EntityWorld::removeEntity(EntityId entity)
         = query().outEdgesOfKind(nid, vigine::ecs::edge_kind::Attached);
     for (auto it = attachedEdges.rbegin(); it != attachedEdges.rend(); ++it)
     {
-        const vigine::graph::IEdge *e = edge(*it);
+        const vigine::core::graph::IEdge *e = edge(*it);
         if (e == nullptr)
         {
             continue;
         }
-        const vigine::graph::NodeId componentNode = e->to();
+        const vigine::core::graph::NodeId componentNode = e->to();
         // removeNode cascades the edge for us; calling it first on the
         // component makes ownership release order deterministic.
         (void)removeNode(componentNode);
@@ -280,7 +280,7 @@ bool EntityWorld::hasEntity(EntityId entity) const noexcept
     {
         return false;
     }
-    const vigine::graph::INode *n = node(toNodeId(entity));
+    const vigine::core::graph::INode *n = node(toNodeId(entity));
     return n != nullptr && n->kind() == vigine::ecs::kind::Entity;
 }
 
@@ -296,21 +296,21 @@ ComponentHandle EntityWorld::attachComponent(
         return ComponentHandle{};
     }
 
-    const vigine::graph::NodeId entityNode = toNodeId(entity);
+    const vigine::core::graph::NodeId entityNode = toNodeId(entity);
     if (!query().hasNode(entityNode))
     {
         return ComponentHandle{};
     }
 
     auto                        compNode = std::make_unique<ComponentNode>(std::move(component));
-    const vigine::graph::NodeId compId   = addNode(std::move(compNode));
+    const vigine::core::graph::NodeId compId   = addNode(std::move(compNode));
     if (!compId.valid())
     {
         return ComponentHandle{};
     }
 
     auto                        attachment = std::make_unique<AttachedEdge>(entityNode, compId);
-    const vigine::graph::EdgeId eid        = addEdge(std::move(attachment));
+    const vigine::core::graph::EdgeId eid        = addEdge(std::move(attachment));
     if (!eid.valid())
     {
         // Adding the edge failed — roll the component node back so the
@@ -329,7 +329,7 @@ Result EntityWorld::detachComponent(EntityId entity, ComponentTypeId typeId)
         return Result(Result::Code::Error, "invalid entity id");
     }
 
-    const vigine::graph::NodeId entityNode = toNodeId(entity);
+    const vigine::core::graph::NodeId entityNode = toNodeId(entity);
     if (!query().hasNode(entityNode))
     {
         return Result(Result::Code::Error, "stale entity id");
@@ -337,14 +337,14 @@ Result EntityWorld::detachComponent(EntityId entity, ComponentTypeId typeId)
 
     const auto attachedEdges
         = query().outEdgesOfKind(entityNode, vigine::ecs::edge_kind::Attached);
-    for (vigine::graph::EdgeId eid : attachedEdges)
+    for (vigine::core::graph::EdgeId eid : attachedEdges)
     {
-        const vigine::graph::IEdge *e = edge(eid);
+        const vigine::core::graph::IEdge *e = edge(eid);
         if (e == nullptr)
         {
             continue;
         }
-        const vigine::graph::INode *target = node(e->to());
+        const vigine::core::graph::INode *target = node(e->to());
         const auto                 *cn     = dynamic_cast<const ComponentNode *>(target);
         if (cn == nullptr || cn->component() == nullptr)
         {
@@ -368,7 +368,7 @@ const IComponent *EntityWorld::findComponent(
         return nullptr;
     }
 
-    const vigine::graph::NodeId entityNode = toNodeId(entity);
+    const vigine::core::graph::NodeId entityNode = toNodeId(entity);
     if (!query().hasNode(entityNode))
     {
         return nullptr;
@@ -376,14 +376,14 @@ const IComponent *EntityWorld::findComponent(
 
     const auto attachedEdges
         = query().outEdgesOfKind(entityNode, vigine::ecs::edge_kind::Attached);
-    for (vigine::graph::EdgeId eid : attachedEdges)
+    for (vigine::core::graph::EdgeId eid : attachedEdges)
     {
-        const vigine::graph::IEdge *e = edge(eid);
+        const vigine::core::graph::IEdge *e = edge(eid);
         if (e == nullptr)
         {
             continue;
         }
-        const vigine::graph::INode *target = node(e->to());
+        const vigine::core::graph::INode *target = node(e->to());
         const auto                 *cn     = dynamic_cast<const ComponentNode *>(target);
         if (cn == nullptr || cn->component() == nullptr)
         {
@@ -405,7 +405,7 @@ std::vector<const IComponent *> EntityWorld::componentsOf(EntityId entity) const
         return out;
     }
 
-    const vigine::graph::NodeId entityNode = toNodeId(entity);
+    const vigine::core::graph::NodeId entityNode = toNodeId(entity);
     if (!query().hasNode(entityNode))
     {
         return out;
@@ -414,14 +414,14 @@ std::vector<const IComponent *> EntityWorld::componentsOf(EntityId entity) const
     const auto attachedEdges
         = query().outEdgesOfKind(entityNode, vigine::ecs::edge_kind::Attached);
     out.reserve(attachedEdges.size());
-    for (vigine::graph::EdgeId eid : attachedEdges)
+    for (vigine::core::graph::EdgeId eid : attachedEdges)
     {
-        const vigine::graph::IEdge *e = edge(eid);
+        const vigine::core::graph::IEdge *e = edge(eid);
         if (e == nullptr)
         {
             continue;
         }
-        const vigine::graph::INode *target = node(e->to());
+        const vigine::core::graph::INode *target = node(e->to());
         const auto                 *cn     = dynamic_cast<const ComponentNode *>(target);
         if (cn == nullptr || cn->component() == nullptr)
         {
@@ -443,7 +443,7 @@ std::vector<EntityId> EntityWorld::entitiesWith(ComponentTypeId typeId) const
     // local mutex. The graph's own shared_mutex guards every per-edge
     // lookup, so concurrent attaches land under the graph's exclusive
     // lock and finish before this walk observes them.
-    std::vector<vigine::graph::NodeId> snapshot;
+    std::vector<vigine::core::graph::NodeId> snapshot;
     {
         std::shared_lock lock(_entitiesMutex);
         snapshot = _entities;
@@ -451,7 +451,7 @@ std::vector<EntityId> EntityWorld::entitiesWith(ComponentTypeId typeId) const
 
     std::vector<EntityId> out;
     out.reserve(snapshot.size());
-    for (vigine::graph::NodeId entityNode : snapshot)
+    for (vigine::core::graph::NodeId entityNode : snapshot)
     {
         if (!query().hasNode(entityNode))
         {
@@ -460,14 +460,14 @@ std::vector<EntityId> EntityWorld::entitiesWith(ComponentTypeId typeId) const
         const auto attachedEdges
             = query().outEdgesOfKind(entityNode, vigine::ecs::edge_kind::Attached);
         bool matched = false;
-        for (vigine::graph::EdgeId eid : attachedEdges)
+        for (vigine::core::graph::EdgeId eid : attachedEdges)
         {
-            const vigine::graph::IEdge *e = edge(eid);
+            const vigine::core::graph::IEdge *e = edge(eid);
             if (e == nullptr)
             {
                 continue;
             }
-            const vigine::graph::INode *target = node(e->to());
+            const vigine::core::graph::INode *target = node(e->to());
             const auto                 *cn     = dynamic_cast<const ComponentNode *>(target);
             if (cn == nullptr || cn->component() == nullptr)
             {

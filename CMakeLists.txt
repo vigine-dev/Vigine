@@ -186,19 +186,19 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
     ${INCLUDE_DIR}/vigine/base/constant.h
-    ${INCLUDE_DIR}/vigine/graph/nodeid.h
-    ${INCLUDE_DIR}/vigine/graph/edgeid.h
-    ${INCLUDE_DIR}/vigine/graph/traverse_mode.h
-    ${INCLUDE_DIR}/vigine/graph/visit_result.h
-    ${INCLUDE_DIR}/vigine/graph/kind.h
-    ${INCLUDE_DIR}/vigine/graph/iedgedata.h
-    ${INCLUDE_DIR}/vigine/graph/inode.h
-    ${INCLUDE_DIR}/vigine/graph/iedge.h
-    ${INCLUDE_DIR}/vigine/graph/igraphvisitor.h
-    ${INCLUDE_DIR}/vigine/graph/igraphquery.h
-    ${INCLUDE_DIR}/vigine/graph/igraph.h
-    ${INCLUDE_DIR}/vigine/graph/factory.h
-    ${INCLUDE_DIR}/vigine/graph/abstractgraph.h
+    ${INCLUDE_DIR}/vigine/core/graph/nodeid.h
+    ${INCLUDE_DIR}/vigine/core/graph/edgeid.h
+    ${INCLUDE_DIR}/vigine/core/graph/traverse_mode.h
+    ${INCLUDE_DIR}/vigine/core/graph/visit_result.h
+    ${INCLUDE_DIR}/vigine/core/graph/kind.h
+    ${INCLUDE_DIR}/vigine/core/graph/iedgedata.h
+    ${INCLUDE_DIR}/vigine/core/graph/inode.h
+    ${INCLUDE_DIR}/vigine/core/graph/iedge.h
+    ${INCLUDE_DIR}/vigine/core/graph/igraphvisitor.h
+    ${INCLUDE_DIR}/vigine/core/graph/igraphquery.h
+    ${INCLUDE_DIR}/vigine/core/graph/igraph.h
+    ${INCLUDE_DIR}/vigine/core/graph/factory.h
+    ${INCLUDE_DIR}/vigine/core/graph/abstractgraph.h
     ${INCLUDE_DIR}/vigine/core/threading/threadaffinity.h
     ${INCLUDE_DIR}/vigine/core/threading/namedthreadid.h
     ${INCLUDE_DIR}/vigine/core/threading/threadmanagerconfig.h
@@ -273,12 +273,12 @@ set(SOURCES
     ${SRC_DIR}/ecs/entitymanager.cpp
     ${SRC_DIR}/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
-    ${SRC_DIR}/graph/abstractgraph.cpp
-    ${SRC_DIR}/graph/defaultgraph.cpp
-    ${SRC_DIR}/graph/defaultgraph_traverse.cpp
-    ${SRC_DIR}/graph/defaultgraph_query.cpp
-    ${SRC_DIR}/graph/defaultgraph_export.cpp
-    ${SRC_DIR}/graph/factory.cpp
+    ${SRC_DIR}/core/graph/abstractgraph.cpp
+    ${SRC_DIR}/core/graph/defaultgraph.cpp
+    ${SRC_DIR}/core/graph/defaultgraph_traverse.cpp
+    ${SRC_DIR}/core/graph/defaultgraph_query.cpp
+    ${SRC_DIR}/core/graph/defaultgraph_export.cpp
+    ${SRC_DIR}/core/graph/factory.cpp
     ${SRC_DIR}/core/threading/abstractthreadmanager.cpp
     ${SRC_DIR}/core/threading/threadmanager.cpp
     ${SRC_DIR}/core/threading/defaultmutex.h

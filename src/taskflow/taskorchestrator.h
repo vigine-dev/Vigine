@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 #include "vigine/taskflow/resultcode.h"
 #include "vigine/taskflow/routemode.h"
@@ -17,7 +17,7 @@ namespace vigine::taskflow
  * @brief Internal graph specialisation that the task flow wrapper uses
  *        to hold its tasks and their transitions.
  *
- * @ref TaskOrchestrator is a concrete @c vigine::graph::AbstractGraph
+ * @ref TaskOrchestrator is a concrete @c vigine::core::graph::AbstractGraph
  * subtype that seals the inheritance chain for the task flow wrapper.
  * It carries the translation between the wrapper's own POD handle
  * (@ref TaskId) and the substrate's generational @c NodeId so every
@@ -26,7 +26,7 @@ namespace vigine::taskflow
  * surface.
  *
  * This header lives under @c src/taskflow on purpose: the INV-11 rule
- * forbids @c vigine::graph types from surfacing in
+ * forbids @c vigine::core::graph types from surfacing in
  * @c include/vigine/taskflow. Only the wrapper implementation
  * consumes the orchestrator; callers of @ref ITaskFlow /
  * @ref AbstractTaskFlow see neither the orchestrator nor its graph
@@ -50,7 +50,7 @@ namespace vigine::taskflow
  *     edges registered against the same
  *     @c (source, resultCode) pair.
  */
-class TaskOrchestrator final : public vigine::graph::AbstractGraph
+class TaskOrchestrator final : public vigine::core::graph::AbstractGraph
 {
   public:
     TaskOrchestrator();
@@ -69,7 +69,7 @@ class TaskOrchestrator final : public vigine::graph::AbstractGraph
      *
      * The returned handle is always valid; the underlying graph never
      * returns an invalid generation from
-     * @ref vigine::graph::AbstractGraph::addNode.
+     * @ref vigine::core::graph::AbstractGraph::addNode.
      */
     [[nodiscard]] TaskId addTask();
 
@@ -109,7 +109,7 @@ class TaskOrchestrator final : public vigine::graph::AbstractGraph
      * same layout; the helper exists for type-safety, not for
      * arithmetic.
      */
-    [[nodiscard]] static vigine::graph::NodeId toNodeId(TaskId task) noexcept;
+    [[nodiscard]] static vigine::core::graph::NodeId toNodeId(TaskId task) noexcept;
 
     /**
      * @brief Translates a substrate @c NodeId back to a
@@ -118,7 +118,7 @@ class TaskOrchestrator final : public vigine::graph::AbstractGraph
      * Only the wrapper implementation calls this; callers of the
      * public task flow API never see the substrate type.
      */
-    [[nodiscard]] static TaskId toTaskId(vigine::graph::NodeId node) noexcept;
+    [[nodiscard]] static TaskId toTaskId(vigine::core::graph::NodeId node) noexcept;
 
   private:
     /**

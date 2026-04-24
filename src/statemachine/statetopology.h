@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <mutex>
 
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/stateid.h"
 
@@ -15,7 +15,7 @@ namespace vigine::statemachine
  * @brief Internal graph specialisation that the state machine wrapper
  *        uses to hold its state-and-hierarchy storage.
  *
- * @ref StateTopology is a concrete @c vigine::graph::AbstractGraph
+ * @ref StateTopology is a concrete @c vigine::core::graph::AbstractGraph
  * subtype that seals the inheritance chain for the state machine
  * wrapper. It carries the translation between the wrapper's own POD
  * handle (@ref StateId) and the substrate's generational @c NodeId
@@ -24,7 +24,7 @@ namespace vigine::statemachine
  * wrapper surface.
  *
  * This header lives under @c src/statemachine on purpose: the INV-11
- * rule forbids @c vigine::graph types from surfacing in
+ * rule forbids @c vigine::core::graph types from surfacing in
  * @c include/vigine/statemachine. Only the wrapper implementation
  * consumes the topology; callers of @ref IStateMachine /
  * @ref AbstractStateMachine see neither the topology nor its graph
@@ -47,7 +47,7 @@ namespace vigine::statemachine
  *     leaf that wires the machine to the message bus; this leaf
  *     only maintains the hierarchy.
  */
-class StateTopology final : public vigine::graph::AbstractGraph
+class StateTopology final : public vigine::core::graph::AbstractGraph
 {
   public:
     StateTopology();
@@ -126,7 +126,7 @@ class StateTopology final : public vigine::graph::AbstractGraph
      * same layout; the helper exists for type-safety, not for
      * arithmetic.
      */
-    [[nodiscard]] static vigine::graph::NodeId toNodeId(StateId state) noexcept;
+    [[nodiscard]] static vigine::core::graph::NodeId toNodeId(StateId state) noexcept;
 
     /**
      * @brief Translates a substrate @c NodeId back to a
@@ -135,7 +135,7 @@ class StateTopology final : public vigine::graph::AbstractGraph
      * Only the wrapper implementation calls this; callers of the
      * public state machine API never see the substrate type.
      */
-    [[nodiscard]] static StateId toStateId(vigine::graph::NodeId node) noexcept;
+    [[nodiscard]] static StateId toStateId(vigine::core::graph::NodeId node) noexcept;
 
   private:
     /**

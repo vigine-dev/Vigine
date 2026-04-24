@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """check_graph_purity.py -- Static checker for graph-core purity (INV-9).
 
-Scans include/vigine/graph/ and src/graph/ for engine-layer tokens:
+Scans include/vigine/core/graph/ and src/core/graph/ for engine-layer tokens:
 forbidden include paths and engine-concept identifiers. Any match exits 1.
 
 Exit codes:
@@ -66,8 +66,8 @@ WAIVER_MARKER = "// INV-9 EXEMPTION:"
 
 # Directories scanned relative to repo root.
 SCAN_DIRS: list[str] = [
-    "include/vigine/graph",
-    "src/graph",
+    "include/vigine/core/graph",
+    "src/core/graph",
 ]
 
 # File extensions considered C++ sources / headers.

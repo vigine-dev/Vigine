@@ -1,15 +1,15 @@
 #include "fixtures/graph_fixture_7n10e.h"
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/igraph.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/igraphvisitor.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
-#include "vigine/graph/traverse_mode.h"
-#include "vigine/graph/visit_result.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/igraph.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/igraphvisitor.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
+#include "vigine/core/graph/traverse_mode.h"
+#include "vigine/core/graph/visit_result.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
@@ -31,7 +31,7 @@
 // at depth one.
 // =============================================================================
 
-namespace vigine::graph::contract
+namespace vigine::core::graph::contract
 {
 namespace
 {
@@ -141,4 +141,4 @@ INSTANTIATE_TEST_SUITE_P(contract_fanout,
                          ::testing::Values(defaultGraphFactory()),
                          GraphFactoryNamer{});
 
-} // namespace vigine::graph::contract
+} // namespace vigine::core::graph::contract

@@ -10,18 +10,18 @@
 #include <unordered_map>
 #include <vector>
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/igraph.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/igraphvisitor.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
-#include "vigine/graph/traverse_mode.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/igraph.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/igraphvisitor.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
+#include "vigine/core/graph/traverse_mode.h"
 #include "vigine/result.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Concrete stateful base for every in-memory @ref IGraph.
@@ -212,4 +212,4 @@ class AbstractGraph : public IGraph
     friend class QueryImpl;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph
