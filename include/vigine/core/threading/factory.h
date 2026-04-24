@@ -2,10 +2,10 @@
 
 #include <memory>
 
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Constructs the default @ref IThreadManager implementation.
@@ -30,4 +30,4 @@ namespace vigine::threading
 [[nodiscard]] std::unique_ptr<IThreadManager>
     createThreadManager(const ThreadManagerConfig &config = {});
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

@@ -4,8 +4,8 @@
 #include "vigine/engine/factory.h"
 #include "vigine/engine/iengine.h"
 #include "vigine/result.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 
@@ -62,7 +62,7 @@ using namespace vigine::engine;
 // queue without leaking captured state through the IRunnable contract.
 // ---------------------------------------------------------------------------
 
-class CallbackRunnable final : public threading::IRunnable
+class CallbackRunnable final : public core::threading::IRunnable
 {
   public:
     explicit CallbackRunnable(std::function<void()> fn) : _fn(std::move(fn)) {}

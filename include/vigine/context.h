@@ -13,10 +13,10 @@
 namespace vigine
 {
 
-namespace threading
+namespace core::threading
 {
 class IThreadManager;
-} // namespace threading
+} // namespace core::threading
 
 enum class Property;
 class EntityManager;
@@ -63,7 +63,7 @@ class Context : public IContext
     [[nodiscard]] statemachine::IStateMachine &stateMachine() override;
     [[nodiscard]] taskflow::ITaskFlow         &taskFlow() override;
 
-    [[nodiscard]] threading::IThreadManager &threadManager() override;
+    [[nodiscard]] core::threading::IThreadManager &threadManager() override;
 
     [[nodiscard]] std::shared_ptr<service::IService>
         service(service::ServiceId id) const override;
@@ -75,7 +75,7 @@ class Context : public IContext
     [[nodiscard]] bool isFrozen() const noexcept override;
 
   private:
-    Context(EntityManager *entityManager, threading::IThreadManager *threadManager);
+    Context(EntityManager *entityManager, core::threading::IThreadManager *threadManager);
     AbstractServiceUPtr createService(const ServiceId &id, const Name &name);
     AbstractSystemUPtr createSystem(const SystemId &id, const SystemName &name);
 
@@ -88,7 +88,7 @@ class Context : public IContext
     // callers through threadManager() so TaskFlow::signal's non-Any
     // path and any other context-driven scheduling works on the
     // legacy Engine front door.
-    threading::IThreadManager *_threadManager{nullptr};
+    core::threading::IThreadManager *_threadManager{nullptr};
     // Atomic because `isFrozen()` is documented as safe from any
     // thread and runs alongside lifecycle transitions. A plain bool
     // here would be a TSAN-observable data race even though the

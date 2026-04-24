@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <mutex>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 namespace
 {
@@ -96,4 +96,4 @@ std::size_t DefaultBarrier::pendingParties() const
     return _pending;
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

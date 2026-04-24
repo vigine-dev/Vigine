@@ -36,7 +36,7 @@
 #include "vigine/requestbus/irequestbus.h"
 #include "vigine/requestbus/requestconfig.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 #include "vigine/topicbus/topicid.h"
 
 #include <gtest/gtest.h>

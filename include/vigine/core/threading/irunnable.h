@@ -2,7 +2,7 @@
 
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Pure-virtual interface for any unit of work posted to the thread
@@ -46,4 +46,4 @@ class IRunnable
     IRunnable() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

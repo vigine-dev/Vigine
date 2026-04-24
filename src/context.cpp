@@ -17,7 +17,7 @@
 #include "vigine/service/platformservice.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -60,7 +60,7 @@ vigine::AbstractSystem *vigine::Context::system(const SystemId id, const SystemN
 }
 
 vigine::Context::Context(EntityManager            *entityManager,
-                         threading::IThreadManager *threadManager)
+                         core::threading::IThreadManager *threadManager)
 {
     _entityManager  = entityManager;
     _threadManager  = threadManager;
@@ -211,7 +211,7 @@ vigine::taskflow::ITaskFlow &vigine::Context::taskFlow()
         "legacy vigine::Context has no Level-1 task flow wrapper; use vigine::context::createContext"};
 }
 
-vigine::threading::IThreadManager &vigine::Context::threadManager()
+vigine::core::threading::IThreadManager &vigine::Context::threadManager()
 {
     if (_threadManager == nullptr)
     {

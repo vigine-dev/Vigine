@@ -11,9 +11,9 @@
 #include "vigine/messaging/messagekind.h"
 #include "vigine/messaging/targetkind.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -176,11 +176,11 @@ class CountingTarget final : public vigine::messaging::AbstractMessageTarget
 };
 
 // Helper: create a thread manager for tests.
-std::unique_ptr<vigine::threading::IThreadManager> makeThreadManager()
+std::unique_ptr<vigine::core::threading::IThreadManager> makeThreadManager()
 {
-    vigine::threading::ThreadManagerConfig cfg;
+    vigine::core::threading::ThreadManagerConfig cfg;
     cfg.poolSize = 1;
-    return vigine::threading::createThreadManager(cfg);
+    return vigine::core::threading::createThreadManager(cfg);
 }
 
 // ---------------------------------------------------------------------------

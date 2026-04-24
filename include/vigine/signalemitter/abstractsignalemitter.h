@@ -30,7 +30,7 @@ using AbstractMessageBus = vigine::messaging::AbstractMessageBus;
  *
  * Concrete subclasses (for example @ref DefaultSignalEmitter) close the
  * chain by providing a concrete @ref vigine::messaging::BusConfig and
- * wiring a @ref vigine::threading::IThreadManager. Callers never name
+ * wiring a @ref vigine::core::threading::IThreadManager. Callers never name
  * those types directly.
  *
  * Invariants:
@@ -75,7 +75,7 @@ class AbstractSignalEmitter : public ISignalEmitter, protected AbstractMessageBu
      *        @ref vigine::messaging::AbstractMessageBus.
      */
     AbstractSignalEmitter(vigine::messaging::BusConfig               config,
-                          vigine::threading::IThreadManager          &threadManager);
+                          vigine::core::threading::IThreadManager          &threadManager);
 };
 
 } // namespace vigine::signalemitter

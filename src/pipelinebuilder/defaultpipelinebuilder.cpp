@@ -190,7 +190,7 @@ struct DefaultPipelineBuilder::Impl
 
 DefaultPipelineBuilder::DefaultPipelineBuilder(
     vigine::messaging::IMessageBus       &bus,
-    vigine::threading::IThreadManager    &threadManager,
+    vigine::core::threading::IThreadManager    &threadManager,
     vigine::channelfactory::IChannelFactory &channelFactory)
     : AbstractPipelineBuilder(bus, threadManager, channelFactory)
     , _impl(std::make_unique<Impl>())
@@ -293,7 +293,7 @@ std::unique_ptr<IPipeline> DefaultPipelineBuilder::build(vigine::Result *outResu
 
 std::unique_ptr<IPipelineBuilder>
 createPipelineBuilder(vigine::messaging::IMessageBus       &bus,
-                      vigine::threading::IThreadManager    &threadManager,
+                      vigine::core::threading::IThreadManager    &threadManager,
                       vigine::channelfactory::IChannelFactory &channelFactory)
 {
     return std::make_unique<DefaultPipelineBuilder>(bus, threadManager, channelFactory);

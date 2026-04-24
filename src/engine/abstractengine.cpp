@@ -4,7 +4,7 @@
 
 #include "vigine/context/factory.h"
 #include "vigine/context/icontext.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::engine
 {
@@ -93,7 +93,7 @@ Result AbstractEngine::run()
     // cannot be lost) and once lock-free before each drain (so a
     // shutdown that arrives during the drain is observed at the next
     // predicate check).
-    threading::IThreadManager &tm = _context->threadManager();
+    core::threading::IThreadManager &tm = _context->threadManager();
     const auto tick = std::chrono::milliseconds{pumpTickMilliseconds()};
 
     while (!_shutdownRequested.load(std::memory_order_acquire))

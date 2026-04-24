@@ -5,7 +5,7 @@
 #include "vigine/channelfactory/ichannelfactory.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/pipelinebuilder/defaultpipelinebuilder.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 // factory.h is a convenience header that re-exports createPipelineBuilder
 // so callers can include a single predictable factory header rather than
@@ -29,7 +29,7 @@ namespace vigine::pipelinebuilder
  */
 [[nodiscard]] std::unique_ptr<IPipelineBuilder>
     createPipelineBuilder(vigine::messaging::IMessageBus       &bus,
-                          vigine::threading::IThreadManager    &threadManager,
+                          vigine::core::threading::IThreadManager    &threadManager,
                           vigine::channelfactory::IChannelFactory &channelFactory);
 
 } // namespace vigine::pipelinebuilder

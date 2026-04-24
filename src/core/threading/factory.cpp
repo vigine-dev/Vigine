@@ -1,12 +1,12 @@
-#include "vigine/threading/factory.h"
+#include "vigine/core/threading/factory.h"
 
 #include <memory>
 
-#include "vigine/threading/defaultthreadmanager.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/threadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 // The factory is intentionally non-templated. unique_ptr ownership —
 // not shared_ptr — because the thread manager is a singular owner
@@ -16,7 +16,7 @@ namespace vigine::threading
 
 std::unique_ptr<IThreadManager> createThreadManager(const ThreadManagerConfig &config)
 {
-    return std::make_unique<DefaultThreadManager>(config);
+    return std::make_unique<ThreadManager>(config);
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

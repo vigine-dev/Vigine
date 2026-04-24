@@ -37,7 +37,7 @@ std::atomic<std::uint32_t> &busIdCounter() noexcept
 
 std::unique_ptr<IMessageBus>
     createMessageBus(const BusConfig                  &config,
-                     vigine::threading::IThreadManager &threadManager)
+                     vigine::core::threading::IThreadManager &threadManager)
 {
     BusConfig resolved = resolveBusId(config);
     return std::make_unique<SystemMessageBus>(std::move(resolved), threadManager);

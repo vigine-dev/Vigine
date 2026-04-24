@@ -3,7 +3,7 @@
 // The definitions live in a dedicated TU rather than inside
 // abstractthreadmanager.cpp so that extending the primitive catalogue
 // in a later leaf does not force a recompile of the registry/lifecycle
-// bookkeeping code. DefaultThreadManager inherits these definitions
+// bookkeeping code. ThreadManager inherits these definitions
 // unchanged — it does not override any of them.
 
 #include <cstddef>
@@ -13,13 +13,13 @@
 #include "defaultmessagechannel.h"
 #include "defaultmutex.h"
 #include "defaultsemaphore.h"
-#include "vigine/threading/abstractthreadmanager.h"
-#include "vigine/threading/ibarrier.h"
-#include "vigine/threading/imessagechannel.h"
-#include "vigine/threading/imutex.h"
-#include "vigine/threading/isemaphore.h"
+#include "vigine/core/threading/abstractthreadmanager.h"
+#include "vigine/core/threading/ibarrier.h"
+#include "vigine/core/threading/imessagechannel.h"
+#include "vigine/core/threading/imutex.h"
+#include "vigine/core/threading/isemaphore.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 std::unique_ptr<IMutex> AbstractThreadManager::createMutex()
 {
@@ -44,4 +44,4 @@ AbstractThreadManager::createMessageChannel(std::size_t capacity)
     return std::make_unique<DefaultMessageChannel>(capacity);
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

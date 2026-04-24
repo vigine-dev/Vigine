@@ -3,7 +3,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Generational identifier of a named thread registered with
@@ -38,4 +38,4 @@ struct NamedThreadId
     friend constexpr bool operator==(const NamedThreadId &, const NamedThreadId &)  = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

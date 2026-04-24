@@ -7,9 +7,9 @@
 #include <mutex>
 
 #include "vigine/result.h"
-#include "vigine/threading/ibarrier.h"
+#include "vigine/core/threading/ibarrier.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Default @ref IBarrier implementation — a reusable generation-
@@ -52,4 +52,4 @@ class DefaultBarrier final : public IBarrier
     std::uint64_t           _generation;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

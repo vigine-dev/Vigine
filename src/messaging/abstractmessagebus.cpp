@@ -16,7 +16,7 @@
 #include "vigine/messaging/imessage.h"
 #include "vigine/messaging/isubscriber.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include "messaging/ibuscontrolblock_default.h"
 
@@ -108,7 +108,7 @@ bool AbstractMessageBus::SubscriptionToken::active() const noexcept
 // ---------------------------------------------------------------------------
 
 AbstractMessageBus::AbstractMessageBus(BusConfig                          config,
-                                       vigine::threading::IThreadManager &threadManager)
+                                       vigine::core::threading::IThreadManager &threadManager)
     : _config(std::move(config))
     , _threadManager(&threadManager)
     , _control(std::make_shared<DefaultBusControlBlock>())

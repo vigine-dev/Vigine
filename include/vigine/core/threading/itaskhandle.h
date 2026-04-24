@@ -4,7 +4,7 @@
 
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Caller-held handle to a scheduled @ref IRunnable.
@@ -77,4 +77,4 @@ class ITaskHandle
     ITaskHandle() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

@@ -36,7 +36,7 @@
 #include "vigine/reactivestream/ireactivesubscriber.h"
 #include "vigine/reactivestream/ireactivesubscription.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 

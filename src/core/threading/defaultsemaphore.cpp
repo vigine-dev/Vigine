@@ -3,7 +3,7 @@
 #include <chrono>
 #include <mutex>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 DefaultSemaphore::DefaultSemaphore(std::size_t initialCount) noexcept
     : _count{initialCount}
@@ -56,4 +56,4 @@ std::size_t DefaultSemaphore::count() const
     return _count;
 }
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

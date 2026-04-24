@@ -6,9 +6,9 @@
 #include <mutex>
 
 #include "vigine/result.h"
-#include "vigine/threading/isemaphore.h"
+#include "vigine/core/threading/isemaphore.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Default @ref ISemaphore implementation built on
@@ -43,4 +43,4 @@ class DefaultSemaphore final : public ISemaphore
     std::size_t             _count;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

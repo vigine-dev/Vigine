@@ -9,9 +9,9 @@
 #include <vigine/payload/payloadtypeid.h>
 #include <vigine/signalemitter/isignalemitter.h>
 #include <vigine/taskflow.h>
-#include <vigine/threading/irunnable.h>
-#include <vigine/threading/ithreadmanager.h>
-#include <vigine/threading/threadaffinity.h>
+#include <vigine/core/threading/irunnable.h>
+#include <vigine/core/threading/ithreadmanager.h>
+#include <vigine/core/threading/threadaffinity.h>
 
 #include <algorithm>
 #include <atomic>
@@ -139,7 +139,7 @@ private:
 //   process is not terminated.
 // ---------------------------------------------------------------------
 
-class DeliverRunnable final : public threading::IRunnable {
+class DeliverRunnable final : public core::threading::IRunnable {
 public:
   DeliverRunnable(messaging::ISubscriber *target,
                   std::unique_ptr<ScheduledEnvelope> envelope,
@@ -222,8 +222,8 @@ private:
 class TaskFlow::ScheduledDelivery final : public messaging::ISubscriber {
 public:
   ScheduledDelivery(messaging::ISubscriber *target,
-                    threading::IThreadManager &threadManager,
-                    threading::ThreadAffinity affinity)
+                    core::threading::IThreadManager &threadManager,
+                    core::threading::ThreadAffinity affinity)
       : _target(target), _threadManager(threadManager), _affinity(affinity),
         _alive(std::make_shared<std::atomic<bool>>(true)) {}
 
@@ -270,8 +270,8 @@ public:
 
 private:
   messaging::ISubscriber *_target;
-  threading::IThreadManager &_threadManager;
-  threading::ThreadAffinity _affinity;
+  core::threading::IThreadManager &_threadManager;
+  core::threading::ThreadAffinity _affinity;
   // Shared alive-flag passed into every runnable this adapter schedules.
   // The flag is flipped to false in the adapter destructor; runnables
   // still pending on the thread manager observe the flip through an
@@ -353,7 +353,7 @@ Result TaskFlow::route(AbstractTask *from, AbstractTask *to,
 
 Result TaskFlow::signal(AbstractTask *from, AbstractTask *to,
                         payload::PayloadTypeId signalType,
-                        threading::ThreadAffinity affinity) {
+                        core::threading::ThreadAffinity affinity) {
   if (!from || !to)
     return Result(Result::Code::Error,
                   "Invalid pointer provided for signal transition");
@@ -369,7 +369,7 @@ Result TaskFlow::signal(AbstractTask *from, AbstractTask *to,
   // purpose and the caller must use scheduleOnNamed instead. TaskFlow
   // does not yet carry a NamedThreadId parameter on signal(), so the
   // edge is rejected outright.
-  if (affinity == threading::ThreadAffinity::Named)
+  if (affinity == core::threading::ThreadAffinity::Named)
     return Result(Result::Code::Error,
                   "ThreadAffinity::Named is not supported on signal edges");
 
@@ -390,7 +390,7 @@ Result TaskFlow::signal(AbstractTask *from, AbstractTask *to,
   filter.kind = messaging::MessageKind::Signal;
   filter.typeId = signalType;
 
-  if (affinity == threading::ThreadAffinity::Any) {
+  if (affinity == core::threading::ThreadAffinity::Any) {
     // Local re-interpretation of ThreadAffinity::Any: run the handler
     // synchronously on the emitter's thread. No scheduler involvement.
     // The subscriber is wired directly to the bus; the bus's
@@ -412,7 +412,7 @@ Result TaskFlow::signal(AbstractTask *from, AbstractTask *to,
                   "No context installed; threaded signal edges require "
                   "IThreadManager from IContext::threadManager");
 
-  threading::IThreadManager &threadManager = _context->threadManager();
+  core::threading::IThreadManager &threadManager = _context->threadManager();
 
   auto delivery = std::make_unique<ScheduledDelivery>(subscriber, threadManager,
                                                       affinity);

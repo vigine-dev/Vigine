@@ -11,9 +11,9 @@
 #include "vigine/messaging/routemode.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -187,7 +187,7 @@ class ActorHostSmoke : public ::testing::Test
   protected:
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         vigine::messaging::BusConfig cfg;
         cfg.threading    = vigine::messaging::ThreadingPolicy::InlineOnly;
@@ -213,7 +213,7 @@ class ActorHostSmoke : public ::testing::Test
         }
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<vigine::messaging::IMessageBus>    _bus;
     std::unique_ptr<IActorHost>                        _host;
 };

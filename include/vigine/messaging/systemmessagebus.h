@@ -3,10 +3,10 @@
 #include "vigine/messaging/abstractmessagebus.h"
 #include "vigine/messaging/busconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::messaging
 {
@@ -39,7 +39,7 @@ class SystemMessageBus final : public AbstractMessageBus
      * engine's single system bus; use @ref createMessageBus for user
      * buses with arbitrary configs.
      */
-    explicit SystemMessageBus(vigine::threading::IThreadManager &threadManager);
+    explicit SystemMessageBus(vigine::core::threading::IThreadManager &threadManager);
 
     /**
      * @brief Builds the bus with @p config verbatim.
@@ -50,7 +50,7 @@ class SystemMessageBus final : public AbstractMessageBus
      * sentinel zero end up with an auto-assigned id.
      */
     SystemMessageBus(BusConfig                          config,
-                     vigine::threading::IThreadManager &threadManager);
+                     vigine::core::threading::IThreadManager &threadManager);
 
     ~SystemMessageBus() override = default;
 

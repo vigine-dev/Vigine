@@ -31,7 +31,7 @@
 #include "vigine/eventscheduler/itimersource.h"
 #include "vigine/eventscheduler/ossignal.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 

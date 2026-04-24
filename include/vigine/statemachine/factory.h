@@ -23,7 +23,7 @@ namespace vigine::statemachine
  * mirrors the shape used by the ECS factory
  * (@ref vigine::ecs::createECS), the service factory
  * (@ref vigine::service::createService), the thread manager factory
- * (@ref vigine::threading::createThreadManager), the payload registry
+ * (@ref vigine::core::threading::createThreadManager), the payload registry
  * factory, and the message bus factory
  * (@ref vigine::messaging::createMessageBus).
  *

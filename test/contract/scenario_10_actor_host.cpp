@@ -32,7 +32,7 @@
 #include "vigine/messaging/routemode.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 

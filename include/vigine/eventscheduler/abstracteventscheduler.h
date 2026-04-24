@@ -3,10 +3,10 @@
 #include "vigine/messaging/abstractmessagebus.h"
 #include "vigine/eventscheduler/ieventscheduler.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::eventscheduler
 {
@@ -60,7 +60,7 @@ class AbstractEventScheduler : public IEventScheduler, protected AbstractMessage
      *        @ref vigine::messaging::AbstractMessageBus.
      */
     AbstractEventScheduler(vigine::messaging::BusConfig      config,
-                           vigine::threading::IThreadManager &threadManager);
+                           vigine::core::threading::IThreadManager &threadManager);
 };
 
 } // namespace vigine::eventscheduler

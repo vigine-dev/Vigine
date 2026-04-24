@@ -4,9 +4,9 @@
 #include <mutex>
 
 #include "vigine/result.h"
-#include "vigine/threading/imutex.h"
+#include "vigine/core/threading/imutex.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Default @ref IMutex implementation over @c std::timed_mutex.
@@ -38,4 +38,4 @@ class DefaultMutex final : public IMutex
     std::timed_mutex _mutex;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

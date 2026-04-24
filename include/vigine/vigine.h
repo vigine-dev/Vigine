@@ -13,10 +13,10 @@ class IStateMachine;
 class IContext;
 class IEntityManager;
 
-namespace threading
+namespace core::threading
 {
 class IThreadManager;
-} // namespace threading
+} // namespace core::threading
 
 namespace messaging
 {
@@ -62,7 +62,7 @@ class Engine
     // Messaging / threading substrate -- introduced here, left null.
     // Their concrete wiring lands in later leaves (plan_09 for the
     // message bus core, plan_23 for the final construction order).
-    std::unique_ptr<threading::IThreadManager>            _threadManager;
+    std::unique_ptr<core::threading::IThreadManager>            _threadManager;
     std::shared_ptr<messaging::IMessageBus>               _systemBus;
     std::vector<std::shared_ptr<messaging::IMessageBus>>  _userBuses;
 

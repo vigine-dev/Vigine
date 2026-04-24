@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Closed enumeration of scheduling targets accepted by @ref IThreadManager.
@@ -42,4 +42,4 @@ enum class ThreadAffinity : std::uint8_t
     Named = 4,
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

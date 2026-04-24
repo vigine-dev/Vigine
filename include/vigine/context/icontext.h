@@ -32,10 +32,10 @@ namespace vigine::taskflow
 class ITaskFlow;
 } // namespace vigine::taskflow
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine
 {
@@ -64,7 +64,7 @@ namespace vigine
  *     available.
  *
  * Strict construction order (AD-5 C8, encoded by @ref AbstractContext):
- *   1. @ref threading::IThreadManager (created first).
+ *   1. @ref core::threading::IThreadManager (created first).
  *   2. system @ref messaging::IMessageBus (needs the thread manager).
  *   3. Level-1 wrappers (ECS, state machine, task flow).
  *   4. services registered through @ref registerService.
@@ -167,7 +167,7 @@ class IContext
      * construction and destruction orders in @ref AbstractContext are
      * strict.
      */
-    [[nodiscard]] virtual threading::IThreadManager &threadManager() = 0;
+    [[nodiscard]] virtual core::threading::IThreadManager &threadManager() = 0;
 
     // ------ Service registry ------
 

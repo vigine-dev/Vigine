@@ -7,10 +7,10 @@
 #include "vigine/eventscheduler/iossignalsource.h"
 #include "vigine/eventscheduler/itimersource.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::eventscheduler
 {
@@ -50,7 +50,7 @@ class DefaultEventScheduler final
      * @p osSignalSource provides OS-signal subscribe / unsubscribe
      *                   (owned by caller).
      */
-    explicit DefaultEventScheduler(vigine::threading::IThreadManager &threadManager,
+    explicit DefaultEventScheduler(vigine::core::threading::IThreadManager &threadManager,
                                    ITimerSource                      &timerSource,
                                    IOsSignalSource                   &osSignalSource);
 

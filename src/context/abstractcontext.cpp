@@ -8,7 +8,7 @@
 #include "vigine/service/abstractservice.h"
 #include "vigine/statemachine/factory.h"
 #include "vigine/taskflow/factory.h"
-#include "vigine/threading/factory.h"
+#include "vigine/core/threading/factory.h"
 
 namespace vigine::context
 {
@@ -17,7 +17,7 @@ AbstractContext::AbstractContext(const ContextConfig &config)
     // Step 1: thread manager first. Built before the initialiser list
     // touches any other wrapper so every downstream step has a live
     // thread manager reference to bind to.
-    : _threadManager{threading::createThreadManager(config.threading)}
+    : _threadManager{core::threading::createThreadManager(config.threading)}
     // Step 2: system bus next. Takes the thread manager by reference so
     // its dispatch worker can schedule on the engine pool. The factory
     // returns a unique_ptr; we lift it into a shared_ptr so facades
@@ -140,7 +140,7 @@ taskflow::ITaskFlow &AbstractContext::taskFlow()
 // Threading
 // ---------------------------------------------------------------------
 
-threading::IThreadManager &AbstractContext::threadManager()
+core::threading::IThreadManager &AbstractContext::threadManager()
 {
     return *_threadManager;
 }

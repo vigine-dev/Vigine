@@ -19,7 +19,7 @@
 #include "vigine/messaging/routemode.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::eventscheduler
 {
@@ -222,7 +222,7 @@ struct DefaultEventScheduler::Impl
 // -----------------------------------------------------------------
 
 DefaultEventScheduler::DefaultEventScheduler(
-    vigine::threading::IThreadManager &threadManager,
+    vigine::core::threading::IThreadManager &threadManager,
     ITimerSource                      &timerSource,
     IOsSignalSource                   &osSignalSource)
     : AbstractEventScheduler{inlineBusConfig(), threadManager}
@@ -421,7 +421,7 @@ void DefaultEventScheduler::onOsSignal(OsSignal signal)
 // -----------------------------------------------------------------
 
 std::unique_ptr<IEventScheduler>
-createEventScheduler(vigine::threading::IThreadManager &threadManager,
+createEventScheduler(vigine::core::threading::IThreadManager &threadManager,
                      ITimerSource                      &timerSource,
                      IOsSignalSource                   &osSignalSource)
 {

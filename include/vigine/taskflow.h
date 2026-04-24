@@ -3,7 +3,7 @@
 #include "abstracttask.h"
 #include "payload/payloadtypeid.h"
 #include "result.h"
-#include "threading/threadaffinity.h"
+#include "core/threading/threadaffinity.h"
 
 #include <memory>
 #include <unordered_map>
@@ -83,26 +83,26 @@ class TaskFlow
      * with a matching @c PayloadTypeId.
      *
      * Threading:
-     *   - @p affinity defaults to @ref threading::ThreadAffinity::Any.
+     *   - @p affinity defaults to @ref core::threading::ThreadAffinity::Any.
      *     Inside @c TaskFlow::signal, @c Any is re-interpreted as
      *     "run the handler synchronously on the emitter's thread, with no
-     *     @ref threading::IThreadManager involvement". This is a local
+     *     @ref core::threading::IThreadManager involvement". This is a local
      *     re-definition of the generic "engine picks a fast worker"
-     *     meaning documented on @ref threading::ThreadAffinity::Any for
-     *     @ref threading::IThreadManager::schedule; see that header for
+     *     meaning documented on @ref core::threading::ThreadAffinity::Any for
+     *     @ref core::threading::IThreadManager::schedule; see that header for
      *     the dispatch-time semantics.
      *   - Any other @p affinity value wraps @p to in an internal
      *     subscriber adapter that, on delivery from the emitter, re-posts
      *     the handler call through
-     *     @ref threading::IThreadManager::schedule. The emitter thread
+     *     @ref core::threading::IThreadManager::schedule. The emitter thread
      *     therefore does not block on the handler.
      *
      * Failures:
      *   - Null @p from or @p to, or @p from / @p to not registered with
      *     this flow, returns an error @ref Result.
-     *   - A @ref threading::ThreadAffinity::Named value returns an error;
-     *     @c Named affinities require a @ref threading::NamedThreadId and
-     *     are routed through @ref threading::IThreadManager::scheduleOnNamed
+     *   - A @ref core::threading::ThreadAffinity::Named value returns an error;
+     *     @c Named affinities require a @ref core::threading::NamedThreadId and
+     *     are routed through @ref core::threading::IThreadManager::scheduleOnNamed
      *     instead of @c schedule.
      *   - No @ref signalemitter::ISignalEmitter installed via
      *     @ref setSignalEmitter returns an error.
@@ -122,8 +122,8 @@ class TaskFlow
     [[nodiscard]] Result signal(AbstractTask            *from,
                                 AbstractTask            *to,
                                 payload::PayloadTypeId   signalType,
-                                threading::ThreadAffinity affinity
-                                = threading::ThreadAffinity::Any);
+                                core::threading::ThreadAffinity affinity
+                                = core::threading::ThreadAffinity::Any);
 
     // Change current task
     void changeCurrentTaskTo(AbstractTask *newTask);

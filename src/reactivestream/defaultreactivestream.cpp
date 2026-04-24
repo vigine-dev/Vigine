@@ -18,7 +18,7 @@
 #include "vigine/reactivestream/ireactivesubscriber.h"
 #include "vigine/reactivestream/ireactivesubscription.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -183,7 +183,7 @@ class BusSubscriber final : public vigine::messaging::ISubscriber
 struct DefaultReactiveStream::Impl
 {
     vigine::messaging::IMessageBus    &bus;
-    vigine::threading::IThreadManager &threadManager;
+    vigine::core::threading::IThreadManager &threadManager;
 
     std::mutex                                                                registryMutex;
     std::unordered_map<std::uint64_t, std::shared_ptr<SubscriptionState>>    subscriptions;
@@ -195,7 +195,7 @@ struct DefaultReactiveStream::Impl
     std::atomic<bool> shutdownFlag{false};
 
     explicit Impl(vigine::messaging::IMessageBus    &bus_,
-                  vigine::threading::IThreadManager &tm_)
+                  vigine::core::threading::IThreadManager &tm_)
         : bus(bus_)
         , threadManager(tm_)
     {
@@ -228,7 +228,7 @@ struct DefaultReactiveStream::Impl
 // ---------------------------------------------------------------------------
 
 DefaultReactiveStream::DefaultReactiveStream(vigine::messaging::IMessageBus    &bus,
-                                             vigine::threading::IThreadManager &threadManager)
+                                             vigine::core::threading::IThreadManager &threadManager)
     : AbstractReactiveStream(bus)
     , _impl(std::make_unique<Impl>(bus, threadManager))
 {
@@ -422,7 +422,7 @@ vigine::Result DefaultReactiveStream::shutdown()
 
 std::unique_ptr<IReactiveStream>
 createReactiveStream(vigine::messaging::IMessageBus    &bus,
-                     vigine::threading::IThreadManager &threadManager)
+                     vigine::core::threading::IThreadManager &threadManager)
 {
     return std::make_unique<DefaultReactiveStream>(bus, threadManager);
 }

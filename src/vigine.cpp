@@ -3,8 +3,8 @@
 #include "vigine/context.h"
 #include "vigine/ecs/entitymanager.h"
 #include "vigine/statemachine.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine
 {
@@ -12,7 +12,7 @@ namespace vigine
 Engine::Engine()
 {
     _entityManager.reset(new EntityManager());
-    _threadManager = threading::createThreadManager();
+    _threadManager = core::threading::createThreadManager();
     _context.reset(new Context(_entityManager.get(), _threadManager.get()));
     _stateMachine.reset(new StateMachine(_context.get()));
 }

@@ -5,16 +5,16 @@
 #include <string_view>
 
 #include "vigine/result.h"
-#include "vigine/threading/ibarrier.h"
-#include "vigine/threading/imessagechannel.h"
-#include "vigine/threading/imutex.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/isemaphore.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/namedthreadid.h"
-#include "vigine/threading/threadaffinity.h"
+#include "vigine/core/threading/ibarrier.h"
+#include "vigine/core/threading/imessagechannel.h"
+#include "vigine/core/threading/imutex.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/isemaphore.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/namedthreadid.h"
+#include "vigine/core/threading/threadaffinity.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Pure-virtual core of the threading substrate.
@@ -208,4 +208,4 @@ class IThreadManager
     IThreadManager() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

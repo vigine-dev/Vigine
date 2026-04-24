@@ -4,7 +4,7 @@
 
 #include "vigine/result.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Pure-virtual engine-level mutual-exclusion primitive.
@@ -78,4 +78,4 @@ class IMutex
     IMutex() = default;
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

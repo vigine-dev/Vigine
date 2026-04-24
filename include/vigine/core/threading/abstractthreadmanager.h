@@ -11,15 +11,15 @@
 #include <vector>
 
 #include "vigine/result.h"
-#include "vigine/threading/ibarrier.h"
-#include "vigine/threading/imessagechannel.h"
-#include "vigine/threading/imutex.h"
-#include "vigine/threading/isemaphore.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/namedthreadid.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/ibarrier.h"
+#include "vigine/core/threading/imessagechannel.h"
+#include "vigine/core/threading/imutex.h"
+#include "vigine/core/threading/isemaphore.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/namedthreadid.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 /**
  * @brief Concrete stateful base for every in-process @ref IThreadManager.
@@ -30,13 +30,13 @@ namespace vigine::threading
  * atomic shut-down flag. It implements the parts of @ref IThreadManager
  * that are identical across every implementation — registry bookkeeping
  * and observability — and leaves the scheduling and pump mechanics
- * abstract for @ref DefaultThreadManager to provide.
+ * abstract for @ref ThreadManager to provide.
  *
  * The class carries state, so it follows the project's @c Abstract
  * naming convention rather than the @c I pure-virtual prefix. It is
  * abstract only in the logical sense — users do not instantiate it
  * directly; @ref createThreadManager returns a @c final subclass
- * (@ref DefaultThreadManager) that closes the inheritance chain.
+ * (@ref ThreadManager) that closes the inheritance chain.
  *
  * Thread-safety: every mutating entry point on the registry takes
  * an exclusive lock on an internal @c std::mutex. The shut-down flag
@@ -193,4 +193,4 @@ class AbstractThreadManager : public IThreadManager
     std::atomic<std::uint32_t>     _nextNamedGeneration{1};
 };
 
-} // namespace vigine::threading
+} // namespace vigine::core::threading

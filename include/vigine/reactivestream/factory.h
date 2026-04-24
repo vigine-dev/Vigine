@@ -9,10 +9,10 @@ namespace vigine::messaging
 class IMessageBus;
 } // namespace vigine::messaging
 
-namespace vigine::threading
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
 
 namespace vigine::reactivestream
 {
@@ -36,6 +36,6 @@ namespace vigine::reactivestream
  */
 [[nodiscard]] std::unique_ptr<IReactiveStream>
     createReactiveStream(vigine::messaging::IMessageBus    &bus,
-                         vigine::threading::IThreadManager &threadManager);
+                         vigine::core::threading::IThreadManager &threadManager);
 
 } // namespace vigine::reactivestream

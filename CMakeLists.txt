@@ -200,19 +200,19 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/graph/igraph.h
     ${INCLUDE_DIR}/vigine/graph/factory.h
     ${INCLUDE_DIR}/vigine/graph/abstractgraph.h
-    ${INCLUDE_DIR}/vigine/threading/threadaffinity.h
-    ${INCLUDE_DIR}/vigine/threading/namedthreadid.h
-    ${INCLUDE_DIR}/vigine/threading/threadmanagerconfig.h
-    ${INCLUDE_DIR}/vigine/threading/irunnable.h
-    ${INCLUDE_DIR}/vigine/threading/itaskhandle.h
-    ${INCLUDE_DIR}/vigine/threading/imutex.h
-    ${INCLUDE_DIR}/vigine/threading/isemaphore.h
-    ${INCLUDE_DIR}/vigine/threading/ibarrier.h
-    ${INCLUDE_DIR}/vigine/threading/imessagechannel.h
-    ${INCLUDE_DIR}/vigine/threading/ithreadmanager.h
-    ${INCLUDE_DIR}/vigine/threading/abstractthreadmanager.h
-    ${INCLUDE_DIR}/vigine/threading/defaultthreadmanager.h
-    ${INCLUDE_DIR}/vigine/threading/factory.h
+    ${INCLUDE_DIR}/vigine/core/threading/threadaffinity.h
+    ${INCLUDE_DIR}/vigine/core/threading/namedthreadid.h
+    ${INCLUDE_DIR}/vigine/core/threading/threadmanagerconfig.h
+    ${INCLUDE_DIR}/vigine/core/threading/irunnable.h
+    ${INCLUDE_DIR}/vigine/core/threading/itaskhandle.h
+    ${INCLUDE_DIR}/vigine/core/threading/imutex.h
+    ${INCLUDE_DIR}/vigine/core/threading/isemaphore.h
+    ${INCLUDE_DIR}/vigine/core/threading/ibarrier.h
+    ${INCLUDE_DIR}/vigine/core/threading/imessagechannel.h
+    ${INCLUDE_DIR}/vigine/core/threading/ithreadmanager.h
+    ${INCLUDE_DIR}/vigine/core/threading/abstractthreadmanager.h
+    ${INCLUDE_DIR}/vigine/core/threading/threadmanager.h
+    ${INCLUDE_DIR}/vigine/core/threading/factory.h
     ${INCLUDE_DIR}/vigine/payload/payloadtypeid.h
     ${INCLUDE_DIR}/vigine/payload/payloadrange.h
     ${INCLUDE_DIR}/vigine/payload/ipayloadregistry.h
@@ -280,18 +280,18 @@ set(SOURCES
     ${SRC_DIR}/graph/defaultgraph_query.cpp
     ${SRC_DIR}/graph/defaultgraph_export.cpp
     ${SRC_DIR}/graph/factory.cpp
-    ${SRC_DIR}/threading/abstractthreadmanager.cpp
-    ${SRC_DIR}/threading/defaultthreadmanager.cpp
-    ${SRC_DIR}/threading/defaultmutex.h
-    ${SRC_DIR}/threading/defaultmutex.cpp
-    ${SRC_DIR}/threading/defaultsemaphore.h
-    ${SRC_DIR}/threading/defaultsemaphore.cpp
-    ${SRC_DIR}/threading/defaultbarrier.h
-    ${SRC_DIR}/threading/defaultbarrier.cpp
-    ${SRC_DIR}/threading/defaultmessagechannel.h
-    ${SRC_DIR}/threading/defaultmessagechannel.cpp
-    ${SRC_DIR}/threading/defaultthreadmanager_factories.cpp
-    ${SRC_DIR}/threading/factory.cpp
+    ${SRC_DIR}/core/threading/abstractthreadmanager.cpp
+    ${SRC_DIR}/core/threading/threadmanager.cpp
+    ${SRC_DIR}/core/threading/defaultmutex.h
+    ${SRC_DIR}/core/threading/defaultmutex.cpp
+    ${SRC_DIR}/core/threading/defaultsemaphore.h
+    ${SRC_DIR}/core/threading/defaultsemaphore.cpp
+    ${SRC_DIR}/core/threading/defaultbarrier.h
+    ${SRC_DIR}/core/threading/defaultbarrier.cpp
+    ${SRC_DIR}/core/threading/defaultmessagechannel.h
+    ${SRC_DIR}/core/threading/defaultmessagechannel.cpp
+    ${SRC_DIR}/core/threading/defaultthreadmanager_factories.cpp
+    ${SRC_DIR}/core/threading/factory.cpp
     ${SRC_DIR}/payload/abstractpayloadregistry.h
     ${SRC_DIR}/payload/abstractpayloadregistry.cpp
     ${SRC_DIR}/payload/defaultpayloadregistry.h

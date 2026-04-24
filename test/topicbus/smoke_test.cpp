@@ -10,9 +10,9 @@
 #include "vigine/messaging/routemode.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 #include "vigine/topicbus/defaulttopicbus.h"
 #include "vigine/topicbus/itopicbus.h"
 #include "vigine/topicbus/topicid.h"
@@ -99,7 +99,7 @@ class TopicBusSmoke : public ::testing::Test
   protected:
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         BusConfig cfg;
         cfg.threading    = ThreadingPolicy::InlineOnly;
@@ -125,7 +125,7 @@ class TopicBusSmoke : public ::testing::Test
         }
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<IMessageBus>                       _bus;
     std::unique_ptr<ITopicBus>                         _topic;
 };

@@ -43,7 +43,7 @@ class DefaultPipelineBuilder final : public AbstractPipelineBuilder
      * All three references must outlive this builder instance.
      */
     DefaultPipelineBuilder(vigine::messaging::IMessageBus       &bus,
-                           vigine::threading::IThreadManager    &threadManager,
+                           vigine::core::threading::IThreadManager    &threadManager,
                            vigine::channelfactory::IChannelFactory &channelFactory);
 
     ~DefaultPipelineBuilder() override;
