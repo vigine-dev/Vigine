@@ -97,6 +97,17 @@ If a task description does not include the project folder layout, use this secti
 - Keep this file aligned with the current engine structure when folders, core classes, or inheritance relations change.
 - If class relationships change, also update the related Mermaid diagrams in this folder.
 
+## Architecture rules
+
+- [Engine token (R-StateScope pattern)](ecs/engine-token.md) —
+  state-scoped DI handle the engine hands to tasks via
+  `IContext::makeEngineToken`. Documents the
+  `IEngineToken` / `AbstractEngineToken` / `EngineToken` pyramid, the
+  hybrid gating policy that splits domain accessors (gated, return
+  `Result<T>`) from infrastructure accessors (non-gated, return `T&`),
+  the `subscribeExpiration` self-destruct contract, and the FSM-side
+  invalidation listener firing path on `AbstractStateMachine`.
+
 ## Class diagrams
 
 - [Core architecture](core-class-diagram.md)
