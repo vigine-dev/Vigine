@@ -100,10 +100,12 @@ namespace vigine::statemachine
  *     thread later applies the queued request through
  *     @ref processQueuedTransitions, which delegates to the
  *     synchronous @ref transition path on its own thread.
- *   - The engine arranges the drain pump from its controller-thread
- *     main loop and best-effort once at engine shutdown, so consumers
- *     that go through the engine never call
- *     @ref processQueuedTransitions themselves.
+ *   - The owner of the controller-thread loop is responsible for
+ *     calling @ref processQueuedTransitions on a periodic cadence
+ *     while the machine is live, and once at teardown to drain
+ *     whatever requests are still queued. The interface does not
+ *     prescribe @e who that owner is; concrete embedders, hosting
+ *     subsystems, or test harnesses each pick their own pump point.
  *   - Read-only queries (@ref hasState, @ref parent,
  *     @ref isAncestorOf, @ref current, @ref routeMode,
  *     @ref controllerThread) are safe to call from any thread and
@@ -281,14 +283,31 @@ class IStateMachine
     /**
      * @brief Binds the state machine to its controller thread.
      *
-     * @par One-shot binding
-     * This call is the single moment the machine learns which thread
-     * owns its synchronous mutation path. It MUST be called exactly
-     * once, before the first sync mutation (@ref setInitial,
-     * @ref transition, @ref addChildState) and before the first drain
-     * (@ref processQueuedTransitions). After the binding lands, every
-     * subsequent sync-mutator call is gated against @p controllerId
-     * via @c AbstractStateMachine::checkThreadAffinity.
+     * @par Two supported modes
+     * The machine supports two mutually exclusive operation modes,
+     * and the consumer chooses between them by either calling this
+     * method or skipping it:
+     *   - @b Bound mode (affinity gate active): the consumer calls
+     *     @ref bindToControllerThread exactly once, before the first
+     *     sync mutation (@ref setInitial, @ref transition,
+     *     @ref addChildState) and before the first drain
+     *     (@ref processQueuedTransitions). After the binding lands,
+     *     every subsequent sync-mutator call is gated against
+     *     @p controllerId via
+     *     @c AbstractStateMachine::checkThreadAffinity. This is the
+     *     mode production embedders pick when they want the assert
+     *     to catch stray cross-thread mutations.
+     *   - @b Unbound mode (affinity gate inactive): the consumer
+     *     never calls @ref bindToControllerThread. The gate stays
+     *     inactive for the life of the machine; sync mutators skip
+     *     the assert and run on whichever thread issued them. This
+     *     is the documented escape hatch for tests, ad-hoc embedders,
+     *     and any caller that opts out of the dual-API policy and
+     *     prefers to serialise mutations on its own.
+     *
+     * The two modes are not meant to be mixed: once the consumer
+     * has decided to enable the gate via this call, the gate stays
+     * active for the rest of the machine's life.
      *
      * @par Re-binding
      * A second call is rejected. The implementation installs the
@@ -297,15 +316,6 @@ class IStateMachine
      * non-sentinel expected value and fails. Debug builds fire the
      * contract assert; Release silently keeps the original binding so
      * the machine remains usable but with the original controller.
-     *
-     * @par Un-bound = gate inactive
-     * Until @ref bindToControllerThread runs, the controller-thread
-     * gate is intentionally inactive. Sync mutators called before
-     * binding skip the assert and run on whichever thread issued them;
-     * this is the documented escape hatch for callers that opt out of
-     * the dual-API policy and serialise mutations themselves. The
-     * locked engine wiring binds the machine on construction so the
-     * un-bound state is invisible to typical Engine consumers.
      *
      * @par Thread-safety
      * Safe to call from any thread; the compare-exchange against the
@@ -336,12 +346,13 @@ class IStateMachine
      * This entry point is the @b asynchronous half of the dual-API
      * transition surface. It is the ONLY way to drive a transition
      * from a non-controller thread. The call is thread-safe by
-     * construction: it pushes @p target onto an internal FIFO queue
-     * under @c _queueMutex and returns immediately, without validating
-     * the id, taking the topology lock, or touching @c _current. The
-     * controller thread later drains the queue via
-     * @ref processQueuedTransitions and applies each entry through the
-     * synchronous @ref transition call site, on its own thread.
+     * construction: it enqueues @p target onto an internal FIFO under
+     * the queue's synchronisation primitive and returns immediately,
+     * without validating the id, taking the topology lock, or touching
+     * the active-state field. The controller thread later drains the
+     * queue via @ref processQueuedTransitions and applies each entry
+     * through the synchronous @ref transition call site, on its own
+     * thread.
      *
      * @par No back-pressure to the producer
      * Stale ids and other failures are intentionally not surfaced to
@@ -354,15 +365,15 @@ class IStateMachine
      * here.
      *
      * @par Ordering and idempotency
-     * The call is non-idempotent in effect: pushing the same target
+     * The call is non-idempotent in effect: posting the same target
      * twice queues two separate transitions, both of which the drain
-     * applies in order. Multiple producers may post concurrently; the
-     * queue mutex serialises pushes, so the observed FIFO order
-     * matches the order of mutex acquisitions. A request posted from
-     * inside an @c onEnter / @c onExit hook (i.e. during a drain) sits
-     * on the @b live queue and is applied on the @b next drain pass —
-     * the drain takes one snapshot per call by design (see
-     * @ref processQueuedTransitions).
+     * applies in order. Multiple producers may post concurrently;
+     * pushes are serialised under the queue's synchronisation primitive,
+     * so the observed FIFO order matches the order in which those
+     * pushes were admitted. A request posted from inside an @c onEnter
+     * / @c onExit hook (i.e. during a drain) sits on the @b live queue
+     * and is applied on the @b next drain pass — the drain takes one
+     * snapshot per call by design (see @ref processQueuedTransitions).
      *
      * @par Relationship to the sync surface
      * Code that already runs on the controller thread does not need to
@@ -386,31 +397,30 @@ class IStateMachine
      * @c AbstractStateMachine::checkThreadAffinity contract assert in
      * Debug and is undefined behaviour in Release. The "un-bound =
      * gate inactive" contract documented on
-     * @ref bindToControllerThread applies here too: callers that opt
-     * out of binding can call this method from any thread, but the
-     * locked engine wiring always binds the machine, so consumers
-     * that go through the engine never hit the un-bound branch.
+     * @ref bindToControllerThread applies here too: a consumer that
+     * has opted into the unbound mode can call this method from any
+     * thread.
      *
-     * @par Pump shape — engine-driven
-     * The locked policy gives the engine exclusive responsibility for
-     * pumping the drain. The engine arranges drains from its
-     * controller-thread main loop on every tick @b and once at engine
-     * shutdown (best-effort, draining whatever is still queued at
-     * stop time). Direct callers therefore typically do not invoke
-     * this method themselves; tests and embedders that own the
-     * controller loop call it directly when they need a deterministic
-     * pump point.
+     * @par Pump shape — controller-thread owner drives the cadence
+     * Calling this method is the responsibility of whichever component
+     * owns the controller-thread loop. That owner is expected to drain
+     * on a periodic cadence while the machine is live and once at
+     * teardown (best-effort, draining whatever is still queued at stop
+     * time). The interface does not name a specific owner; in
+     * practice, embedders that host the FSM inside a tick loop pump
+     * it from there, while tests and ad-hoc embedders pump it
+     * explicitly when they need a deterministic boundary.
      *
      * @par Single-pass snapshot
-     * The drain takes ONE snapshot of the queue per call by atomically
-     * swapping @c _transitionQueue with a stack-local empty deque
-     * under @c _queueMutex, then walks the snapshot in FIFO order
-     * outside the lock. Each entry is applied through the synchronous
-     * @ref transition call site, which means listeners and (future)
-     * enter/exit hooks fire on the controller thread inside this
-     * method. Per-entry failures are intentionally not surfaced: the
-     * drain discards the @ref Result returned by each delegated
-     * @ref transition.
+     * The drain takes ONE snapshot of the queued requests per call by
+     * atomically detaching the live queue (replacing it with an empty
+     * one) under the queue's synchronisation primitive, then walks the
+     * snapshot in FIFO order outside the lock. Each entry is applied
+     * through the synchronous @ref transition call site, which means
+     * listeners and (future) enter/exit hooks fire on the controller
+     * thread inside this method. Per-entry failures are intentionally
+     * not surfaced: the drain discards the @ref Result returned by
+     * each delegated @ref transition.
      *
      * @par Re-entrancy boundary
      * The single-pass guarantee is deliberate. A request pushed from

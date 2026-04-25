@@ -95,31 +95,33 @@ class StateTopology;
  *     @ref processQueuedTransitions are gated through
  *     @ref checkThreadAffinity once the controller binding is in
  *     place. Stray callers from another thread fire an @c assert in
- *     Debug builds and are undefined behaviour in Release. Until the
- *     binding lands the gate is intentionally inactive (the
- *     "un-bound = gate inactive" contract); the locked engine wiring
- *     binds the machine on construction so engine consumers never
- *     observe the un-bound branch.
+ *     Debug builds and are undefined behaviour in Release. The
+ *     binding is opt-in per the contract on
+ *     @ref bindToControllerThread: a consumer that calls it before
+ *     the first sync mutation gets the affinity gate; a consumer
+ *     that never calls it stays in the unbound mode for the life of
+ *     the machine and the gate stays inactive.
  *   - The @b asynchronous request surface — @ref requestTransition —
- *     is the only path open to non-controller threads. It pushes the
- *     target onto an internal FIFO queue (@c _transitionQueue,
- *     guarded by @c _queueMutex) and returns immediately. Multiple
- *     producers may post concurrently; the queue mutex serialises
- *     pushes and FIFO order matches mutex acquisition order.
+ *     is the only path open to non-controller threads. It posts the
+ *     target onto an internal FIFO queue and returns immediately.
+ *     Multiple producers may post concurrently; pushes are serialised
+ *     under the queue's synchronisation primitive and FIFO order
+ *     matches the order in which those pushes were admitted.
  *   - The drain pump @ref processQueuedTransitions is the
  *     controller-thread end of the async path. It takes ONE snapshot
- *     of the queue per call (atomic swap with an empty deque under
- *     @c _queueMutex) and walks the snapshot outside the lock,
- *     delegating each entry to the synchronous @ref transition call
- *     site. Requests posted from inside an @c onEnter / @c onExit
- *     hook or a listener during a drain land on the @b live queue and
- *     are applied on the @b next drain — never inside the same drain
- *     — so the controller thread is free of unbounded reentry.
- *   - The engine arranges the drain pump from its controller-thread
- *     main loop and once at engine shutdown (best-effort). Tests and
- *     embedders that own the controller loop may call
- *     @ref processQueuedTransitions directly when they need a
- *     deterministic pump point.
+ *     of the queue per call (atomic detach of the live queue under
+ *     the queue's synchronisation primitive) and walks the snapshot
+ *     outside the lock, delegating each entry to the synchronous
+ *     @ref transition call site. Requests posted from inside an
+ *     @c onEnter / @c onExit hook or a listener during a drain land
+ *     on the @b live queue and are applied on the @b next drain —
+ *     never inside the same drain — so the controller thread is
+ *     free of unbounded reentry.
+ *   - The owner of the controller-thread loop is responsible for
+ *     calling @ref processQueuedTransitions on a periodic cadence
+ *     while the machine is live and once at teardown (best-effort).
+ *     Tests and ad-hoc embedders that own the controller loop call
+ *     it directly when they need a deterministic pump point.
  *   - Read-only queries (@ref hasState, @ref parent,
  *     @ref isAncestorOf, @ref current, @ref routeMode,
  *     @ref controllerThread) are safe from any thread and either
@@ -176,8 +178,8 @@ class AbstractStateMachine : public IStateMachine
      * transition, with the @ref StateId of the state that has just been
      * vacated (i.e. the state @ref current returned immediately before
      * the new state took effect). Listeners always fire BEFORE the
-     * machine flips the @c _current member, so observers see the OLD
-     * state id consistently.
+     * machine flips the active state, so observers see the OLD state
+     * id consistently.
      *
      * No-op transitions (target equal to the current state) and
      * transitions rejected because the target is not registered DO NOT
