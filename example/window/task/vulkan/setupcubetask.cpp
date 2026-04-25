@@ -31,7 +31,7 @@ void SetupCubeTask::contextChanged()
     }
 }
 
-vigine::Result SetupCubeTask::execute()
+vigine::Result SetupCubeTask::run()
 {
     std::cout << "Setting up cube geometry..." << std::endl;
 

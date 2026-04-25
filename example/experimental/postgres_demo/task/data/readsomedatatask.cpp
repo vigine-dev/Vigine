@@ -23,11 +23,12 @@ void ReadSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Перевіряти entity/_dbService і повертати помилку, якщо DatabaseService::readData()
-// лишається недописаним; зараз сценарій маскує неготовий код як success.
-vigine::Result ReadSomeDataTask::execute()
+// COPILOT_TODO: Validate entity/_dbService and return an error while
+// DatabaseService::readData() stays unfinished; the current path masks
+// incomplete code as success.
+vigine::Result ReadSomeDataTask::run()
 {
-    std::println("-- ReadSomeDataTask::execute()");
+    std::println("-- ReadSomeDataTask::run()");
 
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");

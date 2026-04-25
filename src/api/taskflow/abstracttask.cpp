@@ -2,16 +2,31 @@
 
 #include "vigine/context.h"
 
-vigine::AbstractTask::~AbstractTask() {}
+namespace vigine
+{
 
-vigine::AbstractTask::AbstractTask() {}
+AbstractTask::AbstractTask() = default;
 
-void vigine::AbstractTask::setContext(Context *context)
+AbstractTask::~AbstractTask() = default;
+
+void AbstractTask::setApi(engine::IEngineToken *api) noexcept
+{
+    _api = api;
+}
+
+engine::IEngineToken *AbstractTask::api() noexcept
+{
+    return _api;
+}
+
+void AbstractTask::setContext(Context *context)
 {
     _context = context;
     contextChanged();
 }
 
-vigine::Context *vigine::AbstractTask::context() const { return _context; }
+Context *AbstractTask::context() const { return _context; }
 
-void vigine::AbstractTask::contextChanged() {}
+void AbstractTask::contextChanged() {}
+
+} // namespace vigine

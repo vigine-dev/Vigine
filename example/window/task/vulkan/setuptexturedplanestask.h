@@ -19,7 +19,7 @@ class SetupTexturedPlanesTask : public vigine::AbstractTask
   public:
     SetupTexturedPlanesTask() = default;
 
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
     void contextChanged() override;
 
   private:

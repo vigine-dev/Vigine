@@ -23,11 +23,12 @@ void RemoveSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Перевіряти entity/_dbService і мати шлях повернення помилки з
-// clearTable/queryRequest, інакше збої БД тут залишаться непоміченими.
-vigine::Result RemoveSomeDataTask::execute()
+// COPILOT_TODO: Validate entity/_dbService and provide an error-return
+// path from clearTable/queryRequest; otherwise database failures here
+// go unnoticed.
+vigine::Result RemoveSomeDataTask::run()
 {
-    std::println("-- RemoveSomeDataTask::execute()");
+    std::println("-- RemoveSomeDataTask::run()");
 
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");

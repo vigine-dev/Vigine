@@ -25,7 +25,7 @@ class LoadTexturesTask : public vigine::AbstractTask
   public:
     LoadTexturesTask() = default;
 
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
     void contextChanged() override;
 
   private:

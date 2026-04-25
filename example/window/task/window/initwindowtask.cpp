@@ -28,7 +28,7 @@ void InitWindowTask::createEventHandlers()
     _eventHandlers.push_back(std::make_unique<WindowEventHandler>("MainWindowHandler"));
 }
 
-vigine::Result InitWindowTask::execute()
+vigine::Result InitWindowTask::run()
 {
     if (!_platformService)
         return vigine::Result(vigine::Result::Code::Error, "Platform service is unavailable");

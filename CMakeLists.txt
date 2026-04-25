@@ -165,6 +165,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/impl/statemachine/statemachine.h
     ${INCLUDE_DIR}/vigine/api/statemachine/abstractstate.h
     ${INCLUDE_DIR}/vigine/impl/taskflow/taskflow.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/itask.h
     ${INCLUDE_DIR}/vigine/api/taskflow/abstracttask.h
     ${INCLUDE_DIR}/vigine/abstractservice.h
     ${INCLUDE_DIR}/vigine/context.h

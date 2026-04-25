@@ -56,7 +56,7 @@ void SetupTextTask::contextChanged()
     }
 }
 
-vigine::Result SetupTextTask::execute()
+vigine::Result SetupTextTask::run()
 {
     if (!_graphicsService)
     {

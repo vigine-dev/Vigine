@@ -31,7 +31,7 @@ void LoadTexturesTask::contextChanged()
     }
 }
 
-vigine::Result LoadTexturesTask::execute()
+vigine::Result LoadTexturesTask::run()
 {
     if (!_graphicsService)
     {

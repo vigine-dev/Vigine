@@ -34,7 +34,7 @@ class IMessage;
  * future member is added after @c _tokens, the explicit clear still runs
  * first and drains any in-flight @c onMessage before other fields go away.
  *
- * @c execute remains a no-op returning @c Success; the task participates
+ * @c run remains a no-op returning @c Success; the task participates
  * in the flow only to own its subscription tokens and serve as a
  * subscriber target.
  */
@@ -45,7 +45,7 @@ class ProcessInputEventTask final : public vigine::AbstractTask,
     ProcessInputEventTask();
     ~ProcessInputEventTask() override;
 
-    [[nodiscard]] vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
     /**
      * @brief Delivers an incoming message from the bus to the matching

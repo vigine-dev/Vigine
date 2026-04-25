@@ -30,7 +30,7 @@ void SetupTexturedPlanesTask::contextChanged()
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 }
-vigine::Result SetupTexturedPlanesTask::execute()
+vigine::Result SetupTexturedPlanesTask::run()
 {
     std::cout << "Setting up textured planes..." << std::endl;
 

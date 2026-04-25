@@ -23,7 +23,7 @@ void CheckBDShecmeTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-vigine::Result CheckBDShecmeTask::execute()
+vigine::Result CheckBDShecmeTask::run()
 {
     vigine::Result result;
 
