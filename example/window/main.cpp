@@ -47,8 +47,10 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(messaging::ISignalEmitter *signalEm
     // Task flow needs the concrete legacy Context so its signal()
     // non-Any branch can reach the engine-owned IThreadManager (see
     // TaskFlow::signal and the accompanying code comment). The
-    // downcast happens once in main(); here we simply install it.
-    taskFlow->setContext(context);
+    // downcast happens once in main(); here we simply install it. The
+    // setContext signature now takes Context& so we dereference the
+    // non-null pointer received from main() (asserted there).
+    taskFlow->setContext(*context);
 
     auto *initWindow          = taskFlow->addTask(std::make_unique<InitWindowTask>());
     auto *initVulkan          = taskFlow->addTask(std::make_unique<InitVulkanTask>());
