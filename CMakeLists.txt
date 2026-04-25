@@ -428,11 +428,12 @@ set(HEADER_MESSAGING
     ${INCLUDE_DIR}/vigine/api/messaging/isignalemitter.h
     ${INCLUDE_DIR}/vigine/api/messaging/abstractsignalemitter.h
     # api/messaging/payload/ -- payload registry + signal-payload base
-    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadtypeid.h
-    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadrange.h
-    ${INCLUDE_DIR}/vigine/api/messaging/payload/ipayloadregistry.h
     ${INCLUDE_DIR}/vigine/api/messaging/payload/factory.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/ipayloadregistry.h
     ${INCLUDE_DIR}/vigine/api/messaging/payload/isignalpayload.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadrange.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadtypeid.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/stateinvalidatedpayload.h
     # impl/messaging/ -- concrete final messaging types
     ${INCLUDE_DIR}/vigine/impl/messaging/connectiontoken.h
     ${INCLUDE_DIR}/vigine/impl/messaging/systemmessagebus.h
