@@ -197,7 +197,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/render/graphicsbackend.h
     ${INCLUDE_DIR}/vigine/ecs/render/graphicshandles.h
     ${INCLUDE_DIR}/vigine/ecs/render/camera.h
-    ${INCLUDE_DIR}/vigine/ecs/render/surfacefactory.h
     ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
     ${INCLUDE_DIR}/vigine/ecs/render/transformcomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/meshcomponent.h
@@ -334,7 +333,11 @@ set(SOURCES
     ${SRC_DIR}/messaging/routing/broadcast.cpp
 )
 
-# Add platform-specific surface factory
+# Add platform-specific surface factory.
+# The SurfaceFactory abstract base lives in src/ecs/render/ (private)
+# because it is a Vulkan-typed extension point used only by VulkanDevice
+# -- not part of the public, Vulkan-SDK-free engine API.
+list(APPEND SOURCES ${SRC_DIR}/ecs/render/surfacefactory.h)
 if(WIN32)
     list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/win32surfacefactory.cpp)
 elseif(APPLE)

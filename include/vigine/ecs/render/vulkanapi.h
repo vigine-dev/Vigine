@@ -3,6 +3,13 @@
 /**
  * @file vulkanapi.h
  * @brief Vulkan implementation of the GraphicsBackend interface.
+ *
+ * Public surface stays Vulkan-SDK-free: no Vulkan SDK headers are
+ * pulled in transitively, no `vk::*` types appear in member or
+ * function signatures. Backend-specific state (Vulkan handles, draw
+ * resources, helper objects) lives in the .cpp behind a forward-
+ * declared `Impl` PIMPL plus opaque `unique_ptr` members for the
+ * helper sub-systems.
  */
 
 #include "graphicsbackend.h"
@@ -16,9 +23,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <memory>
-#include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 
 namespace vigine
 {
@@ -38,9 +43,11 @@ class VulkanFrameRenderer;
  * swapchain, and frame renderer. Implements the GraphicsBackend
  * contract (pipeline / buffer / texture / shader creation, push
  * constants, frame begin / end, draw submit) and adds Vulkan-specific
- * helpers: setEntityDrawGroups, setSdfGlyphData, setSdfClipY,
- * descriptor-set creation, and raw vk::Instance / Device accessors
- * used during gradual refactoring.
+ * helpers: setEntityDrawGroups, setSdfGlyphData, setSdfClipY, and
+ * descriptor-set creation. Vulkan handle plumbing (vk::Buffer /
+ * vk::DeviceMemory bookkeeping, the next-handle counter) is hidden in
+ * a PIMPL `Impl` so callers never need the Vulkan SDK on their include
+ * path.
  */
 class VulkanAPI : public GraphicsBackend
 {
@@ -68,22 +75,11 @@ class VulkanAPI : public GraphicsBackend
     // SDF text clip planes (world Y). clipYMax == 0 → no clipping.
     void setSdfClipY(float yMin, float yMax);
 
-    // Vulkan resources access
-    vk::Instance getInstance() const;
-    vk::PhysicalDevice getPhysicalDevice() const;
-    vk::Device getLogicalDevice() const;
-    vk::Queue getGraphicsQueue() const;
-
-    // Texture Vulkan resource access (for descriptor set creation)
-    vk::ImageView getTextureImageView(TextureHandle handle) const;
-    vk::Sampler getTextureSampler(TextureHandle handle) const;
-
     // Allocate and configure a Vulkan descriptor set for the given GPU texture.
     // Stores it internally; looked up by TextureHandle.value during drawFrame.
     void createTextureDescriptorSet(TextureHandle handle);
 
     // Utility
-    uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
     bool isInitialized() const;
     bool hasSwapchain() const;
     void cleanupCompletedTextureUploads();
@@ -109,11 +105,6 @@ class VulkanAPI : public GraphicsBackend
     void setPushConstants(const PushConstantData &data) override;
 
   private:
-    // Handle management (buffers only; pipeline/shader handles are in VulkanPipelineStore)
-    uint64_t _nextHandleId{1};
-    std::unordered_map<uint64_t, vk::Buffer> _bufferHandles;
-    std::unordered_map<uint64_t, vk::DeviceMemory> _bufferMemoryHandles;
-
     void cleanupSwapchainResources();
     bool recreateSwapchainFromSurfaceExtent();
 
@@ -121,12 +112,19 @@ class VulkanAPI : public GraphicsBackend
     glm::mat4 _currentViewProjection{1.0f};
     PushConstantData _currentPushConstants{};
 
-    // Vulkan helper objects
+    // Vulkan helper objects -- opaque to public callers; full types
+    // visible only inside vulkanapi.cpp via forward declarations above.
     std::unique_ptr<VulkanDevice> _vulkanDevice;
     std::unique_ptr<VulkanSwapchain> _vulkanSwapchain;
     std::unique_ptr<VulkanTextureStore> _vulkanTextureStore;
     std::unique_ptr<VulkanPipelineStore> _vulkanPipelineStore;
     std::unique_ptr<VulkanFrameRenderer> _vulkanFrameRenderer;
+
+    // PIMPL holding everything that requires Vulkan SDK headers
+    // (handle counter + vk::Buffer / vk::DeviceMemory maps for buffers
+    // owned directly by VulkanAPI). Defined in vulkanapi.cpp.
+    struct Impl;
+    std::unique_ptr<Impl> _impl;
 };
 
 using VulkanAPIUPtr = std::unique_ptr<VulkanAPI>;

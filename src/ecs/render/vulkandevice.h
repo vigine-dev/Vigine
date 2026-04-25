@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/ecs/render/surfacefactory.h"
+#include "surfacefactory.h"
 
 #include <memory>
 #include <vector>
