@@ -10,6 +10,8 @@
 #include "vigine/base/macros.h"
 
 #include <glm/glm.hpp>
+#include <cassert>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -49,8 +51,16 @@ class MeshComponent
     const std::vector<Vertex> &getVertices() const { return _vertices; }
     const std::vector<uint32_t> &getIndices() const { return _indices; }
 
-    uint32_t getVertexCount() const { return static_cast<uint32_t>(_vertices.size()); }
-    uint32_t getIndexCount() const { return static_cast<uint32_t>(_indices.size()); }
+    uint32_t getVertexCount() const
+    {
+        assert(_vertices.size() <= (std::numeric_limits<uint32_t>::max)());
+        return static_cast<uint32_t>(_vertices.size());
+    }
+    uint32_t getIndexCount() const
+    {
+        assert(_indices.size() <= (std::numeric_limits<uint32_t>::max)());
+        return static_cast<uint32_t>(_indices.size());
+    }
 
     // Procedural geometry in shader (e.g., cube.vert, sphere.vert generate vertices)
     void setProceduralInShader(bool procedural, uint32_t vertexCount = 0)

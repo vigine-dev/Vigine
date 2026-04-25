@@ -48,8 +48,11 @@ if(WIN32)
     # block: bundled FreeType (`add_subdirectory(... EXCLUDE_FROM_ALL)`)
     # would otherwise inherit it on its command line and re-define it
     # internally, producing C4005 macro-redefinition warnings. The
-    # macro is instead pushed onto the `vigine` (and example/test)
-    # targets via `target_compile_definitions(... PRIVATE)` below.
+    # macro is instead pushed onto the `vigine` target only via
+    # `target_compile_definitions(... PRIVATE)` below; the windowed
+    # example applies its own copy in `example/window/CMakeLists.txt`,
+    # and the test executables do not pull `<windows.h>` transitively
+    # so they need no definition.
     add_compile_definitions(
         VK_USE_PLATFORM_WIN32_KHR
         _WIN32_WINNT=0x0A00
