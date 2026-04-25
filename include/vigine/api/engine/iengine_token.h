@@ -98,10 +98,21 @@ namespace vigine::statemachine
 class IStateMachine;
 } // namespace vigine::statemachine
 
-namespace vigine::threading
+// The thread manager lives in @c vigine::core::threading today. The
+// IEngineToken signature predates that move and uses the shorter
+// @c vigine::threading alias for clarity. The alias below makes the
+// existing forward declarations and accessor signatures resolve
+// against the real type without a behaviour change. A future leaf
+// that renames the canonical namespace can drop the alias.
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
+
+namespace vigine
+{
+namespace threading = ::vigine::core::threading;
+} // namespace vigine
 
 namespace vigine
 {

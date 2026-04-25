@@ -2,11 +2,15 @@
 
 #include <atomic>
 #include <cassert>
+#include <cstdint>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
+#include "vigine/messaging/isubscriptiontoken.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/statemachine/routemode.h"
@@ -120,6 +124,45 @@ class AbstractStateMachine : public IStateMachine
 
     void requestTransition(StateId target) override;
     void processQueuedTransitions() override;
+
+    // ------ State-invalidation listener registry ------
+
+    /**
+     * @brief Registers @p listener so it observes every successful
+     *        non-noop transition.
+     *
+     * The state machine fires @p listener once per non-noop, valid
+     * transition, with the @ref StateId of the state that has just been
+     * vacated (i.e. the state @ref current returned immediately before
+     * the new state took effect). Listeners always fire BEFORE the
+     * machine flips the @c _current member, so observers see the OLD
+     * state id consistently.
+     *
+     * No-op transitions (target equal to the current state) and
+     * transitions rejected because the target is not registered DO NOT
+     * fire any listener — the machine only notifies on genuine state
+     * changes that actually propagate.
+     *
+     * Listeners run synchronously on the controller thread that
+     * executed @ref transition or @ref processQueuedTransitions. They
+     * must be cheap and non-blocking; the FSM holds no listener mutex
+     * across a listener invocation, so a listener may itself call
+     * @ref requestTransition or @ref addInvalidationListener safely
+     * (the new entry will sit on the registry for the NEXT firing).
+     *
+     * The returned token follows the project's RAII subscription
+     * convention: dropping it (or calling @c cancel) removes the
+     * listener from the registry without racing in-flight firings.
+     * Returns an inert token (whose @c active is false from the start)
+     * when @p listener is empty.
+     *
+     * Thread-safety: the registry mutex serialises register / cancel
+     * calls against each other and against the firing path, so a
+     * listener registered concurrently with a transition is either
+     * fully registered (and gets fired) or fully absent (and does not).
+     */
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISubscriptionToken>
+        addInvalidationListener(std::function<void(StateId)> listener);
 
     AbstractStateMachine(const AbstractStateMachine &)            = delete;
     AbstractStateMachine &operator=(const AbstractStateMachine &) = delete;
@@ -269,6 +312,106 @@ class AbstractStateMachine : public IStateMachine
      * documented on @ref IStateMachine::processQueuedTransitions.
      */
     std::deque<StateId> _transitionQueue;
+
+    /**
+     * @brief Slot in the invalidation-listener registry.
+     *
+     * Each successful @ref addInvalidationListener call fills one slot.
+     * Slots are append-only; @c id is the per-machine monotonic key
+     * the matching subscription token carries so a token cancel can
+     * find the slot back without iterating by callback identity.
+     * @c callback is the listener body; an empty @c callback marks the
+     * slot as cancelled and is skipped by the firing path.
+     */
+    struct InvalidationListenerSlot
+    {
+        std::uint32_t                id{0};
+        std::function<void(StateId)> callback;
+    };
+
+    /**
+     * @brief Registry of invalidation listeners.
+     *
+     * Stored as @c std::vector to keep the firing path linear and cache
+     * friendly; cancellations leave a hole (empty callback) instead of
+     * shifting elements so live registrations and the firing iterator
+     * never invalidate. The listeners count is small in practice (one
+     * per live engine token), so the empty-slot bookkeeping never
+     * needs compaction.
+     */
+    std::vector<InvalidationListenerSlot> _invalidationListeners;
+
+    /**
+     * @brief Mutex serialising listener register / cancel against each
+     *        other and against the firing path.
+     *
+     * Held only briefly for vector mutation. The firing path takes
+     * a snapshot of the active slots under the lock and then invokes
+     * each listener outside the lock so a listener that itself calls
+     * back into the FSM does not deadlock.
+     */
+    mutable std::mutex _invalidationListenersMutex;
+
+    /**
+     * @brief Monotonic id allocator for the registry.
+     *
+     * Bumped under @c _invalidationListenersMutex on each successful
+     * register call. Atomic so the subscription token can read the id
+     * back without contending the registry mutex on the cancel path.
+     */
+    std::atomic<std::uint32_t> _nextInvalidationListenerId{1};
+
+    /**
+     * @brief Internal helper that fires every active listener with
+     *        @p oldState as the argument.
+     *
+     * Called on the controller thread from @ref transition right
+     * before @c _current is mutated. The helper takes a snapshot of
+     * the listener vector under @c _invalidationListenersMutex,
+     * releases the lock, and then walks the snapshot, invoking each
+     * non-empty callback exactly once. Listeners that throw propagate
+     * the exception to the caller of @ref transition; the FSM does
+     * not swallow listener-side errors because doing so would silently
+     * mask programming mistakes in the engine-token subscription path.
+     */
+    void fireInvalidationListeners(StateId oldState);
+
+    /**
+     * @brief Removes the listener slot whose id matches @p id.
+     *
+     * Idempotent: a second call with the same id is a no-op. Called by
+     * the subscription token's @c cancel and by its destructor.
+     */
+    void cancelInvalidationListener(std::uint32_t id) noexcept;
+
+    /**
+     * @brief Subscription token returned by @ref addInvalidationListener.
+     *
+     * Holds a non-owning reference to the owning state machine and the
+     * monotonic id of its registry slot. Dropping the token cancels the
+     * slot through @ref cancelInvalidationListener. Idempotent: repeated
+     * @c cancel calls are no-ops.
+     */
+    class InvalidationSubscriptionToken final
+        : public vigine::messaging::ISubscriptionToken
+    {
+      public:
+        InvalidationSubscriptionToken(AbstractStateMachine *owner,
+                                      std::uint32_t         id) noexcept;
+        ~InvalidationSubscriptionToken() override;
+
+        void               cancel() noexcept override;
+        [[nodiscard]] bool active() const noexcept override;
+
+        InvalidationSubscriptionToken(const InvalidationSubscriptionToken &)            = delete;
+        InvalidationSubscriptionToken &operator=(const InvalidationSubscriptionToken &) = delete;
+        InvalidationSubscriptionToken(InvalidationSubscriptionToken &&)                 = delete;
+        InvalidationSubscriptionToken &operator=(InvalidationSubscriptionToken &&)      = delete;
+
+      private:
+        AbstractStateMachine     *_owner;
+        std::atomic<std::uint32_t> _id;
+    };
 };
 
 } // namespace vigine::statemachine
