@@ -46,16 +46,12 @@ struct TopicId
 
 } // namespace vigine::topicbus
 
-namespace std
-{
-
+// TEMPLATE EXEMPTION: std::hash specialization required for hash-map key support; sanctioned per architecture.md § R-NoTemplates.
 template <>
-struct hash<vigine::topicbus::TopicId>
+struct std::hash<vigine::topicbus::TopicId>
 {
     [[nodiscard]] std::size_t operator()(vigine::topicbus::TopicId id) const noexcept
     {
         return std::hash<std::uint32_t>{}(id.value);
     }
 };
-
-} // namespace std
