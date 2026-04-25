@@ -1,5 +1,7 @@
 #pragma once
 
+#include <thread>
+
 #include "vigine/result.h"
 #include "vigine/statemachine/routemode.h"
 #include "vigine/statemachine/stateid.h"
@@ -224,6 +226,25 @@ class IStateMachine
      * @ref routeMode calls return the newly selected value.
      */
     virtual void setRouteMode(RouteMode mode) noexcept = 0;
+
+    // ------ Thread affinity ------
+
+    /**
+     * @brief Binds the state machine to its controller thread.
+     *
+     * One-shot. Must be called once before the first sync mutation
+     * (setInitial / transition / addChildState). A second call is
+     * rejected: Debug builds assert; Release silently keeps the original
+     * binding.
+     */
+    virtual void bindToControllerThread(std::thread::id controllerId) = 0;
+
+    /**
+     * @brief Returns the bound controller thread id.
+     *
+     * Default-constructed @c std::thread::id when not yet bound.
+     */
+    [[nodiscard]] virtual std::thread::id controllerThread() const noexcept = 0;
 
     IStateMachine(const IStateMachine &)            = delete;
     IStateMachine &operator=(const IStateMachine &) = delete;
