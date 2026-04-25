@@ -22,10 +22,11 @@ namespace vigine
  * non-owning pointers / references; copying and moving are deleted on
  * the interface itself so a slice can never duplicate an entity.
  *
- * Thread-safety: the interface does not fix one. The concrete
- * @ref EntityManager serialises mutations under its own mutex; reads of
- * @ref id are stable for the entity's lifetime once it has been
- * registered.
+ * Thread-safety: the interface does not fix one and the concrete
+ * @ref EntityManager carries no internal synchronisation today, so
+ * external callers must serialise create / remove / alias mutations
+ * themselves. Reads of @ref id are stable for the entity's lifetime
+ * once it has been registered.
  *
  * INV-1 compliance: no template parameters anywhere on the surface.
  * INV-10 compliance: the @c I prefix marks a pure-virtual interface

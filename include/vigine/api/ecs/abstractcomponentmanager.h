@@ -93,24 +93,29 @@ class IComponentManager
 };
 
 /**
- * @brief Stateful abstract base between @ref IComponentManager and the
- *        concrete @ref ComponentManager.
+ * @brief Empty intermediate base between @ref IComponentManager and
+ *        the concrete @ref ComponentManager.
  *
- * @ref AbstractComponentManager is the level-4 base in the wrapper
- * recipe applied to the legacy component manager: it provides default
- * implementations of every @ref IComponentManager method so a derived
- * closer plugs in without re-implementing the ownership story.
+ * @ref AbstractComponentManager is the level-4 hook in the wrapper
+ * recipe applied to the legacy component manager. It deliberately
+ * carries no state and provides no implementations of the pure-virtual
+ * @ref IComponentManager methods today -- every method stays pure on
+ * this layer and the concrete @ref ComponentManager closes the chain.
+ * The class exists so the follow-up leaf can fold shared storage or
+ * book-keeping (e.g. lifting the @c ComponentKind storage map) into
+ * this layer without changing the inheritance hierarchy or the
+ * @ref ComponentManager call sites.
  *
  * State carried here:
- *   - none today; the concrete @ref ComponentManager keeps its
- *     storage map until the follow-up leaf migrates the substrate up
- *     into this base. Mirrors how @c AbstractEntityManager defers its
+ *   - none today; the concrete @ref ComponentManager owns the storage
+ *     map until the follow-up leaf migrates the substrate up into
+ *     this base. Mirrors how @c AbstractEntityManager defers its
  *     storage to the concrete for the duration of the leaf.
  *
  * Strict encapsulation: per the project rule every data member that
- * lives on this layer is @c private; derived closers reach the
- * substrate through @c protected accessors. Today no accessor is
- * exposed because no state lives here.
+ * eventually lands here will be @c private; derived closers will
+ * reach the substrate through @c protected accessors. Today no
+ * accessor is exposed because no state lives here.
  *
  * INV-1 compliance: no template parameters on the public surface.
  */

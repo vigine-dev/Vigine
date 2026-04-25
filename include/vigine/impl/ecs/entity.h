@@ -17,23 +17,25 @@ namespace vigine
  * owned by EntityManager. The class derives from
  * @ref AbstractEntity so it satisfies the @ref IEntity contract; the
  * stable id reported by @ref IEntity::id is stamped by the entity
- * manager at construction time.
+ * manager at construction time through the @ref Entity(IEntity::Id)
+ * constructor.
  *
  * Strict encapsulation: no public data members. The id slot lives on
  * the @ref AbstractEntity base and the manager passes the value to
  * the constructor; once stamped, the id is immutable for the entity's
- * lifetime.
+ * lifetime. The class has no default constructor by design -- every
+ * legitimate Entity carries a non-zero id assigned at construction.
  */
 class Entity final : public AbstractEntity
 {
   public:
-    Entity() = default;
-
     /**
      * @brief Constructs an entity with the stable id @p id.
      *
-     * Called by the entity manager. Callers outside the manager use
-     * the default constructor and let the manager stamp the id.
+     * Called by @ref EntityManager::createEntity, which is the only
+     * sanctioned entry point. The manager passes a fresh non-zero id
+     * from its monotonic counter; the value is forwarded to the
+     * @ref AbstractEntity base via @ref AbstractEntity::setId.
      */
     explicit Entity(IEntity::Id id) noexcept { setId(id); }
 
