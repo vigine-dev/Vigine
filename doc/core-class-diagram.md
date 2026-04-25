@@ -14,8 +14,6 @@ class Result
 class AbstractState
 class TaskFlow
 class AbstractTask
-class ContextHolder
-class EntityBindingHost
 
 class AbstractService
 class AbstractSystem
@@ -55,10 +53,10 @@ AbstractState *-- TaskFlow : owns
 TaskFlow o-- AbstractTask : stores
 TaskFlow ..> ISignalEmitter : subscribes handlers by PayloadTypeId
 
-AbstractTask --|> ContextHolder
-AbstractService --|> ContextHolder
-AbstractService --|> EntityBindingHost
-AbstractSystem --|> EntityBindingHost
+AbstractTask --> Context : holds (composition)
+AbstractService --> Context : holds (composition)
+AbstractService --> Entity : binds (composition)
+AbstractSystem --> Entity : binds (composition)
 
 Context --> EntityManager
 Context --> AbstractService : creates or returns
@@ -92,7 +90,6 @@ VulkanAPI *-- VulkanTextureStore
 VulkanAPI *-- VulkanPipelineStore
 VulkanAPI *-- VulkanFrameRenderer
 
-EntityBindingHost --> Entity : binds
 AbstractState --> Result
 AbstractTask --> Result
 StateMachine --> Result

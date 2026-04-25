@@ -38,14 +38,13 @@ If a task description does not include the project folder layout, use this secti
 - `Result` is the shared execution result type for states, tasks, and transitions.
 - `EntityManager` owns engine entities.
 - `Entity` is the base runtime entity type.
-- `EntityBindingHost` provides entity binding hooks for services and systems.
-- `ContextHolder` provides `Context` propagation for tasks and services.
+- `AbstractService` and `AbstractSystem` carry their `Entity *` binding directly (composition); `AbstractTask` and `AbstractService` carry their `Context *` directly. The previous `ContextHolder` and `EntityBindingHost` mixins have been deleted.
 
 ### Inheritance overview
 
-- `AbstractTask : ContextHolder`
-- `AbstractService : ContextHolder, EntityBindingHost`
-- `AbstractSystem : EntityBindingHost`
+- `AbstractTask` (holds `Context *` by composition)
+- `AbstractService` (holds `Context *` and `Entity *` by composition)
+- `AbstractSystem : ISystem` (holds `Entity *` by composition)
 - `PlatformService : AbstractService`
 - `GraphicsService : AbstractService`
 - `DatabaseService : AbstractService`
