@@ -31,7 +31,7 @@ void SetupHelperGeometryTask::contextChanged()
     }
 }
 
-vigine::Result SetupHelperGeometryTask::execute()
+vigine::Result SetupHelperGeometryTask::run()
 {
     std::cout << "Setting up helper geometry (pyramid, grid, sun)..." << std::endl;
 

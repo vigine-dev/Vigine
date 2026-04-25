@@ -18,7 +18,7 @@ class SetupHelperGeometryTask : public vigine::AbstractTask
     SetupHelperGeometryTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};

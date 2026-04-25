@@ -19,7 +19,7 @@ ProcessInputEventTask::~ProcessInputEventTask()
     _tokens.clear();
 }
 
-vigine::Result ProcessInputEventTask::execute()
+vigine::Result ProcessInputEventTask::run()
 {
     // The task participates in the flow only to own its subscription
     // tokens and serve as a subscriber target; there is no per-tick work

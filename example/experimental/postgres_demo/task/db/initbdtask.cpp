@@ -24,7 +24,7 @@ void InitBDTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::New));
 }
 
-vigine::Result InitBDTask::execute()
+vigine::Result InitBDTask::run()
 {
     auto *entityManager       = context()->entityManager();
     vigine::Entity *ent       = entityManager->createEntity();

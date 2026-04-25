@@ -25,9 +25,9 @@ void AddSomeDataTask::contextChanged()
 
 // COPILOT_TODO: Або дописати реальний insert-сценарій, або прибрати задачу; зараз вона завершується
 // успішно без жодної дії та без перевірки entity/_dbService.
-vigine::Result AddSomeDataTask::execute()
+vigine::Result AddSomeDataTask::run()
 {
-    std::println("-- AddSomeDataTask::execute()");
+    std::println("-- AddSomeDataTask::run()");
 
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");

@@ -119,7 +119,7 @@ void RunWindowTask::contextChanged()
 
 // COPILOT_TODO: Гарантувати unbindEntity() на всіх ранніх виходах через
 // RAII/guard, інакше PlatformService може залишитися прив'язаним після помилки.
-vigine::Result RunWindowTask::execute()
+vigine::Result RunWindowTask::run()
 {
     if ((!_platformService || !_graphicsService) && context())
         contextChanged();

@@ -74,7 +74,7 @@ void SetupTextEditTask::contextChanged()
                             _graphicsService ? _graphicsService->renderSystem() : nullptr);
 }
 
-vigine::Result SetupTextEditTask::execute()
+vigine::Result SetupTextEditTask::run()
 {
     if (!_graphicsService)
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");

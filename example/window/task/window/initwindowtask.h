@@ -22,7 +22,7 @@ class InitWindowTask : public vigine::AbstractTask
     InitWindowTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     vigine::ecs::platform::PlatformService *_platformService{nullptr};

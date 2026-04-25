@@ -52,7 +52,7 @@ void InitVulkanTask::contextChanged()
     std::cout << "RenderSystem initialized successfully" << std::endl;
 }
 
-vigine::Result InitVulkanTask::execute()
+vigine::Result InitVulkanTask::run()
 {
     std::cout << "Initializing Vulkan API..." << std::endl;
 

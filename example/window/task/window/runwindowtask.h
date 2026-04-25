@@ -38,7 +38,7 @@ class RunWindowTask final : public vigine::AbstractTask
     RunWindowTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
     void onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y);
     void onMouseButtonUp(vigine::ecs::platform::MouseButton button, int x, int y);

@@ -8,7 +8,7 @@ class RenderCubeTask : public vigine::AbstractTask
     RenderCubeTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     float _rotationAngle{0.0f};

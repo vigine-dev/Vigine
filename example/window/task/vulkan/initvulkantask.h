@@ -22,7 +22,7 @@ class InitVulkanTask : public vigine::AbstractTask
     InitVulkanTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};

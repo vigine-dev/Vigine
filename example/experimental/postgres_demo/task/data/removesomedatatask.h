@@ -13,7 +13,7 @@ class RemoveSomeDataTask : public vigine::AbstractTask
     RemoveSomeDataTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     vigine::DatabaseService *_dbService{nullptr};

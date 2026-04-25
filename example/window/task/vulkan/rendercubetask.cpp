@@ -12,7 +12,7 @@ void RenderCubeTask::contextChanged()
     // No specific services needed for cube rendering
 }
 
-vigine::Result RenderCubeTask::execute()
+vigine::Result RenderCubeTask::run()
 {
     // Update cube rotation
     _rotationAngle += 0.05f; // Rotate by 0.05 radians per frame

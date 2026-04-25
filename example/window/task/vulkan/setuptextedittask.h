@@ -32,7 +32,7 @@ class SetupTextEditTask : public vigine::AbstractTask
                                std::shared_ptr<TextEditorSystem> editorSystem);
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     std::shared_ptr<TextEditState> _state;

@@ -25,9 +25,9 @@ void ReadSomeDataTask::contextChanged()
 
 // COPILOT_TODO: Перевіряти entity/_dbService і повертати помилку, якщо DatabaseService::readData()
 // лишається недописаним; зараз сценарій маскує неготовий код як success.
-vigine::Result ReadSomeDataTask::execute()
+vigine::Result ReadSomeDataTask::run()
 {
-    std::println("-- ReadSomeDataTask::execute()");
+    std::println("-- ReadSomeDataTask::run()");
 
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");

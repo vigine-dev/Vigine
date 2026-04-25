@@ -18,7 +18,7 @@ class SetupTextTask : public vigine::AbstractTask
     SetupTextTask();
 
     void contextChanged() override;
-    vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
   private:
     vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};

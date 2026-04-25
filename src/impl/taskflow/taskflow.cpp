@@ -1,5 +1,6 @@
 #include <vigine/context.h>
 #include <vigine/api/context/icontext.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/api/messaging/imessage.h>
 #include <vigine/api/messaging/isubscriber.h>
 #include <vigine/api/messaging/isubscriptiontoken.h>
@@ -8,6 +9,7 @@
 #include <vigine/api/messaging/routemode.h>
 #include <vigine/api/messaging/payload/payloadtypeid.h>
 #include <vigine/api/messaging/isignalemitter.h>
+#include <vigine/api/statemachine/stateid.h>
 #include <vigine/impl/taskflow/taskflow.h>
 #include <vigine/core/threading/irunnable.h>
 #include <vigine/core/threading/ithreadmanager.h>
@@ -449,8 +451,36 @@ void TaskFlow::runCurrentTask() {
   if (!_currTask)
     return;
 
-  // Execute current task and get result
-  auto currStatus = _currTask->execute();
+  // R-StateScope wiring: bind a state-scoped engine token before
+  // invoking the task's run() entry point. The legacy aggregator
+  // returns a null token (see Context::makeEngineToken stub) — that
+  // is fine for tasks that have not yet migrated off the
+  // ContextHolder mixin; their api() accessor reports nullptr and
+  // they fall back to context() as before. New-shape tasks check
+  // api() and reach engine subsystems through the bound token.
+  std::unique_ptr<engine::IEngineToken> token;
+  if (_context != nullptr) {
+    // Pass the invalid-sentinel StateId on the legacy path: the
+    // legacy Context::makeEngineToken ignores the argument and
+    // returns nullptr unconditionally; the new-shape AbstractContext
+    // factory also tolerates the sentinel and threads it into the
+    // concrete token. The IStateMachine::current() lookup that
+    // would normally seed the bound state lands together with the
+    // upcoming TaskFlow rewrite.
+    token = _context->makeEngineToken(vigine::statemachine::StateId{});
+  }
+  _currTask->setApi(token.get());
+
+  // Run the task (canonical R-StateScope entry point). The Result
+  // drives the result-code-keyed transitions registered through
+  // route().
+  auto currStatus = _currTask->run();
+
+  // Clear the binding before the token expires so the task cannot
+  // accidentally reach the dying token from a callback that fires
+  // outside the run() scope.
+  _currTask->setApi(nullptr);
+  token.reset();
 
   // Check possible transitions
   auto transitions = _transitions.find(_currTask);
