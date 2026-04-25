@@ -519,6 +519,20 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
         // Allow a small margin for OS scheduling jitter.
         EXPECT_GE(cancelEnd, slow.exitedAt())
             << "cancel() returned before onMessage() exited";
+
+        // cancel() was issued *after* onMessage entered its sleep, so the
+        // wait inside cancel() must have spanned the remaining sleep
+        // window. Allow a generous jitter floor so the assertion stays
+        // robust on slow CI runners while still catching a non-blocking
+        // cancel() (which would return in microseconds).
+        const auto cancelDuration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(cancelEnd - cancelStart);
+        const auto minWait = delay / 2;
+        EXPECT_GE(cancelDuration, minWait)
+            << "cancel() returned in " << cancelDuration.count()
+            << " ms -- expected at least " << minWait.count()
+            << " ms (subscriber sleep was " << delay.count()
+            << " ms); cancel() likely did not block on the in-flight dispatch";
     }
 
     dispatcher.join();
