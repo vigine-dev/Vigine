@@ -1,20 +1,20 @@
 #include "vigine/context.h"
 
 #include "vigine/api/ecs/iecs.h"
-#include "vigine/ecs/platform/windowsystem.h"
+#include "vigine/impl/ecs/platform/windowsystem.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
 #endif
-#include "vigine/ecs/render/rendersystem.h"
+#include "vigine/impl/ecs/graphics/rendersystem.h"
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/property.h"
 #include "vigine/result.h"
 #include "vigine/service/databaseservice.h"
-#include "vigine/service/graphicsservice.h"
+#include "vigine/impl/ecs/graphics/graphicsservice.h"
 #include "vigine/api/service/iservice.h"
-#include "vigine/service/platformservice.h"
+#include "vigine/impl/ecs/platform/platformservice.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -72,14 +72,14 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 {
     if (id == "Window")
     {
-        auto windowSystem = std::make_unique<vigine::platform::WindowSystem>(name);
+        auto windowSystem = std::make_unique<vigine::ecs::platform::WindowSystem>(name);
 
         return std::move(windowSystem);
     }
 
     if (id == "Render")
     {
-        auto renderSystem = std::make_unique<vigine::graphics::RenderSystem>(name);
+        auto renderSystem = std::make_unique<vigine::ecs::graphics::RenderSystem>(name);
 
         return std::move(renderSystem);
     }
@@ -140,7 +140,7 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
 {
     if (id == "Platform")
     {
-        auto platformService = std::make_unique<vigine::platform::PlatformService>(name);
+        auto platformService = std::make_unique<vigine::ecs::platform::PlatformService>(name);
         platformService->setContext(this);
 
         return std::move(platformService);
@@ -148,7 +148,7 @@ vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, 
 
     if (id == "Graphics")
     {
-        auto graphicsService = std::make_unique<vigine::graphics::GraphicsService>(name);
+        auto graphicsService = std::make_unique<vigine::ecs::graphics::GraphicsService>(name);
         graphicsService->setContext(this);
 
         return std::move(graphicsService);

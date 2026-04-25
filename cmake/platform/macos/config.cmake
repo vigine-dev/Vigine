@@ -14,29 +14,44 @@ endfunction()
 
 # vigine_platform_collect_sources
 #
-# Append macOS-specific source paths onto the caller-named lists. The
-# Metal-backed Vulkan surface factory + the macOS OS-signal source
-# (Objective-C++ .mm) + the Cocoa window component live here.
-function(vigine_platform_collect_sources headers_var sources_var)
-    set(_headers "${${headers_var}}")
-    set(_sources "${${sources_var}}")
+# Append macOS-specific source paths onto the four caller-named lists.
+# Each macOS source file targets one of the four lists by subsystem:
+#   - ECS platform (window component header / source) -- Cocoa window
+#     component lives at src/impl/ecs/platform/cocoawindowcomponent.{h,mm}
+#   - ECS graphics (Vulkan surface factory source) -- Metal-backed factory
+#     lives at src/impl/ecs/graphics/platform/metalsurfacefactory.cpp
+#   - Event scheduler (OS-signal source) -- macOS signal source (.mm)
+#     lives at src/eventscheduler/iossignalsource_macos.{h,mm}
+function(vigine_platform_collect_sources
+        headers_ecs_platform_var
+        sources_ecs_platform_var
+        sources_ecs_graphics_var
+        sources_eventscheduler_var)
+    set(_headers_ecs_platform "${${headers_ecs_platform_var}}")
+    set(_sources_ecs_platform "${${sources_ecs_platform_var}}")
+    set(_sources_ecs_graphics "${${sources_ecs_graphics_var}}")
+    set(_sources_eventscheduler "${${sources_eventscheduler_var}}")
 
-    list(APPEND _sources
-        "${SRC_DIR}/ecs/render/platform/metalsurfacefactory.cpp"
+    list(APPEND _headers_ecs_platform
+        "${SRC_DIR}/impl/ecs/platform/cocoawindowcomponent.h"
+    )
+    list(APPEND _sources_ecs_platform
+        "${SRC_DIR}/impl/ecs/platform/cocoawindowcomponent.mm"
+    )
+
+    list(APPEND _sources_ecs_graphics
+        "${SRC_DIR}/impl/ecs/graphics/platform/metalsurfacefactory.cpp"
+    )
+
+    list(APPEND _sources_eventscheduler
         "${SRC_DIR}/eventscheduler/iossignalsource_macos.h"
         "${SRC_DIR}/eventscheduler/iossignalsource_macos.mm"
     )
 
-    list(APPEND _headers
-        "${SRC_DIR}/ecs/platform/cocoawindowcomponent.h"
-    )
-
-    list(APPEND _sources
-        "${SRC_DIR}/ecs/platform/cocoawindowcomponent.mm"
-    )
-
-    set(${headers_var} "${_headers}" PARENT_SCOPE)
-    set(${sources_var} "${_sources}" PARENT_SCOPE)
+    set(${headers_ecs_platform_var} "${_headers_ecs_platform}" PARENT_SCOPE)
+    set(${sources_ecs_platform_var} "${_sources_ecs_platform}" PARENT_SCOPE)
+    set(${sources_ecs_graphics_var} "${_sources_ecs_graphics}" PARENT_SCOPE)
+    set(${sources_eventscheduler_var} "${_sources_eventscheduler}" PARENT_SCOPE)
 endfunction()
 
 # vigine_platform_apply_target

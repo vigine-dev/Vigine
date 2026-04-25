@@ -12,12 +12,14 @@ namespace vigine
 {
 class Context;
 
+namespace ecs
+{
 namespace graphics
 {
 class GraphicsService;
 }
+} // namespace ecs
 } // namespace vigine
-
 class LoadTexturesTask : public vigine::AbstractTask
 {
   public:
@@ -27,5 +29,5 @@ class LoadTexturesTask : public vigine::AbstractTask
     void contextChanged() override;
 
   private:
-    vigine::graphics::GraphicsService *_graphicsService = nullptr;
+    vigine::ecs::graphics::GraphicsService *_graphicsService = nullptr;
 };

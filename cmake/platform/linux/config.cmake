@@ -36,29 +36,44 @@ endfunction()
 
 # vigine_platform_collect_sources
 #
-# Append Linux-specific source paths onto the caller-named lists. The
-# Vulkan XCB surface factory + the POSIX OS-signal source + the XCB
-# window backend live here.
-function(vigine_platform_collect_sources headers_var sources_var)
-    set(_headers "${${headers_var}}")
-    set(_sources "${${sources_var}}")
+# Append Linux-specific source paths onto the four caller-named lists.
+# Each Linux source file targets one of the four lists by subsystem:
+#   - ECS platform (window component header / source) -- XCB window
+#     backend lives at src/platform/linux/xcbwindowbackend.{h,cpp}
+#   - ECS graphics (Vulkan surface factory source) -- XCB surface
+#     factory lives at src/platform/linux/vulkan_surface_xcb.cpp
+#   - Event scheduler (OS-signal source) -- POSIX signal source lives
+#     at src/platform/linux/iossignalsource_posix.{h,cpp}
+function(vigine_platform_collect_sources
+        headers_ecs_platform_var
+        sources_ecs_platform_var
+        sources_ecs_graphics_var
+        sources_eventscheduler_var)
+    set(_headers_ecs_platform "${${headers_ecs_platform_var}}")
+    set(_sources_ecs_platform "${${sources_ecs_platform_var}}")
+    set(_sources_ecs_graphics "${${sources_ecs_graphics_var}}")
+    set(_sources_eventscheduler "${${sources_eventscheduler_var}}")
 
-    list(APPEND _sources
+    list(APPEND _headers_ecs_platform
+        "${SRC_DIR}/platform/linux/xcbwindowbackend.h"
+    )
+    list(APPEND _sources_ecs_platform
+        "${SRC_DIR}/platform/linux/xcbwindowbackend.cpp"
+    )
+
+    list(APPEND _sources_ecs_graphics
         "${SRC_DIR}/platform/linux/vulkan_surface_xcb.cpp"
+    )
+
+    list(APPEND _sources_eventscheduler
         "${SRC_DIR}/platform/linux/iossignalsource_posix.h"
         "${SRC_DIR}/platform/linux/iossignalsource_posix.cpp"
     )
 
-    list(APPEND _headers
-        "${SRC_DIR}/platform/linux/xcbwindowbackend.h"
-    )
-
-    list(APPEND _sources
-        "${SRC_DIR}/platform/linux/xcbwindowbackend.cpp"
-    )
-
-    set(${headers_var} "${_headers}" PARENT_SCOPE)
-    set(${sources_var} "${_sources}" PARENT_SCOPE)
+    set(${headers_ecs_platform_var} "${_headers_ecs_platform}" PARENT_SCOPE)
+    set(${sources_ecs_platform_var} "${_sources_ecs_platform}" PARENT_SCOPE)
+    set(${sources_ecs_graphics_var} "${_sources_ecs_graphics}" PARENT_SCOPE)
+    set(${sources_eventscheduler_var} "${_sources_eventscheduler}" PARENT_SCOPE)
 endfunction()
 
 # vigine_platform_apply_target

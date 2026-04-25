@@ -2,10 +2,10 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/rendersystem.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
-#include <vigine/service/platformservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
+#include <vigine/impl/ecs/platform/platformservice.h>
 
 #include <iostream>
 
@@ -20,19 +20,19 @@ void InitVulkanTask::contextChanged()
         return;
     }
 
-    auto *graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    auto *graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
     if (!graphicsService)
     {
-        graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 
-    _platformService = dynamic_cast<vigine::platform::PlatformService *>(
+    _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
     if (!_platformService)
     {
-        _platformService = dynamic_cast<vigine::platform::PlatformService *>(
+        _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
             context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
     }
 

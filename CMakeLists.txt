@@ -179,17 +179,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/api/ecs/icomponent.h
     ${INCLUDE_DIR}/vigine/api/ecs/ientity.h
     ${INCLUDE_DIR}/vigine/api/ecs/isystem.h
-    ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
-    ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/render/graphicsbackend.h
-    ${INCLUDE_DIR}/vigine/ecs/render/graphicshandles.h
-    ${INCLUDE_DIR}/vigine/ecs/render/camera.h
-    ${INCLUDE_DIR}/vigine/ecs/render/vulkanapi.h
-    ${INCLUDE_DIR}/vigine/ecs/render/transformcomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/render/meshcomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/render/shadercomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/render/texturecomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/render/pipelinecache.h
     ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/impl/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
@@ -261,20 +250,6 @@ set(SOURCES
     ${SRC_DIR}/taskflow.cpp
     ${SRC_DIR}/context.cpp
     ${SRC_DIR}/impl/ecs/componentmanager.cpp
-    ${SRC_DIR}/ecs/render/rendersystem.cpp
-    ${SRC_DIR}/ecs/render/rendercomponent.cpp
-    ${SRC_DIR}/ecs/render/camera.cpp
-    ${SRC_DIR}/ecs/render/vulkanapi.cpp
-    ${SRC_DIR}/ecs/render/vulkandevice.cpp
-    ${SRC_DIR}/ecs/render/vulkanswapchain.cpp
-    ${SRC_DIR}/ecs/render/vulkantexturestore.cpp
-    ${SRC_DIR}/ecs/render/vulkanpipelinestore.cpp
-    ${SRC_DIR}/ecs/render/vulkanframerenderer.cpp
-    ${SRC_DIR}/ecs/render/transformcomponent.cpp
-    ${SRC_DIR}/ecs/render/meshcomponent.cpp
-    ${SRC_DIR}/ecs/render/shadercomponent.cpp
-    ${SRC_DIR}/ecs/render/texturecomponent.cpp
-    ${SRC_DIR}/ecs/render/pipelinecache.cpp
     ${SRC_DIR}/impl/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
@@ -320,21 +295,59 @@ set(SOURCES
     ${SRC_DIR}/messaging/routing/broadcast.cpp
 )
 
-# Add the platform-agnostic SurfaceFactory header. The platform-
-# specific concrete (Win32 / Metal / XCB) is appended via the
-# dispatcher's vigine_platform_collect_sources(HEADER_PLATFORM
-# SOURCES_PLATFORM) call below.
+# ECS graphics subsystem (#280) -- public interfaces under api/, concrete
+# components / systems / services and Vulkan helpers under impl/.
 #
-# The SurfaceFactory abstract base lives in src/ecs/render/ (private)
-# because it is a Vulkan-typed extension point used only by VulkanDevice
-# -- not part of the public, Vulkan-SDK-free engine API.
-list(APPEND SOURCES ${SRC_DIR}/ecs/render/surfacefactory.h)
+# The platform-specific Vulkan surface factory (Win32 / Metal / XCB) is
+# NOT listed here -- it is appended onto SOURCES_ECS_GRAPHICS by the
+# active platform fragment via vigine_platform_collect_sources() below
+# (R-PlatformPortability: no if(WIN32/APPLE/UNIX) blocks in root
+# CMakeLists.txt).
+set(HEADER_ECS_GRAPHICS
+    ${INCLUDE_DIR}/vigine/api/ecs/graphics/igraphicsbackend.h
+    ${INCLUDE_DIR}/vigine/api/ecs/graphics/isurfacefactory.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/camera.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/graphicshandles.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/graphicsservice.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/meshcomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/pipelinecache.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/rendercomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/rendersystem.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/shadercomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/textcomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/texturecomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/transformcomponent.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/graphics/vulkanapi.h
+)
+
+set(SOURCES_ECS_GRAPHICS
+    ${SRC_DIR}/impl/ecs/graphics/camera.cpp
+    ${SRC_DIR}/impl/ecs/graphics/graphicsservice.cpp
+    ${SRC_DIR}/impl/ecs/graphics/meshcomponent.cpp
+    ${SRC_DIR}/impl/ecs/graphics/pipelinecache.cpp
+    ${SRC_DIR}/impl/ecs/graphics/rendercomponent.cpp
+    ${SRC_DIR}/impl/ecs/graphics/rendersystem.cpp
+    ${SRC_DIR}/impl/ecs/graphics/shadercomponent.cpp
+    ${SRC_DIR}/impl/ecs/graphics/surfacefactory.h
+    ${SRC_DIR}/impl/ecs/graphics/texturecomponent.cpp
+    ${SRC_DIR}/impl/ecs/graphics/transformcomponent.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkanapi.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkandevice.h
+    ${SRC_DIR}/impl/ecs/graphics/vulkandevice.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkanframerenderer.h
+    ${SRC_DIR}/impl/ecs/graphics/vulkanframerenderer.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkanpipelinestore.h
+    ${SRC_DIR}/impl/ecs/graphics/vulkanpipelinestore.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkanswapchain.h
+    ${SRC_DIR}/impl/ecs/graphics/vulkanswapchain.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkantexturestore.h
+    ${SRC_DIR}/impl/ecs/graphics/vulkantexturestore.cpp
+    ${SRC_DIR}/impl/ecs/graphics/vulkantypes.h
+)
 
 # Add source files
 set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/databaseservice.h
-    ${INCLUDE_DIR}/vigine/service/graphicsservice.h
-    ${INCLUDE_DIR}/vigine/service/platformservice.h
     # Level-1 service wrapper (R.4.1) — public surface.
     ${INCLUDE_DIR}/vigine/api/service/serviceid.h
     ${INCLUDE_DIR}/vigine/api/service/dependencykind.h
@@ -346,8 +359,6 @@ set(HEADER_SERVICE
 
 set(SOURCES_SERVICE
     ${SRC_DIR}/service/databaseservice.cpp
-    ${SRC_DIR}/service/graphicsservice.cpp
-    ${SRC_DIR}/service/platformservice.cpp
     # Level-1 service wrapper (R.4.1) — internal registry + base impl.
     ${SRC_DIR}/service/serviceregistry.h
     ${SRC_DIR}/service/serviceregistry.cpp
@@ -639,25 +650,51 @@ if(VIGINE_ENABLE_EXPERIMENTAL AND ENABLE_POSTGRESQL)
     )
 endif()
 
-set(HEADER_PLATFORM
-    ${INCLUDE_DIR}/vigine/ecs/platform/windowsystem.h
-    ${SRC_DIR}/ecs/platform/windowcomponent.h
-    ${SRC_DIR}/ecs/platform/windoweventdispatcher.h
+# ECS platform subsystem (#280) -- public IWindowEventHandlerComponent
+# under api/, concrete WindowSystem + window backends under impl/.
+set(HEADER_ECS_PLATFORM
+    ${INCLUDE_DIR}/vigine/api/ecs/platform/iwindoweventhandler.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/platform/platformservice.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/platform/windowsystem.h
+    ${SRC_DIR}/impl/ecs/platform/windowcomponent.h
+    ${SRC_DIR}/impl/ecs/platform/windoweventdispatcher.h
 )
 
-set(SOURCES_PLATFORM
-    ${SRC_DIR}/ecs/platform/windowsystem.cpp
-    ${SRC_DIR}/ecs/platform/windowcomponent.cpp
-    ${SRC_DIR}/ecs/platform/windoweventdispatcher.cpp
+set(SOURCES_ECS_PLATFORM
+    ${SRC_DIR}/impl/ecs/platform/platformservice.cpp
+    ${SRC_DIR}/impl/ecs/platform/windowsystem.cpp
+    ${SRC_DIR}/impl/ecs/platform/windowcomponent.cpp
+    ${SRC_DIR}/impl/ecs/platform/windoweventdispatcher.cpp
 )
 
-# Append every platform-specific source / header onto the shared
-# HEADER_PLATFORM / SOURCES_PLATFORM lists. The active platform's
-# fragment (cmake/platform/<X>/config.cmake) decides which surface
-# factory, OS-signal source, and window backend get pulled in. The
-# fragment was loaded by the platform dispatcher near the top of this
-# file.
-vigine_platform_collect_sources(HEADER_PLATFORM SOURCES_PLATFORM)
+# Append every platform-specific source / header onto the per-subsystem
+# lists. The active platform's fragment (cmake/platform/<X>/config.cmake)
+# decides which window component, Vulkan surface factory, and OS-signal
+# source get pulled in. The fragment was loaded by the platform
+# dispatcher near the top of this file.
+#
+# Argument order (positional, see cmake/platform/platform.cmake):
+#   1. HEADER_ECS_PLATFORM   -- per-platform window component header
+#                               (winapicomponent.h / cocoawindowcomponent.h
+#                               / xcbwindowbackend.h)
+#   2. SOURCES_ECS_PLATFORM  -- per-platform window component source
+#                               (winapicomponent.cpp /
+#                               cocoawindowcomponent.mm /
+#                               xcbwindowbackend.cpp)
+#   3. SOURCES_ECS_GRAPHICS  -- per-platform Vulkan surface factory
+#                               (win32surfacefactory.cpp /
+#                               metalsurfacefactory.cpp /
+#                               vulkan_surface_xcb.cpp)
+#   4. SOURCES_EVENTSCHEDULER -- per-platform OS-signal source
+#                                (iossignalsource_win.{h,cpp} /
+#                                iossignalsource_macos.{h,mm} /
+#                                iossignalsource_posix.{h,cpp})
+vigine_platform_collect_sources(
+    HEADER_ECS_PLATFORM
+    SOURCES_ECS_PLATFORM
+    SOURCES_ECS_GRAPHICS
+    SOURCES_EVENTSCHEDULER
+)
 
 # add vulkan
 # Add a library
@@ -704,8 +741,10 @@ add_library(${PROJECT_NAME}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}
-    ${HEADER_PLATFORM}
-    ${SOURCES_PLATFORM}
+    ${HEADER_ECS_GRAPHICS}
+    ${SOURCES_ECS_GRAPHICS}
+    ${HEADER_ECS_PLATFORM}
+    ${SOURCES_ECS_PLATFORM}
     include/vigine/base/name.h src/base/name.cpp
     include/vigine/base/password.h src/base/password.cpp
     include/vigine/base/macros.h

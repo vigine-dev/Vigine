@@ -4,6 +4,8 @@
 
 namespace vigine
 {
+namespace ecs
+{
 namespace graphics
 {
 class RenderSystem;
@@ -12,8 +14,8 @@ namespace platform
 {
 class PlatformService;
 }
+} // namespace ecs
 } // namespace vigine
-
 class InitVulkanTask : public vigine::AbstractTask
 {
   public:
@@ -23,6 +25,6 @@ class InitVulkanTask : public vigine::AbstractTask
     vigine::Result execute() override;
 
   private:
-    vigine::graphics::RenderSystem *_renderSystem{nullptr};
-    vigine::platform::PlatformService *_platformService{nullptr};
+    vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};
+    vigine::ecs::platform::PlatformService *_platformService{nullptr};
 };

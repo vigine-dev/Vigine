@@ -2,12 +2,12 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <iostream>
 
@@ -21,12 +21,12 @@ void SetupCubeTask::contextChanged()
         return;
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
 
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 }
@@ -59,19 +59,19 @@ vigine::Result SetupCubeTask::execute()
     }
 
     // Create a cube mesh with colored faces
-    auto cubeMesh = vigine::graphics::MeshComponent::createCube();
+    auto cubeMesh = vigine::ecs::graphics::MeshComponent::createCube();
     // Cube shader generates geometry procedurally (36 vertices: 6 faces × 2 triangles × 3 vertices)
     cubeMesh.setProceduralInShader(true, 36);
 
     // Configure render component managed by RenderSystem
     renderComponent->setMesh(cubeMesh);
     {
-        vigine::graphics::ShaderComponent shader("cube.vert.spv", "cube.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("cube.vert.spv", "cube.frag.spv");
         renderComponent->setShader(shader);
     }
 
     // Set initial transform (center at origin, no rotation)
-    vigine::graphics::TransformComponent transform;
+    vigine::ecs::graphics::TransformComponent transform;
     transform.setPosition({0.0f, 0.0f, 0.0f});
     transform.setScale({1.0f, 1.0f, 1.0f});
     renderComponent->setTransform(transform);

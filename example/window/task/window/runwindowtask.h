@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vigine/abstracttask.h>
-#include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
 #include <vigine/signalemitter/isignalemitter.h>
 
 #include "../../system/texteditorsystem.h"
@@ -13,17 +13,23 @@
 
 namespace vigine
 {
+namespace ecs
+{
 namespace platform
 {
 class PlatformService;
 class WindowComponent;
 } // namespace platform
+} // namespace ecs
 class Entity;
+namespace ecs
+{
 namespace graphics
 {
 class GraphicsService;
 class RenderSystem;
 } // namespace graphics
+} // namespace ecs
 } // namespace vigine
 
 class RunWindowTask final : public vigine::AbstractTask
@@ -34,13 +40,13 @@ class RunWindowTask final : public vigine::AbstractTask
     void contextChanged() override;
     vigine::Result execute() override;
 
-    void onMouseButtonDown(vigine::platform::MouseButton button, int x, int y);
-    void onMouseButtonUp(vigine::platform::MouseButton button, int x, int y);
+    void onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y);
+    void onMouseButtonUp(vigine::ecs::platform::MouseButton button, int x, int y);
     void onMouseMove(int x, int y);
     void onMouseWheel(int delta, int x, int y);
-    void onKeyDown(const vigine::platform::KeyEvent &event);
-    void onKeyUp(const vigine::platform::KeyEvent &event);
-    void onChar(const vigine::platform::TextEvent &event);
+    void onKeyDown(const vigine::ecs::platform::KeyEvent &event);
+    void onKeyUp(const vigine::ecs::platform::KeyEvent &event);
+    void onChar(const vigine::ecs::platform::TextEvent &event);
 
     void setTextEditorSystem(std::shared_ptr<TextEditorSystem> editorSystem);
     void setSignalEmitter(vigine::signalemitter::ISignalEmitter *emitter) noexcept;
@@ -56,9 +62,9 @@ class RunWindowTask final : public vigine::AbstractTask
         MoveKeyE = 1u << 5,
     };
 
-    void onWindowResized(vigine::platform::WindowComponent *window, int width, int height);
+    void onWindowResized(vigine::ecs::platform::WindowComponent *window, int width, int height);
     void updateCameraMovementKey(unsigned int keyCode, bool pressed);
-    bool handleClipboardShortcut(const vigine::platform::KeyEvent &event);
+    bool handleClipboardShortcut(const vigine::ecs::platform::KeyEvent &event);
     bool isFocusedTextEditor() const;
     void setFocusedEntity(vigine::Entity *entity);
     bool ensureMouseRayEntity();
@@ -70,9 +76,9 @@ class RunWindowTask final : public vigine::AbstractTask
     void endObjectDrag();
 
     vigine::signalemitter::ISignalEmitter *_signalEmitter{nullptr};
-    vigine::platform::PlatformService *_platformService{nullptr};
-    vigine::graphics::GraphicsService *_graphicsService{nullptr};
-    vigine::graphics::RenderSystem *_renderSystem{nullptr};
+    vigine::ecs::platform::PlatformService *_platformService{nullptr};
+    vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
+    vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};
     std::shared_ptr<TextEditorSystem> _textEditorSystem;
     vigine::Entity *_focusedEntity{nullptr};
     vigine::Entity *_mouseRayEntity{nullptr};
@@ -89,7 +95,7 @@ class RunWindowTask final : public vigine::AbstractTask
     vigine::Entity *_dragEntity{nullptr};
     float _dragDistanceFromCamera{0.0f};
     glm::vec3 _dragGrabOffset{0.0f, 0.0f, 0.0f};
-    vigine::platform::WindowComponent *_pendingResizeWindow{nullptr};
+    vigine::ecs::platform::WindowComponent *_pendingResizeWindow{nullptr};
     uint32_t _pendingResizeWidth{0};
     uint32_t _pendingResizeHeight{0};
     uint32_t _appliedResizeWidth{0};

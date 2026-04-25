@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vigine/ecs/platform/iwindoweventhandler.h>
-#include <vigine/ecs/render/textcomponent.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
+#include <vigine/impl/ecs/graphics/textcomponent.h>
 
 #include "../texteditstate.h"
 
@@ -16,11 +16,14 @@ namespace vigine
 {
 class Context;
 class Entity;
+namespace ecs
+{
 namespace graphics
 {
 class GraphicsService;
 class RenderSystem;
 } // namespace graphics
+} // namespace ecs
 } // namespace vigine
 
 class TextEditorSystem
@@ -28,8 +31,8 @@ class TextEditorSystem
   public:
     explicit TextEditorSystem(std::shared_ptr<TextEditState> state);
 
-    void bind(vigine::Context *context, vigine::graphics::GraphicsService *graphicsService,
-              vigine::graphics::RenderSystem *renderSystem);
+    void bind(vigine::Context *context, vigine::ecs::graphics::GraphicsService *graphicsService,
+              vigine::ecs::graphics::RenderSystem *renderSystem);
 
     void setLayout(std::size_t maxColumns, float panelWidth, float panelHeight);
 
@@ -39,7 +42,7 @@ class TextEditorSystem
     void onMouseButtonUp();
     void onMouseMove(int x, int y);
     void onKeyDown(unsigned int keyCode);
-    void onChar(const vigine::platform::TextEvent &event, uint8_t movementKeyMask);
+    void onChar(const vigine::ecs::platform::TextEvent &event, uint8_t movementKeyMask);
     void onMouseWheel(int delta); // delta > 0: scroll up; delta < 0: scroll down
     void setFocused(bool focused);
     void offsetEditorFrame(float dx, float dy, float dz = 0.0f);
@@ -67,11 +70,11 @@ class TextEditorSystem
   private:
     std::shared_ptr<TextEditState> _state;
     vigine::Context *_context{nullptr};
-    vigine::graphics::GraphicsService *_graphicsService{nullptr};
-    vigine::graphics::RenderSystem *_renderSystem{nullptr};
+    vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
+    vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};
 
     std::chrono::steady_clock::time_point _lastBlink{std::chrono::steady_clock::now()};
-    std::vector<vigine::graphics::CursorSlot> _cursorSlots;
+    std::vector<vigine::ecs::graphics::CursorSlot> _cursorSlots;
     float _panelWidth{4.8f};
     float _panelHeight{1.5f};
     float _panelCenterX{0.0f};

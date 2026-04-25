@@ -2,18 +2,18 @@
 
 #include "vigine/impl/ecs/entity.h"
 #include "vigine/impl/ecs/entitymanager.h"
-#include "vigine/ecs/render/meshcomponent.h"
-#include "vigine/ecs/render/rendercomponent.h"
-#include "vigine/ecs/render/rendersystem.h"
-#include "vigine/ecs/render/shadercomponent.h"
-#include "vigine/ecs/render/transformcomponent.h"
+#include "vigine/impl/ecs/graphics/meshcomponent.h"
+#include "vigine/impl/ecs/graphics/rendercomponent.h"
+#include "vigine/impl/ecs/graphics/rendersystem.h"
+#include "vigine/impl/ecs/graphics/shadercomponent.h"
+#include "vigine/impl/ecs/graphics/transformcomponent.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
-#include <vigine/service/platformservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
+#include <vigine/impl/ecs/platform/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
-#include "ecs/platform/windowcomponent.h"
+#include "impl/ecs/platform/windowcomponent.h"
 #include "windoweventpayload.h"
 
 #include <cstring>
@@ -23,7 +23,7 @@
 #include <memory>
 
 #ifdef _WIN32
-#include "ecs/platform/winapicomponent.h"
+#include "impl/ecs/platform/winapicomponent.h"
 
 #include <windows.h>
 
@@ -95,19 +95,19 @@ void RunWindowTask::contextChanged()
         return;
     }
 
-    _platformService = dynamic_cast<vigine::platform::PlatformService *>(
+    _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
     if (!_platformService)
     {
-        _platformService = dynamic_cast<vigine::platform::PlatformService *>(
+        _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
             context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
     if (_graphicsService)
@@ -161,14 +161,14 @@ vigine::Result RunWindowTask::execute()
                                           "Window event handler has unsupported type");
 
                 windowEventHandler->setMouseButtonDownCallback(
-                    [this](vigine::platform::MouseButton button, int x, int y) {
+                    [this](vigine::ecs::platform::MouseButton button, int x, int y) {
                         std::cout << "[RunWindowTask::execute::lambda] button="
                                   << static_cast<int>(button) << ", x=" << x << ", y=" << y
                                   << std::endl;
                         onMouseButtonDown(button, x, y);
                     });
                 windowEventHandler->setMouseButtonUpCallback(
-                    [this](vigine::platform::MouseButton button, int x, int y) {
+                    [this](vigine::ecs::platform::MouseButton button, int x, int y) {
                         onMouseButtonUp(button, x, y);
                     });
                 windowEventHandler->setMouseMoveCallback(
@@ -176,7 +176,7 @@ vigine::Result RunWindowTask::execute()
                 windowEventHandler->setMouseWheelCallback(
                     [this](int delta, int x, int y) { onMouseWheel(delta, x, y); });
                 windowEventHandler->setKeyDownCallback(
-                    [this](const vigine::platform::KeyEvent &event) {
+                    [this](const vigine::ecs::platform::KeyEvent &event) {
                         if (!event.isRepeat)
                             std::cout
                                 << "[RunWindowTask::execute::lambda] keyCode=" << event.keyCode
@@ -187,9 +187,9 @@ vigine::Result RunWindowTask::execute()
                         onKeyDown(event);
                     });
                 windowEventHandler->setKeyUpCallback(
-                    [this](const vigine::platform::KeyEvent &event) { onKeyUp(event); });
+                    [this](const vigine::ecs::platform::KeyEvent &event) { onKeyUp(event); });
                 windowEventHandler->setCharCallback(
-                    [this](const vigine::platform::TextEvent &event) { onChar(event); });
+                    [this](const vigine::ecs::platform::TextEvent &event) { onChar(event); });
                 windowEventHandler->setWindowResizedCallback([this, window](int width, int height) {
                     onWindowResized(window, width, height);
                 });
@@ -237,7 +237,7 @@ vigine::Result RunWindowTask::execute()
                     _renderSystem->update();
 #ifdef _WIN32
                     if (auto *winApiWindow =
-                            dynamic_cast<vigine::platform::WinAPIComponent *>(window))
+                            dynamic_cast<vigine::ecs::platform::WinAPIComponent *>(window))
                         winApiWindow->setRenderedVertexCount(
                             _renderSystem->lastRenderedVertexCount());
 #endif
@@ -255,9 +255,9 @@ vigine::Result RunWindowTask::execute()
     return vigine::Result();
 }
 
-void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int x, int y)
+void RunWindowTask::onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y)
 {
-    if (button == vigine::platform::MouseButton::Left)
+    if (button == vigine::ecs::platform::MouseButton::Left)
     {
         vigine::Entity *picked =
             _renderSystem ? _renderSystem->pickFirstIntersectedEntity(x, y) : nullptr;
@@ -304,7 +304,7 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
         }
     }
 
-    if (_renderSystem && button == vigine::platform::MouseButton::Right &&
+    if (_renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
         (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->beginCameraDrag(x, y);
 
@@ -317,15 +317,15 @@ void RunWindowTask::onMouseButtonDown(vigine::platform::MouseButton button, int 
     }
 }
 
-void RunWindowTask::onMouseButtonUp(vigine::platform::MouseButton button, int x, int y)
+void RunWindowTask::onMouseButtonUp(vigine::ecs::platform::MouseButton button, int x, int y)
 {
     static_cast<void>(x);
     static_cast<void>(y);
 
-    if (button == vigine::platform::MouseButton::Left && _textEditorSystem)
+    if (button == vigine::ecs::platform::MouseButton::Left && _textEditorSystem)
         _textEditorSystem->onMouseButtonUp();
 
-    if (_renderSystem && button == vigine::platform::MouseButton::Right &&
+    if (_renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
         (!_focusedEntity || _ctrlHeld || _objectDragActive))
         _renderSystem->endCameraDrag();
 }
@@ -372,7 +372,7 @@ void RunWindowTask::onMouseWheel(int delta, int x, int y)
         _renderSystem->zoomCamera(delta);
 }
 
-void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
+void RunWindowTask::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
 {
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
@@ -445,7 +445,7 @@ void RunWindowTask::onKeyDown(const vigine::platform::KeyEvent &event)
     }
 }
 
-void RunWindowTask::onKeyUp(const vigine::platform::KeyEvent &event)
+void RunWindowTask::onKeyUp(const vigine::ecs::platform::KeyEvent &event)
 {
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
@@ -503,7 +503,7 @@ void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
     }
 }
 
-void RunWindowTask::onWindowResized(vigine::platform::WindowComponent *window, int width,
+void RunWindowTask::onWindowResized(vigine::ecs::platform::WindowComponent *window, int width,
                                     int height)
 {
     if (!_renderSystem || !_platformService || !window)
@@ -531,18 +531,18 @@ void RunWindowTask::setSignalEmitter(vigine::signalemitter::ISignalEmitter *emit
     _signalEmitter = emitter;
 }
 
-void RunWindowTask::onChar(const vigine::platform::TextEvent &event)
+void RunWindowTask::onChar(const vigine::ecs::platform::TextEvent &event)
 {
     if (_textEditorSystem && isFocusedTextEditor())
         _textEditorSystem->onChar(event, _movementKeyMask);
 }
 
-bool RunWindowTask::handleClipboardShortcut(const vigine::platform::KeyEvent &event)
+bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEvent &event)
 {
     if (!_textEditorSystem || !isFocusedTextEditor())
         return false;
 
-    const bool ctrlPressed = (event.modifiers & vigine::platform::KeyModifierControl) != 0;
+    const bool ctrlPressed = (event.modifiers & vigine::ecs::platform::KeyModifierControl) != 0;
     if (!ctrlPressed)
         return false;
 
@@ -830,16 +830,16 @@ bool RunWindowTask::ensureMouseRayEntity()
         return false;
     }
 
-    auto rayMesh = vigine::graphics::MeshComponent::createCube();
+    auto rayMesh = vigine::ecs::graphics::MeshComponent::createCube();
     rayMesh.setProceduralInShader(true, 36);
     rc->setMesh(rayMesh);
     {
-        vigine::graphics::ShaderComponent shader("cube.vert.spv", "cube.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("cube.vert.spv", "cube.frag.spv");
         rc->setShader(shader);
     }
     rc->setPickable(false);
 
-    vigine::graphics::TransformComponent transform;
+    vigine::ecs::graphics::TransformComponent transform;
     transform.setPosition({0.0f, -100.0f, 0.0f});
     transform.setScale({0.01f, 0.01f, 0.01f});
     rc->setTransform(transform);
@@ -878,16 +878,16 @@ bool RunWindowTask::ensureMouseClickSphereEntity()
         return false;
     }
 
-    auto sphereMesh = vigine::graphics::MeshComponent::createCube();
+    auto sphereMesh = vigine::ecs::graphics::MeshComponent::createCube();
     sphereMesh.setProceduralInShader(true, 768); // Sphere shader generates 768 vertices
     rc->setMesh(sphereMesh);
     {
-        vigine::graphics::ShaderComponent shader("sphere.vert.spv", "sphere.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("sphere.vert.spv", "sphere.frag.spv");
         rc->setShader(shader);
     }
     rc->setPickable(false);
 
-    vigine::graphics::TransformComponent transform;
+    vigine::ecs::graphics::TransformComponent transform;
     transform.setPosition({0.0f, -100.0f, 0.0f});
     transform.setScale({0.06f, 0.06f, 0.06f});
     rc->setTransform(transform);

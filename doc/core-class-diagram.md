@@ -38,7 +38,7 @@ class IMessagePayload
 class ISubscriber
 class IMessageBus
 
-class GraphicsBackend
+class IGraphicsBackend
 class VulkanAPI
 class VulkanDevice
 class VulkanSwapchain
@@ -85,7 +85,7 @@ ISignalEmitter ..> ISignalPayload : emits
 ISignalEmitter ..> ISubscriber : routes by MessageFilter
 ISignalPayload --|> IMessagePayload
 
-VulkanAPI --|> GraphicsBackend
+VulkanAPI --|> IGraphicsBackend
 VulkanAPI *-- VulkanDevice
 VulkanAPI *-- VulkanSwapchain
 VulkanAPI *-- VulkanTextureStore

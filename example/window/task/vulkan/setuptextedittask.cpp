@@ -2,13 +2,13 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/textcomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/textcomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -60,12 +60,12 @@ void SetupTextEditTask::contextChanged()
         return;
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
 
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 
@@ -107,16 +107,16 @@ vigine::Result SetupTextEditTask::execute()
         }
 
         // Flat dark-blue panel: slightly larger and moved toward camera (in front of cube).
-        auto panelMesh = vigine::graphics::MeshComponent::createPlane(kPanelWidth, kPanelHeight,
+        auto panelMesh = vigine::ecs::graphics::MeshComponent::createPlane(kPanelWidth, kPanelHeight,
                                                                       {0.08f, 0.08f, 0.25f});
         panelMesh.setProceduralInShader(true, 6); // Panel shader generates quad (6 vertices)
         rc->setMesh(panelMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition({0.0f, kPanelCenterY, kPanelZ});
         // Scale to actual panel dimensions so the unit-quad shader renders kPanelWidth x
         // kPanelHeight
@@ -145,15 +145,15 @@ vigine::Result SetupTextEditTask::execute()
         }
 
         auto trackMesh =
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f});
+            vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f});
         trackMesh.setProceduralInShader(true, 6);
         rc->setMesh(trackMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition({kScrollbarX, kPanelCenterY, kPanelZ + 0.005f});
         transform.setScale({kScrollbarWidth, kScrollbarHeight, 0.01f});
         rc->setTransform(transform);
@@ -176,11 +176,11 @@ vigine::Result SetupTextEditTask::execute()
         }
 
         auto thumbMesh =
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f});
+            vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f});
         thumbMesh.setProceduralInShader(true, 6);
         rc->setMesh(thumbMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
@@ -208,7 +208,7 @@ vigine::Result SetupTextEditTask::execute()
                                   "Render component unavailable for TextEditEntity");
         }
 
-        vigine::graphics::TextComponent text;
+        vigine::ecs::graphics::TextComponent text;
         text.setEnabled(true);
         text.setDrawBaseInstance(false);
         text.setText(_state->text);
@@ -224,25 +224,25 @@ vigine::Result SetupTextEditTask::execute()
         text.setMaxLineWorldWidth(4.58f);
 
         // Configure mesh for glyph instanced rendering
-        vigine::graphics::MeshComponent glyphMesh;
+        vigine::ecs::graphics::MeshComponent glyphMesh;
         glyphMesh.setProceduralInShader(true, 6); // 6 vertices per glyph quad instance
         rc->setMesh(glyphMesh);
 
         // Set shader before setText so that RenderComponent knows to build SDF quads.
         {
-            vigine::graphics::ShaderComponent shader("glyph.vert.spv", "glyph.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("glyph.vert.spv", "glyph.frag.spv");
             // Glyph shader generates procedural quad per glyph instance (6 vertices)
             shader.setInstancedRendering(true);
             // Instance vertex layout: mat4 as 4 consecutive vec4 attributes.
-            vigine::graphics::VertexBindingDesc instBinding;
+            vigine::ecs::graphics::VertexBindingDesc instBinding;
             instBinding.binding      = 0;
             instBinding.stride       = sizeof(glm::mat4);
             instBinding.instanceRate = true;
             instBinding.attributes   = {
-                {0, vigine::graphics::VertexFormat::Float32x4, 0 },
-                {1, vigine::graphics::VertexFormat::Float32x4, 16},
-                {2, vigine::graphics::VertexFormat::Float32x4, 32},
-                {3, vigine::graphics::VertexFormat::Float32x4, 48},
+                {0, vigine::ecs::graphics::VertexFormat::Float32x4, 0 },
+                {1, vigine::ecs::graphics::VertexFormat::Float32x4, 16},
+                {2, vigine::ecs::graphics::VertexFormat::Float32x4, 32},
+                {3, vigine::ecs::graphics::VertexFormat::Float32x4, 48},
             };
             shader.setVertexLayout({instBinding});
             rc->setShader(shader);
@@ -255,7 +255,7 @@ vigine::Result SetupTextEditTask::execute()
                                   "Failed to build editor text voxels");
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         // Entity stays at panel center (proven visible); anchorOffset shifts text to top-left.
         transform.setPosition({0.0f, kPanelCenterY, 1.21f});
         transform.setScale({1.0f, 1.0f, 1.0f});
@@ -292,15 +292,15 @@ vigine::Result SetupTextEditTask::execute()
             }
 
             auto frameMesh =
-                vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f});
+                vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f});
             frameMesh.setProceduralInShader(true, 6);
             rc->setMesh(frameMesh);
             {
-                vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+                vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
                 rc->setShader(shader);
             }
 
-            vigine::graphics::TransformComponent transform;
+            vigine::ecs::graphics::TransformComponent transform;
             transform.setPosition({0.0f, -100.0f, 0.0f});
             transform.setScale({0.001f, 0.001f, 0.001f});
             rc->setTransform(transform);
