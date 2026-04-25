@@ -1,6 +1,9 @@
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
+#include "vigine/messaging/connectionid.h"
+#include "vigine/messaging/connectiontoken.h"
 #include "vigine/messaging/factory.h"
+#include "vigine/messaging/ibuscontrolblock.h"
 #include "vigine/messaging/imessage.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/messaging/imessagepayload.h"
@@ -9,6 +12,7 @@
 #include "vigine/messaging/messagefilter.h"
 #include "vigine/messaging/messagekind.h"
 #include "vigine/messaging/routemode.h"
+#include "vigine/messaging/subscriptionslot.h"
 #include "vigine/messaging/systemmessagebus.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
@@ -517,6 +521,157 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
     }
 
     dispatcher.join();
+}
+
+// ---------------------------------------------------------------------------
+// Case 10 -- ConnectionToken::cancel() is idempotent and flips active() false.
+//
+// Pins the API-symmetry contract L-B2 adds alongside
+// ISubscriptionToken::cancel():
+//
+//   1. active() reports true while the slot is live.
+//   2. The first cancel() unregisters the slot AND trips the shared
+//      SlotState's `cancelled` flag (the registry observes the loss).
+//   3. active() reports false after cancel().
+//   4. A second cancel() is a structural no-op -- the control block
+//      sees exactly one unregisterTarget call across both invocations.
+//
+// Uses an in-test fake IBusControlBlock so the assertion is local: the
+// ConnectionToken is constructed directly and observed directly,
+// without routing through the full AbstractMessageBus register path
+// (which hides the token inside AbstractMessageTarget's private
+// _connections vector).
+// ---------------------------------------------------------------------------
+
+/// @brief Minimal IBusControlBlock that counts unregisterTarget calls
+///        and tracks whether the last unregister saw its slot live.
+///
+/// Everything else is either a pass-through or a no-op; the test only
+/// cares about unregister bookkeeping plus the two contracts the block
+/// must honour for ConnectionToken to behave correctly: @ref isAlive
+/// returns true until @ref markDead runs, and @ref allocateSlot hands
+/// back a valid id paired with a fresh SlotState. Subscription-side
+/// methods are stubbed because ConnectionToken never reaches them.
+class FakeBusControlBlock final : public IBusControlBlock,
+                                  public std::enable_shared_from_this<FakeBusControlBlock>
+{
+  public:
+    [[nodiscard]] bool isAlive() const noexcept override
+    {
+        return _alive.load(std::memory_order_acquire);
+    }
+
+    void markDead() noexcept override
+    {
+        _alive.store(false, std::memory_order_release);
+    }
+
+    [[nodiscard]] SlotAllocation
+        allocateSlot(AbstractMessageTarget * /*target*/) override
+    {
+        if (!_alive.load(std::memory_order_acquire))
+        {
+            return SlotAllocation{};
+        }
+        auto state = std::make_shared<SlotState>();
+        _lastState = state;
+        return SlotAllocation{
+            ConnectionId{_nextIndex++, _nextGeneration++},
+            std::move(state),
+        };
+    }
+
+    void unregisterTarget(ConnectionId id) noexcept override
+    {
+        if (!id.valid())
+        {
+            return;
+        }
+        _unregisterCalls.fetch_add(1, std::memory_order_acq_rel);
+        _lastUnregisteredId = id;
+    }
+
+    [[nodiscard]] std::uint64_t registerSubscription(
+        ISubscriber * /*subscriber*/,
+        MessageFilter /*filter*/,
+        std::shared_ptr<SlotState> /*slotState*/) override
+    {
+        return 0;
+    }
+
+    void unregisterSubscription(std::uint64_t /*serial*/) noexcept override {}
+
+    [[nodiscard]] std::vector<SubscriptionSlot> snapshotSubscriptions() const override
+    {
+        return {};
+    }
+
+    [[nodiscard]] std::uint32_t unregisterCalls() const noexcept
+    {
+        return _unregisterCalls.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] ConnectionId lastUnregisteredId() const noexcept
+    {
+        return _lastUnregisteredId;
+    }
+
+    [[nodiscard]] std::shared_ptr<SlotState> lastState() const noexcept
+    {
+        return _lastState;
+    }
+
+  private:
+    std::atomic<bool>           _alive{true};
+    std::atomic<std::uint32_t>  _unregisterCalls{0};
+    std::uint32_t               _nextIndex{1};
+    std::uint32_t               _nextGeneration{1};
+    ConnectionId                _lastUnregisteredId{};
+    std::shared_ptr<SlotState>  _lastState;
+};
+
+TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
+{
+    auto block       = std::make_shared<FakeBusControlBlock>();
+    auto allocation  = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    ConnectionToken token{
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state,
+    };
+
+    // Preconditions: the fresh token is live, no unregister yet.
+    EXPECT_TRUE(token.active());
+    EXPECT_EQ(block->unregisterCalls(), 0u);
+    EXPECT_FALSE(allocation.state->cancelled);
+
+    // First cancel: runs the full unregister-plus-barrier sequence.
+    token.cancel();
+
+    EXPECT_FALSE(token.active())
+        << "active() must report false after the first cancel()";
+    EXPECT_EQ(block->unregisterCalls(), 1u)
+        << "first cancel() must drive exactly one unregisterTarget";
+    EXPECT_EQ(block->lastUnregisteredId(), allocation.id)
+        << "unregisterTarget must be called with the token's own id";
+    EXPECT_TRUE(allocation.state->cancelled)
+        << "the shared SlotState's cancelled flag must be true after cancel()";
+
+    // Second cancel: idempotent no-op. The control block must not see
+    // a second unregisterTarget and the state must stay cancelled.
+    token.cancel();
+
+    EXPECT_FALSE(token.active());
+    EXPECT_EQ(block->unregisterCalls(), 1u)
+        << "second cancel() must not drive another unregisterTarget";
+    EXPECT_TRUE(allocation.state->cancelled);
+
+    // A third cancel: same invariants as the second.
+    token.cancel();
+    EXPECT_EQ(block->unregisterCalls(), 1u);
 }
 
 } // namespace
