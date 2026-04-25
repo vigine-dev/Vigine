@@ -1,17 +1,42 @@
 #include "vigine/impl/ecs/platform/platformservice.h"
 
-#include "vigine/context.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/impl/ecs/platform/windowsystem.h"
-#include "vigine/property.h"
 
 #include "impl/ecs/platform/windowcomponent.h"
 
-
 using namespace vigine::ecs::platform;
 
-PlatformService::PlatformService(const Name &name) : AbstractService(name) {}
+PlatformService::PlatformService(const Name &name)
+    : vigine::service::AbstractService()
+    , _name{name}
+{
+}
 
 PlatformService::~PlatformService() = default;
+
+const vigine::Name &PlatformService::name() const noexcept { return _name; }
+
+void PlatformService::setWindowSystem(WindowSystem *system) noexcept
+{
+    _windowSystem = system;
+}
+
+vigine::Result PlatformService::onInit(vigine::IContext &context)
+{
+    // Modern lifecycle: chain to the wrapper base so the
+    // @c isInitialised flag flips to @c true. Window-system
+    // attachment is performed through @ref setWindowSystem because
+    // @ref vigine::IContext does not yet expose a system locator.
+    return vigine::service::AbstractService::onInit(context);
+}
+
+vigine::Result PlatformService::onShutdown(vigine::IContext &context)
+{
+    // Drop the non-owning window-system handle before chaining up.
+    _windowSystem = nullptr;
+    return vigine::service::AbstractService::onShutdown(context);
+}
 
 WindowComponent *PlatformService::createWindow()
 {
@@ -29,13 +54,11 @@ vigine::Result PlatformService::showWindow(WindowComponent *window)
     return _windowSystem->showWindow(window);
 }
 
-vigine::Result PlatformService::bindWindowEventHandler(WindowComponent *window,
+vigine::Result PlatformService::bindWindowEventHandler(vigine::Entity *entity, WindowComponent *window,
                                                        IWindowEventHandlerComponent *handler)
 {
-    auto *entity = getBoundEntity();
-
     if (!_windowSystem || !entity || !window)
-        return vigine::Result(vigine::Result::Code::Error, "No bound entity or window system");
+        return vigine::Result(vigine::Result::Code::Error, "No entity or window system");
 
     if (auto bindWindowResult = _windowSystem->bindWindowComponent(entity, window);
         bindWindowResult.isError())
@@ -52,20 +75,16 @@ void *PlatformService::nativeWindowHandle(WindowComponent *window) const
     return window->nativeHandle();
 }
 
-std::vector<WindowComponent *> PlatformService::windowComponents() const
+std::vector<WindowComponent *> PlatformService::windowComponents(vigine::Entity *entity) const
 {
-    auto *entity = getBoundEntity();
-
     if (!_windowSystem || !entity)
         return {};
 
     return _windowSystem->windowComponents(entity);
 }
 
-std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers() const
+std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers(vigine::Entity *entity) const
 {
-    auto *entity = getBoundEntity();
-
     if (!_windowSystem || !entity)
         return {};
 
@@ -73,45 +92,10 @@ std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers
 }
 
 std::vector<IWindowEventHandlerComponent *>
-PlatformService::windowEventHandlers(WindowComponent *window) const
+PlatformService::windowEventHandlers(vigine::Entity *entity, WindowComponent *window) const
 {
-    auto *entity = getBoundEntity();
-
     if (!_windowSystem || !entity || !window)
         return {};
 
     return _windowSystem->windowEventHandlers(entity, window);
 }
-
-void PlatformService::contextChanged()
-{
-    if (!context())
-    {
-        _windowSystem = nullptr;
-
-        return;
-    }
-
-    _windowSystem = dynamic_cast<WindowSystem *>(
-        context()->system("Window", "MainWindow", vigine::Property::Exist));
-
-    if (_windowSystem)
-        return;
-
-    _windowSystem = dynamic_cast<WindowSystem *>(
-        context()->system("Window", "MainWindow", vigine::Property::New));
-}
-
-void PlatformService::entityBound()
-{
-    if (_windowSystem)
-        _windowSystem->bindEntity(getBoundEntity());
-}
-
-void PlatformService::entityUnbound()
-{
-    if (_windowSystem)
-        _windowSystem->unbindEntity();
-}
-
-vigine::ServiceId PlatformService::id() const { return "Platform"; }
