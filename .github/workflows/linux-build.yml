@@ -2,14 +2,18 @@ name: Linux build
 
 on:
   push:
-    branches: ["main", "feat/**"]
+    branches: ["main", "feat/**", "feature/**"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "feature/**"]
 
 jobs:
   linux-build:
-    name: Ubuntu 22.04 — XCB + POSIX signals + Vulkan surface
+    name: Ubuntu 22.04 ${{ matrix.config }} (XCB + Vulkan + full ctest)
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
 
     steps:
       - uses: actions/checkout@v4
@@ -34,16 +38,14 @@ jobs:
       - name: Configure
         run: >
           cmake -S . -B build
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           -DENABLE_UNITTEST=ON
           -DENABLE_EXAMPLE=OFF
-          -DENABLE_POSTGRESQL=OFF
+          -DVIGINE_ENABLE_EXPERIMENTAL=OFF
 
-      - name: Build vigine
-        run: cmake --build build --target vigine -- -j$(nproc)
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }} -- -j$(nproc)
 
-      - name: Build Linux platform smoke test
-        run: cmake --build build --target linux-platform-smoke -- -j$(nproc)
-
-      - name: Run Linux platform smoke tests
-        run: ctest --test-dir build -L linux-platform-smoke --output-on-failure
+      - name: Run ctest
+        working-directory: build
+        run: ctest --output-on-failure -C ${{ matrix.config }}

@@ -1,0 +1,55 @@
+name: Windows build
+
+on:
+  push:
+    branches: ["main", "feat/**", "feature/**"]
+  pull_request:
+    branches: ["main", "feature/**"]
+
+jobs:
+  windows-build:
+    name: Windows ${{ matrix.config }} (MSVC + Vulkan)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Cache vcpkg_installed
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/build/vcpkg_installed
+          key: vcpkg-windows-latest-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-windows-latest-
+
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: 1.3.290.0
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+          -DENABLE_UNITTEST=ON
+          -DENABLE_EXAMPLE=OFF
+          -DVIGINE_ENABLE_EXPERIMENTAL=OFF
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }} --parallel
+
+      - name: Run ctest
+        working-directory: build
+        run: ctest --output-on-failure -C ${{ matrix.config }}
