@@ -243,10 +243,10 @@ class TickRunnable final : public vigine::core::threading::IRunnable
             return r;
         }
 
-        // Bump the global exchange counter. A returned-pre-increment
-        // value of >= _target means we just emitted the last signal we
-        // are allowed to emit; the peer subscriber will notice the
-        // counter and stop scheduling further ticks.
+        // Bump the global exchange counter before deciding whether to
+        // post the response. fetch_add returns the old (pre-increment)
+        // value; if that value is already >= _target the target was
+        // reached by a different runnable -- do not post.
         const int prior = _exchanges.fetch_add(1, std::memory_order_acq_rel);
         if (prior >= _target)
         {
@@ -294,13 +294,13 @@ class TickSubscriber final : public vigine::messaging::ISubscriber
   public:
     TickSubscriber(vigine::core::threading::IThreadManager &tm,
                    vigine::core::threading::NamedThreadId   target,
-                   FsmContext                              &peerCtx,
+                   FsmContext                              &ownCtx,
                    vigine::messaging::IMessageBus          &bus,
                    std::atomic<int>                        &exchanges,
                    int                                      targetCount) noexcept
         : _tm(tm)
         , _target(target)
-        , _peerCtx(peerCtx)
+        , _ownCtx(ownCtx)
         , _bus(bus)
         , _exchanges(exchanges)
         , _targetCount(targetCount)
@@ -322,7 +322,7 @@ class TickSubscriber final : public vigine::messaging::ISubscriber
         }
 
         auto runnable = std::make_unique<TickRunnableT>(
-            _peerCtx, _bus, _exchanges, _targetCount);
+            _ownCtx, _bus, _exchanges, _targetCount);
         auto handle =
             _tm.scheduleOnNamed(std::move(runnable), _target);
         // We deliberately drop the handle: the chain is self-clocking
@@ -338,7 +338,7 @@ class TickSubscriber final : public vigine::messaging::ISubscriber
   private:
     vigine::core::threading::IThreadManager  &_tm;
     vigine::core::threading::NamedThreadId    _target;
-    FsmContext                               &_peerCtx;
+    FsmContext                               &_ownCtx;
     vigine::messaging::IMessageBus           &_bus;
     std::atomic<int>                         &_exchanges;
     int                                       _targetCount;
