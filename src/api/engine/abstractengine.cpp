@@ -1,9 +1,12 @@
 #include "vigine/api/engine/abstractengine.h"
 
 #include <chrono>
+#include <cstdio>
+#include <thread>
 
 #include "vigine/api/context/factory.h"
 #include "vigine/api/context/icontext.h"
+#include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::engine
@@ -27,12 +30,21 @@ AbstractEngine::AbstractEngine(const EngineConfig &config)
 // reverse teardown through its own member declaration order (services
 // registry, Level-1 wrappers, system bus, thread manager last).
 //
-// Before letting _context tear down we do two things explicitly:
+// Before letting _context tear down we do three things explicitly:
 //   1. Call _context->freeze() so any late post-back that slips
 //      through observes a closed topology and bounces with
 //      Result::Code::TopologyFrozen rather than attempting a mutation
 //      on a half-dead aggregator.
-//   2. Drain the thread manager's main-thread queue one last time so
+//   2. Drain the FSM's queued transitions one last time on the
+//      destruction thread when it is safe to do so (the FSM is
+//      unbound, or its bound controller thread matches this one).
+//      Best-effort per AD-G5: requestTransition calls posted after
+//      this drain land on a queue that is about to be torn down with
+//      the FSM, so they are silently dropped without surfacing any
+//      Result. The thread-affinity guard avoids tripping the Debug
+//      assert in checkThreadAffinity when the engine is destroyed
+//      from a thread other than the one that drove run().
+//   3. Drain the thread manager's main-thread queue one last time so
 //      any runnable posted by a caller between createEngine() and
 //      destruction (without a matching run()) is observed on the
 //      destruction thread rather than being silently discarded by the
@@ -42,6 +54,14 @@ AbstractEngine::~AbstractEngine()
     if (_context)
     {
         _context->freeze();
+
+        statemachine::IStateMachine &fsm  = _context->stateMachine();
+        const std::thread::id        bound = fsm.controllerThread();
+        if (bound == std::thread::id{} || bound == std::this_thread::get_id())
+        {
+            fsm.processQueuedTransitions();
+        }
+
         _context->threadManager().runMainThreadPump();
     }
 }
@@ -81,23 +101,79 @@ Result AbstractEngine::run()
     // createEngine() and run().
     _context->freeze();
 
+    // Pin the engine-wide state machine to this thread per AD-G2: the
+    // thread that drives the pump loop is the FSM's controller thread.
+    // bindToControllerThread is one-shot, so this is safe only when no
+    // earlier caller (e.g. a test that drove the FSM directly off the
+    // shared context) has already bound the FSM to a different thread.
+    // The contract on a double-bind is "Debug asserts; Release silently
+    // keeps the original binding" — we honour both: in production the
+    // engine owns the binding, while tests that bypass the engine
+    // continue to bind manually without the engine clobbering them.
+    //
+    // We also classify the binding outcome into a boolean
+    // (fsmDrainSafe): when this thread is the FSM's controller (either
+    // because we just bound it or because an earlier bind landed on
+    // exactly this thread), draining the queued transitions on every
+    // tick is safe. When the FSM is already bound to a different
+    // thread (a test embedder or a host application that drove the
+    // FSM directly off the shared context before calling run()),
+    // calling processQueuedTransitions on this thread would trip the
+    // Debug thread-affinity assert in checkThreadAffinity. In that
+    // case we skip the FSM drain altogether for the rest of run() and
+    // emit a one-shot warning on stderr so the silent-skip is visible
+    // in test logs. The thread manager's main-thread pump remains
+    // active so post-backs to the engine thread are still observed.
+    statemachine::IStateMachine &fsm        = _context->stateMachine();
+    const std::thread::id        bound      = fsm.controllerThread();
+    const std::thread::id        selfId     = std::this_thread::get_id();
+    bool                         fsmDrainSafe = true;
+    if (bound == std::thread::id{})
+    {
+        fsm.bindToControllerThread(selfId);
+    }
+    else if (bound != selfId)
+    {
+        fsmDrainSafe = false;
+        std::fprintf(stderr,
+                     "[vigine::engine] FSM bound to non-engine controller "
+                     "thread before run(); skipping FSM drains for this "
+                     "run() invocation to preserve thread affinity\n");
+    }
+
     // Publish the running flag with release semantics so an observer
     // that sees isRunning() == true also sees the freeze side effect.
     _running.store(true, std::memory_order_release);
 
-    // Main-thread pump loop. Drains the thread manager's main-thread
-    // queue on every tick, then waits for either a shutdown request
-    // or the pump tick timeout so a shutdown() call is observed with
-    // bounded latency. The shutdown flag is checked twice per tick --
-    // once under the mutex (so a concurrent shutdown + notify pair
-    // cannot be lost) and once lock-free before each drain (so a
-    // shutdown that arrives during the drain is observed at the next
-    // predicate check).
+    // Main-thread pump loop. Each iteration is the engine "tick" per
+    // AD-G3: we drain queued FSM transitions on the controller thread
+    // first (so requestTransition calls posted from worker threads are
+    // applied before any main-thread runnable observes the new state),
+    // then drain the thread manager's main-thread queue, then wait for
+    // either a shutdown request or the pump tick timeout so a
+    // shutdown() call is observed with bounded latency. The shutdown
+    // flag is checked twice per tick -- once under the mutex (so a
+    // concurrent shutdown + notify pair cannot be lost) and once
+    // lock-free before each drain (so a shutdown that arrives during
+    // the drain is observed at the next predicate check).
     core::threading::IThreadManager &tm = _context->threadManager();
     const auto tick = std::chrono::milliseconds{pumpTickMilliseconds()};
 
     while (!_shutdownRequested.load(std::memory_order_acquire))
     {
+        // Drain queued FSM transitions on this (controller) thread.
+        // processQueuedTransitions is single-pass and snapshot-swap;
+        // requests posted during the drain land on the live queue and
+        // are picked up on the next iteration, per the cooperative
+        // no-reentry contract documented on
+        // IStateMachine::processQueuedTransitions. Gated by
+        // fsmDrainSafe so an alien-bound FSM (tests / embedders) does
+        // not trip the controller-thread assertion in checkThreadAffinity.
+        if (fsmDrainSafe)
+        {
+            fsm.processQueuedTransitions();
+        }
+
         // Drain any main-thread work posted since the last tick.
         // runMainThreadPump is permitted to run zero or more
         // runnables synchronously on the calling thread; it returns
@@ -114,12 +190,26 @@ Result AbstractEngine::run()
         });
     }
 
-    // Final drain after shutdown is observed so any post-back that
-    // arrived between "wait returns" and "loop exits" is not stranded
-    // on the main-thread queue. The thread manager's own shutdown
-    // (driven by the context's dtor) would discard late runnables
-    // anyway; draining here gives deterministic semantics for tests
-    // that shutdown from inside a main-thread runnable.
+    // Final drain after shutdown is observed so requests posted between
+    // "wait returns" and "loop exits" are applied before the FSM is
+    // torn down. AD-G5 calls this the best-effort drain pass: every
+    // requestTransition call already on the queue is honoured exactly
+    // once; calls that race in after this point land on a queue that
+    // is about to die with the context, so they are silently dropped
+    // without surfacing any Result back to the producer. Gated by
+    // fsmDrainSafe for the same reason as the in-loop drain: an
+    // alien-bound FSM is the embedder's responsibility to drain.
+    if (fsmDrainSafe)
+    {
+        fsm.processQueuedTransitions();
+    }
+
+    // Final drain of the thread manager's main-thread queue so any
+    // post-back that arrived between "wait returns" and "loop exits"
+    // is not stranded. The thread manager's own shutdown (driven by
+    // the context's dtor) would discard late runnables anyway;
+    // draining here gives deterministic semantics for tests that
+    // shutdown from inside a main-thread runnable.
     tm.runMainThreadPump();
 
     _running.store(false, std::memory_order_release);
