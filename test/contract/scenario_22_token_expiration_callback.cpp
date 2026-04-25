@@ -197,15 +197,19 @@ TEST_F(TokenExpirationCallback, MultipleSubscribersAllFire)
 
 TEST_F(TokenExpirationCallback, FiresOnControllerThread)
 {
-    auto &sm     = context().stateMachine();
-    auto  states = latchOnStateA(sm);
+    auto &sm = context().stateMachine();
 
     // Bind the FSM controller binding to the test thread BEFORE the
-    // token's listener registers. processQueuedTransitions then runs on
-    // this thread and the listener fires on this thread by the FSM
-    // thread-affinity contract.
+    // first sync mutation (latchOnStateA calls addState / setInitial,
+    // both gated by checkThreadAffinity). The IStateMachine contract is
+    // explicit: bindToControllerThread is one-shot and must be called
+    // before the first sync mutation. processQueuedTransitions then
+    // runs on this thread and the listener fires on this thread by the
+    // FSM thread-affinity contract.
     const auto controllerId = std::this_thread::get_id();
     sm.bindToControllerThread(controllerId);
+
+    auto states = latchOnStateA(sm);
 
     vigine::engine::EngineToken token(states.stateA, context(), sm);
 
