@@ -22,7 +22,7 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/eventscheduler/eventconfig.h"
 #include "vigine/eventscheduler/factory.h"
 #include "vigine/eventscheduler/ieventhandle.h"

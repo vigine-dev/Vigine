@@ -15,7 +15,7 @@
 
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/ecs/ecstypes.h"
 #include "vigine/ecs/iecs.h"
 #include "vigine/result.h"

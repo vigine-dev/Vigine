@@ -14,10 +14,10 @@
 //     semantics) does not flip the flag back to false.
 // ---------------------------------------------------------------------------
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/service/factory.h"
+#include "vigine/api/service/iservice.h"
 #include "vigine/result.h"
-#include "vigine/service/factory.h"
-#include "vigine/service/iservice.h"
 
 #include <gtest/gtest.h>
 

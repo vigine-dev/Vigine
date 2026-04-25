@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "vigine/context/contextconfig.h"
+#include "vigine/api/context/contextconfig.h"
 
 namespace vigine::engine
 {

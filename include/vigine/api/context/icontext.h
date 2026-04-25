@@ -5,7 +5,7 @@
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/result.h"
-#include "vigine/service/serviceid.h"
+#include "vigine/api/service/serviceid.h"
 
 namespace vigine::ecs
 {
@@ -47,8 +47,8 @@ namespace vigine
  * @c IService::onInit. It owns no resources itself; the stateful base
  * @ref AbstractContext holds the actual @c std::unique_ptr handles and
  * supplies the accessors on top of them. The concrete
- * @c DefaultContext (see @c src/context) seals the inheritance chain
- * and is handed out by @ref createContext.
+ * @c Context (see @c include/vigine/impl/context) seals the inheritance
+ * chain and is handed out by @ref createContext.
  *
  * Surface shape (UD-9):
  *   - One accessor per Level-1 wrapper (@c systemBus, @c ecs,

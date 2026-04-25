@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "vigine/context/contextconfig.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/contextconfig.h"
+#include "vigine/api/context/icontext.h"
 
 namespace vigine::context
 {

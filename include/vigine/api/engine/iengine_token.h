@@ -53,7 +53,7 @@
 #include <type_traits>
 
 #include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/service/serviceid.h"
+#include "vigine/api/service/serviceid.h"
 #include "vigine/statemachine/stateid.h"
 
 // Forward declarations for the references the gated and ungated

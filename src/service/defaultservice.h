@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/service/abstractservice.h"
+#include "vigine/api/service/abstractservice.h"
 
 namespace vigine::service
 {

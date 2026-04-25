@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "vigine/result.h"
-#include "vigine/service/serviceid.h"
+#include "vigine/api/service/serviceid.h"
 
 namespace vigine
 {

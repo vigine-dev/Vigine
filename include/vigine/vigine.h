@@ -28,7 +28,7 @@ class IMessageBus;
  *
  * @note Superseded for new code by @ref vigine::engine::IEngine and
  *       the @ref vigine::engine::createEngine factory (see
- *       @c vigine/engine/). The new engine wraps @ref IContext (the
+ *       @c vigine/api/engine/). The new engine wraps @ref IContext (the
  *       R.4.5 aggregator) and encodes the AD-5 C8 strict construction
  *       and destruction order end to end, including
  *       @c context->freeze() on @c run() entry and a thread-safe

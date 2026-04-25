@@ -24,7 +24,7 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/messaging/imessage.h"
 #include "vigine/messaging/imessagepayload.h"
 #include "vigine/messaging/isubscriber.h"

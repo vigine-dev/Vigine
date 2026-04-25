@@ -1,8 +1,8 @@
-#include "vigine/context/factory.h"
+#include "vigine/api/context/factory.h"
 
 #include <memory>
 
-#include "context/defaultcontext.h"
+#include "vigine/impl/context/context.h"
 
 namespace vigine::context
 {
@@ -15,7 +15,7 @@ namespace vigine::context
 
 std::unique_ptr<IContext> createContext(const ContextConfig &config)
 {
-    return std::make_unique<DefaultContext>(config);
+    return std::make_unique<Context>(config);
 }
 
 } // namespace vigine::context

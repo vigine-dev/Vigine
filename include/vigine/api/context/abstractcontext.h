@@ -6,15 +6,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include "vigine/context/contextconfig.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/contextconfig.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/service/iservice.h"
+#include "vigine/api/service/serviceid.h"
 #include "vigine/ecs/iecs.h"
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/result.h"
-#include "vigine/service/iservice.h"
-#include "vigine/service/serviceid.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -30,8 +30,8 @@ namespace vigine::context
  * bus, the Level-1 wrappers, the user-bus registry, and the service
  * registry, and encodes the strict construction and destruction order
  * required by UD-9 + AD-5 C8. A concrete closer (see
- * @c DefaultContext in @c src/context) seals the chain so the factory
- * can hand out @c std::unique_ptr<IContext>.
+ * @c Context in @c include/vigine/impl/context) seals the chain so the
+ * factory can hand out @c std::unique_ptr<IContext>.
  *
  * The class carries state, so it uses the project's @c Abstract
  * naming convention. All data members are @c private per the strict
