@@ -14,9 +14,9 @@
 #include "vigine/abstractservice.h"
 #include "vigine/ecs/entity.h"
 #if VIGINE_POSTGRESQL
-#include "vigine/ecs/postgresql/column.h"
-#include "vigine/ecs/postgresql/databaseconfiguration.h"
-#include "vigine/ecs/postgresql/table.h"
+#include "vigine/experimental/ecs/postgresql/impl/column.h"
+#include "vigine/experimental/ecs/postgresql/impl/databaseconfiguration.h"
+#include "vigine/experimental/ecs/postgresql/impl/table.h"
 #endif
 #include "vigine/result.h"
 
@@ -26,12 +26,18 @@
 namespace vigine
 {
 #if VIGINE_POSTGRESQL
+namespace experimental
+{
+namespace ecs
+{
 namespace postgresql
 {
 class PostgreSQLSystem;
 class DatabaseConfiguration;
 class Column;
 } // namespace postgresql
+} // namespace ecs
+} // namespace experimental
 #endif
 
 /**
@@ -54,13 +60,13 @@ class DatabaseService : public AbstractService
     [[nodiscard]] ServiceId id() const override;
 
 #if VIGINE_POSTGRESQL
-    [[nodiscard]] postgresql::DatabaseConfiguration *databaseConfiguration();
+    [[nodiscard]] experimental::ecs::postgresql::DatabaseConfiguration *databaseConfiguration();
 
     [[nodiscard]] ResultUPtr connectToDb();
     [[nodiscard]] ResultUPtr checkDatabaseScheme();
     [[nodiscard]] ResultUPtr createDatabaseScheme();
 
-    void writeData(const std::string &tableName, const std::vector<postgresql::Column> columnsData);
+    void writeData(const std::string &tableName, const std::vector<experimental::ecs::postgresql::Column> columnsData);
     [[nodiscard]] std::vector<std::vector<std::string>>
     readData(const std::string &tableName) const;
     void clearTable(const std::string &tableName) const;
@@ -72,7 +78,7 @@ class DatabaseService : public AbstractService
 
   private:
 #if VIGINE_POSTGRESQL
-    postgresql::PostgreSQLSystem *_postgressSystem{nullptr};
+    experimental::ecs::postgresql::PostgreSQLSystem *_postgressSystem{nullptr};
 #endif
 };
 

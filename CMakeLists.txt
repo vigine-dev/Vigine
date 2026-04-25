@@ -111,10 +111,23 @@ if(UNIX AND NOT APPLE)
     endif()
 endif()
 
-# PostgreSQL (libpqxx) is optional; disable on platforms without vcpkg postgres
-option(ENABLE_POSTGRESQL "Enable PostgreSQL support (requires libpqxx via vcpkg)" ON)
-if(ENABLE_POSTGRESQL)
-    find_package(libpqxx CONFIG REQUIRED)
+# Experimental subsystems are gated behind a single opt-in flag so the
+# default build keeps the public surface small. Postgres is the first
+# subsystem under this umbrella; future experimental features land here
+# too.
+option(VIGINE_ENABLE_EXPERIMENTAL "Build experimental subsystems (postgresql, etc.)" OFF)
+
+# PostgreSQL (libpqxx) is optional; disable on platforms without vcpkg postgres.
+# The legacy ENABLE_POSTGRESQL switch is kept as a per-subsystem toggle but is
+# now gated by the experimental umbrella -- if VIGINE_ENABLE_EXPERIMENTAL is
+# OFF, postgres is unconditionally excluded.
+if(VIGINE_ENABLE_EXPERIMENTAL)
+    option(ENABLE_POSTGRESQL "Enable PostgreSQL support (requires libpqxx via vcpkg)" ON)
+    if(ENABLE_POSTGRESQL)
+        find_package(libpqxx CONFIG REQUIRED)
+    endif()
+else()
+    set(ENABLE_POSTGRESQL OFF CACHE BOOL "Enable PostgreSQL support (requires libpqxx via vcpkg)" FORCE)
 endif()
 
 if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
@@ -614,32 +627,36 @@ set(HEADER_ENGINE_TOKEN
     ${INCLUDE_DIR}/vigine/api/messaging/payload/stateinvalidatedpayload.h
 )
 
-# Add source files
-if(ENABLE_POSTGRESQL)
+# Postgres ECS subsystem lives under the experimental opt-in umbrella.
+# Both VIGINE_ENABLE_EXPERIMENTAL (umbrella) and ENABLE_POSTGRESQL
+# (per-subsystem) must be ON to compile postgres. The umbrella defaults
+# to OFF so the public default build never pulls libpqxx headers or
+# emits postgres symbols.
+if(VIGINE_ENABLE_EXPERIMENTAL AND ENABLE_POSTGRESQL)
     set(HEADER_POSTGRESQL
-        ${INCLUDE_DIR}/vigine/ecs/postgresql/postgresqlsystem.h
-        ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.h
-        ${INCLUDE_DIR}/vigine/ecs/postgresql/table.h
-        ${INCLUDE_DIR}/vigine/ecs/postgresql/column.h
+        ${INCLUDE_DIR}/vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h
+        ${SRC_DIR}/experimental/ecs/postgresql/impl/postgresqlcomponent.h
+        ${INCLUDE_DIR}/vigine/experimental/ecs/postgresql/impl/table.h
+        ${INCLUDE_DIR}/vigine/experimental/ecs/postgresql/impl/column.h
     )
 
     set(SOURCES_POSTGRESQL
-        ${SRC_DIR}/ecs/postgresql/postgresqlcomponent.cpp
-        ${SRC_DIR}/ecs/postgresql/postgresqlsystem.cpp
-        ${SRC_DIR}/ecs/postgresql/table.cpp
-        ${SRC_DIR}/ecs/postgresql/column.cpp
+        ${SRC_DIR}/experimental/ecs/postgresql/impl/postgresqlcomponent.cpp
+        ${SRC_DIR}/experimental/ecs/postgresql/impl/postgresqlsystem.cpp
+        ${SRC_DIR}/experimental/ecs/postgresql/impl/table.cpp
+        ${SRC_DIR}/experimental/ecs/postgresql/impl/column.cpp
     )
 
     set(SOURCES_POSTGRESQL_EXTRA
-        include/vigine/ecs/postgresql/databaseconfiguration.h src/ecs/postgresql/databaseconfiguration.cpp
-        include/vigine/ecs/postgresql/connectiondata.h src/ecs/postgresql/connectiondata.cpp
-        include/vigine/ecs/postgresql/data.h src/ecs/postgresql/data.cpp
-        include/vigine/ecs/postgresql/columntype.h
-        include/vigine/ecs/postgresql/postgresqlresult.h src/ecs/postgresql/postgresqlresult.cpp
-        include/vigine/ecs/postgresql/query/querybuilder.h src/ecs/postgresql/query/querybuilder.cpp
-        include/vigine/ecs/postgresql/tablerows.h src/ecs/postgresql/tablerows.cpp
-        include/vigine/ecs/postgresql/row.h src/ecs/postgresql/row.cpp
-        include/vigine/ecs/postgresql/postgresqltypeconverter.h src/ecs/postgresql/postgresqltypeconverter.cpp
+        include/vigine/experimental/ecs/postgresql/impl/databaseconfiguration.h src/experimental/ecs/postgresql/impl/databaseconfiguration.cpp
+        include/vigine/experimental/ecs/postgresql/impl/connectiondata.h src/experimental/ecs/postgresql/impl/connectiondata.cpp
+        include/vigine/experimental/ecs/postgresql/impl/data.h src/experimental/ecs/postgresql/impl/data.cpp
+        include/vigine/experimental/ecs/postgresql/impl/columntype.h
+        include/vigine/experimental/ecs/postgresql/impl/postgresqlresult.h src/experimental/ecs/postgresql/impl/postgresqlresult.cpp
+        include/vigine/experimental/ecs/postgresql/impl/query/querybuilder.h src/experimental/ecs/postgresql/impl/query/querybuilder.cpp
+        include/vigine/experimental/ecs/postgresql/impl/tablerows.h src/experimental/ecs/postgresql/impl/tablerows.cpp
+        include/vigine/experimental/ecs/postgresql/impl/row.h src/experimental/ecs/postgresql/impl/row.cpp
+        include/vigine/experimental/ecs/postgresql/impl/postgresqltypeconverter.h src/experimental/ecs/postgresql/impl/postgresqltypeconverter.cpp
     )
 endif()
 
@@ -771,7 +788,7 @@ target_link_libraries(${PROJECT_NAME}
     Threads::Threads
 )
 
-if(ENABLE_POSTGRESQL)
+if(VIGINE_ENABLE_EXPERIMENTAL AND ENABLE_POSTGRESQL)
     target_link_libraries(${PROJECT_NAME}
         PUBLIC
         libpqxx::pqxx

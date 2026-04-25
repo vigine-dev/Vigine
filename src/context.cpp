@@ -3,7 +3,7 @@
 #include "vigine/ecs/iecs.h"
 #include "vigine/ecs/platform/windowsystem.h"
 #if VIGINE_POSTGRESQL
-#include "vigine/ecs/postgresql/postgresqlsystem.h"
+#include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
 #endif
 #include "vigine/ecs/render/rendersystem.h"
 #include "vigine/messaging/busconfig.h"
@@ -87,7 +87,7 @@ vigine::AbstractSystemUPtr vigine::Context::createSystem(const SystemId &id, con
 #if VIGINE_POSTGRESQL
     if (id == "PostgreSQL")
     {
-        auto postgreSQLSystem = std::make_unique<vigine::postgresql::PostgreSQLSystem>(name);
+        auto postgreSQLSystem = std::make_unique<vigine::experimental::ecs::postgresql::PostgreSQLSystem>(name);
 
         return std::move(postgreSQLSystem);
     }

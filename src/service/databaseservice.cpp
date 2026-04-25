@@ -4,7 +4,7 @@
 #include "vigine/ecs/entity.h"
 #include "vigine/ecs/entitymanager.h"
 #if VIGINE_POSTGRESQL
-#include "vigine/ecs/postgresql/postgresqlsystem.h"
+#include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
 #include <pqxx/pqxx>
 #endif
 #include "vigine/property.h"
@@ -18,7 +18,7 @@ vigine::DatabaseService::DatabaseService(const Name &name) : AbstractService(nam
 void vigine::DatabaseService::contextChanged()
 {
 #if VIGINE_POSTGRESQL
-    _postgressSystem = dynamic_cast<vigine::postgresql::PostgreSQLSystem *>(
+    _postgressSystem = dynamic_cast<vigine::experimental::ecs::postgresql::PostgreSQLSystem *>(
         context()->system("PostgreSQL", "vigineBD", Property::New));
 #endif
 }
@@ -40,7 +40,7 @@ vigine::ResultUPtr vigine::DatabaseService::createDatabaseScheme()
     return result;
 }
 
-vigine::postgresql::DatabaseConfiguration *vigine::DatabaseService::databaseConfiguration()
+vigine::experimental::ecs::postgresql::DatabaseConfiguration *vigine::DatabaseService::databaseConfiguration()
 {
     return _postgressSystem->dbConfiguration();
 }
@@ -62,7 +62,7 @@ void vigine::DatabaseService::clearTable(const std::string &tableName) const
 }
 
 void vigine::DatabaseService::writeData(const std::string &tableName,
-                                        const std::vector<postgresql::Column> columnsData)
+                                        const std::vector<experimental::ecs::postgresql::Column> columnsData)
 {
     std::string query = "INSERT INTO public.\"" + tableName + "\"  (col1, col2, col3) VALUES ('" +
                         columnsData.at(0).name() + "', '" + columnsData.at(1).name() + "', '" +
