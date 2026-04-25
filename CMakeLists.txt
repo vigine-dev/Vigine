@@ -179,9 +179,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/api/ecs/icomponent.h
     ${INCLUDE_DIR}/vigine/api/ecs/ientity.h
     ${INCLUDE_DIR}/vigine/api/ecs/isystem.h
-    ${INCLUDE_DIR}/vigine/contextholder.h
     ${INCLUDE_DIR}/vigine/impl/ecs/entitymanager.h
-    ${INCLUDE_DIR}/vigine/entitybindinghost.h
     ${INCLUDE_DIR}/vigine/base/constant.h
     ${INCLUDE_DIR}/vigine/core/graph/nodeid.h
     ${INCLUDE_DIR}/vigine/core/graph/edgeid.h
@@ -228,10 +226,8 @@ set(SOURCES
     ${SRC_DIR}/impl/ecs/entity.cpp
     ${SRC_DIR}/api/taskflow/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
-    ${SRC_DIR}/contextholder.cpp
     ${SRC_DIR}/impl/ecs/entitymanager.cpp
     ${SRC_DIR}/api/ecs/abstractsystem.cpp
-    ${SRC_DIR}/entitybindinghost.cpp
     ${SRC_DIR}/core/graph/abstractgraph.cpp
     ${SRC_DIR}/core/graph/defaultgraph.cpp
     ${SRC_DIR}/core/graph/defaultgraph_traverse.cpp
