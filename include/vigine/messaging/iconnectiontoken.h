@@ -28,13 +28,42 @@ class IConnectionToken
     virtual ~IConnectionToken() = default;
 
     /**
+     * @brief Tears the connection slot down immediately.
+     *
+     * One-shot release of the connection: asks the underlying bus
+     * control block to retire the registry slot and trips the
+     * cancellation flag on the shared @ref SlotState so every
+     * still-in-flight dispatch on this slot drains before @ref cancel
+     * returns.
+     *
+     * Idempotent: a second call is a no-op, and calling @ref cancel
+     * after the destructor has already run (on a concrete
+     * @ref ConnectionToken that already unregistered itself) is
+     * structurally impossible because the token is gone -- but a
+     * repeated @ref cancel on a still-live token is safely a no-op.
+     *
+     * Blocks if a dispatch is in flight on this slot: @ref cancel
+     * acquires the slot's @c lifecycleMutex exclusively, which waits
+     * for every shared-holder (every concurrent @c onMessage) to
+     * release. This is the same dtor-blocks contract the destructor
+     * honours; explicit @ref cancel and RAII teardown share the same
+     * barrier.
+     *
+     * Mirrors @ref ISubscriptionToken::cancel for API symmetry: a
+     * caller that needs to drop a target's connection earlier than
+     * the owning target's destructor may do so without destroying the
+     * token storage.
+     */
+    virtual void cancel() = 0;
+
+    /**
      * @brief Returns @c true when the subscription slot is still live.
      *
      * A token becomes inactive when the underlying bus is marked dead
      * (either through @ref IBusControlBlock::markDead or the bus being
-     * destroyed) or when the token's slot has been explicitly
-     * unregistered. Once @ref active returns @c false, it never returns
-     * @c true again.
+     * destroyed), when the token's slot has been explicitly
+     * unregistered, or after @ref cancel has been called. Once
+     * @ref active returns @c false, it never returns @c true again.
      */
     [[nodiscard]] virtual bool active() const noexcept = 0;
 

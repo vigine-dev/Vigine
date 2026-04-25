@@ -18,44 +18,78 @@ ConnectionToken::ConnectionToken(std::weak_ptr<IBusControlBlock> control,
 
 ConnectionToken::~ConnectionToken()
 {
-    // Step 1: ask the control block to retire the registry slot. On a
-    // live bus the block also drains every dispatch in flight on this
-    // slot by acquiring `_slotState->lifecycleMutex` exclusively
-    // before flipping `cancelled`. On a dead bus the weak_ptr.lock()
-    // returns null and the registry has already been reclaimed en
-    // masse — the cancel barrier below still has work to do for any
-    // dispatch snapshot still holding a copy of the same SlotState.
-    if (auto ctrl = _control.lock())
+    // Delegate to cancel() so the explicit-cancel and RAII teardown
+    // paths share one body. cancel() is idempotent via the
+    // _cancelled atomic, so a user who already called cancel() pays
+    // only the short-circuit check here; users who never called
+    // cancel() run the full unregister-plus-barrier sequence exactly
+    // once from inside the destructor. Mirrors the same delegation
+    // pattern SubscriptionToken::~SubscriptionToken uses today.
+    cancel();
+}
+
+void ConnectionToken::cancel()
+{
+    // Idempotency gate: the first caller flips false->true and runs
+    // the full tear-down; any later caller sees true and short-
+    // circuits before touching either the control block or the
+    // slot's lifecycleMutex. acq_rel ordering pairs cleanly with the
+    // acquire-load a future active()-style reader would need.
+    bool expected = false;
+    if (!_cancelled.compare_exchange_strong(expected, true, std::memory_order_acq_rel))
     {
-        ctrl->unregisterTarget(_id);
+        return;
     }
 
-    // Step 2: defensive cancel barrier from the token side. Mirror of
-    // `SubscriptionToken::cancel`. Even when step 1 ran the same
-    // logic inside `unregisterTarget`, repeating it here costs only an
-    // already-uncontended lock acquisition and covers the bus-died-
-    // first path, where step 1 was a no-op but a racing dispatch may
-    // still be sitting on a snapshot copy of `_slotState`. The
-    // `unique_lock` on the shared_mutex blocks until every concurrent
-    // shared holder (every in-flight `onMessage`) has released, which
-    // is the dtor-blocks contract that the IConnectionToken header
-    // documents.
+    // Step 1: defensive cancel barrier from the token side. Mirror of
+    // `AbstractMessageBus::SubscriptionToken::cancel`. Acquired FIRST
+    // so we block concurrent dispatch before the registry slot is
+    // retired; on a dead bus (weak_ptr expired, registry reclaimed
+    // en masse) step 2 becomes a no-op and this is the only barrier
+    // that drains any dispatch snapshot still holding a copy of the
+    // same SlotState. The `unique_lock` on the shared_mutex blocks
+    // until every concurrent shared holder (every in-flight
+    // `onMessage`) has released, which is the dtor-blocks contract
+    // that the IConnectionToken header documents.
     if (_slotState)
     {
         std::unique_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
         _slotState->cancelled = true;
     }
+
+    // Step 2: ask the control block to retire the registry slot. On
+    // a live bus the block also runs the same exclusive-lock-flip-
+    // cancelled sequence internally; the redundant second flip costs
+    // only an uncontended lock acquisition and keeps the
+    // unregisterTarget contract self-sufficient when callers reach
+    // it through paths other than this token. On a dead bus the
+    // weak_ptr.lock() returns null and the registry has already been
+    // reclaimed — nothing to do in this branch.
+    if (auto ctrl = _control.lock())
+    {
+        ctrl->unregisterTarget(_id);
+    }
 }
 
 bool ConnectionToken::active() const noexcept
 {
-    // An inert token (subscribe returned early on invalid input or on
-    // shutdown) carries a default-constructed ConnectionId whose
-    // generation is the zero sentinel. Such a token must report
-    // active == false even when the bus is still alive, otherwise a
-    // caller guarding an unsubscribe with `if (token.active())` would
-    // happily call unsubscribe on an id the bus never handed out.
+    // An inert token (registerTarget returned early on invalid input
+    // or on shutdown) carries a default-constructed ConnectionId
+    // whose generation is the zero sentinel. Such a token must
+    // report active == false even when the bus is still alive,
+    // otherwise a caller guarding an unregister with
+    // `if (token.active())` would happily call unregister on an id
+    // the bus never handed out.
     if (!_id.valid())
+    {
+        return false;
+    }
+    // An explicitly cancelled token is no longer active even if the
+    // bus is still running. Mirrors the same check
+    // `AbstractMessageBus::SubscriptionToken::active` runs on its
+    // own `_cancelled` flag, so the two RAII tokens report a
+    // consistent view of live/dead through `active()`.
+    if (_cancelled.load(std::memory_order_acquire))
     {
         return false;
     }

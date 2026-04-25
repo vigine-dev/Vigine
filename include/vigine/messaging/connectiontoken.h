@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include "vigine/messaging/connectionid.h"
@@ -72,11 +73,12 @@ class ConnectionToken final : public IConnectionToken
      *        @c lifecycleMutex so every still-in-flight dispatch on
      *        this slot drains before this destructor returns.
      *
-     * The destructor is the exact mirror of
-     * @ref AbstractMessageBus::SubscriptionToken::cancel: lock the
-     * weak_ptr to the control block, call @c unregisterTarget on a
-     * live block (the block itself drives the cancel barrier through
-     * the slot's @c lifecycleMutex), and finally — defensively —
+     * Delegates to @ref cancel so the RAII teardown path and the
+     * explicit-cancel path share one body. The destructor is the exact
+     * mirror of @ref AbstractMessageBus::SubscriptionToken::cancel:
+     * lock the weak_ptr to the control block, call @c unregisterTarget
+     * on a live block (the block itself drives the cancel barrier
+     * through the slot's @c lifecycleMutex), and finally — defensively —
      * acquire the same @c lifecycleMutex exclusively from the token
      * side and trip @c cancelled. The defensive step covers the path
      * where the bus died first (weak_ptr.lock() returns null) and the
@@ -91,13 +93,29 @@ class ConnectionToken final : public IConnectionToken
     ~ConnectionToken() override;
 
     /**
-     * @brief Returns @c true when both the control block is reachable
-     *        and @ref IBusControlBlock::isAlive reports @c true.
+     * @brief Explicitly releases the slot ahead of destruction.
      *
-     * Cheap: one @c weak_ptr::lock plus one atomic load. The return
-     * value is a momentary snapshot; callers racing with
-     * @ref IBusControlBlock::markDead may observe the bus transitioning
-     * to dead between the @c active check and a subsequent dispatch.
+     * Runs the same unregister-then-barrier sequence as the
+     * destructor. Idempotent across repeated calls via the
+     * @c _cancelled atomic exchange; the second caller short-circuits
+     * before touching the control block or the @c lifecycleMutex so a
+     * repeat is wait-free. Blocks on the slot's @c lifecycleMutex when
+     * a dispatch is in flight, matching the dtor-blocks contract the
+     * @ref IConnectionToken header documents.
+     */
+    void cancel() override;
+
+    /**
+     * @brief Returns @c true when the id is valid, the token has not
+     *        been cancelled, the control block is reachable, and
+     *        @ref IBusControlBlock::isAlive reports @c true.
+     *
+     * Cheap: one valid-id check, one atomic load on @c _cancelled,
+     * one @c weak_ptr::lock, one atomic load on the bus alive flag.
+     * The return value is a momentary snapshot; callers racing with
+     * @ref IBusControlBlock::markDead or a concurrent @ref cancel may
+     * observe the transition between the check and any follow-up
+     * operation.
      */
     [[nodiscard]] bool active() const noexcept override;
 
@@ -122,6 +140,13 @@ class ConnectionToken final : public IConnectionToken
     // sets `_slotState->cancelled` to drain every concurrent
     // onMessage; mirrors the SubscriptionToken cancel path.
     std::shared_ptr<SlotState>      _slotState;
+    // Idempotency flag for `cancel`. The first caller (explicit or
+    // the destructor) wins the compare_exchange and runs the full
+    // unregister-plus-barrier sequence; later callers short-circuit
+    // before touching either the control block or the lifecycle
+    // mutex. Mirrors the same role `_cancelled` plays inside
+    // `AbstractMessageBus::SubscriptionToken`.
+    std::atomic<bool>               _cancelled{false};
 };
 
 } // namespace vigine::messaging
