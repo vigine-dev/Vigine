@@ -68,7 +68,36 @@ class GraphicsService : public vigine::service::AbstractService
     void setRenderSystem(RenderSystem *system) noexcept;
 
     [[nodiscard]] bool initializeRender(void *nativeWindowHandle, std::uint32_t width, std::uint32_t height);
+
+    /**
+     * @brief Returns the render component bound to the underlying
+     *        @ref RenderSystem's currently bound entity.
+     *
+     * The service does not bind entities itself; binding happens at
+     * the @ref RenderSystem level (driven by ECS @c entityBound
+     * callbacks). This accessor is a thin pass-through to
+     * @c RenderSystem::boundRenderComponent and therefore returns
+     * @c nullptr in three observable cases:
+     *   1. The render system has not been attached yet
+     *      (see @ref setRenderSystem).
+     *   2. The render system has no bound entity.
+     *   3. The bound entity has no @c RenderComponent registered.
+     *
+     * Callers MUST null-check the return value; the accessor is
+     * intentionally tolerant of unbound state because example code
+     * inspects bindings opportunistically during input handling.
+     */
     [[nodiscard]] RenderComponent *renderComponent() const;
+
+    /**
+     * @brief Returns the texture component bound to the underlying
+     *        @ref RenderSystem's currently bound entity.
+     *
+     * Same null-state contract as @ref renderComponent: returns
+     * @c nullptr when the render system is unattached, has no bound
+     * entity, or the bound entity has no @c TextureComponent.
+     * Callers MUST null-check.
+     */
     [[nodiscard]] TextureComponent *textureComponent() const;
 
     /**

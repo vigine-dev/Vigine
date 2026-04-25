@@ -9,7 +9,7 @@
 
 namespace vigine::experimental::ecs::postgresql
 {
-bool Row::operator==(const Row &other) const { return _columnsData == _columnsData; }
+bool Row::operator==(const Row &other) const { return _columnsData == other._columnsData; }
 
 void Row::set(const ColumnName &columnName, const Data &data)
 {
@@ -41,7 +41,7 @@ const Data &Row::operator[](const ColumnName &name) const
 
 size_t Row::size() const { return _columnsData.size(); }
 
-int Row::columnIndex(const ColumnName &columnName) const { return 0; }
+int Row::columnIndex(const ColumnName & /*columnName*/) const { return 0; }
 
 bool Row::empty() const noexcept { return _columnsData.empty(); }
 
@@ -60,7 +60,7 @@ int Row::findIndexByColumnName(const std::string &name) const
     for (size_t i = 0; i < _columnsData.size(); ++i)
     {
         if (_columnsData[i].first == name)
-            return i;
+            return static_cast<int>(i);
     }
 
     return -1;
@@ -71,7 +71,7 @@ int Row::findIndexByColumn(const Column &column) const
     for (size_t i = 0; i < _columnsData.size(); ++i)
     {
         if (_columnsData[i].first == column)
-            return i;
+            return static_cast<int>(i);
     }
 
     return -1;

@@ -82,11 +82,18 @@ vigine::experimental::ecs::postgresql::PostgreSQLResultUPtr vigine::experimental
     return std::make_unique<PostgreSQLResult>();
 }
 
-// COPILOT_TODO: Перевіряти _boundEntityComponent перед доступом до dbConfiguration()/exec(), інакше
-// перевірка схеми падає ще до повернення Result::Error.
 vigine::experimental::ecs::postgresql::PostgreSQLResultUPtr
 vigine::experimental::ecs::postgresql::PostgreSQLSystem::checkTablesScheme() const
 {
+    // Defensive null-check: previously this routine dereferenced
+    // _boundEntityComponent directly and crashed when the system had
+    // no entity bound yet (Copilot finding A9). Surface the error as
+    // a Result so the call chain through DatabaseService::checkDatabaseScheme
+    // returns cleanly.
+    if (!_boundEntityComponent)
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "PostgreSQL entity component is not bound");
+
     const auto &tables = _boundEntityComponent->dbConfiguration()->tables();
 
     bool hasError{false};

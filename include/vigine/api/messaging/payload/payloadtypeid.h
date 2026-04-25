@@ -58,8 +58,15 @@ struct PayloadTypeId
 // promise. Keyed off the wrapped uint32_t and delegated to the std::hash
 // for uint32_t so the quality matches the standard library's default.
 // TEMPLATE EXEMPTION: std::hash specialization required for hash-map key support; sanctioned per architecture.md § R-NoTemplates.
+// Wrapped in `namespace std { ... }` (rather than the `template <>
+// struct std::hash<...>` global-scope form) for portability — the
+// global form is accepted by some compilers but the namespace-qualified
+// form is the form mandated by the standard for user specialisations
+// inside std.
+namespace std
+{
 template <>
-struct std::hash<vigine::payload::PayloadTypeId>
+struct hash<vigine::payload::PayloadTypeId>
 {
     [[nodiscard]] std::size_t
     operator()(vigine::payload::PayloadTypeId id) const noexcept
@@ -67,3 +74,4 @@ struct std::hash<vigine::payload::PayloadTypeId>
         return std::hash<std::uint32_t>{}(id.value);
     }
 };
+} // namespace std

@@ -23,21 +23,24 @@ void RemoveSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Validate entity/_dbService and provide an error-return
-// path from clearTable/queryRequest; otherwise database failures here
-// go unnoticed.
 vigine::Result RemoveSomeDataTask::run()
 {
     std::println("-- RemoveSomeDataTask::run()");
 
+    if (!_dbService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "RemoveSomeDataTask::run: database service is not bound");
+
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
 
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "RemoveSomeDataTask::run: entity 'PostgresBDLocal' not found");
+
     _dbService->bindEntity(entity);
-    {
-        _dbService->clearTable("Test");
-    }
+    auto clearResult = _dbService->clearTable("Test");
     _dbService->unbindEntity();
 
-    return vigine::Result();
+    return clearResult;
 }

@@ -139,7 +139,15 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name
 // constructible through this legacy factory; callers that previously
 // reached them via `Context::service(id, name, Property::New)` register
 // them on the modern aggregator (`vigine::context::AbstractContext`)
-// through `registerService` and resolve them through `service(ServiceId)`.
+// through `registerService` and resolve them through the modern
+// generational accessor
+// `vigine::service::IService::service(vigine::service::ServiceId)` —
+// distinct from the deprecated legacy `service(ServiceId, Name, Property)`
+// signature defined in this file, where `ServiceId` is the
+// root-namespace `std::string` alias rather than the modern
+// `vigine::service::ServiceId` generational handle. The legacy
+// signature is retained for transitional callers but is scheduled for
+// removal once all services migrate.
 //
 // The factory itself stays in place for any future legacy service that
 // has not yet migrated; the three migrated ids fall through to the

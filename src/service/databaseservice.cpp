@@ -80,27 +80,39 @@ vigine::DatabaseService::readData(const std::string &tableName) const
     return resultData;
 }
 
-void vigine::DatabaseService::clearTable(const std::string &tableName) const
+vigine::Result vigine::DatabaseService::clearTable(const std::string &tableName) const
 {
+    // Surface the unattached-system case as an explicit error so
+    // callers can react instead of treating a no-op as success
+    // (Copilot finding A5/B-cluster on PR #331+#332).
     if (!_postgressSystem)
-        return;
+        return vigine::Result(vigine::Result::Code::Error,
+                              "DatabaseService::clearTable: postgres system not attached");
 
     std::string query = "TRUNCATE TABLE public.\"" + tableName + "\"";
 
     _postgressSystem->queryRequest(query);
+    return vigine::Result();
 }
 
-void vigine::DatabaseService::writeData(const std::string &tableName,
-                                        const std::vector<experimental::ecs::postgresql::Column> columnsData)
+vigine::Result vigine::DatabaseService::writeData(
+    const std::string &tableName,
+    const std::vector<experimental::ecs::postgresql::Column> &columnsData)
 {
+    // Same surfacing rule as clearTable: explicit error rather than
+    // silent void-return when the postgres system is unattached.
+    // Parameter changed from by-value to const-ref to avoid copying
+    // the columns vector at every call site (Copilot finding A7).
     if (!_postgressSystem)
-        return;
+        return vigine::Result(vigine::Result::Code::Error,
+                              "DatabaseService::writeData: postgres system not attached");
 
     std::string query = "INSERT INTO public.\"" + tableName + "\"  (col1, col2, col3) VALUES ('" +
                         columnsData.at(0).name() + "', '" + columnsData.at(1).name() + "', '" +
                         columnsData.at(2).name() + "')";
 
     _postgressSystem->queryRequest(query);
+    return vigine::Result();
 }
 
 vigine::ResultUPtr vigine::DatabaseService::connectToDb()

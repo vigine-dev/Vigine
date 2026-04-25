@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Portability skip-guard: this example needs the Vulkan SDK (glslc) and
+# the Win32 platform service. Linux/macOS CI runs without the Vulkan SDK
+# installed and without the Win32 platform implementation, so opting in
+# only on Windows keeps the cross-platform configure step clean. The
+# guard MUST sit immediately after cmake_minimum_required, BEFORE
+# project() and find_program(GLSLC_EXECUTABLE), so non-Windows hosts
+# never enable the example-window project at all.
+if(NOT WIN32)
+    return()
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(PROJECT_WINDOW_NAME example-window)
 project(${PROJECT_WINDOW_NAME})
-
-# Portability skip-guard: this example needs the Vulkan SDK (glslc) and
-# the Win32 platform service. Linux/macOS CI runs without the Vulkan SDK
-# installed and without the Win32 platform implementation, so opting in
-# only on Windows keeps the cross-platform configure step clean. The
-# guard MUST be the first effective statement so we never reach
-# find_program(GLSLC_EXECUTABLE) on non-Windows hosts.
-if(NOT WIN32)
-    return()
-endif()
 
 set(EXAMPLE_WINDOW_HANDLER_SOURCES
     handler/windoweventhandler.h handler/windoweventhandler.cpp)
@@ -306,13 +307,18 @@ endif()
 # automatically -- the manual reach into ${CMAKE_SOURCE_DIR}/include is
 # unnecessary and would leak the wrong include root when Vigine is
 # added via add_subdirectory under a parent project. The
-# ${CMAKE_SOURCE_DIR} entry below stays in place because
+# ${VIGINE_ROOT_DIR} entry below stays in place because
 # task/vulkan/imageloader.cpp resolves the bundled stb header through
 # `external/stb/stb_image.h`, which needs the engine root on the path.
+# Using ${VIGINE_ROOT_DIR} (set in the top-level CMakeLists) instead of
+# ${CMAKE_SOURCE_DIR} keeps the include resolution correct when Vigine
+# is consumed via add_subdirectory under a parent project — in that
+# case ${CMAKE_SOURCE_DIR} would point at the parent's source root,
+# not the engine root.
 target_include_directories(${PROJECT_WINDOW_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_SOURCE_DIR}
+    ${VIGINE_ROOT_DIR}
 )
 
 # Apply the central warning / strict-mode compile flags so the example

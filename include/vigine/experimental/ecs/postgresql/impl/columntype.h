@@ -44,7 +44,7 @@ struct Void
  * @brief Closed enum of PostgreSQL column types supported by the
  *        engine.
  *
- * @c NotRcognized is the sentinel returned when the engine cannot
+ * @c NotRecognized is the sentinel returned when the engine cannot
  * map a database-side type to one of the recognised kinds; the
  * remaining enumerators are generated from
  * @c VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST and mirror the C++
@@ -52,7 +52,7 @@ struct Void
  */
 enum class DataType
 {
-    NotRcognized,
+    NotRecognized,
 #define VIGINE_POSTGRESQL_DATA_X(name, type) name,
 
     VIGINE_POSTGRESQL_DATA_COLUMN_TYPE_LIST

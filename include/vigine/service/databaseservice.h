@@ -6,9 +6,22 @@
  *        scheme check / create, row read / write / clear) through the
  *        service container.
  *
- * Database operations are compiled in only when the project is built
- * with @c VIGINE_POSTGRESQL enabled; otherwise the service still exists
- * but its database-facing API is omitted.
+ * Two-tier gating chain:
+ *   1. The experimental postgres example (@c example/experimental/postgres_demo)
+ *      is opted in at the top-level CMake through
+ *      @c VIGINE_ENABLE_EXPERIMENTAL combined with
+ *      @c BUILD_EXAMPLE_POSTGRESQL (see @c example/CMakeLists.txt).
+ *   2. Inside this header, the database-facing CRUD API is compiled in
+ *      only when the @c VIGINE_POSTGRESQL preprocessor define is set.
+ *      When the experimental umbrella is enabled the build system
+ *      defines @c VIGINE_POSTGRESQL automatically; otherwise this
+ *      service still exists as a lifecycle-only stub but its
+ *      database-facing API is omitted.
+ *
+ * The two flags are NOT redundant: @c VIGINE_ENABLE_EXPERIMENTAL gates
+ * the experimental tree as a whole (across multiple subsystems), while
+ * @c VIGINE_POSTGRESQL is the per-translation-unit compile-time switch
+ * that this header keys off.
  */
 
 #include "vigine/api/service/abstractservice.h"
@@ -95,10 +108,29 @@ class DatabaseService : public vigine::service::AbstractService
     [[nodiscard]] ResultUPtr checkDatabaseScheme();
     [[nodiscard]] ResultUPtr createDatabaseScheme();
 
-    void writeData(const std::string &tableName, const std::vector<experimental::ecs::postgresql::Column> columnsData);
+    /**
+     * @brief Inserts a row into the named table.
+     *
+     * Returns @c Result::Code::Error when the postgres system is
+     * unattached (previously the call returned @c void and silently
+     * dropped the request — a real CRUD failure was indistinguishable
+     * from a successful no-op). The @c columnsData parameter is taken
+     * by const-reference to avoid a vector copy on every call site.
+     */
+    [[nodiscard]] vigine::Result writeData(const std::string &tableName,
+                                           const std::vector<experimental::ecs::postgresql::Column> &columnsData);
     [[nodiscard]] std::vector<std::vector<std::string>>
     readData(const std::string &tableName) const;
-    void clearTable(const std::string &tableName) const;
+
+    /**
+     * @brief Truncates the named table.
+     *
+     * Returns @c Result::Code::Error when the postgres system is
+     * unattached (previously @c void with a silent return, hiding the
+     * failure). Callers can chain on @ref vigine::Result::isError to
+     * surface the issue up the task graph.
+     */
+    [[nodiscard]] vigine::Result clearTable(const std::string &tableName) const;
 
     /**
      * @brief Attaches the @c PostgreSQLSystem this service wraps.

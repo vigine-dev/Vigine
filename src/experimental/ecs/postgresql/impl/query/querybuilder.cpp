@@ -210,7 +210,7 @@ std::string vigine::experimental::ecs::postgresql::query::QueryBuilder::format(s
             {"table_name"sv, [this](const Data &data) -> std::string  { return std::format("'{}'", escapeString(data.as<DataType::Text>().value_or(""))); }},
             {"quoted"sv,     [this](const Data &data) -> std::string  { return std::format("'{}'", escape(data)); } },
             {"text"sv,       [](const Data &data)     -> std::string  { return data.as<DataType::Text>().value_or(""); }},
-            {"is_null"sv,    [](const Data &data)     -> std::string  { return "TRUE"; }                                },
+            {"is_null"sv,    [](const Data &/*data*/) -> std::string  { return "TRUE"; }                                },
             {"bool"sv,       [](const Data &data)     -> std::string  { return (data.as<DataType::Boolean>().value_or(false))?"true":"false"; }     },
             {"char"sv,       [](const Data &data)     -> std::string  { return "'" + std::string(1, data.as<DataType::Char>().value_or('\0')) + "'"; }},
     };

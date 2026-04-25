@@ -57,8 +57,19 @@ vigine::Result PlatformService::showWindow(WindowComponent *window)
 vigine::Result PlatformService::bindWindowEventHandler(vigine::Entity *entity, WindowComponent *window,
                                                        IWindowEventHandlerComponent *handler)
 {
-    if (!_windowSystem || !entity || !window)
-        return vigine::Result(vigine::Result::Code::Error, "No entity or window system");
+    // Surface the specific null arg so callers don't have to guess
+    // which of the three required handles came in null. The previous
+    // catch-all "No entity or window system" message swallowed the
+    // window argument entirely.
+    if (!_windowSystem)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "PlatformService::bindWindowEventHandler: window system is unattached");
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "PlatformService::bindWindowEventHandler: entity is null");
+    if (!window)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "PlatformService::bindWindowEventHandler: window is null");
 
     if (auto bindWindowResult = _windowSystem->bindWindowComponent(entity, window);
         bindWindowResult.isError())
