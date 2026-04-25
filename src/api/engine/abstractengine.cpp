@@ -1,6 +1,7 @@
 #include "vigine/api/engine/abstractengine.h"
 
 #include <chrono>
+#include <cstdio>
 #include <thread>
 
 #include "vigine/api/context/factory.h"
@@ -109,10 +110,35 @@ Result AbstractEngine::run()
     // keeps the original binding" — we honour both: in production the
     // engine owns the binding, while tests that bypass the engine
     // continue to bind manually without the engine clobbering them.
-    statemachine::IStateMachine &fsm = _context->stateMachine();
-    if (fsm.controllerThread() == std::thread::id{})
+    //
+    // We also classify the binding outcome into a boolean
+    // (fsmDrainSafe): when this thread is the FSM's controller (either
+    // because we just bound it or because an earlier bind landed on
+    // exactly this thread), draining the queued transitions on every
+    // tick is safe. When the FSM is already bound to a different
+    // thread (a test embedder or a host application that drove the
+    // FSM directly off the shared context before calling run()),
+    // calling processQueuedTransitions on this thread would trip the
+    // Debug thread-affinity assert in checkThreadAffinity. In that
+    // case we skip the FSM drain altogether for the rest of run() and
+    // emit a one-shot warning on stderr so the silent-skip is visible
+    // in test logs. The thread manager's main-thread pump remains
+    // active so post-backs to the engine thread are still observed.
+    statemachine::IStateMachine &fsm        = _context->stateMachine();
+    const std::thread::id        bound      = fsm.controllerThread();
+    const std::thread::id        selfId     = std::this_thread::get_id();
+    bool                         fsmDrainSafe = true;
+    if (bound == std::thread::id{})
     {
-        fsm.bindToControllerThread(std::this_thread::get_id());
+        fsm.bindToControllerThread(selfId);
+    }
+    else if (bound != selfId)
+    {
+        fsmDrainSafe = false;
+        std::fprintf(stderr,
+                     "[vigine::engine] FSM bound to non-engine controller "
+                     "thread before run(); skipping FSM drains for this "
+                     "run() invocation to preserve thread affinity\n");
     }
 
     // Publish the running flag with release semantics so an observer
@@ -140,8 +166,13 @@ Result AbstractEngine::run()
         // requests posted during the drain land on the live queue and
         // are picked up on the next iteration, per the cooperative
         // no-reentry contract documented on
-        // IStateMachine::processQueuedTransitions.
-        fsm.processQueuedTransitions();
+        // IStateMachine::processQueuedTransitions. Gated by
+        // fsmDrainSafe so an alien-bound FSM (tests / embedders) does
+        // not trip the controller-thread assertion in checkThreadAffinity.
+        if (fsmDrainSafe)
+        {
+            fsm.processQueuedTransitions();
+        }
 
         // Drain any main-thread work posted since the last tick.
         // runMainThreadPump is permitted to run zero or more
@@ -165,8 +196,13 @@ Result AbstractEngine::run()
     // requestTransition call already on the queue is honoured exactly
     // once; calls that race in after this point land on a queue that
     // is about to die with the context, so they are silently dropped
-    // without surfacing any Result back to the producer.
-    fsm.processQueuedTransitions();
+    // without surfacing any Result back to the producer. Gated by
+    // fsmDrainSafe for the same reason as the in-loop drain: an
+    // alien-bound FSM is the embedder's responsibility to drain.
+    if (fsmDrainSafe)
+    {
+        fsm.processQueuedTransitions();
+    }
 
     // Final drain of the thread manager's main-thread queue so any
     // post-back that arrived between "wait returns" and "loop exits"
