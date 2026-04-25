@@ -28,6 +28,7 @@ namespace vigine::context
  * caller overrides individual fields before handing the struct to the
  * factory.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct ContextConfig
 {
     /**

@@ -20,6 +20,7 @@ class IMessagePayload;
  * request/response matching (for example @c TopicRequest) allocate a
  * fresh non-zero value per pair.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct CorrelationId
 {
     std::uint64_t value{0};

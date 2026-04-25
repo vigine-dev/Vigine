@@ -18,6 +18,7 @@ namespace vigine::messaging
  * The struct is trivially copyable and safe to pass by value across
  * thread boundaries; equality is defined on the underlying value.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct BusId
 {
     std::uint32_t value{0};

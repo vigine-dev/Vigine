@@ -39,6 +39,7 @@ class AbstractMessageTarget;
  * through its RAII token vector: a target registered with any bus
  * outlives every subscription that references it.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct MessageFilter
 {
     MessageKind                          kind{MessageKind::Signal};

@@ -33,6 +33,7 @@ namespace vigine::core::threading
  *   channel->send(std::move(msg), std::chrono::milliseconds::max());
  * @endcode
  */
+// ENCAP EXEMPT: pure value aggregate
 struct Message
 {
     /// Payload-registry key the receiver uses to decode @ref bytes.

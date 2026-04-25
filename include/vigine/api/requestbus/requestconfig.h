@@ -31,6 +31,7 @@ namespace vigine::requestbus
  *   - POD aggregate: trivially constructible, copyable.
  *   - INV-11: no graph types appear in this header.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct RequestConfig
 {
     /// How long @ref IFuture::wait blocks. Default: effectively forever.

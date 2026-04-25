@@ -19,6 +19,7 @@ namespace vigine::core::threading
  * applies to @ref maxDedicatedThreads; @ref maxNamedThreads defaults to
  * an upper bound the typical engine will never exhaust.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct ThreadManagerConfig
 {
     /**

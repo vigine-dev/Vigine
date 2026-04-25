@@ -33,6 +33,7 @@ namespace vigine::taskflow
  *       keeping substrate types out of the public header tree is
  *       the whole point of the separate type.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct TaskId
 {
     std::uint32_t index{0};

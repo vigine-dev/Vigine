@@ -27,6 +27,7 @@ namespace vigine::payload
  * @ref PayloadTypeId keys without requiring each caller to write their
  * own hasher.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct PayloadTypeId
 {
     std::uint32_t value{0};

@@ -18,6 +18,7 @@ namespace vigine::messaging
  * value across thread boundaries. Control-block implementations issue
  * ids starting at @c generation == 1; zero is reserved for the sentinel.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct ConnectionId
 {
     std::uint32_t index{0};

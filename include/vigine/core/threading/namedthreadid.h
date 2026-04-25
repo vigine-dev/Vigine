@@ -19,6 +19,7 @@ namespace vigine::core::threading
  *       default-constructed @ref NamedThreadId is therefore always invalid
  *       and never returned from a successful registration.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct NamedThreadId
 {
     std::uint32_t index{0};

@@ -34,6 +34,7 @@ namespace vigine::statemachine
  *       keeping substrate types out of the public header tree is
  *       the whole point of the separate type.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct StateId
 {
     std::uint32_t index{0};

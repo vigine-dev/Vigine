@@ -39,6 +39,7 @@ namespace vigine::eventscheduler
  * INV-1: no template parameters.
  * INV-11: no graph types in this header.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct EventConfig
 {
     std::chrono::milliseconds         delay{0};

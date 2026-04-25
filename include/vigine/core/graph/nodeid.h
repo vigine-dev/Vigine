@@ -17,6 +17,7 @@ namespace vigine::core::graph
  *       constructed @ref NodeId is therefore always invalid and never
  *       returned by @ref IGraph::addNode.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct NodeId
 {
     std::uint32_t index{0};
