@@ -56,6 +56,7 @@ struct PayloadTypeId
 // hash-container usability; shipping the specialisation here keeps that
 // promise. Keyed off the wrapped uint32_t and delegated to the std::hash
 // for uint32_t so the quality matches the standard library's default.
+// TEMPLATE EXEMPTION: std::hash specialization required for hash-map key support; sanctioned per architecture.md § R-NoTemplates.
 template <>
 struct std::hash<vigine::payload::PayloadTypeId>
 {
