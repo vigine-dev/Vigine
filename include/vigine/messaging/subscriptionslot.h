@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -36,11 +37,11 @@ class ISubscriber;
  *     unsubscribe path (@ref IBusControlBlock::unregisterSubscription)
  *     acquires it in EXCLUSIVE mode, which blocks until every concurrent
  *     shared-holder has returned. Once the exclusive lock is held,
- *     @c cancelled is flipped to @c true so that snapshot copies still
- *     waiting to enter the shared region observe the flag and skip
- *     @c onMessage entirely. That is the use-after-free barrier for a
- *     subscriber whose owner drops the token and then destroys the
- *     subscriber right after the cancel returns.
+ *     @c cancelled is flipped to @c true with a release store so that
+ *     snapshot copies still waiting to enter the shared region observe
+ *     the flag and skip @c onMessage entirely. That is the use-after-
+ *     free barrier for a subscriber whose owner drops the token and
+ *     then destroys the subscriber right after the cancel returns.
  *
  * The struct is non-copyable and non-movable because the contained
  * mutexes are neither. A lifetime share through @c std::shared_ptr is
@@ -53,10 +54,16 @@ struct SlotState
     /// Guards the slot's active lifetime: shared for dispatch, exclusive
     /// for cancellation. See class comment above.
     std::shared_mutex lifecycleMutex;
-    /// Set to @c true under the exclusive @c lifecycleMutex by the
-    /// unsubscribe path. The dispatch path checks it under the shared
-    /// lock and skips @c onMessage when true.
-    bool              cancelled{false};
+    /// Set to @c true with a release store under the exclusive
+    /// @c lifecycleMutex by the unsubscribe path. Two readers exist: the
+    /// dispatch path reads it under the shared @c lifecycleMutex (the
+    /// shared lock already supplies the happens-before pair, the atomic
+    /// type only forbids torn reads / data races); the lock-free
+    /// @c ConnectionToken::active reader takes no lock and relies
+    /// purely on @c memory_order_acquire to see the writer's release.
+    /// The flag is monotonic — once @c true, never @c false again — so
+    /// a relaxed-after-acquire view is still correct.
+    std::atomic<bool> cancelled{false};
 
     SlotState()                             = default;
     ~SlotState()                            = default;

@@ -50,11 +50,14 @@ void ConnectionToken::cancel()
     // same SlotState. The `unique_lock` on the shared_mutex blocks
     // until every concurrent shared holder (every in-flight
     // `onMessage`) has released, which is the dtor-blocks contract
-    // that the IConnectionToken header documents.
+    // that the IConnectionToken header documents. The `cancelled`
+    // store uses release ordering so the lock-free reader in
+    // `active()` (which only does an acquire-load and never takes
+    // this lock) sees the flip on its very next call.
     if (_slotState)
     {
         std::unique_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
-        _slotState->cancelled = true;
+        _slotState->cancelled.store(true, std::memory_order_release);
     }
 
     // Step 2: ask the control block to retire the registry slot. On
@@ -97,19 +100,22 @@ bool ConnectionToken::active() const noexcept
     // this token — for example when the bus drives unregisterTarget
     // on its own (programmatic teardown) or when a sibling cancel
     // path on the same SlotState ran without going through this
-    // token's own _cancelled atomic. The flag is a plain bool, and
-    // every writer flips it under an exclusive lock on
-    // lifecycleMutex; a reader that touched it without any lock
-    // would race with that exclusive write. We therefore take a
-    // shared_lock for the read so concurrent readers stay parallel
-    // while writers still get exclusive ownership during the flip.
-    if (_slotState)
+    // token's own _cancelled atomic. The flag is `std::atomic<bool>`
+    // and every writer pairs an exclusive `lifecycleMutex` (which
+    // gives it the lifetime barrier for in-flight dispatches) with a
+    // release store on the atomic (which gives it the visibility
+    // pair for lock-free readers). This reader therefore needs only
+    // an acquire load: the flag is monotonic — once it is `true` it
+    // never returns to `false` — so observing it `true` is a
+    // permanent retire signal, and observing it `false` is a
+    // momentary live snapshot consistent with everything else
+    // `active()` returns. Skipping the shared_lock here keeps the
+    // hot path lock-free and removes the unnecessary contention
+    // against concurrent dispatchers that already hold the same
+    // shared_mutex shared.
+    if (_slotState && _slotState->cancelled.load(std::memory_order_acquire))
     {
-        std::shared_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
-        if (_slotState->cancelled)
-        {
-            return false;
-        }
+        return false;
     }
     auto ctrl = _control.lock();
     return static_cast<bool>(ctrl) && ctrl->isAlive();

@@ -124,10 +124,13 @@ class ConnectionToken final : public IConnectionToken
      * holding the token must observe @ref active as @c false even
      * before the bus itself goes dead.
      *
-     * Cheap: one valid-id check, one atomic load on @c _cancelled,
-     * one direct (lock-free) read of @c _slotState->cancelled, one
-     * @c weak_ptr::lock, one atomic load on the bus alive flag. The
-     * return value is a momentary snapshot; callers racing with
+     * Cheap: one valid-id check, one acquire-load on @c _cancelled,
+     * one acquire-load on @c _slotState->cancelled (also
+     * @c std::atomic<bool> — pairs with the release store every
+     * unregister path issues under @c lifecycleMutex), one
+     * @c weak_ptr::lock, one atomic load on the bus alive flag. No
+     * lock acquisitions in the hot path. The return value is a
+     * momentary snapshot; callers racing with
      * @ref IBusControlBlock::markDead, a concurrent @ref cancel, or a
      * sibling unregister path may observe the transition between the
      * check and any follow-up operation.
