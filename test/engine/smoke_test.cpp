@@ -296,6 +296,8 @@ TEST(EngineSmoke, RunFreezesTheContext)
 namespace
 {
 
+using vigine::Result;
+
 // Probe task that records every run() invocation. Used by the FSM-drive
 // scenarios to verify the per-tick pump path without needing a full
 // demo wiring.

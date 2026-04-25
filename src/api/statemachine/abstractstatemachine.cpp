@@ -460,9 +460,15 @@ Result AbstractStateMachine::addStateTaskFlow(
     // One-shot per state. A re-register attempt is a programming
     // mistake (the caller is supposed to hand a freshly built flow
     // exactly once during topology setup), so report an error rather
-    // than silently swap. The unique_ptr stays owned by the caller in
-    // the error path because emplace's return.second tells us whether
-    // the insertion happened.
+    // than silently swap. Ownership is consumed by this call regardless
+    // of result: the @p taskFlow parameter is taken by value, so the
+    // caller already moved its unique_ptr into the local. Whether or
+    // not std::unordered_map::emplace moved from the local on the
+    // duplicate-key path is implementation-defined, but either way the
+    // local goes out of scope at function return and its destructor
+    // tears down whatever it still owns. There is no hand-back path
+    // for the rejected flow — on duplicate registration the flow is
+    // simply destroyed before this function returns.
     auto [it, inserted] = _stateTaskFlows.emplace(state, std::move(taskFlow));
     if (!inserted)
     {
@@ -473,18 +479,40 @@ Result AbstractStateMachine::addStateTaskFlow(
     return Result();
 }
 
-vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state) const
+vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state)
+{
+    // Non-const overload: the engine's per-tick fast path calls this
+    // through a non-const IStateMachine reference because runCurrentTask
+    // mutates the flow's internal _currTask field. Delegating to the
+    // const overload through a const_cast keeps the lookup logic in one
+    // place; the cast is sound because the underlying registry slot
+    // owns the TaskFlow through a std::unique_ptr and "the registry
+    // hands out a non-owning pointer" is the public contract — the
+    // const overload was never doing more than reading the slot value
+    // out from under the registry mutex.
+    const auto *self = this;
+    return const_cast<vigine::TaskFlow *>(self->taskFlowFor(state));
+}
+
+const vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state) const
 {
     // Lookup is open to any thread: the engine's per-tick fast path
     // calls this from the controller thread, but tests and
     // diagnostics may probe the registry from worker threads too.
     // The mutex hold is the few instructions of std::unordered_map::find;
     // we copy the raw pointer out under the lock so the caller holds
-    // a stable handle even if a concurrent register adds a new entry
-    // (which would not invalidate iterators on emplace, but copying
-    // the raw pointer keeps the public contract loose).
+    // a stable handle even after the lock is released. Note that
+    // std::unordered_map::emplace MAY rehash and so MAY invalidate
+    // iterators on insertion; but it never invalidates the pointer
+    // value the unique_ptr owns. By copying out the raw pointer (the
+    // unique_ptr's get()) under the lock we hand the caller a stable
+    // address into the registry's storage that survives any future
+    // rehash. The caller relies on the absence of any removal API to
+    // keep that pointer live — entries are append-only for the
+    // machine's lifetime, so the underlying TaskFlow is never freed
+    // until the machine itself is destroyed.
     std::scoped_lock lock{_stateTaskFlowsMutex};
-    auto it = _stateTaskFlows.find(state);
+    auto             it = _stateTaskFlows.find(state);
     if (it == _stateTaskFlows.end())
     {
         return nullptr;

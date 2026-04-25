@@ -462,9 +462,13 @@ class IStateMachine
      * or when @p taskFlow is @c nullptr. Reports
      * @ref Result::Code::Error when @p state already has a TaskFlow
      * bound (one-shot; callers that need to swap a flow rebuild the
-     * machine). On error the @c std::unique_ptr is released back to the
-     * caller through the move so the caller may inspect or retry; on
-     * success the machine consumes the unique_ptr.
+     * machine). Ownership is consumed by this call regardless of
+     * result: @p taskFlow is taken by value, so on every failure path
+     * the @c std::unique_ptr held by the parameter is destroyed at
+     * function return — its TaskFlow is released along with it. There
+     * is no hand-back to the caller. On success the machine takes the
+     * flow into its registry; on failure the flow is destroyed before
+     * the call returns.
      *
      * Threading: controller-thread-only once a binding is in place via
      * @ref bindToControllerThread. The registration walks the state
@@ -490,11 +494,22 @@ class IStateMachine
      * for this state" signal that lets the engine fall through to the
      * thread manager pump alone.
      *
+     * Two overloads are provided so callers observe a const-correct
+     * surface: a non-const machine returns a mutable @ref vigine::TaskFlow
+     * pointer (the engine needs that handle to call @c runCurrentTask
+     * each tick), while a const machine returns @c const @ref vigine::TaskFlow
+     * pointer so a @c const @ref IStateMachine reference cannot be used to
+     * mutate the bound flow. Both overloads share the same lookup body
+     * and lock policy below.
+     *
      * Threading: safe from any thread. Takes the registry mutex
      * briefly for the lookup; concurrent lookups serialise against
      * each other and against @ref addStateTaskFlow.
      */
     [[nodiscard]] virtual vigine::TaskFlow *
+        taskFlowFor(StateId state) = 0;
+
+    [[nodiscard]] virtual const vigine::TaskFlow *
         taskFlowFor(StateId state) const = 0;
 
     IStateMachine(const IStateMachine &)            = delete;

@@ -149,9 +149,7 @@ Result AbstractEngine::run()
 
     // Main-thread pump loop. Each iteration is the engine "tick" per
     // AD-G3: we (1) advance the TaskFlow bound to the FSM's current
-    // state by exactly one step so tasks see a real state-bound
-    // engine token through the per-tick makeEngineToken call inside
-    // TaskFlow::runCurrentTask, (2) drain queued FSM transitions on
+    // state by exactly one step, (2) drain queued FSM transitions on
     // the controller thread (so requestTransition calls posted from
     // worker threads -- including those just posted by the task that
     // ran in step 1 -- are applied before the next state read), (3)
@@ -168,15 +166,39 @@ Result AbstractEngine::run()
     //   state through IStateMachine::taskFlowFor(current()). When the
     //   lookup hits, the engine drives exactly one TaskFlow step per
     //   tick by calling runCurrentTask(). That call asks IContext for
-    //   a fresh engine token, binds it on the task via setApi, runs
-    //   the task once, clears the binding, and lets the token go out
-    //   of scope so any subscribeExpiration callbacks that fired
-    //   during run() can finish their bookkeeping. When the lookup
-    //   misses (no TaskFlow registered for the current state) or the
-    //   bound flow has no further task to run (hasTasksToRun() ==
-    //   false), the tick falls through to the FSM drain + main-thread
-    //   pump alone, matching the pre-FSM-drive behaviour for callers
-    //   that drive the engine without a state-bound flow.
+    //   a fresh engine token (when a context has been wired into the
+    //   flow via TaskFlow::setContext), binds it on the task via
+    //   setApi, runs the task once, clears the binding, and lets the
+    //   token go out of scope so any subscribeExpiration callbacks
+    //   that fired during run() can finish their bookkeeping. When
+    //   the lookup misses (no TaskFlow registered for the current
+    //   state) or the bound flow has no further task to run
+    //   (hasTasksToRun() == false), the tick falls through to the FSM
+    //   drain + main-thread pump alone, matching the pre-FSM-drive
+    //   behaviour for callers that drive the engine without a
+    //   state-bound flow.
+    //
+    //   Engine-token state binding -- honest current state:
+    //     This leaf wires the per-tick lookup through taskFlowFor but
+    //     does NOT yet thread the FSM's current StateId into the token
+    //     mint inside TaskFlow::runCurrentTask. The legacy
+    //     TaskFlow::runCurrentTask path passes a sentinel-default
+    //     vigine::statemachine::StateId{} into IContext::makeEngineToken
+    //     (see src/impl/taskflow/taskflow.cpp). The legacy
+    //     Context::makeEngineToken stub ignores its argument; the
+    //     modern AbstractContext token factory tolerates the sentinel
+    //     and threads it into the concrete token. So the engine-token
+    //     a task observes per tick today is NOT bound to the FSM's
+    //     real current state -- it carries the sentinel id. Wiring
+    //     the real id through here requires either a runCurrentTask
+    //     overload that accepts an externally minted token or a
+    //     redesign of the legacy TaskFlow::setContext path; both are
+    //     larger than the FSM-drive infrastructure scope of this leaf
+    //     and are flagged for follow-up. The engine-token contract
+    //     suite (scenario_21/22) and the legacy demo path continue to
+    //     verify the token shape itself; this comment only documents
+    //     that the state-id field threaded into that token is the
+    //     sentinel, not fsm.current(), until the follow-up lands.
     //
     //   The FSM-drive step skips entirely when the FSM is bound to an
     //   alien thread (fsmDrainSafe == false) -- the caller asked the

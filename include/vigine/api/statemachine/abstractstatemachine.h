@@ -180,7 +180,8 @@ class AbstractStateMachine : public IStateMachine
         addStateTaskFlow(StateId                          state,
                          std::unique_ptr<vigine::TaskFlow> taskFlow) override;
 
-    [[nodiscard]] vigine::TaskFlow *taskFlowFor(StateId state) const override;
+    [[nodiscard]] vigine::TaskFlow       *taskFlowFor(StateId state) override;
+    [[nodiscard]] const vigine::TaskFlow *taskFlowFor(StateId state) const override;
 
     // ------ State-invalidation listener registry ------
 
