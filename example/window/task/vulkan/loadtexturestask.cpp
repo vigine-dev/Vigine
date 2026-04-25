@@ -9,6 +9,7 @@
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <iostream>
 
@@ -75,8 +76,12 @@ vigine::Result LoadTexturesTask::execute()
         if (!entry.is_regular_file())
             continue;
         auto ext = entry.path().extension().string();
-        // Case-insensitive extension check
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        // Case-insensitive extension check. Wrap ::tolower so the int->char
+        // narrowing happens explicitly (C4244 under /WX); ::tolower also
+        // requires unsigned char input on signed-char platforms.
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
         if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
             imagePaths.push_back(entry.path().string());
     }
