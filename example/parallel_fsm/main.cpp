@@ -25,9 +25,11 @@
 //
 // Why named threads + sync transition
 // -----------------------------------
-//   Subscribers fire on the publisher's thread (Shared bus policy in this
-//   demo). Calling transition() directly inside onMessage() would violate
-//   the controller-thread affinity once a binding is installed (the
+//   Subscribers run on the bus dispatch thread under the Shared policy
+//   (which the current AbstractMessageBus drains on the posting thread,
+//   though the public contract only guarantees the bus dispatch pool).
+//   Calling transition() directly inside onMessage() would violate the
+//   controller-thread affinity once a binding is installed (the
 //   AbstractStateMachine assert fires in Debug). The subscriber instead
 //   schedules a runnable on the peer's named thread; the transition pair
 //   then runs on the bound thread, which keeps the affinity gate happy.
@@ -281,11 +283,13 @@ using PongTickRunnable = TickRunnable<PingMessage>; // FSM B receives pong, repl
 // Subscriber that, on receiving its kind of message, schedules the
 // peer's TickRunnable on the peer's named thread.
 //
-// The subscriber runs synchronously on the publisher's thread (Shared
-// bus policy). It must NOT call transition() itself: the FSM is bound
-// to the named thread and a transition from the wrong thread fires the
-// affinity assert in Debug. Scheduling the tick runnable hands the
-// transition over to the controller thread, which keeps the contract.
+// The subscriber runs on the bus dispatch thread under the Shared
+// policy (today the posting thread; the public contract only guarantees
+// the bus dispatch pool). It must NOT call transition() itself: the FSM
+// is bound to the named thread and a transition from the wrong thread
+// fires the affinity assert in Debug. Scheduling the tick runnable
+// hands the transition over to the controller thread, which keeps the
+// contract.
 // ---------------------------------------------------------------------------
 
 template <typename TickRunnableT>
@@ -525,14 +529,17 @@ int main()
 
     // ---- Drain ---------------------------------------------------------------
     //
-    // Spin until the exchange counter reaches the target or the deadline
+    // Wait until the exchange counter reaches the target or the deadline
     // expires. The cycle is fully scheduler-driven from here -- main
-    // does no more posting.
+    // does no more posting. Sleep briefly between polls so the safety-
+    // belt path stays CPU-friendly when the exchange stalls; the happy
+    // path completes in well under one tick of the sleep window so the
+    // delay does not affect normal throughput.
     const auto deadline = std::chrono::steady_clock::now() + kRunDeadline;
     while (exchanges.load(std::memory_order_acquire) < kTargetExchanges &&
            std::chrono::steady_clock::now() < deadline)
     {
-        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     const int finalCount = exchanges.load(std::memory_order_acquire);

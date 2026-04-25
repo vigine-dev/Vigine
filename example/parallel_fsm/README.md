@@ -14,11 +14,12 @@ combines:
     that thread and the controller-affinity contract holds (the assert
     in `AbstractStateMachine::checkThreadAffinity` stays silent).
   * `IMessageBus` carries the Ping / Pong signal pair between the two
-    sides. Each subscriber runs on the publisher's thread (Shared
-    policy), so the subscriber never calls `transition()` itself --
-    instead it schedules a tick runnable on the peer's named thread,
-    which performs the active -> waiting -> active transition pair and
-    posts the response.
+    sides. Each subscriber runs on the bus dispatch thread under the
+    `Shared` policy (currently the posting thread, though the public
+    contract only guarantees the bus dispatch pool), so the subscriber
+    never calls `transition()` itself -- instead it schedules a tick
+    runnable on the peer's named thread, which performs the active ->
+    waiting -> active transition pair and posts the response.
 
 Note that the example uses synchronous `transition()` exclusively. The
 asynchronous `requestTransition` / `processQueuedTransitions` API is
