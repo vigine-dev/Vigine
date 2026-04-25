@@ -10,7 +10,7 @@
 #include <thread>
 #include <vector>
 
-#include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/statemachine/routemode.h"

@@ -21,7 +21,7 @@
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/engine/iengine_token.h"
 #include "vigine/impl/engine/enginetoken.h"
-#include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/statemachine/stateid.h"

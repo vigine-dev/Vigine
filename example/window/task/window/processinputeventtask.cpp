@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#include <vigine/messaging/imessage.h>
+#include <vigine/api/messaging/imessage.h>
 
 ProcessInputEventTask::ProcessInputEventTask() = default;
 

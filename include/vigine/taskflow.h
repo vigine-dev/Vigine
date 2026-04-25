@@ -1,7 +1,7 @@
 #pragma once
 
 #include "abstracttask.h"
-#include "payload/payloadtypeid.h"
+#include "api/messaging/payload/payloadtypeid.h"
 #include "result.h"
 #include "core/threading/threadaffinity.h"
 
@@ -13,12 +13,9 @@ namespace vigine::messaging
 {
 class ISubscriber;
 class ISubscriptionToken;
-} // namespace vigine::messaging
-
-namespace vigine::signalemitter
-{
 class ISignalEmitter;
-} // namespace vigine::signalemitter
+class ISignalPayload;
+} // namespace vigine::messaging
 
 namespace vigine
 {
@@ -74,7 +71,7 @@ class TaskFlow
      * @brief Wires a signal edge from @p from to @p to.
      *
      * Subscribes @p to (after casting it to @ref messaging::ISubscriber) on
-     * the currently installed @ref signalemitter::ISignalEmitter for messages
+     * the currently installed @ref messaging::ISignalEmitter for messages
      * whose @ref messaging::MessageFilter matches
      * @ref messaging::MessageKind::Signal and the supplied @p signalType.
      * @p from is validated as registered in this flow but is not persisted
@@ -104,7 +101,7 @@ class TaskFlow
      *     @c Named affinities require a @ref core::threading::NamedThreadId and
      *     are routed through @ref core::threading::IThreadManager::scheduleOnNamed
      *     instead of @c schedule.
-     *   - No @ref signalemitter::ISignalEmitter installed via
+     *   - No @ref messaging::ISignalEmitter installed via
      *     @ref setSignalEmitter returns an error.
      *   - @p to not implementing @ref messaging::ISubscriber returns an
      *     error.
@@ -152,7 +149,7 @@ class TaskFlow
      * calls return an error @ref Result until a non-null emitter is
      * installed.
      */
-    void setSignalEmitter(signalemitter::ISignalEmitter *emitter);
+    void setSignalEmitter(messaging::ISignalEmitter *emitter);
 
   private:
     bool isTaskRegistered(AbstractTask *task) const;
@@ -162,7 +159,7 @@ class TaskFlow
     TransitionMap                  _transitions;
     AbstractTask                  *_currTask{nullptr};
     Context                       *_context{nullptr};
-    signalemitter::ISignalEmitter *_signalEmitter{nullptr};
+    messaging::ISignalEmitter *_signalEmitter{nullptr};
 
     // Adapter instances live here so every scheduled-delivery wrapper
     // outlives its subscription slot. The emitter stores raw pointers

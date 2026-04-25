@@ -29,8 +29,8 @@
 #include "fixtures/engine_fixture.h"
 
 #include "vigine/api/context/icontext.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/reactivestream/factory.h"
 #include "vigine/api/reactivestream/ireactivestream.h"
 #include "vigine/api/reactivestream/ireactivesubscriber.h"

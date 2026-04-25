@@ -3,8 +3,8 @@
 #include <memory>
 
 #include <vigine/api/ecs/platform/iwindoweventhandler.h>
-#include <vigine/payload/payloadtypeid.h>
-#include <vigine/signalemitter/isignalpayload.h>
+#include <vigine/api/messaging/payload/payloadtypeid.h>
+#include <vigine/api/messaging/payload/isignalpayload.h>
 
 /**
  * @file windoweventpayload.h
@@ -42,7 +42,7 @@ inline constexpr vigine::payload::PayloadTypeId kKeyDownPayloadTypeId{0x20102u};
  * construction time; the bus may deliver the same pointer to multiple
  * subscribers, so the observable state never changes after publish.
  */
-class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayload
+class MouseButtonDownPayload final : public vigine::messaging::ISignalPayload
 {
   public:
     MouseButtonDownPayload(vigine::ecs::platform::MouseButton button, int x, int y) noexcept
@@ -57,7 +57,7 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
         return kMouseButtonDownPayloadTypeId;
     }
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
         clone() const override
     {
         return std::make_unique<MouseButtonDownPayload>(_button, _x, _y);
@@ -82,7 +82,7 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
  * platform layer. The wrapped struct is held by value; exposing it by
  * @c const reference keeps the contract read-only.
  */
-class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
+class KeyDownPayload final : public vigine::messaging::ISignalPayload
 {
   public:
     explicit KeyDownPayload(const vigine::ecs::platform::KeyEvent &event) noexcept : _event(event) {}
@@ -94,7 +94,7 @@ class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
         return kKeyDownPayloadTypeId;
     }
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
         clone() const override
     {
         return std::make_unique<KeyDownPayload>(_event);

@@ -14,15 +14,15 @@
 // class suitable for direct std::make_unique<Type>(...) construction.
 // ---------------------------------------------------------------------------
 
-#include "vigine/messaging/abstractmessagetarget.h"
-#include "vigine/messaging/iconnectiontoken.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/messaging/routemode.h"
-#include "vigine/messaging/targetkind.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/abstractmessagetarget.h"
+#include "vigine/api/messaging/iconnectiontoken.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/routemode.h"
+#include "vigine/api/messaging/targetkind.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 
 #include <atomic>
 #include <chrono>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/api/channelfactory/ichannelfactory.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 
 namespace vigine::channelfactory
 {

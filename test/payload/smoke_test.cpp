@@ -1,7 +1,7 @@
-#include "vigine/payload/factory.h"
-#include "vigine/payload/ipayloadregistry.h"
-#include "vigine/payload/payloadrange.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/payload/factory.h"
+#include "vigine/api/messaging/payload/ipayloadregistry.h"
+#include "vigine/api/messaging/payload/payloadrange.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
@@ -16,13 +16,13 @@
 using namespace vigine;
 using namespace vigine::payload;
 
-TEST(DefaultPayloadRegistrySmoke, FactoryReturnsUniquePtr)
+TEST(PayloadRegistrySmoke, FactoryReturnsUniquePtr)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
     ASSERT_NE(registry, nullptr);
 }
 
-TEST(DefaultPayloadRegistrySmoke, EngineRangesPreRegisteredAtBootstrap)
+TEST(PayloadRegistrySmoke, EngineRangesPreRegisteredAtBootstrap)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -45,7 +45,7 @@ TEST(DefaultPayloadRegistrySmoke, EngineRangesPreRegisteredAtBootstrap)
     EXPECT_EQ(*owner, std::string{kEngineOwner});
 }
 
-TEST(DefaultPayloadRegistrySmoke, HappyPathUserRegistration)
+TEST(PayloadRegistrySmoke, HappyPathUserRegistration)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -61,7 +61,7 @@ TEST(DefaultPayloadRegistrySmoke, HappyPathUserRegistration)
     EXPECT_EQ(*owner, "app.game");
 }
 
-TEST(DefaultPayloadRegistrySmoke, DuplicateRangeRejected)
+TEST(PayloadRegistrySmoke, DuplicateRangeRejected)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -77,7 +77,7 @@ TEST(DefaultPayloadRegistrySmoke, DuplicateRangeRejected)
     EXPECT_EQ(collide.code(), Result::Code::DuplicatePayloadId);
 }
 
-TEST(DefaultPayloadRegistrySmoke, EngineRangesRejectReRegistration)
+TEST(PayloadRegistrySmoke, EngineRangesRejectReRegistration)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -88,7 +88,7 @@ TEST(DefaultPayloadRegistrySmoke, EngineRangesRejectReRegistration)
     EXPECT_EQ(r.code(), Result::Code::DuplicatePayloadId);
 }
 
-TEST(DefaultPayloadRegistrySmoke, OutOfRangeRejectedForCrossingBoundary)
+TEST(PayloadRegistrySmoke, OutOfRangeRejectedForCrossingBoundary)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -100,7 +100,7 @@ TEST(DefaultPayloadRegistrySmoke, OutOfRangeRejectedForCrossingBoundary)
     EXPECT_EQ(r.code(), Result::Code::OutOfRange);
 }
 
-TEST(DefaultPayloadRegistrySmoke, OutOfRangeRejectedForInvertedRange)
+TEST(PayloadRegistrySmoke, OutOfRangeRejectedForInvertedRange)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -111,7 +111,7 @@ TEST(DefaultPayloadRegistrySmoke, OutOfRangeRejectedForInvertedRange)
     EXPECT_EQ(r.code(), Result::Code::OutOfRange);
 }
 
-TEST(DefaultPayloadRegistrySmoke, UnregisterFreesRangeForReuse)
+TEST(PayloadRegistrySmoke, UnregisterFreesRangeForReuse)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 
@@ -132,7 +132,7 @@ TEST(DefaultPayloadRegistrySmoke, UnregisterFreesRangeForReuse)
     EXPECT_TRUE(reuse.isSuccess());
 }
 
-TEST(DefaultPayloadRegistrySmoke, ConcurrentRegisterAndResolveAreTsanClean)
+TEST(PayloadRegistrySmoke, ConcurrentRegisterAndResolveAreTsanClean)
 {
     std::unique_ptr<IPayloadRegistry> registry = createPayloadRegistry();
 

@@ -22,11 +22,11 @@
 #include "task/window/runwindowtask.h"
 #include "task/window/windoweventpayload.h"
 
-#include <vigine/payload/factory.h>
-#include <vigine/payload/ipayloadregistry.h>
-#include <vigine/payload/payloadtypeid.h>
-#include <vigine/signalemitter/defaultsignalemitter.h>
-#include <vigine/signalemitter/isignalemitter.h>
+#include <vigine/api/messaging/payload/factory.h>
+#include <vigine/api/messaging/payload/ipayloadregistry.h>
+#include <vigine/api/messaging/payload/payloadtypeid.h>
+#include <vigine/impl/messaging/signalemitter.h>
+#include <vigine/api/messaging/isignalemitter.h>
 #include <vigine/core/threading/ithreadmanager.h>
 #include <vigine/core/threading/threadaffinity.h>
 
@@ -38,7 +38,7 @@
 
 using namespace vigine;
 
-std::unique_ptr<TaskFlow> createInitTaskFlow(signalemitter::ISignalEmitter *signalEmitter,
+std::unique_ptr<TaskFlow> createInitTaskFlow(messaging::ISignalEmitter *signalEmitter,
                                              Context *context,
                                              std::shared_ptr<TextEditState> textEditState,
                                              std::shared_ptr<TextEditorSystem> textEditorSystem)
@@ -151,9 +151,9 @@ int main()
     // bus and the TaskFlow::signal non-Any scheduler both share the
     // single IThreadManager that the engine plumbs through its
     // Context — see TaskFlow::signal and Engine::Engine.
-    auto signalEmitter    = vigine::signalemitter::createSignalEmitter(
+    auto signalEmitter    = vigine::messaging::createSignalEmitter(
         engine.context().threadManager(),
-        vigine::signalemitter::sharedBusConfig());
+        vigine::messaging::sharedBusConfig());
 
     auto textEditState    = std::make_shared<TextEditState>();
     auto textEditorSystem = std::make_shared<TextEditorSystem>(textEditState);

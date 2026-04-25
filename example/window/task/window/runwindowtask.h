@@ -2,7 +2,7 @@
 
 #include <vigine/abstracttask.h>
 #include <vigine/api/ecs/platform/iwindoweventhandler.h>
-#include <vigine/signalemitter/isignalemitter.h>
+#include <vigine/api/messaging/isignalemitter.h>
 
 #include "../../system/texteditorsystem.h"
 
@@ -49,7 +49,7 @@ class RunWindowTask final : public vigine::AbstractTask
     void onChar(const vigine::ecs::platform::TextEvent &event);
 
     void setTextEditorSystem(std::shared_ptr<TextEditorSystem> editorSystem);
-    void setSignalEmitter(vigine::signalemitter::ISignalEmitter *emitter) noexcept;
+    void setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept;
 
   private:
     enum MovementKeyMask : uint8_t
@@ -75,7 +75,7 @@ class RunWindowTask final : public vigine::AbstractTask
     void updateObjectDrag(int x, int y, bool suppressZDelta = true);
     void endObjectDrag();
 
-    vigine::signalemitter::ISignalEmitter *_signalEmitter{nullptr};
+    vigine::messaging::ISignalEmitter *_signalEmitter{nullptr};
     vigine::ecs::platform::PlatformService *_platformService{nullptr};
     vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
     vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};

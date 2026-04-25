@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "vigine/eventscheduler/ossignal.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 
 namespace vigine::eventscheduler
 {

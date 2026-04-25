@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 namespace vigine::core::threading

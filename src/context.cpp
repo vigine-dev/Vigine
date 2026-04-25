@@ -7,9 +7,9 @@
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
 #endif
 #include "vigine/impl/ecs/graphics/rendersystem.h"
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/busid.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/busid.h"
+#include "vigine/api/messaging/imessagebus.h"
 #include "vigine/property.h"
 #include "vigine/result.h"
 #include "vigine/service/databaseservice.h"

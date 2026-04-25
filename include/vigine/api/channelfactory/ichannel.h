@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 namespace vigine::channelfactory

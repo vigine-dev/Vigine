@@ -52,7 +52,7 @@
 #include <string>
 #include <type_traits>
 
-#include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/statemachine/stateid.h"
 
@@ -88,10 +88,10 @@ namespace vigine::service
 class IService;
 } // namespace vigine::service
 
-namespace vigine::signalemitter
+namespace vigine::messaging
 {
 class ISignalEmitter;
-} // namespace vigine::signalemitter
+} // namespace vigine::messaging
 
 namespace vigine::statemachine
 {
@@ -351,7 +351,7 @@ class IEngineToken
     /**
      * @brief Returns the engine-wide signal emitter facade.
      */
-    [[nodiscard]] virtual vigine::signalemitter::ISignalEmitter &
+    [[nodiscard]] virtual vigine::messaging::ISignalEmitter &
         signalEmitter() noexcept = 0;
 
     /**

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/api/actorhost/iactorhost.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::actorhost

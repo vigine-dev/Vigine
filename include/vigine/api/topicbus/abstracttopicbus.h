@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/api/topicbus/itopicbus.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 
 namespace vigine::topicbus
 {

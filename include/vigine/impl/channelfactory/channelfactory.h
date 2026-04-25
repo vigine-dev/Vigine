@@ -5,7 +5,7 @@
 #include "vigine/api/channelfactory/abstractchannelfactory.h"
 #include "vigine/api/channelfactory/channelkind.h"
 #include "vigine/api/channelfactory/ichannel.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 namespace vigine::channelfactory

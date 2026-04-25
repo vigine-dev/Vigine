@@ -1,8 +1,8 @@
 #pragma once
 
 #include "vigine/api/requestbus/irequestbus.h"
-#include "vigine/messaging/abstractmessagebus.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/abstractmessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 
 namespace vigine::requestbus
 {

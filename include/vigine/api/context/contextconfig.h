@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/messaging/busconfig.h"
+#include "vigine/api/messaging/busconfig.h"
 #include "vigine/core/threading/threadmanagerconfig.h"
 
 namespace vigine::context
