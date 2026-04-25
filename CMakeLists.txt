@@ -300,8 +300,6 @@ set(SOURCES
     ${SRC_DIR}/messaging/connectiontoken.cpp
     ${SRC_DIR}/messaging/ibuscontrolblock_default.h
     ${SRC_DIR}/messaging/ibuscontrolblock_default.cpp
-    ${SRC_DIR}/messaging/cleanup.h
-    ${SRC_DIR}/messaging/cleanup.cpp
     ${SRC_DIR}/messaging/abstractmessagebus.cpp
     ${SRC_DIR}/messaging/systemmessagebus.cpp
     ${SRC_DIR}/messaging/createmessagebus.cpp
