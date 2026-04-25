@@ -1,4 +1,4 @@
-name: Linux build
+name: macOS build
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
     branches: ["main", "feature/**"]
 
 jobs:
-  linux-build:
-    name: Ubuntu 22.04 ${{ matrix.config }} (XCB + Vulkan + full ctest)
-    runs-on: ubuntu-22.04
+  macos-build:
+    name: macOS ${{ matrix.config }} (Apple Clang + Vulkan)
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
@@ -20,29 +20,26 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            libxcb1-dev \
-            libxcb-util0-dev \
-            libvulkan-dev \
-            vulkan-validationlayers-dev \
-            libpqxx-dev \
-            libglm-dev \
-            googletest \
-            libgtest-dev
+      # The engine's root CMake calls find_package(Vulkan) unconditionally,
+      # so the SDK must be available even when example/window is disabled
+      # below.
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: 1.3.290.0
+          cache: true
 
       # example/window's source uses <windows.h> without a CMake-level
-      # skip-guard, so on Linux we keep ENABLE_EXAMPLE=ON to exercise the
+      # skip-guard, so on macOS we keep ENABLE_EXAMPLE=ON to exercise the
       # example-tree wiring but disable the window slot via
       # BUILD_EXAMPLE_WINDOW=OFF. The CMake skip-guard for the window
       # example is tracked in #299. The other three slots
       # (threaded_bus / parallel_fsm / fanout_fsm) are EXISTS-guarded in
       # example/CMakeLists.txt, so flipping them ON is a safe no-op until
-      # the stubs become real.
+      # the stubs become real. vcpkg toolchain is not wired here because
+      # VIGINE_ENABLE_EXPERIMENTAL=OFF gates the only current consumer
+      # (libpqxx); re-add a cache step when manifest dependencies become
+      # required outside the experimental umbrella.
       - name: Configure
         run: >
           cmake -S . -B build
@@ -56,7 +53,7 @@ jobs:
           -DVIGINE_ENABLE_EXPERIMENTAL=OFF
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.config }} -- -j$(nproc)
+        run: cmake --build build --config ${{ matrix.config }} --parallel
 
       - name: Run ctest
         working-directory: build
