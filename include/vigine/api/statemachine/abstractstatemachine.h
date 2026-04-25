@@ -81,12 +81,53 @@ class StateTopology;
  *     concrete derivatives can extend the default implementation
  *     without re-exporting the substrate on their own public surface.
  *
- * Thread-safety: the base inherits the state topology's thread-safety
- * policy (reader-writer mutex on the substrate primitive). Callers
- * may query and mutate concurrently; each mutation takes the
- * exclusive lock while each query takes a shared lock. The wrapper
- * layer does not add further synchronisation — every state-machine
- * access path funnels through the topology.
+ * Threading model — single controller thread + async drain (locked policy):
+ *   - @ref AbstractStateMachine implements the dual-API transition
+ *     contract documented on @ref IStateMachine. There is exactly
+ *     ONE controller thread per machine, installed once via
+ *     @ref bindToControllerThread; the binding is one-shot and a
+ *     second attempt fails the compare-exchange against the
+ *     default-constructed @c std::thread::id sentinel (Debug fires
+ *     the contract assert; Release silently keeps the original).
+ *   - The @b synchronous mutator surface — @ref setInitial,
+ *     @ref transition, @ref addState, @ref addChildState,
+ *     @ref setRouteMode — and the drain pump
+ *     @ref processQueuedTransitions are gated through
+ *     @ref checkThreadAffinity once the controller binding is in
+ *     place. Stray callers from another thread fire an @c assert in
+ *     Debug builds and are undefined behaviour in Release. Until the
+ *     binding lands the gate is intentionally inactive (the
+ *     "un-bound = gate inactive" contract); the locked engine wiring
+ *     binds the machine on construction so engine consumers never
+ *     observe the un-bound branch.
+ *   - The @b asynchronous request surface — @ref requestTransition —
+ *     is the only path open to non-controller threads. It pushes the
+ *     target onto an internal FIFO queue (@c _transitionQueue,
+ *     guarded by @c _queueMutex) and returns immediately. Multiple
+ *     producers may post concurrently; the queue mutex serialises
+ *     pushes and FIFO order matches mutex acquisition order.
+ *   - The drain pump @ref processQueuedTransitions is the
+ *     controller-thread end of the async path. It takes ONE snapshot
+ *     of the queue per call (atomic swap with an empty deque under
+ *     @c _queueMutex) and walks the snapshot outside the lock,
+ *     delegating each entry to the synchronous @ref transition call
+ *     site. Requests posted from inside an @c onEnter / @c onExit
+ *     hook or a listener during a drain land on the @b live queue and
+ *     are applied on the @b next drain — never inside the same drain
+ *     — so the controller thread is free of unbounded reentry.
+ *   - The engine arranges the drain pump from its controller-thread
+ *     main loop and once at engine shutdown (best-effort). Tests and
+ *     embedders that own the controller loop may call
+ *     @ref processQueuedTransitions directly when they need a
+ *     deterministic pump point.
+ *   - Read-only queries (@ref hasState, @ref parent,
+ *     @ref isAncestorOf, @ref current, @ref routeMode,
+ *     @ref controllerThread) are safe from any thread and either
+ *     take a shared lock on the topology or an atomic load on the
+ *     wrapper-side cache. The wrapper layer adds no further
+ *     synchronisation beyond the controller-thread gate, the queue
+ *     mutex, and the listener-registry mutex documented on
+ *     @ref addInvalidationListener.
  */
 class AbstractStateMachine : public IStateMachine
 {
