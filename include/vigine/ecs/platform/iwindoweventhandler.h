@@ -64,6 +64,14 @@ struct TextEvent
  * component. Implementers receive window lifecycle notifications,
  * mouse events (move / wheel / button / enter / leave), and keyboard
  * events (key down / up, character, dead-key).
+ *
+ * @note TODO(#293): The lower-level platform window primitive (window
+ * creation, OS event-queue pumping, native-handle management) lives
+ * on @c vigine::platform::IWindowSystem in
+ * @c include/vigine/api/platform/iwindowsystem.h. This ECS-side
+ * @c IWindowEventHandlerComponent is the consumer callback registered
+ * against a specific window component once the platform side has
+ * created the window. A follow-up leaf will reconcile the two layers.
  */
 class IWindowEventHandlerComponent
 {

@@ -18,6 +18,15 @@ namespace graphics
  * Provides a platform-agnostic API for graphics operations.
  * Implementations (e.g., VulkanAPI) handle backend-specific details.
  * This interface supports hot-swapping graphics backends (Vulkan, DirectX, Metal, etc.).
+ *
+ * @note TODO(#293): A separate @c vigine::platform::IGraphicsBackend
+ * lives in @c include/vigine/api/platform/igraphicsbackend.h as the
+ * lower-level platform-graphics-context selector (Vulkan vs Metal vs
+ * D3D vs WebGPU vs availability-probe). This ECS-side
+ * @c vigine::graphics::GraphicsBackend is the rendering surface used
+ * by the ECS render system after a platform backend has been picked.
+ * A follow-up leaf will reconcile the two layers (delegate /
+ * compose / or merge).
  */
 class GraphicsBackend
 {

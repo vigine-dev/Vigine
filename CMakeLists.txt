@@ -37,30 +37,6 @@ if(MSVC)
     add_compile_options(/FS /utf-8)
 endif()
 
-if(WIN32)
-    # Windows 10+ baseline. Pins every Win32 API surface to the
-    # Windows 10 RTM (NTDDI_WIN10, value 0x0A000000); an older API
-    # accidentally used elsewhere would fail to compile here. Bump
-    # `_WIN32_WINNT` + `NTDDI_VERSION` together when a newer feature
-    # set is needed (e.g. NTDDI_WIN10_VB = 0x0A000008 for 1903+).
-    #
-    # WIN32_LEAN_AND_MEAN is intentionally NOT in this directory-scoped
-    # block: bundled FreeType (`add_subdirectory(... EXCLUDE_FROM_ALL)`)
-    # would otherwise inherit it on its command line and re-define it
-    # internally, producing C4005 macro-redefinition warnings. The
-    # macro is instead pushed onto the `vigine` target only via
-    # `target_compile_definitions(... PRIVATE)` below; the windowed
-    # example applies its own copy in `example/window/CMakeLists.txt`,
-    # and the test executables do not pull `<windows.h>` transitively
-    # so they need no definition.
-    add_compile_definitions(
-        VK_USE_PLATFORM_WIN32_KHR
-        _WIN32_WINNT=0x0A00
-        NTDDI_VERSION=0x0A000000
-        NOMINMAX
-    )
-endif()
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -68,19 +44,20 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-# Set the CMake module path to include shared and platform-specific modules
+# Set the CMake module path to include shared modules. The
+# platform-specific module path is appended by the dispatcher's
+# vigine_platform_setup_global() call below.
 list(APPEND CMAKE_MODULE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
 )
 
-if(APPLE)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/macos)
-elseif(WIN32)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/windows)
-elseif(UNIX)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/linux)
-endif()
+# Platform dispatcher (R-PlatformPortability). Loads exactly one
+# cmake/platform/<platform>/config.cmake fragment. Each fragment
+# defines three callbacks consumed below: vigine_platform_setup_global,
+# vigine_platform_collect_sources, and vigine_platform_apply_target.
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/platform.cmake)
+vigine_platform_setup_global()
 
 # Build FreeType from external submodule.
 # Keep optional compression/shaping deps disabled for a predictable local build.
@@ -111,14 +88,9 @@ find_package(VulkanHpp REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# libxcb is required on Linux for XCB window backend + VK_KHR_xcb_surface.
-if(UNIX AND NOT APPLE)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(XCB REQUIRED xcb)
-    if(NOT XCB_FOUND)
-        message(FATAL_ERROR "libxcb not found. Install libxcb-dev (Ubuntu) or libxcb-devel (Fedora).")
-    endif()
-endif()
+# libxcb / XCB discovery is handled by the Linux platform fragment
+# (cmake/platform/linux/config.cmake) loaded via the platform
+# dispatcher above. Other platforms have no XCB dependency.
 
 # Experimental subsystems are gated behind a single opt-in flag so the
 # default build keeps the public surface small. Postgres is the first
@@ -348,18 +320,15 @@ set(SOURCES
     ${SRC_DIR}/messaging/routing/broadcast.cpp
 )
 
-# Add platform-specific surface factory.
+# Add the platform-agnostic SurfaceFactory header. The platform-
+# specific concrete (Win32 / Metal / XCB) is appended via the
+# dispatcher's vigine_platform_collect_sources(HEADER_PLATFORM
+# SOURCES_PLATFORM) call below.
+#
 # The SurfaceFactory abstract base lives in src/ecs/render/ (private)
 # because it is a Vulkan-typed extension point used only by VulkanDevice
 # -- not part of the public, Vulkan-SDK-free engine API.
 list(APPEND SOURCES ${SRC_DIR}/ecs/render/surfacefactory.h)
-if(WIN32)
-    list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/win32surfacefactory.cpp)
-elseif(APPLE)
-    list(APPEND SOURCES ${SRC_DIR}/ecs/render/platform/metalsurfacefactory.cpp)
-elseif(UNIX)
-    list(APPEND SOURCES ${SRC_DIR}/platform/linux/vulkan_surface_xcb.cpp)
-endif()
 
 # Add source files
 set(HEADER_SERVICE
@@ -498,22 +467,10 @@ set(SOURCES_EVENTSCHEDULER
     ${SRC_DIR}/eventscheduler/itimersource_default.cpp
 )
 
-if(WIN32)
-    list(APPEND SOURCES_EVENTSCHEDULER
-        ${SRC_DIR}/eventscheduler/iossignalsource_win.h
-        ${SRC_DIR}/eventscheduler/iossignalsource_win.cpp
-    )
-elseif(APPLE)
-    list(APPEND SOURCES_EVENTSCHEDULER
-        ${SRC_DIR}/eventscheduler/iossignalsource_macos.h
-        ${SRC_DIR}/eventscheduler/iossignalsource_macos.mm
-    )
-elseif(UNIX)
-    list(APPEND SOURCES_EVENTSCHEDULER
-        ${SRC_DIR}/platform/linux/iossignalsource_posix.h
-        ${SRC_DIR}/platform/linux/iossignalsource_posix.cpp
-    )
-endif()
+# Platform-specific OS-signal source (iossignalsource_*.{h,cpp,mm}) is
+# appended onto SOURCES_PLATFORM via the dispatcher callback below.
+# Keeping it on a single platform list (instead of per-facade) is the
+# R-PlatformPortability shape: each platform has ONE collection point.
 
 # Topic-bus facade (R.3.3.1.3 / plan_17) -- public surface.
 set(HEADER_TOPICBUS
@@ -694,35 +651,13 @@ set(SOURCES_PLATFORM
     ${SRC_DIR}/ecs/platform/windoweventdispatcher.cpp
 )
 
-if(WIN32)
-    list(APPEND HEADER_PLATFORM
-        ${SRC_DIR}/ecs/platform/winapicomponent.h
-    )
-
-    list(APPEND SOURCES_PLATFORM
-        ${SRC_DIR}/ecs/platform/winapicomponent.cpp
-    )
-endif()
-
-if(APPLE)
-    list(APPEND HEADER_PLATFORM
-        ${SRC_DIR}/ecs/platform/cocoawindowcomponent.h
-    )
-
-    list(APPEND SOURCES_PLATFORM
-        ${SRC_DIR}/ecs/platform/cocoawindowcomponent.mm
-    )
-endif()
-
-if(UNIX AND NOT APPLE)
-    list(APPEND HEADER_PLATFORM
-        ${SRC_DIR}/platform/linux/xcbwindowbackend.h
-    )
-
-    list(APPEND SOURCES_PLATFORM
-        ${SRC_DIR}/platform/linux/xcbwindowbackend.cpp
-    )
-endif()
+# Append every platform-specific source / header onto the shared
+# HEADER_PLATFORM / SOURCES_PLATFORM lists. The active platform's
+# fragment (cmake/platform/<X>/config.cmake) decides which surface
+# factory, OS-signal source, and window backend get pulled in. The
+# fragment was loaded by the platform dispatcher near the top of this
+# file.
+vigine_platform_collect_sources(HEADER_PLATFORM SOURCES_PLATFORM)
 
 # add vulkan
 # Add a library
@@ -782,12 +717,14 @@ add_library(${PROJECT_NAME}
 # other vendored dependencies are not affected.
 vigine_apply_compile_options(${PROJECT_NAME})
 
-# WIN32_LEAN_AND_MEAN trims <windows.h>. Scoped to vigine so the bundled
-# FreeType build (which defines the macro internally for its own TUs)
-# does not see it on its compile line and emit C4005 redefinition.
-if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
-endif()
+# Apply target-scoped platform configuration (compile definitions,
+# include directories, link libraries). On Windows this pushes
+# WIN32_LEAN_AND_MEAN PRIVATE so the bundled FreeType build does not
+# see the macro on its compile line and emit C4005 redefinition. On
+# macOS this links Cocoa / QuartzCore / Metal frameworks. On Linux
+# this pulls in the XCB include path + library discovered by the
+# fragment's setup_global() call.
+vigine_platform_apply_target(${PROJECT_NAME})
 
 # Apply sanitizer flags when VIGINE_SANITIZER is set. Guarded by the same
 # condition used at include-time above so the helper is only called when the
@@ -832,26 +769,9 @@ target_link_libraries(${PROJECT_NAME}
     freetype
 )
 
-if(APPLE)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        "-framework Cocoa"
-        "-framework QuartzCore"
-        "-framework Metal"
-    )
-endif()
-
-if(UNIX AND NOT APPLE)
-    target_include_directories(${PROJECT_NAME}
-        PRIVATE
-        ${XCB_INCLUDE_DIRS}
-    )
-
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        ${XCB_LIBRARIES}
-    )
-endif()
+# Platform-specific framework / include / link wiring lives in
+# cmake/platform/<X>/config.cmake and is applied via
+# vigine_platform_apply_target() above.
 
 # Install the library and headers
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build/lib)
