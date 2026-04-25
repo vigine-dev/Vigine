@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vigine/abstractstate.h>
+#include <vigine/api/statemachine/abstractstate.h>
 
 class InitState final : public vigine::AbstractState
 {

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "vigine/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/istatemachine.h"
 
 namespace vigine::statemachine
 {

@@ -23,8 +23,8 @@
 #include "vigine/impl/engine/enginetoken.h"
 #include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "vigine/statemachine/factory.h"
+#include "vigine/api/statemachine/factory.h"
 
 #include <memory>
 

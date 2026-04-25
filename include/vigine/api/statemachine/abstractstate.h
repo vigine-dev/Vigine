@@ -5,8 +5,8 @@
  * @brief Legacy base class for a state hosted by StateMachine.
  */
 
-#include "result.h"
-#include "taskflow.h"
+#include "vigine/impl/taskflow/taskflow.h"
+#include "vigine/result.h"
 
 #include <memory>
 

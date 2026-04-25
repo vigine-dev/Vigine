@@ -13,10 +13,10 @@
 // ---------------------------------------------------------------------------
 
 #include "vigine/result.h"
-#include "vigine/statemachine/factory.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/routemode.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/factory.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/routemode.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <gtest/gtest.h>
 

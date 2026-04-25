@@ -5,9 +5,9 @@
  * @brief Legacy concrete StateMachine that owns states and their transitions.
  */
 
-#include "abstractstate.h"
-#include "result.h"
-#include "statemachine/istatemachine.h"
+#include "vigine/api/statemachine/abstractstate.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/result.h"
 
 #include <memory>
 #include <unordered_map>

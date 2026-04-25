@@ -8,7 +8,7 @@
 #include <vigine/api/messaging/routemode.h>
 #include <vigine/api/messaging/payload/payloadtypeid.h>
 #include <vigine/api/messaging/isignalemitter.h>
-#include <vigine/taskflow.h>
+#include <vigine/impl/taskflow/taskflow.h>
 #include <vigine/core/threading/irunnable.h>
 #include <vigine/core/threading/ithreadmanager.h>
 #include <vigine/core/threading/threadaffinity.h>

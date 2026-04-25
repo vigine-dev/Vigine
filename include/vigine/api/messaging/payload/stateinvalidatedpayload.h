@@ -32,7 +32,7 @@
 
 #include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/messaging/payload/isignalpayload.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 /**
  * @brief Payload identifier for @ref vigine::messaging::payload::StateInvalidatedPayload.

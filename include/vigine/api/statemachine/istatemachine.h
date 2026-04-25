@@ -3,8 +3,8 @@
 #include <thread>
 
 #include "vigine/result.h"
-#include "vigine/statemachine/routemode.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/routemode.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine
 {

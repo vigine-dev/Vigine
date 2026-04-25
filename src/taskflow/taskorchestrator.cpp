@@ -12,10 +12,10 @@
 #include "vigine/core/graph/kind.h"
 #include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
-#include "vigine/taskflow/kind.h"
-#include "vigine/taskflow/resultcode.h"
-#include "vigine/taskflow/routemode.h"
-#include "vigine/taskflow/taskid.h"
+#include "vigine/api/taskflow/kind.h"
+#include "vigine/api/taskflow/resultcode.h"
+#include "vigine/api/taskflow/routemode.h"
+#include "vigine/api/taskflow/taskid.h"
 
 namespace vigine::taskflow
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/statemachine/abstractstatemachine.h"
+#include "vigine/api/statemachine/abstractstatemachine.h"
 
 namespace vigine::statemachine
 {

@@ -19,7 +19,7 @@
 #include "vigine/api/service/factory.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <gtest/gtest.h>
 

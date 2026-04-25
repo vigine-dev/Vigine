@@ -6,7 +6,7 @@
 #include "vigine/api/messaging/busid.h"
 #include "vigine/result.h"
 #include "vigine/api/service/serviceid.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine::ecs
 {

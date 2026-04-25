@@ -16,8 +16,8 @@
 #include "vigine/impl/ecs/graphics/graphicsservice.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/impl/ecs/platform/platformservice.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/taskflow/itaskflow.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 #include <algorithm>
