@@ -685,7 +685,11 @@ add_executable(${FULL_CONTRACT_TARGET}
     contract/scenario_12_service_lifecycle.cpp
     contract/scenario_13_ecs_entity_lifecycle.cpp
     contract/scenario_14_statemachine_hsm.cpp
+    contract/scenario_15_subscriber_serialization.cpp
+    contract/scenario_16_dtor_blocks_in_flight.cpp
+    contract/scenario_17_fsm_thread_affinity.cpp
     contract/scenario_18_fsm_async_transition.cpp
+    contract/scenario_19_parallel_for.cpp
     contract/scenario_21_stale_engine_token.cpp
     contract/scenario_22_token_expiration_callback.cpp
 )
