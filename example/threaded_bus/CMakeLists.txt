@@ -15,6 +15,10 @@ target_link_libraries(${PROJECT_THREADED_BUS_NAME}
     vigine
 )
 
+# Apply the central warning / strict-mode compile flags so the example
+# is held to the same /WX + -Werror gate as the vigine library.
+vigine_apply_compile_options(${PROJECT_THREADED_BUS_NAME})
+
 # The vigine target PUBLIC-exports its include dirs, so consumers
 # linking against it (PRIVATE here) inherit them automatically. No
 # need to add ${CMAKE_SOURCE_DIR}/include manually -- that variable

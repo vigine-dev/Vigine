@@ -297,3 +297,9 @@ target_include_directories(${PROJECT_WINDOW_NAME}
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}
 )
+
+# Apply the central warning / strict-mode compile flags so the example
+# is held to the same /WX + -Werror gate as the vigine library it
+# depends on. Single source of truth for compile flags across the
+# build matrix (vigine + tests + examples).
+vigine_apply_compile_options(${PROJECT_WINDOW_NAME})

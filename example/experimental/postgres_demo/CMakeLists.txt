@@ -37,3 +37,8 @@ target_include_directories(${PROJECT_POSTGRESQL_NAME}
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_SOURCE_DIR}/include
 )
+
+# Apply the central warning / strict-mode compile flags so the
+# experimental Postgres demo is held to the same /WX + -Werror gate
+# as the vigine library.
+vigine_apply_compile_options(${PROJECT_POSTGRESQL_NAME})

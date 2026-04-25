@@ -2,10 +2,13 @@
 # VigineCompileOptions.cmake
 #
 # Central compile-option helper. Provides vigine_apply_compile_options()
-# which applies the warning / strict-mode flag set that the vigine
-# library (and only vigine, never its vendored dependencies) compiles
-# under. Bundled third-party sources like FreeType must NOT inherit the
-# stricter warning set or the log would drown in unrelated noise.
+# which applies the warning / strict-mode flag set that every in-house
+# Vigine target compiles under -- the vigine library, every test
+# executable, and every example executable. Bundled third-party sources
+# like FreeType / GoogleTest must NOT inherit the stricter warning set
+# or the log would drown in unrelated noise; the helper is therefore
+# applied only to in-house targets via target_compile_options(... PRIVATE)
+# and is never wired into the vendored subdirectories.
 #
 # Baseline:
 #   * MSVC / clang-cl : /W4 /WX /permissive- /Zc:__cplusplus
@@ -16,7 +19,7 @@
 # Warnings are now hard errors. The render-subsystem cleanup landed
 # the in-house warning surface to zero; any new warning fails the
 # build, preventing regressions from sneaking in unnoticed. Keep this
-# scoped to the vigine target via target_compile_options so the
+# scoped to in-house targets via target_compile_options so the
 # bundled FreeType / GoogleTest / etc. translation units are not
 # subjected to the stricter gate -- their own warnings are not under
 # our control.

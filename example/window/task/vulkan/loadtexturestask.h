@@ -6,7 +6,7 @@
 #include <string>
 
 
-class ImageData;
+struct ImageData;
 
 namespace vigine
 {
