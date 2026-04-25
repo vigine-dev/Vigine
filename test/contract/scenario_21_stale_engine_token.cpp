@@ -230,6 +230,12 @@ TEST_F(StaleEngineToken, PostTransitionInfrastructureAccessorsStillValid)
     auto &ctxSystemBus     = context().systemBus();
     auto &ctxStateMachine  = context().stateMachine();
 
+    // Snapshot the signal emitter address before invalidation so we
+    // can verify the post-expiration accessor returns the same instance
+    // (the private NullSignalEmitter stub is not reachable through
+    // IContext, so an IContext-side reference comparison is impossible).
+    auto *preExpirationEmitter = &token->signalEmitter();
+
     // Drive invalidation.
     const auto t = sm.transition(fsm.stateB);
     ASSERT_TRUE(t.isSuccess());
@@ -249,13 +255,16 @@ TEST_F(StaleEngineToken, PostTransitionInfrastructureAccessorsStillValid)
         << "ungated stateMachine must still resolve to the engine-lifetime "
            "singleton after token expiration";
 
-    // The signal emitter accessor is a self-identity sanity check: the
-    // private NullSignalEmitter stub is not exposed through IContext in
-    // the current wiring, so the test only confirms that calling the
-    // accessor after expiration yields a live reference (the noexcept
-    // contract holds) instead of crashing or short-circuiting.
-    auto &emitter = token->signalEmitter();
-    EXPECT_EQ(&emitter, &emitter);
+    // The signal emitter accessor stays bound to the same instance
+    // across expiration: the private NullSignalEmitter stub is not
+    // exposed through IContext in the current wiring, so we compare
+    // the post-expiration address against the snapshot we took before
+    // the transition. This proves the accessor is stable and the
+    // noexcept contract holds (no crash, no short-circuit) instead of
+    // a tautological self-comparison.
+    EXPECT_EQ(&token->signalEmitter(), preExpirationEmitter)
+        << "ungated signalEmitter must keep returning the same instance "
+           "after token expiration";
 }
 
 } // namespace
