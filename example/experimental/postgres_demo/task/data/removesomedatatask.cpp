@@ -38,9 +38,15 @@ vigine::Result RemoveSomeDataTask::run()
         return vigine::Result(vigine::Result::Code::Error,
                               "RemoveSomeDataTask::run: entity 'PostgresBDLocal' not found");
 
-    _dbService->bindEntity(entity);
+    // Post-#330: @c DatabaseService derives from the modern
+    // @c vigine::service::AbstractService, which does not carry the
+    // legacy @c bindEntity / @c unbindEntity surface. The postgres
+    // system is now wired through @c DatabaseService::setPostgresSystem
+    // by the engine bootstrapper; this demo's full wiring migration is
+    // tracked as a follow-up. The previous calls were no-ops on the
+    // modern base anyway because @c DatabaseService never overrode the
+    // entity-bind hooks.
     auto clearResult = _dbService->clearTable("Test");
-    _dbService->unbindEntity();
 
     return clearResult;
 }

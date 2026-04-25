@@ -141,8 +141,10 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name
 // them on the modern aggregator (`vigine::context::AbstractContext`)
 // through `registerService` and resolve them through the modern
 // generational accessor
-// `vigine::service::IService::service(vigine::service::ServiceId)` —
-// distinct from the deprecated legacy `service(ServiceId, Name, Property)`
+// `vigine::IContext::service(vigine::service::ServiceId)` (also
+// available on `vigine::context::AbstractContext` and via the
+// engine-bound `vigine::engine::IEngineToken::service(...)`) — distinct
+// from the deprecated legacy `service(ServiceId, Name, Property)`
 // signature defined in this file, where `ServiceId` is the
 // root-namespace `std::string` alias rather than the modern
 // `vigine::service::ServiceId` generational handle. The legacy
