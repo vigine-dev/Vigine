@@ -1,7 +1,9 @@
 #include "vigine/statemachine/abstractstatemachine.h"
 
 #include <cassert>
+#include <deque>
 #include <memory>
+#include <mutex>
 #include <thread>
 
 #include "statemachine/statetopology.h"
@@ -188,6 +190,68 @@ void AbstractStateMachine::checkThreadAffinity() const noexcept
                && "AbstractStateMachine: sync mutation from non-controller thread");
     }
 #endif
+}
+
+// ---------------------------------------------------------------------------
+// Asynchronous transition request.
+//
+// requestTransition is the producer side. It runs on any thread, takes the
+// queue mutex for the few instructions it needs to push_back the target,
+// and returns. No validation of the id happens here — the drain delegates
+// each entry to the synchronous transition() and intentionally discards
+// the per-target Result, so a stale id is silently dropped on the
+// controller thread instead of being reported back to the producer.
+// That keeps the producer fast; callers that need pre-flight validation
+// run hasState() before requestTransition().
+//
+// processQueuedTransitions is the consumer side. The contract says it
+// runs on the controller thread (checkThreadAffinity gates it) and that
+// it drains the queue in a single pass. The single pass is implemented by
+// swap-out: under the mutex, swap _transitionQueue with a stack-local
+// empty deque, and then walk the snapshot outside the lock. Two
+// consequences fall out of that shape:
+//
+//   1. Producer threads that push_back during the drain do not block on
+//      the per-target transition() call — they only contend on the brief
+//      mutex hold of the swap.
+//
+//   2. Requests posted from inside onEnter / onExit hooks fired by
+//      transition() during the drain land on the live queue, not on the
+//      snapshot; they are processed on the *next* processQueuedTransitions
+//      call. That's the cooperative-no-reentry contract documented on
+//      IStateMachine::processQueuedTransitions.
+// ---------------------------------------------------------------------------
+
+void AbstractStateMachine::requestTransition(StateId target)
+{
+    std::lock_guard<std::mutex> lock{_queueMutex};
+    _transitionQueue.push_back(target);
+}
+
+void AbstractStateMachine::processQueuedTransitions()
+{
+    checkThreadAffinity();
+
+    std::deque<StateId> snapshot;
+    {
+        std::lock_guard<std::mutex> lock{_queueMutex};
+        snapshot.swap(_transitionQueue);
+    }
+
+    for (const auto target : snapshot)
+    {
+        // Delegate to the existing synchronous transition machinery.
+        // The Result is intentionally discarded: the contract says
+        // processQueuedTransitions returns void and does not surface
+        // per-request failures (e.g. a stale @ref StateId rejected by
+        // @ref transition). Failures are deliberately swallowed by
+        // this leaf — callers that need pre-flight validation use
+        // @ref hasState before @ref requestTransition. A separate
+        // future leaf may attach a diagnostic sink (callback or
+        // aggregate Result) if a caller needs visibility into the
+        // rejected drains; that is out of scope here.
+        (void) transition(target);
+    }
 }
 
 } // namespace vigine::statemachine

@@ -246,6 +246,57 @@ class IStateMachine
      */
     [[nodiscard]] virtual std::thread::id controllerThread() const noexcept = 0;
 
+    // ------ Asynchronous transition request ------
+
+    /**
+     * @brief Request a transition from any thread.
+     *
+     * Thread-safe. Pushes @p target onto an internal FIFO queue under
+     * an internal mutex; the call neither validates the id nor mutates
+     * the active state. The request is applied later, on the controller
+     * thread, by @ref processQueuedTransitions. Stale ids are
+     * intentionally not surfaced: the drain delegates each entry to the
+     * synchronous @ref transition call and discards its
+     * @ref Result, so a stale @p target is silently dropped instead of
+     * being reported back to the producer. Callers who need pre-flight
+     * validation use @ref hasState before requesting; a separate future
+     * leaf may add a diagnostic-sink callback API for visibility into
+     * drain rejections.
+     *
+     * The call is idempotent in the sense that pushing the same target
+     * twice queues two separate transitions. Multiple producers may
+     * post concurrently; the queue mutex serialises pushes so the
+     * observed FIFO order matches the order of mutex acquisitions.
+     */
+    virtual void requestTransition(StateId target) = 0;
+
+    /**
+     * @brief Drain the request queue on the controller thread.
+     *
+     * Must be called from the controller thread once a binding has
+     * been installed via @ref bindToControllerThread. The thread
+     * binding is one-shot and optional — when no binding has been
+     * installed the gate is intentionally inactive (the
+     * "un-bound = assert inactive" contract that the rest of the
+     * sync mutators in this interface follow), so callers that opt
+     * out of binding can call this method from any thread; once a
+     * binding is in place a stray caller from another thread fires
+     * the @c AbstractStateMachine::checkThreadAffinity contract
+     * assert in Debug and is undefined behaviour in Release. Per-
+     * request failures are intentionally not surfaced: the drain
+     * discards the @ref Result returned by each delegated
+     * @ref transition call. The drain takes one snapshot of the queue
+     * under the queue mutex (atomically swapping it with an empty
+     * deque) and then walks the snapshot in FIFO order, applying each
+     * entry through @ref transition. The single-pass guarantee is
+     * intentional: requests pushed by @c onEnter / @c onExit hooks
+     * during the drain land on the live queue and are applied on the
+     * @b next @ref processQueuedTransitions call, never inside the
+     * same drain. That keeps the controller thread free of unbounded
+     * reentry and gives state code a stable "tick" boundary.
+     */
+    virtual void processQueuedTransitions() = 0;
+
     IStateMachine(const IStateMachine &)            = delete;
     IStateMachine &operator=(const IStateMachine &) = delete;
     IStateMachine(IStateMachine &&)                 = delete;
