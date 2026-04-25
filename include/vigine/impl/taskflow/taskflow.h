@@ -137,7 +137,7 @@ class TaskFlow
     // Run the task flow
     void operator()();
 
-    void setContext(Context *context);
+    void setContext(Context &context);
 
     /**
      * @brief Installs the signal emitter used by @ref signal to wire

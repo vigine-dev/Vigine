@@ -49,17 +49,23 @@ class AbstractState // ENCAP EXEMPTION: legacy; protected _taskFlow/_isActive/_c
             return;
 
         _taskFlow = std::move(taskFlow);
-        _taskFlow->setContext(_context);
+        // Propagate the state's context binding only when one is
+        // installed. The state may receive its task flow before its
+        // own setContext is called by the state machine; in that case
+        // the task flow stays unbound until the state's setContext
+        // forwards the binding below.
+        if (_context != nullptr)
+            _taskFlow->setContext(*_context);
     }
 
     [[nodiscard]] TaskFlow *getTaskFlow() const { return _taskFlow.get(); }
 
-    void setContext(Context *context)
+    void setContext(Context &context)
     {
-        _context = context;
+        _context = &context;
 
         if (_taskFlow)
-            _taskFlow->setContext(_context);
+            _taskFlow->setContext(context);
     }
 
   protected:

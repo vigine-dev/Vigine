@@ -53,7 +53,7 @@ class AbstractTask : public ITask
 
     [[nodiscard]] engine::IEngineToken *api() noexcept override final;
 
-    void setContext(Context *context);
+    void setContext(Context &context);
 
   protected:
     AbstractTask();

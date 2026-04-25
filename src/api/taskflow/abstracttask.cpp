@@ -19,9 +19,9 @@ engine::IEngineToken *AbstractTask::api() noexcept
     return _api;
 }
 
-void AbstractTask::setContext(Context *context)
+void AbstractTask::setContext(Context &context)
 {
-    _context = context;
+    _context = &context;
     contextChanged();
 }
 

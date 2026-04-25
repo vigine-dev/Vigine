@@ -295,7 +295,12 @@ AbstractTask *TaskFlow::addTask(TaskUPtr task) {
   if (!task)
     return nullptr;
 
-  task->setContext(_context);
+  // Propagate the flow's context binding only when one is installed.
+  // The flow may be assembled (addTask) before its setContext is called
+  // by the owning state / engine; in that case the task simply keeps
+  // its default null binding until the flow's setContext propagates.
+  if (_context != nullptr)
+    task->setContext(*_context);
 
   // Store the task
   _tasks.push_back(std::move(task));
@@ -525,8 +530,8 @@ void TaskFlow::operator()() {
   }
 }
 
-void TaskFlow::setContext(Context *context) {
-  _context = context;
+void TaskFlow::setContext(Context &context) {
+  _context = &context;
 
   std::ranges::for_each(_tasks, [&context](const TaskUPtr &taskUptr) {
     taskUptr->setContext(context);

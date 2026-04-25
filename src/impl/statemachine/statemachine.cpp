@@ -13,7 +13,15 @@ AbstractState *StateMachine::addState(StateUPtr state)
     if (!state)
         return nullptr;
 
-    state->setContext(_context);
+    // Propagate the state machine's context binding only when one is
+    // installed. StateMachine receives its Context once via the private
+    // constructor (Engine-only), so production callers always see a
+    // non-null binding here; the null branch covers tests that
+    // instantiate StateMachine through a friend hook before any Engine
+    // wiring. The state keeps its default null binding in that case --
+    // there is no later propagation step on StateMachine.
+    if (_context != nullptr)
+        state->setContext(*_context);
     // Store the state
     _states.push_back(std::move(state));
     return _states.back().get();
