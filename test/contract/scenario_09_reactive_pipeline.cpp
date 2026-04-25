@@ -3,7 +3,7 @@
 //
 // IReactiveStream is the canonical cold-publisher surface: each
 // subscribe() call produces an independent subscription that delivers
-// items on demand. The DefaultReactiveStream shipped so far exposes
+// items on demand. The ReactiveStream shipped so far exposes
 // only the raw primitive -- Map / Filter / Take operators land in a
 // later leaf. The scenario therefore performs an end-to-end demand
 // round-trip:
@@ -31,10 +31,11 @@
 #include "vigine/api/context/icontext.h"
 #include "vigine/messaging/imessagepayload.h"
 #include "vigine/payload/payloadtypeid.h"
-#include "vigine/reactivestream/defaultreactivestream.h"
-#include "vigine/reactivestream/ireactivestream.h"
-#include "vigine/reactivestream/ireactivesubscriber.h"
-#include "vigine/reactivestream/ireactivesubscription.h"
+#include "vigine/api/reactivestream/factory.h"
+#include "vigine/api/reactivestream/ireactivestream.h"
+#include "vigine/api/reactivestream/ireactivesubscriber.h"
+#include "vigine/api/reactivestream/ireactivesubscription.h"
+#include "vigine/impl/reactivestream/reactivestream.h"
 #include "vigine/result.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
@@ -109,10 +110,10 @@ TEST_F(ReactivePipeline, DemandControlledDeliveryAndComplete)
         stack.bus(), stack.threadManager());
     ASSERT_NE(stream, nullptr);
 
-    // DefaultReactiveStream exposes a publish() entry point on the
+    // ReactiveStream exposes a publish() entry point on the
     // concrete type; upcast from the unique_ptr so tests can drive
     // the stream deterministically.
-    auto *concrete = dynamic_cast<vigine::reactivestream::DefaultReactiveStream *>(
+    auto *concrete = dynamic_cast<vigine::reactivestream::ReactiveStream *>(
         stream.get());
     ASSERT_NE(concrete, nullptr);
 
