@@ -6,6 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(PROJECT_WINDOW_NAME example-window)
 project(${PROJECT_WINDOW_NAME})
 
+# Portability skip-guard: this example needs the Vulkan SDK (glslc) and
+# the Win32 platform service. Linux/macOS CI runs without the Vulkan SDK
+# installed and without the Win32 platform implementation, so opting in
+# only on Windows keeps the cross-platform configure step clean. The
+# guard MUST be the first effective statement so we never reach
+# find_program(GLSLC_EXECUTABLE) on non-Windows hosts.
+if(NOT WIN32)
+    return()
+endif()
+
 set(EXAMPLE_WINDOW_HANDLER_SOURCES
     handler/windoweventhandler.h handler/windoweventhandler.cpp)
 
@@ -291,10 +301,17 @@ if(WIN32)
     target_compile_definitions(${PROJECT_WINDOW_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
 endif()
 
+# vigine target PUBLIC-exports its `include/` directory, so consumers
+# linking against it (PRIVATE here) inherit `vigine/...` headers
+# automatically -- the manual reach into ${CMAKE_SOURCE_DIR}/include is
+# unnecessary and would leak the wrong include root when Vigine is
+# added via add_subdirectory under a parent project. The
+# ${CMAKE_SOURCE_DIR} entry below stays in place because
+# task/vulkan/imageloader.cpp resolves the bundled stb header through
+# `external/stb/stb_image.h`, which needs the engine root on the path.
 target_include_directories(${PROJECT_WINDOW_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}
 )
 
