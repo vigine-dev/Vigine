@@ -4,16 +4,16 @@
 #include <memory>
 #include <string>
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/igraphvisitor.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/nodeid.h"
-#include "vigine/graph/traverse_mode.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/igraphvisitor.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/nodeid.h"
+#include "vigine/core/graph/traverse_mode.h"
 #include "vigine/result.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Pure-virtual core of the graph substrate.
@@ -157,4 +157,4 @@ class IGraph
     IGraph &operator=(IGraph &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

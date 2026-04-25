@@ -3,15 +3,15 @@
 #include <memory>
 #include <utility>
 
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/iedgedata.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/iedgedata.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Default concrete implementation of @ref IGraph.
@@ -106,4 +106,4 @@ class EdgeImpl final
 
 } // namespace internal
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

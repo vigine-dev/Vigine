@@ -3,14 +3,14 @@
 #include <cstdint>
 #include <memory>
 
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/iedgedata.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/iedgedata.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 #include "vigine/taskflow/kind.h"
 #include "vigine/taskflow/resultcode.h"
@@ -38,7 +38,7 @@ namespace
  * unit can accidentally collide with it. The value is arbitrary within
  * the space of @c std::uint32_t; the only contract is that every
  * transition edge reports exactly this value from its
- * @ref vigine::graph::IEdgeData::dataTypeId override.
+ * @ref vigine::core::graph::IEdgeData::dataTypeId override.
  */
 inline constexpr std::uint32_t kTransitionDataTypeId = 0x74665452U; // "tfTR"
 
@@ -50,28 +50,28 @@ inline constexpr std::uint32_t kTransitionDataTypeId = 0x74665452U; // "tfTR"
  * flows back to @c id() without a round-trip through the graph.
  */
 class TaskNode final
-    : public vigine::graph::INode
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::INode
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
     TaskNode() = default;
 
-    [[nodiscard]] vigine::graph::NodeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::NodeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::NodeKind kind() const noexcept override
     {
         return vigine::taskflow::kind::Task;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = nodeId;
         (void)edgeId;
     }
 
   private:
-    vigine::graph::NodeId _id{};
+    vigine::core::graph::NodeId _id{};
 };
 
 /**
@@ -84,7 +84,7 @@ class TaskNode final
  * registration to enforce the "one @ref RouteMode per pair"
  * invariant.
  */
-class TransitionData final : public vigine::graph::IEdgeData
+class TransitionData final : public vigine::core::graph::IEdgeData
 {
   public:
     TransitionData(ResultCode code, RouteMode mode) noexcept
@@ -114,13 +114,13 @@ class TransitionData final : public vigine::graph::IEdgeData
  * the @ref ResultCode and @ref RouteMode back during queries.
  */
 class TransitionEdge final
-    : public vigine::graph::IEdge
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::IEdge
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
     TransitionEdge(
-        vigine::graph::NodeId from,
-        vigine::graph::NodeId to,
+        vigine::core::graph::NodeId from,
+        vigine::core::graph::NodeId to,
         ResultCode            code,
         RouteMode             mode) noexcept
         : _from{from}
@@ -129,30 +129,30 @@ class TransitionEdge final
     {
     }
 
-    [[nodiscard]] vigine::graph::EdgeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::EdgeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::EdgeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::EdgeKind kind() const noexcept override
     {
         return vigine::taskflow::edge_kind::Transition;
     }
-    [[nodiscard]] vigine::graph::NodeId from() const noexcept override { return _from; }
-    [[nodiscard]] vigine::graph::NodeId to() const noexcept override { return _to; }
-    [[nodiscard]] const vigine::graph::IEdgeData *data() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId from() const noexcept override { return _from; }
+    [[nodiscard]] vigine::core::graph::NodeId to() const noexcept override { return _to; }
+    [[nodiscard]] const vigine::core::graph::IEdgeData *data() const noexcept override
     {
         return &_data;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = edgeId;
         (void)nodeId;
     }
 
   private:
-    vigine::graph::EdgeId _id{};
-    vigine::graph::NodeId _from{};
-    vigine::graph::NodeId _to{};
+    vigine::core::graph::EdgeId _id{};
+    vigine::core::graph::NodeId _from{};
+    vigine::core::graph::NodeId _to{};
     TransitionData        _data;
 };
 
@@ -168,17 +168,17 @@ TaskOrchestrator::~TaskOrchestrator() = default;
 
 // ---------------------------------------------------------------------------
 // POD translation helpers. The @ref TaskId layout is intentionally
-// identical to @c vigine::graph::NodeId so the translation is a plain
+// identical to @c vigine::core::graph::NodeId so the translation is a plain
 // field-for-field copy; INV-11 allows it here because the conversion
 // lives entirely inside the wrapper implementation.
 // ---------------------------------------------------------------------------
 
-vigine::graph::NodeId TaskOrchestrator::toNodeId(TaskId task) noexcept
+vigine::core::graph::NodeId TaskOrchestrator::toNodeId(TaskId task) noexcept
 {
-    return vigine::graph::NodeId{task.index, task.generation};
+    return vigine::core::graph::NodeId{task.index, task.generation};
 }
 
-TaskId TaskOrchestrator::toTaskId(vigine::graph::NodeId node) noexcept
+TaskId TaskOrchestrator::toTaskId(vigine::core::graph::NodeId node) noexcept
 {
     return TaskId{node.index, node.generation};
 }
@@ -194,7 +194,7 @@ TaskId TaskOrchestrator::addTask()
     // @c INode unique_ptr follows the IdStamp handshake — the node captures
     // the assigned id during insert.
     auto                        node = std::make_unique<TaskNode>();
-    const vigine::graph::NodeId nid  = addNode(std::move(node));
+    const vigine::core::graph::NodeId nid  = addNode(std::move(node));
     return toTaskId(nid);
 }
 
@@ -204,7 +204,7 @@ bool TaskOrchestrator::hasTask(TaskId task) const noexcept
     {
         return false;
     }
-    const vigine::graph::INode *n = node(toNodeId(task));
+    const vigine::core::graph::INode *n = node(toNodeId(task));
     return n != nullptr && n->kind() == vigine::taskflow::kind::Task;
 }
 
@@ -217,7 +217,7 @@ RouteMode TaskOrchestrator::storedModeFor(
     ResultCode code,
     RouteMode  fallback) const
 {
-    const vigine::graph::NodeId srcNode = toNodeId(source);
+    const vigine::core::graph::NodeId srcNode = toNodeId(source);
     if (!query().hasNode(srcNode))
     {
         return fallback;
@@ -231,12 +231,12 @@ RouteMode TaskOrchestrator::storedModeFor(
         = query().outEdgesOfKind(srcNode, vigine::taskflow::edge_kind::Transition);
     for (const auto eid : edges)
     {
-        const vigine::graph::IEdge *e = edge(eid);
+        const vigine::core::graph::IEdge *e = edge(eid);
         if (e == nullptr)
         {
             continue;
         }
-        const vigine::graph::IEdgeData *d = e->data();
+        const vigine::core::graph::IEdgeData *d = e->data();
         if (d == nullptr || d->dataTypeId() != kTransitionDataTypeId)
         {
             continue;
@@ -265,8 +265,8 @@ Result TaskOrchestrator::addTransition(
         return Result(Result::Code::Error, "task cannot transition to itself");
     }
 
-    const vigine::graph::NodeId srcNode  = toNodeId(source);
-    const vigine::graph::NodeId nextNode = toNodeId(next);
+    const vigine::core::graph::NodeId srcNode  = toNodeId(source);
+    const vigine::core::graph::NodeId nextNode = toNodeId(next);
 
     if (!query().hasNode(srcNode))
     {
@@ -291,7 +291,7 @@ Result TaskOrchestrator::addTransition(
 
     auto edgePtr
         = std::make_unique<TransitionEdge>(srcNode, nextNode, code, mode);
-    const vigine::graph::EdgeId eid = addEdge(std::move(edgePtr));
+    const vigine::core::graph::EdgeId eid = addEdge(std::move(edgePtr));
     if (!eid.valid())
     {
         return Result(Result::Code::Error, "failed to add transition edge");

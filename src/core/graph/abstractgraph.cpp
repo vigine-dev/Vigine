@@ -1,10 +1,10 @@
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/core/graph/abstractgraph.h"
 
 #include <algorithm>
 #include <mutex>
 #include <utility>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 // ---------------------------------------------------------------------------
 // Construction / destruction.
@@ -450,4 +450,4 @@ std::vector<EdgeId> AbstractGraph::QueryImpl::inEdgesOfKind(NodeId id, EdgeKind 
     return out;
 }
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

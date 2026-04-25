@@ -3,7 +3,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Generational identifier of a graph edge.
@@ -26,4 +26,4 @@ struct EdgeId
     friend constexpr bool operator==(const EdgeId &, const EdgeId &)  = default;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

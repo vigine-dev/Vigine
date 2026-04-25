@@ -1,11 +1,11 @@
 #pragma once
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedgedata.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedgedata.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Pure-virtual directed edge of an @ref IGraph.
@@ -61,4 +61,4 @@ class IEdge
     IEdge &operator=(IEdge &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

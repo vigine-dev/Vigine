@@ -1,9 +1,9 @@
 #pragma once
 
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Pure-virtual vertex of an @ref IGraph.
@@ -52,4 +52,4 @@ class INode
     INode &operator=(INode &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

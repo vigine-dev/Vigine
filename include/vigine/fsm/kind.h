@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vigine/graph/kind.h>
+#include <vigine/core/graph/kind.h>
 
 // wrapper-kind-waiver: engine-concept kind constants in a wrapper subspace.
 
@@ -11,11 +11,11 @@ namespace vigine::fsm
  *
  * Carved out of the reserved range `[48..63]` in the graph substrate. Every
  * state-machine node carries one of these tags so the core graph stays free
- * of engine-specific concepts (see @ref vigine::graph::NodeKind).
+ * of engine-specific concepts (see @ref vigine::core::graph::NodeKind).
  */
 namespace kind
 {
-inline constexpr vigine::graph::NodeKind State = 48;
+inline constexpr vigine::core::graph::NodeKind State = 48;
 } // namespace kind
 
 /**
@@ -27,8 +27,8 @@ inline constexpr vigine::graph::NodeKind State = 48;
  */
 namespace edge_kind
 {
-inline constexpr vigine::graph::EdgeKind Transition = 48;
-inline constexpr vigine::graph::EdgeKind ChildOf = 49;
+inline constexpr vigine::core::graph::EdgeKind Transition = 48;
+inline constexpr vigine::core::graph::EdgeKind ChildOf = 49;
 } // namespace edge_kind
 
 } // namespace vigine::fsm

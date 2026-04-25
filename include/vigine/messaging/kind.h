@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vigine/graph/kind.h>  // INV-11 EXEMPTION: kind.h maps wrapper constants onto graph substrate ranges
+#include <vigine/core/graph/kind.h>  // INV-11 EXEMPTION: kind.h maps wrapper constants onto graph substrate ranges
 
 // wrapper-kind-waiver: engine-concept kind constants in a wrapper subspace.
 
@@ -11,12 +11,12 @@ namespace vigine::messaging
  *
  * Carved out of the reserved range `[16..31]` in the graph substrate. Every
  * messaging-specific node carries one of these tags so the core graph stays
- * free of engine-specific concepts (see @ref vigine::graph::NodeKind).
+ * free of engine-specific concepts (see @ref vigine::core::graph::NodeKind).
  */
 namespace kind
 {
-inline constexpr vigine::graph::NodeKind Target = 16;       // INV-11 EXEMPTION: kind constant mapping
-inline constexpr vigine::graph::NodeKind Subscription = 17; // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::NodeKind Target = 16;       // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::NodeKind Subscription = 17; // INV-11 EXEMPTION: kind constant mapping
 } // namespace kind
 
 /**
@@ -26,7 +26,7 @@ inline constexpr vigine::graph::NodeKind Subscription = 17; // INV-11 EXEMPTION:
  */
 namespace edge_kind
 {
-inline constexpr vigine::graph::EdgeKind Subscription = 16; // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::EdgeKind Subscription = 16; // INV-11 EXEMPTION: kind constant mapping
 } // namespace edge_kind
 
 } // namespace vigine::messaging

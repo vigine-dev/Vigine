@@ -1,6 +1,6 @@
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/core/graph/abstractgraph.h"
 
-#include "graph/nodeid_hasher.h"
+#include "core/graph/nodeid_hasher.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 namespace
 {
@@ -429,4 +429,4 @@ Result AbstractGraph::traverse(NodeId startNode, TraverseMode mode, IGraphVisito
     return Result(Result::Code::Error, "unknown traverse mode");
 }
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

@@ -1,6 +1,6 @@
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/core/graph/abstractgraph.h"
 
-#include "graph/nodeid_hasher.h"
+#include "core/graph/nodeid_hasher.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 namespace
 {
@@ -297,4 +297,4 @@ AbstractGraph::QueryImpl::topologicalOrder() const
     return order;
 }
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

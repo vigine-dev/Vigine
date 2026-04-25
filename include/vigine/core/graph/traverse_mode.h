@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Strategy passed to @ref IGraph::traverse.
@@ -22,4 +22,4 @@ enum class TraverseMode : std::uint8_t
                             ///< @ref IGraphVisitor::nextForCustom.
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

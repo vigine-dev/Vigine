@@ -72,8 +72,8 @@ _WRAPPER_IDENTIFIERS: list[str] = [
 
 # Substring tokens for Level-1 (namespace qualifiers and include paths).
 _WRAPPER_SUBSTRINGS: list[str] = [
-    "vigine::graph::",
-    "<vigine/graph/",
+    "vigine::core::graph::",
+    "<vigine/core/graph/",
 ]
 
 # Additional identifiers forbidden in Level-2 facade headers.
@@ -84,7 +84,7 @@ _FACADE_EXTRA_IDENTIFIERS: list[str] = [
 
 # Additional substring tokens for Level-2 facades.
 _FACADE_EXTRA_SUBSTRINGS: list[str] = [
-    "vigine::graph::kind::",
+    "vigine::core::graph::kind::",
 ]
 
 # ---------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/factory.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/iedgedata.h"
-#include "vigine/graph/igraph.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/factory.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/iedgedata.h"
+#include "vigine/core/graph/igraph.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
 #include <gtest/gtest.h>
 
@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace vigine::graph::contract
+namespace vigine::core::graph::contract
 {
 /**
  * @brief Factory returning a new concrete IGraph behind the public API.
@@ -318,4 +318,4 @@ struct GraphFactoryNamer
     }
 };
 
-} // namespace vigine::graph::contract
+} // namespace vigine::core::graph::contract
