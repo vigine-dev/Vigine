@@ -246,14 +246,13 @@ class AbstractStateMachine : public IStateMachine
      *
      * Held only for the duration of a single @c push_back or a single
      * @c swap with a stack-local empty deque, so contention is bounded
-     * to a few instructions per producer call. Marked @c mutable
-     * because @ref requestTransition is documented as thread-safe but
-     * is not @c const (the queue grows); the mutex is the only
-     * mutation that happens through it though, so leaving it
-     * @c mutable mirrors the standard pattern for "logically thread-safe
-     * mutators that lock internally".
+     * to a few instructions per producer call. Plain (non-@c mutable)
+     * because every locking call site — @ref requestTransition and
+     * @ref processQueuedTransitions — is non-@c const; the mutex never
+     * needs to be taken from a @c const member, so the @c mutable
+     * qualifier would be unused.
      */
-    mutable std::mutex _queueMutex;
+    std::mutex _queueMutex;
 
     /**
      * @brief FIFO of pending transition targets posted via

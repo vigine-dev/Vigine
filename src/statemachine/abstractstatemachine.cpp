@@ -197,11 +197,12 @@ void AbstractStateMachine::checkThreadAffinity() const noexcept
 //
 // requestTransition is the producer side. It runs on any thread, takes the
 // queue mutex for the few instructions it needs to push_back the target,
-// and returns. No validation of the id happens here — stale ids surface as
-// Result::Code::Error inside transition() during the drain. That keeps the
-// producer fast and pushes the cost of stale-id rejection onto the
-// controller thread, which is the only thread allowed to mutate the
-// machine anyway.
+// and returns. No validation of the id happens here — the drain delegates
+// each entry to the synchronous transition() and intentionally discards
+// the per-target Result, so a stale id is silently dropped on the
+// controller thread instead of being reported back to the producer.
+// That keeps the producer fast; callers that need pre-flight validation
+// run hasState() before requestTransition().
 //
 // processQueuedTransitions is the consumer side. The contract says it
 // runs on the controller thread (checkThreadAffinity gates it) and that
@@ -240,12 +241,15 @@ void AbstractStateMachine::processQueuedTransitions()
     for (const auto target : snapshot)
     {
         // Delegate to the existing synchronous transition machinery.
-        // The Result is intentionally discarded here: a stale target
-        // would have been rejected by the producer's caller in any
-        // pre-flight hasState check, and the contract says
-        // processQueuedTransitions does not surface per-request errors.
-        // A later leaf can attach a diagnostic sink if a caller needs
-        // visibility into rejected drains.
+        // The Result is intentionally discarded: the contract says
+        // processQueuedTransitions returns void and does not surface
+        // per-request failures (e.g. a stale @ref StateId rejected by
+        // @ref transition). Failures are deliberately swallowed by
+        // this leaf — callers that need pre-flight validation use
+        // @ref hasState before @ref requestTransition. A separate
+        // future leaf may attach a diagnostic sink (callback or
+        // aggregate Result) if a caller needs visibility into the
+        // rejected drains; that is out of scope here.
         (void) transition(target);
     }
 }

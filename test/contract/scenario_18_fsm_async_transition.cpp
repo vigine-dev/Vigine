@@ -12,8 +12,11 @@
 //
 //   1. RequestsAppliedOnNextProcess  -- multiple producer threads push
 //      requests; nothing happens to the FSM until the controller thread
-//      drains; after the drain the FSM has visited every target in the
-//      order they were pushed and rests on the final target.
+//      drains; after the drain the FSM rests on one of the requested
+//      targets (the snapshot-swap drains everything that landed before
+//      the swap; this case observes the post-drain final state, not
+//      per-target visitation, since onEnter / onExit hooks land in a
+//      later leaf — see FifoOrder for the explicit ordering case).
 //
 //   2. CooperativeNoReentry          -- the controller thread pushes a
 //      follow-up after the drain swap has snapshotted the queue; the
@@ -53,10 +56,11 @@ using FsmAsyncTransition = EngineFixture;
 // Several producer threads each push one request; the controller thread
 // then calls processQueuedTransitions once. Because the producers ran
 // before the drain, the snapshot picked up by the drain contains every
-// pushed target. After the drain current() must equal the *last* target
-// applied — i.e. the last entry in the FIFO snapshot. The producers
-// serialise on the queue mutex, so the order in which they observed the
-// lock is the order the drain replays.
+// pushed target, and after the drain current() ends up on one of the
+// requested targets (the queue-mutex-acquisition order is an
+// implementation detail this test deliberately does not assert on; the
+// dedicated FifoOrder case below covers the deterministic single-thread
+// ordering).
 //
 // We bind the test thread as the controller before the drain so the
 // thread-affinity assert on processQueuedTransitions stays satisfied in
