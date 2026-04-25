@@ -106,6 +106,11 @@ If a task description does not include the project folder layout, use this secti
   `Result<T>`) from infrastructure accessors (non-gated, return `T&`),
   the `subscribeExpiration` self-destruct contract, and the FSM-side
   invalidation listener firing path on `AbstractStateMachine`.
+- [Task system reference](ecs/system.md) — task-side companion to
+  `engine-token.md`. Documents the `ITask::setApi` / `ITask::api()`
+  surface, the gated vs non-gated accessor split as seen from inside a
+  task body, and the `ApiBindingGuard` RAII pattern the task flow
+  drives around every `run()` call.
 
 ## Class diagrams
 
