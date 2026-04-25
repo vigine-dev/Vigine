@@ -3,7 +3,7 @@
 #include "vigine/api/channelfactory/ichannelfactory.h"
 #include "vigine/api/pipelinebuilder/ipipelinebuilder.h"
 #include "vigine/core/threading/ithreadmanager.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 
 namespace vigine::pipelinebuilder
 {

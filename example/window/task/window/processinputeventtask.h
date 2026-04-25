@@ -6,9 +6,9 @@
 #include "windoweventpayload.h"
 
 #include <vigine/abstracttask.h>
-#include <vigine/messaging/isubscriber.h>
-#include <vigine/messaging/isubscriptiontoken.h>
-#include <vigine/messaging/routemode.h>
+#include <vigine/api/messaging/isubscriber.h>
+#include <vigine/api/messaging/isubscriptiontoken.h>
+#include <vigine/api/messaging/routemode.h>
 
 namespace vigine::messaging
 {
@@ -20,7 +20,7 @@ class IMessage;
  *        @ref vigine::messaging::ISubscriber.
  *
  * The task implements @ref vigine::messaging::ISubscriber so an
- * @ref vigine::signalemitter::ISignalEmitter can register it against
+ * @ref vigine::messaging::ISignalEmitter can register it against
  * @ref kMouseButtonDownPayloadTypeId and @ref kKeyDownPayloadTypeId
  * directly. Subscription tokens are owned here through @ref
  * takeSubscriptionToken so the caller that performs the registrations
@@ -74,7 +74,7 @@ class ProcessInputEventTask final : public vigine::AbstractTask,
      * other handler state is torn down.
      *
      * A null token is silently ignored so callers can forward the raw
-     * result of @ref vigine::signalemitter::ISignalEmitter::subscribeSignal
+     * result of @ref vigine::messaging::ISignalEmitter::subscribeSignal
      * without a pre-check.
      */
     void takeSubscriptionToken(

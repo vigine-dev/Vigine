@@ -5,7 +5,7 @@
 #include "vigine/api/actorhost/actorid.h"
 #include "vigine/api/actorhost/iactor.h"
 #include "vigine/api/actorhost/iactormailbox.h"
-#include "vigine/messaging/imessage.h"
+#include "vigine/api/messaging/imessage.h"
 #include "vigine/result.h"
 
 namespace vigine::actorhost

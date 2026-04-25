@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/busid.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/busid.h"
 #include "vigine/result.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/statemachine/stateid.h"

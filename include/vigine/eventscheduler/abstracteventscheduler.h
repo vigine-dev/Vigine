@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/messaging/abstractmessagebus.h"
+#include "vigine/api/messaging/abstractmessagebus.h"
 #include "vigine/eventscheduler/ieventscheduler.h"
 
 namespace vigine::core::threading

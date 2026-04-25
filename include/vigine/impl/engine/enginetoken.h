@@ -67,7 +67,7 @@
 
 #include "vigine/api/engine/abstractengine_token.h"
 #include "vigine/api/engine/iengine_token.h"
-#include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/statemachine/stateid.h"
 
 namespace vigine
@@ -93,10 +93,10 @@ namespace vigine::service
 class IService;
 } // namespace vigine::service
 
-namespace vigine::signalemitter
+namespace vigine::messaging
 {
 class ISignalEmitter;
-} // namespace vigine::signalemitter
+} // namespace vigine::messaging
 
 namespace vigine::statemachine
 {
@@ -159,7 +159,7 @@ class EngineToken final : public AbstractEngineToken
     EngineToken(vigine::statemachine::StateId         boundState,
                 vigine::IContext                     &context,
                 vigine::statemachine::IStateMachine  &stateMachine,
-                vigine::signalemitter::ISignalEmitter *signalEmitter = nullptr);
+                vigine::messaging::ISignalEmitter *signalEmitter = nullptr);
 
     ~EngineToken() override;
 
@@ -189,7 +189,7 @@ class EngineToken final : public AbstractEngineToken
 
     [[nodiscard]] vigine::messaging::IMessageBus &systemBus() noexcept override;
 
-    [[nodiscard]] vigine::signalemitter::ISignalEmitter &
+    [[nodiscard]] vigine::messaging::ISignalEmitter &
         signalEmitter() noexcept override;
 
     [[nodiscard]] vigine::statemachine::IStateMachine &
@@ -305,7 +305,7 @@ class EngineToken final : public AbstractEngineToken
      *        argument.
      *
      * Empty when the engine wiring passes a real
-     * @ref vigine::signalemitter::ISignalEmitter through; in that
+     * @ref vigine::messaging::ISignalEmitter through; in that
      * case @ref _signalEmitter points at the caller-supplied
      * wrapper directly. Holding the stub through a
      * @c std::unique_ptr to the public interface keeps this header
@@ -315,7 +315,7 @@ class EngineToken final : public AbstractEngineToken
      * accessor's @c noexcept contract holds without further
      * synchronisation.
      */
-    std::unique_ptr<vigine::signalemitter::ISignalEmitter> _ownedNullSignalEmitter;
+    std::unique_ptr<vigine::messaging::ISignalEmitter> _ownedNullSignalEmitter;
 
     /**
      * @brief Live pointer to the @ref ISignalEmitter the
@@ -328,7 +328,7 @@ class EngineToken final : public AbstractEngineToken
      * non-null after construction, so the @c noexcept accessor
      * never has to guard against a null.
      */
-    vigine::signalemitter::ISignalEmitter *_signalEmitter;
+    vigine::messaging::ISignalEmitter *_signalEmitter;
 
     /**
      * @brief Subscription that drives the token's invalidation

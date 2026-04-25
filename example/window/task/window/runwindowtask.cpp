@@ -526,7 +526,7 @@ void RunWindowTask::setTextEditorSystem(std::shared_ptr<TextEditorSystem> editor
         _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
 }
 
-void RunWindowTask::setSignalEmitter(vigine::signalemitter::ISignalEmitter *emitter) noexcept
+void RunWindowTask::setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept
 {
     _signalEmitter = emitter;
 }

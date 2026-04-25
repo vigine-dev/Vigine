@@ -13,12 +13,12 @@
 #include "vigine/api/reactivestream/ireactivesubscriber.h"
 #include "vigine/api/reactivestream/ireactivesubscription.h"
 #include "vigine/core/threading/ithreadmanager.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
-#include "vigine/messaging/messagekind.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
 #include "vigine/result.h"
 
 // ---------------------------------------------------------------------------

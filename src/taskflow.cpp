@@ -1,13 +1,13 @@
 #include <vigine/context.h>
 #include <vigine/api/context/icontext.h>
-#include <vigine/messaging/imessage.h>
-#include <vigine/messaging/isubscriber.h>
-#include <vigine/messaging/isubscriptiontoken.h>
-#include <vigine/messaging/messagefilter.h>
-#include <vigine/messaging/messagekind.h>
-#include <vigine/messaging/routemode.h>
-#include <vigine/payload/payloadtypeid.h>
-#include <vigine/signalemitter/isignalemitter.h>
+#include <vigine/api/messaging/imessage.h>
+#include <vigine/api/messaging/isubscriber.h>
+#include <vigine/api/messaging/isubscriptiontoken.h>
+#include <vigine/api/messaging/messagefilter.h>
+#include <vigine/api/messaging/messagekind.h>
+#include <vigine/api/messaging/routemode.h>
+#include <vigine/api/messaging/payload/payloadtypeid.h>
+#include <vigine/api/messaging/isignalemitter.h>
 #include <vigine/taskflow.h>
 #include <vigine/core/threading/irunnable.h>
 #include <vigine/core/threading/ithreadmanager.h>
@@ -58,7 +58,7 @@ public:
                     messaging::CorrelationId correlationId,
                     const messaging::AbstractMessageTarget *target,
                     std::chrono::steady_clock::time_point scheduledFor,
-                    std::unique_ptr<signalemitter::ISignalPayload> payload)
+                    std::unique_ptr<messaging::ISignalPayload> payload)
       : _kind(kind), _payloadTypeId(payloadTypeId), _routeMode(routeMode),
         _correlationId(correlationId), _target(target),
         _scheduledFor(scheduledFor), _payload(std::move(payload)) {}
@@ -106,7 +106,7 @@ private:
   // ScheduledDelivery::onMessage before the source IMessage's dispatch
   // frame unwinds, so by the time the worker thread invokes the target
   // the envelope owns everything the subscriber needs to read.
-  std::unique_ptr<signalemitter::ISignalPayload> _payload;
+  std::unique_ptr<messaging::ISignalPayload> _payload;
 };
 
 // ---------------------------------------------------------------------
@@ -244,10 +244,10 @@ public:
     // / move so the envelope lives on the heap; the payload is cloned
     // through ISignalPayload::clone() so the worker thread sees its
     // own copy of the data, independent of the bus's lifetime.
-    std::unique_ptr<signalemitter::ISignalPayload> clonedPayload;
+    std::unique_ptr<messaging::ISignalPayload> clonedPayload;
     if (const auto *raw = message.payload()) {
       if (const auto *signalPayload =
-              dynamic_cast<const signalemitter::ISignalPayload *>(raw)) {
+              dynamic_cast<const messaging::ISignalPayload *>(raw)) {
         clonedPayload = signalPayload->clone();
       }
     }
@@ -485,7 +485,7 @@ void TaskFlow::setContext(Context *context) {
   });
 }
 
-void TaskFlow::setSignalEmitter(signalemitter::ISignalEmitter *emitter) {
+void TaskFlow::setSignalEmitter(messaging::ISignalEmitter *emitter) {
   _signalEmitter = emitter;
 }
 

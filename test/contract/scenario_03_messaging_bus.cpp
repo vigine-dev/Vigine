@@ -12,12 +12,12 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/messaging/routemode.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/routemode.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>

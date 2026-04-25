@@ -16,7 +16,7 @@
  * header ships the payload contract only.
  *
  * Payload discipline follows the
- * @ref vigine::signalemitter::ISignalPayload contract:
+ * @ref vigine::messaging::ISignalPayload contract:
  *   - Fields are @c const and set at construction time. The bus may
  *     deliver the same payload pointer to multiple subscribers
  *     without copying, so observable state never changes after
@@ -30,8 +30,8 @@
 
 #include <memory>
 
-#include "vigine/payload/payloadtypeid.h"
-#include "vigine/signalemitter/isignalpayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
+#include "vigine/api/messaging/payload/isignalpayload.h"
 #include "vigine/statemachine/stateid.h"
 
 /**
@@ -57,7 +57,7 @@ namespace vigine::messaging::payload
  * machine has just left. Subscribers compare it against their own
  * bound state (if any) to decide whether the signal applies to them.
  */
-class StateInvalidatedPayload final : public vigine::signalemitter::ISignalPayload
+class StateInvalidatedPayload final : public vigine::messaging::ISignalPayload
 {
   public:
     /**
@@ -78,7 +78,7 @@ class StateInvalidatedPayload final : public vigine::signalemitter::ISignalPaylo
         return kStateInvalidatedPayloadTypeId;
     }
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
         clone() const override
     {
         return std::make_unique<StateInvalidatedPayload>(_invalidatedState);

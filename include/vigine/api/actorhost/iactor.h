@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/messaging/imessage.h"
+#include "vigine/api/messaging/imessage.h"
 #include "vigine/result.h"
 
 namespace vigine::actorhost

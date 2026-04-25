@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "vigine/api/channelfactory/ichannel.h"
-#include "vigine/messaging/imessagepayload.h"
+#include "vigine/api/messaging/imessagepayload.h"
 #include "vigine/result.h"
 
 namespace vigine::pipelinebuilder

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/api/reactivestream/ireactivestream.h"
-#include "vigine/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagebus.h"
 
 namespace vigine::reactivestream
 {

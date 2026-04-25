@@ -5,10 +5,10 @@
 #include "vigine/api/requestbus/ifuture.h"
 #include "vigine/api/requestbus/requestconfig.h"
 #include "vigine/api/topicbus/topicid.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/result.h"
 
 namespace vigine::requestbus

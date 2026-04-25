@@ -210,31 +210,6 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/core/threading/threadmanager.h
     ${INCLUDE_DIR}/vigine/core/threading/factory.h
     ${INCLUDE_DIR}/vigine/core/threading/parallel_for.h
-    ${INCLUDE_DIR}/vigine/payload/payloadtypeid.h
-    ${INCLUDE_DIR}/vigine/payload/payloadrange.h
-    ${INCLUDE_DIR}/vigine/payload/ipayloadregistry.h
-    ${INCLUDE_DIR}/vigine/payload/factory.h
-    ${INCLUDE_DIR}/vigine/messaging/kind.h
-    ${INCLUDE_DIR}/vigine/messaging/connectionid.h
-    ${INCLUDE_DIR}/vigine/messaging/targetkind.h
-    ${INCLUDE_DIR}/vigine/messaging/iconnectiontoken.h
-    ${INCLUDE_DIR}/vigine/messaging/ibuscontrolblock.h
-    ${INCLUDE_DIR}/vigine/messaging/connectiontoken.h
-    ${INCLUDE_DIR}/vigine/messaging/abstractmessagetarget.h
-    ${INCLUDE_DIR}/vigine/messaging/busid.h
-    ${INCLUDE_DIR}/vigine/messaging/busconfig.h
-    ${INCLUDE_DIR}/vigine/messaging/messagekind.h
-    ${INCLUDE_DIR}/vigine/messaging/routemode.h
-    ${INCLUDE_DIR}/vigine/messaging/messagefilter.h
-    ${INCLUDE_DIR}/vigine/messaging/subscriptionslot.h
-    ${INCLUDE_DIR}/vigine/messaging/imessagepayload.h
-    ${INCLUDE_DIR}/vigine/messaging/imessage.h
-    ${INCLUDE_DIR}/vigine/messaging/isubscriber.h
-    ${INCLUDE_DIR}/vigine/messaging/isubscriptiontoken.h
-    ${INCLUDE_DIR}/vigine/messaging/imessagebus.h
-    ${INCLUDE_DIR}/vigine/messaging/abstractmessagebus.h
-    ${INCLUDE_DIR}/vigine/messaging/systemmessagebus.h
-    ${INCLUDE_DIR}/vigine/messaging/factory.h
     ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
     ${INCLUDE_DIR}/vigine/api/context/icontext.h
     ${INCLUDE_DIR}/vigine/api/ecs/ientitymanager.h
@@ -276,23 +251,6 @@ set(SOURCES
     ${SRC_DIR}/core/threading/defaultthreadmanager_factories.cpp
     ${SRC_DIR}/core/threading/factory.cpp
     ${SRC_DIR}/core/threading/parallel_for.cpp
-    ${SRC_DIR}/payload/abstractpayloadregistry.h
-    ${SRC_DIR}/payload/abstractpayloadregistry.cpp
-    ${SRC_DIR}/payload/defaultpayloadregistry.h
-    ${SRC_DIR}/payload/defaultpayloadregistry.cpp
-    ${SRC_DIR}/payload/factory.cpp
-    ${SRC_DIR}/messaging/abstractmessagetarget.cpp
-    ${SRC_DIR}/messaging/connectiontoken.cpp
-    ${SRC_DIR}/messaging/ibuscontrolblock_default.h
-    ${SRC_DIR}/messaging/ibuscontrolblock_default.cpp
-    ${SRC_DIR}/messaging/abstractmessagebus.cpp
-    ${SRC_DIR}/messaging/systemmessagebus.cpp
-    ${SRC_DIR}/messaging/createmessagebus.cpp
-    ${SRC_DIR}/messaging/routing/firstmatch.cpp
-    ${SRC_DIR}/messaging/routing/fanout.cpp
-    ${SRC_DIR}/messaging/routing/chain.cpp
-    ${SRC_DIR}/messaging/routing/bubble.cpp
-    ${SRC_DIR}/messaging/routing/broadcast.cpp
 )
 
 # ECS graphics subsystem (#280) -- public interfaces under api/, concrete
@@ -440,18 +398,71 @@ set(SOURCES_CONTEXT_AGGREGATOR
     ${SRC_DIR}/context/factory.cpp
 )
 
-# Signal-emitter facade (R.3.3.1.1 / plan_15) -- public surface.
-set(HEADER_SIGNALEMITTER
-    ${INCLUDE_DIR}/vigine/signalemitter/isignalpayload.h
-    ${INCLUDE_DIR}/vigine/signalemitter/isignalemitter.h
-    ${INCLUDE_DIR}/vigine/signalemitter/abstractsignalemitter.h
-    ${INCLUDE_DIR}/vigine/signalemitter/defaultsignalemitter.h
+# Messaging pyramid (#277) -- public messaging surface (api/messaging/),
+# concrete finals (impl/messaging/), and the payload sub-namespace
+# (api/messaging/payload/). Consolidates the previously separate
+# include/vigine/messaging/, include/vigine/signalemitter/, and
+# include/vigine/payload/ trees into a single api/+impl/ pyramid that
+# matches the post-#242 engine and post-#279/#280 ECS layout.
+set(HEADER_MESSAGING
+    # api/messaging/ -- pure interfaces, abstract bases, value types/enums
+    ${INCLUDE_DIR}/vigine/api/messaging/kind.h
+    ${INCLUDE_DIR}/vigine/api/messaging/connectionid.h
+    ${INCLUDE_DIR}/vigine/api/messaging/targetkind.h
+    ${INCLUDE_DIR}/vigine/api/messaging/iconnectiontoken.h
+    ${INCLUDE_DIR}/vigine/api/messaging/ibuscontrolblock.h
+    ${INCLUDE_DIR}/vigine/api/messaging/abstractmessagetarget.h
+    ${INCLUDE_DIR}/vigine/api/messaging/busid.h
+    ${INCLUDE_DIR}/vigine/api/messaging/busconfig.h
+    ${INCLUDE_DIR}/vigine/api/messaging/messagekind.h
+    ${INCLUDE_DIR}/vigine/api/messaging/routemode.h
+    ${INCLUDE_DIR}/vigine/api/messaging/messagefilter.h
+    ${INCLUDE_DIR}/vigine/api/messaging/subscriptionslot.h
+    ${INCLUDE_DIR}/vigine/api/messaging/imessagepayload.h
+    ${INCLUDE_DIR}/vigine/api/messaging/imessage.h
+    ${INCLUDE_DIR}/vigine/api/messaging/isubscriber.h
+    ${INCLUDE_DIR}/vigine/api/messaging/isubscriptiontoken.h
+    ${INCLUDE_DIR}/vigine/api/messaging/imessagebus.h
+    ${INCLUDE_DIR}/vigine/api/messaging/abstractmessagebus.h
+    ${INCLUDE_DIR}/vigine/api/messaging/factory.h
+    ${INCLUDE_DIR}/vigine/api/messaging/isignalemitter.h
+    ${INCLUDE_DIR}/vigine/api/messaging/abstractsignalemitter.h
+    # api/messaging/payload/ -- payload registry + signal-payload base
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/factory.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/ipayloadregistry.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/isignalpayload.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadrange.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/payloadtypeid.h
+    ${INCLUDE_DIR}/vigine/api/messaging/payload/stateinvalidatedpayload.h
+    # impl/messaging/ -- concrete final messaging types
+    ${INCLUDE_DIR}/vigine/impl/messaging/connectiontoken.h
+    ${INCLUDE_DIR}/vigine/impl/messaging/systemmessagebus.h
+    ${INCLUDE_DIR}/vigine/impl/messaging/signalemitter.h
 )
 
-# Signal-emitter facade (R.3.3.1.1 / plan_15) -- internal concrete + factory.
-set(SOURCES_SIGNALEMITTER
-    ${SRC_DIR}/signalemitter/abstractsignalemitter.cpp
-    ${SRC_DIR}/signalemitter/defaultsignalemitter.cpp
+set(SOURCES_MESSAGING
+    # api/messaging/ -- abstract base implementations
+    ${SRC_DIR}/api/messaging/abstractmessagebus.cpp
+    ${SRC_DIR}/api/messaging/abstractmessagetarget.cpp
+    ${SRC_DIR}/api/messaging/abstractsignalemitter.cpp
+    ${SRC_DIR}/api/messaging/payload/abstractpayloadregistry.h
+    ${SRC_DIR}/api/messaging/payload/abstractpayloadregistry.cpp
+    # impl/messaging/ -- concrete final implementations + factories
+    ${SRC_DIR}/impl/messaging/buscontrolblock.h
+    ${SRC_DIR}/impl/messaging/buscontrolblock.cpp
+    ${SRC_DIR}/impl/messaging/connectiontoken.cpp
+    ${SRC_DIR}/impl/messaging/systemmessagebus.cpp
+    ${SRC_DIR}/impl/messaging/createmessagebus.cpp
+    ${SRC_DIR}/impl/messaging/signalemitter.cpp
+    ${SRC_DIR}/impl/messaging/payloadregistry.h
+    ${SRC_DIR}/impl/messaging/payloadregistry.cpp
+    ${SRC_DIR}/impl/messaging/payload_factory.cpp
+    # routing helpers (single-translation-unit per route mode)
+    ${SRC_DIR}/impl/messaging/routing/firstmatch.cpp
+    ${SRC_DIR}/impl/messaging/routing/fanout.cpp
+    ${SRC_DIR}/impl/messaging/routing/chain.cpp
+    ${SRC_DIR}/impl/messaging/routing/bubble.cpp
+    ${SRC_DIR}/impl/messaging/routing/broadcast.cpp
 )
 
 # Event-scheduler facade -- public surface. The concrete
@@ -727,8 +738,8 @@ add_library(${PROJECT_NAME}
     ${SOURCES_TASKFLOW_CORE}
     ${HEADER_CONTEXT_AGGREGATOR}
     ${SOURCES_CONTEXT_AGGREGATOR}
-    ${HEADER_SIGNALEMITTER}
-    ${SOURCES_SIGNALEMITTER}
+    ${HEADER_MESSAGING}
+    ${SOURCES_MESSAGING}
     ${HEADER_EVENTSCHEDULER}
     ${SOURCES_EVENTSCHEDULER}
     ${HEADER_TOPICBUS}

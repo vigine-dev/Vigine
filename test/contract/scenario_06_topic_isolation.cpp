@@ -17,9 +17,9 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 #include "vigine/api/topicbus/factory.h"
 #include "vigine/api/topicbus/itopicbus.h"

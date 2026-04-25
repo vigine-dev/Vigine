@@ -13,14 +13,14 @@
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/core/threading/ithreadmanager.h"
-#include "vigine/messaging/abstractmessagetarget.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
+#include "vigine/api/messaging/abstractmessagetarget.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
 #include "vigine/result.h"
-#include "vigine/signalemitter/isignalemitter.h"
-#include "vigine/signalemitter/isignalpayload.h"
+#include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/payload/isignalpayload.h"
 #include "vigine/statemachine/abstractstatemachine.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/statemachine/stateid.h"
@@ -43,13 +43,13 @@ namespace
 // lifetime obligations beyond the EngineToken that owns it, and never
 // reaches outside its translation unit.
 // ---------------------------------------------------------------------------
-class NullSignalEmitter final : public vigine::signalemitter::ISignalEmitter
+class NullSignalEmitter final : public vigine::messaging::ISignalEmitter
 {
   public:
     NullSignalEmitter() = default;
 
     [[nodiscard]] vigine::Result emit(
-        std::unique_ptr<vigine::signalemitter::ISignalPayload> /*payload*/) override
+        std::unique_ptr<vigine::messaging::ISignalPayload> /*payload*/) override
     {
         // Drop the payload silently; the stub stands in for an unwired
         // emitter and intentionally does nothing. Callers that need to
@@ -59,7 +59,7 @@ class NullSignalEmitter final : public vigine::signalemitter::ISignalEmitter
 
     [[nodiscard]] vigine::Result emitTo(
         const vigine::messaging::AbstractMessageTarget * /*target*/,
-        std::unique_ptr<vigine::signalemitter::ISignalPayload> /*payload*/) override
+        std::unique_ptr<vigine::messaging::ISignalPayload> /*payload*/) override
     {
         return vigine::Result();
     }
@@ -102,7 +102,7 @@ class NullSignalEmitter final : public vigine::signalemitter::ISignalEmitter
 EngineToken::EngineToken(vigine::statemachine::StateId          boundState,
                          vigine::IContext                      &context,
                          vigine::statemachine::IStateMachine   &stateMachine,
-                         vigine::signalemitter::ISignalEmitter *signalEmitter)
+                         vigine::messaging::ISignalEmitter *signalEmitter)
     : AbstractEngineToken(boundState),
       _context(context),
       _stateMachine(stateMachine),
@@ -277,7 +277,7 @@ vigine::messaging::IMessageBus &EngineToken::systemBus() noexcept
     return _context.systemBus();
 }
 
-vigine::signalemitter::ISignalEmitter &EngineToken::signalEmitter() noexcept
+vigine::messaging::ISignalEmitter &EngineToken::signalEmitter() noexcept
 {
     // _signalEmitter is non-null by the constructor's post-condition:
     // when the engine passes a real wrapper we point at it; otherwise

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "vigine/messaging/imessagepayload.h"
+#include "vigine/api/messaging/imessagepayload.h"
 
 namespace vigine::pipelinebuilder
 {

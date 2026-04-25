@@ -24,8 +24,8 @@
 #include "vigine/api/pipelinebuilder/ipipeline.h"
 #include "vigine/api/pipelinebuilder/ipipelinebuilder.h"
 #include "vigine/api/pipelinebuilder/ipipelinestage.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
