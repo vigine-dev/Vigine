@@ -29,17 +29,26 @@ void DefaultBusControlBlock::markDead() noexcept
     _alive.store(false, std::memory_order_release);
 }
 
-ConnectionId
+SlotAllocation
 DefaultBusControlBlock::allocateSlot(AbstractMessageTarget *target)
 {
     if (target == nullptr)
     {
-        return ConnectionId{};
+        return SlotAllocation{};
     }
     if (!_alive.load(std::memory_order_acquire))
     {
-        return ConnectionId{};
+        return SlotAllocation{};
     }
+
+    // Build the SlotState before taking the registry lock: SlotState's
+    // mutexes are constructed under no lock, and a `bad_alloc` here
+    // bubbles back to the caller without leaving any registry mutation
+    // behind. The shared_ptr is moved into both the registry slot and
+    // the SlotAllocation, so the registry, the dispatch path, and the
+    // ConnectionToken all share one live SlotState — exactly the same
+    // shape as the subscriber side.
+    auto slotState = std::make_shared<SlotState>();
 
     std::unique_lock<std::shared_mutex> lock{_registryMutex};
 
@@ -47,7 +56,7 @@ DefaultBusControlBlock::allocateSlot(AbstractMessageTarget *target)
     // called markDead between the fast-path read and the lock.
     if (!_alive.load(std::memory_order_acquire))
     {
-        return ConnectionId{};
+        return SlotAllocation{};
     }
 
     // Prefer a recycled index so the registry does not grow
@@ -77,8 +86,8 @@ DefaultBusControlBlock::allocateSlot(AbstractMessageTarget *target)
         }
     }
 
-    _registry.emplace(index, Slot{target, generation});
-    return ConnectionId{index, generation};
+    _registry.emplace(index, Slot{target, generation, slotState});
+    return SlotAllocation{ConnectionId{index, generation}, std::move(slotState)};
 }
 
 void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
@@ -94,31 +103,57 @@ void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
         return;
     }
 
-    std::unique_lock<std::shared_mutex> lock{_registryMutex};
-    auto it = _registry.find(id.index);
-    if (it == _registry.end())
+    // Capture the SlotState shared_ptr BEFORE erasing the registry
+    // entry so the lifecycle mutex survives the map removal. Any
+    // dispatch already past the registry lookup owns its own
+    // shared_ptr to the same SlotState; after this capture AND the
+    // erase, the lifecycle mutex below serialises against every such
+    // in-flight onMessage before we return — which is the dtor-blocks
+    // guarantee that the ConnectionToken contract advertises. Mirror
+    // of `unregisterSubscription`.
+    std::shared_ptr<SlotState> state;
     {
-        return;
+        std::unique_lock<std::shared_mutex> lock{_registryMutex};
+        auto it = _registry.find(id.index);
+        if (it == _registry.end())
+        {
+            return;
+        }
+        if (it->second.generation != id.generation)
+        {
+            // The slot was already recycled under a newer generation;
+            // the caller's id is stale and must not touch the live
+            // slot.
+            return;
+        }
+        state = it->second.slotState;
+        // Remember the next generation for this index, erase the slot,
+        // push the index onto the free-list. `allocateSlot` picks it
+        // up on its next call. Previous behaviour left the slot in
+        // place as a null-target tombstone; over long sessions the
+        // registry grew without bound.
+        std::uint32_t nextGen = it->second.generation + 1u;
+        if (nextGen == 0u)
+        {
+            nextGen = 1u;
+        }
+        _nextGenerationByIndex[id.index] = nextGen;
+        _registry.erase(it);
+        _freeIndices.push_back(id.index);
     }
-    if (it->second.generation != id.generation)
+
+    if (state)
     {
-        // The slot was already recycled under a newer generation; the
-        // caller's id is stale and must not touch the live slot.
-        return;
+        // Acquire lifecycleMutex EXCLUSIVELY. Every concurrent
+        // dispatch that reached this slot through `lookup` holds it
+        // SHARED for the duration of onMessage, so the exclusive
+        // acquisition blocks until all of them have returned. Once we
+        // hold the lock we flip `cancelled` so that any later lookup
+        // racing the registry erase observes the flag and returns an
+        // empty guard — matching the subscriber-side flow.
+        std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
+        state->cancelled = true;
     }
-    // Remember the next generation for this index, erase the slot,
-    // push the index onto the free-list. `allocateSlot` picks it
-    // up on its next call. Previous behaviour left the slot in
-    // place as a null-target tombstone; over long sessions the
-    // registry grew without bound.
-    std::uint32_t nextGen = it->second.generation + 1u;
-    if (nextGen == 0u)
-    {
-        nextGen = 1u;
-    }
-    _nextGenerationByIndex[id.index] = nextGen;
-    _registry.erase(it);
-    _freeIndices.push_back(id.index);
 }
 
 std::uint64_t DefaultBusControlBlock::registerSubscription(
@@ -246,7 +281,7 @@ DefaultBusControlBlock::lookup(ConnectionId id) const noexcept
     {
         return {};
     }
-    std::shared_lock<std::shared_mutex> lock{_registryMutex};
+    std::shared_lock<std::shared_mutex> registryLock{_registryMutex};
     auto it = _registry.find(id.index);
     if (it == _registry.end())
     {
@@ -256,11 +291,36 @@ DefaultBusControlBlock::lookup(ConnectionId id) const noexcept
     {
         return {};
     }
-    // Hand the lock over to the caller alongside the pointer. The
-    // RAII guard releases the lock when the caller's scope ends,
-    // so a concurrent unregisterTarget cannot retire the slot while
-    // the caller dereferences `target`.
-    return LookupGuard{it->second.target, std::move(lock)};
+
+    AbstractMessageTarget *const     target    = it->second.target;
+    const std::shared_ptr<SlotState> slotState = it->second.slotState;
+
+    // Acquire the slot's lifecycleMutex in SHARED mode AFTER we have
+    // identified the live slot. This pairs with the exclusive lock
+    // taken by `unregisterTarget`: while we hold the shared lock, the
+    // cancel barrier inside `~ConnectionToken` cannot return, so the
+    // target pointer remains live for the duration of the caller's
+    // onMessage call. Mirror of the subscriber dispatch path in
+    // `AbstractMessageBus::deliver`.
+    std::shared_lock<std::shared_mutex> lifecycleLock;
+    if (slotState)
+    {
+        lifecycleLock = std::shared_lock<std::shared_mutex>{slotState->lifecycleMutex};
+        if (slotState->cancelled)
+        {
+            // The slot was cancelled between the registry probe and
+            // the lifecycle acquisition; an empty guard skips
+            // onMessage and prevents use-after-free on a target whose
+            // owner is mid-destruction.
+            return {};
+        }
+    }
+
+    // Hand both locks over to the caller alongside the pointer. The
+    // RAII guard releases them when the caller's scope ends, so neither
+    // a concurrent unregisterTarget nor a concurrent token destructor
+    // can retire the slot while the caller dereferences `target`.
+    return LookupGuard{target, std::move(registryLock), std::move(lifecycleLock)};
 }
 
 } // namespace vigine::messaging

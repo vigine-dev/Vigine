@@ -43,7 +43,7 @@ class DefaultBusControlBlock final : public IBusControlBlock
     [[nodiscard]] bool isAlive() const noexcept override;
     void               markDead() noexcept override;
 
-    [[nodiscard]] ConnectionId
+    [[nodiscard]] SlotAllocation
         allocateSlot(AbstractMessageTarget *target) override;
     void unregisterTarget(ConnectionId id) noexcept override;
 
@@ -56,13 +56,15 @@ class DefaultBusControlBlock final : public IBusControlBlock
         snapshotSubscriptions() const override;
 
     /**
-     * @brief RAII pair holding the registry's shared lock alongside
-     *        a target pointer.
+     * @brief RAII bundle holding the registry's shared lock plus the
+     *        slot's @c lifecycleMutex shared lock alongside a target
+     *        pointer.
      *
      * Returned by @ref lookup so callers can dereference `target`
-     * without racing a concurrent `unregisterTarget`. The shared
-     * lock releases when the guard goes out of scope. Move-only
-     * (the shared_lock is move-only by construction); copies would
+     * without racing either a concurrent `unregisterTarget` or a
+     * `~ConnectionToken` running the cancel barrier. Both shared locks
+     * release when the guard goes out of scope. Move-only (the
+     * shared_lock members are move-only by construction); copies would
      * accidentally extend the locked region indefinitely.
      *
      * Usage:
@@ -71,33 +73,43 @@ class DefaultBusControlBlock final : public IBusControlBlock
      *       guard.target->onMessage(msg);
      *   }
      *
-     * When the lookup fails (invalid id, stale generation, bus
-     * dead), `guard.target` is `nullptr` and the shared_lock is
-     * not held. Callers only need to null-check `target`.
+     * When the lookup fails (invalid id, stale generation, bus dead,
+     * or the slot already cancelled), `guard.target` is `nullptr` and
+     * neither shared lock is held. Callers only need to null-check
+     * `target`.
+     *
+     * Lock-order with the cancel path is registry(shared) ->
+     * lifecycleMutex(shared); `unregisterTarget` takes
+     * lifecycleMutex(exclusive) AFTER releasing the registry's
+     * exclusive lock and so cannot race with this nesting.
      */
     struct LookupGuard
     {
         AbstractMessageTarget               *target{nullptr};
-        std::shared_lock<std::shared_mutex>  lock{};
+        std::shared_lock<std::shared_mutex>  registryLock{};
+        std::shared_lock<std::shared_mutex>  lifecycleLock{};
     };
 
     /**
      * @brief Returns an RAII guard around the live target pointer
      *        behind @p id, or an empty guard when the slot is stale,
-     *        recycled, or the bus is dead.
+     *        recycled, the bus is dead, or the slot has already been
+     *        cancelled.
      *
-     * The returned guard owns a shared_lock on the registry, so
-     * dereferencing `guard.target` is safe against a concurrent
-     * `unregisterTarget` for the lifetime of the guard. Releasing
-     * the guard releases the lock.
+     * The returned guard owns a shared_lock on the registry AND a
+     * shared_lock on the slot's @c lifecycleMutex, so dereferencing
+     * `guard.target` is safe against a concurrent `unregisterTarget`
+     * AND against a concurrent `~ConnectionToken` driving the cancel
+     * barrier. Releasing the guard releases both locks.
      */
     [[nodiscard]] LookupGuard lookup(ConnectionId id) const noexcept;
 
   private:
     struct Slot
     {
-        AbstractMessageTarget *target{nullptr};
-        std::uint32_t          generation{0};
+        AbstractMessageTarget     *target{nullptr};
+        std::uint32_t              generation{0};
+        std::shared_ptr<SlotState> slotState{};
     };
 
     mutable std::shared_mutex                     _registryMutex;

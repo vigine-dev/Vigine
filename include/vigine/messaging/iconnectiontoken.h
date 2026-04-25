@@ -11,7 +11,8 @@ namespace vigine::messaging
  * only semantic contract is that @ref active reports whether the backing
  * bus and slot are still live; the concrete RAII token
  * (@ref ConnectionToken) adds destructor-driven unregistration, weak
- * tracking of the control block, and a strong-unsubscribe barrier.
+ * tracking of the control block, and a strong-unsubscribe barrier
+ * driven through the slot's @c lifecycleMutex.
  *
  * Ownership: tokens are owned by their target (typically by
  * @ref AbstractMessageTarget holding them in its @c _connections vector).
