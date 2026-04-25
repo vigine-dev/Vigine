@@ -106,5 +106,5 @@ The captured `span` and `dt` must outlive the returned handle —
 - [`thread-affinity.md`](thread-affinity.md) — per-affinity dispatch
   semantics, including why `Named` cannot ride the generic schedule
   path.
-- [`fsm-threading.md`](fsm-threading.md) — controller-thread invariant;
-  bodies dispatched from a pool worker must not poke FSM state.
+- FSM safety note — preserve the controller-thread invariant; bodies
+  dispatched from a pool worker must not poke FSM state.
