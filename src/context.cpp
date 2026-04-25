@@ -1,6 +1,6 @@
 #include "vigine/context.h"
 
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/ecs/platform/windowsystem.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"

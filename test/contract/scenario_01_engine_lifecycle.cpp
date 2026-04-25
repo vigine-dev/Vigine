@@ -12,7 +12,7 @@
 #include "fixtures/engine_fixture.h"
 
 #include "vigine/api/context/icontext.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"

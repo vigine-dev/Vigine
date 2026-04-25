@@ -2,7 +2,7 @@
 #include "loadtexturestask.h"
 
 #include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/ecs/render/rendersystem.h>
 #include <vigine/ecs/render/texturecomponent.h>
 #include <vigine/property.h>

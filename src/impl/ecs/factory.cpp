@@ -1,4 +1,4 @@
-#include "vigine/ecs/factory.h"
+#include "vigine/impl/ecs/factory.h"
 
 #include <memory>
 

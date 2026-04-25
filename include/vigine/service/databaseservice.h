@@ -12,7 +12,7 @@
  */
 
 #include "vigine/abstractservice.h"
-#include "vigine/ecs/entity.h"
+#include "vigine/impl/ecs/entity.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/experimental/ecs/postgresql/impl/column.h"
 #include "vigine/experimental/ecs/postgresql/impl/databaseconfiguration.h"

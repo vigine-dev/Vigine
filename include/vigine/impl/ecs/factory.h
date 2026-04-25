@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/iecs.h"
 
 namespace vigine::ecs
 {

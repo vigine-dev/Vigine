@@ -4,8 +4,8 @@
 #include <shared_mutex>
 #include <vector>
 
-#include "vigine/ecs/ecstypes.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/ecstypes.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/core/graph/abstractgraph.h"
 #include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"

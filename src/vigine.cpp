@@ -1,7 +1,7 @@
 #include "vigine/vigine.h"
 
 #include "vigine/context.h"
-#include "vigine/ecs/entitymanager.h"
+#include "vigine/impl/ecs/entitymanager.h"
 #include "vigine/statemachine.h"
 #include "vigine/core/threading/factory.h"
 #include "vigine/core/threading/ithreadmanager.h"

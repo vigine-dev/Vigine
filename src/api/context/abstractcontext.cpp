@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "vigine/api/service/abstractservice.h"
-#include "vigine/ecs/factory.h"
+#include "vigine/impl/ecs/factory.h"
 #include "vigine/messaging/factory.h"
 #include "vigine/statemachine/factory.h"
 #include "vigine/taskflow/factory.h"

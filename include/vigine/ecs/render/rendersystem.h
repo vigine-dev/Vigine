@@ -6,7 +6,7 @@
  */
 
 #include "vigine/base/macros.h"
-#include "vigine/ecs/abstractsystem.h"
+#include "vigine/api/ecs/abstractsystem.h"
 #include "vigine/ecs/render/camera.h"
 #include "vigine/ecs/render/pipelinecache.h"
 #include "vigine/ecs/render/textcomponent.h"

@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "vigine/ecs/ecstypes.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/ecstypes.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/result.h"
 
 namespace vigine::ecs

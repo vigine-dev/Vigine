@@ -1,15 +1,17 @@
-#include "vigine/ecs/entitymanager.h"
+#include "vigine/impl/ecs/entitymanager.h"
 
-#include "vigine/ecs/entity.h"
+#include "vigine/impl/ecs/entity.h"
 
 vigine::Entity *vigine::EntityManager::createEntity()
 {
-    _entities.push_back(std::make_unique<vigine::Entity>());
+    // Stamp a fresh non-zero id so the entity can be distinguished
+    // from the default-constructed sentinel that reports id() == 0.
+    _entities.push_back(std::make_unique<vigine::Entity>(_nextId++));
 
     return _entities.back().get();
 }
 
-vigine::EntityManager::~EntityManager() {}
+vigine::EntityManager::~EntityManager() = default;
 
 void vigine::EntityManager::removeEntity(Entity *entity)
 {
@@ -29,4 +31,4 @@ vigine::Entity *vigine::EntityManager::getEntityByAlias(const std::string &alias
     return nullptr;
 }
 
-vigine::EntityManager::EntityManager() {}
+vigine::EntityManager::EntityManager() = default;

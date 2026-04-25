@@ -1,7 +1,7 @@
 #include "checkbdshecmetask.h"
 
-#include "vigine/ecs/entity.h"
-#include "vigine/ecs/entitymanager.h"
+#include "vigine/impl/ecs/entity.h"
+#include "vigine/impl/ecs/entitymanager.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
 #include <vigine/service/databaseservice.h>

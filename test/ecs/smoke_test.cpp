@@ -11,9 +11,9 @@
 // isolation.
 // ---------------------------------------------------------------------------
 
-#include "vigine/ecs/ecstypes.h"
-#include "vigine/ecs/factory.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/ecstypes.h"
+#include "vigine/api/ecs/iecs.h"
+#include "vigine/impl/ecs/factory.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>

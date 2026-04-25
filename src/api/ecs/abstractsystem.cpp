@@ -1,4 +1,4 @@
-#include "vigine/ecs/abstractsystem.h"
+#include "vigine/api/ecs/abstractsystem.h"
 
 vigine::SystemName vigine::AbstractSystem::name() { return _name; }
 
