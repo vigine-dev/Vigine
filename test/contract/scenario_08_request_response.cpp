@@ -31,13 +31,13 @@
 #include "vigine/messaging/isubscriptiontoken.h"
 #include "vigine/messaging/routemode.h"
 #include "vigine/payload/payloadtypeid.h"
-#include "vigine/requestbus/defaultrequestbus.h"
-#include "vigine/requestbus/ifuture.h"
-#include "vigine/requestbus/irequestbus.h"
-#include "vigine/requestbus/requestconfig.h"
-#include "vigine/result.h"
+#include "vigine/api/requestbus/factory.h"
+#include "vigine/api/requestbus/ifuture.h"
+#include "vigine/api/requestbus/irequestbus.h"
+#include "vigine/api/requestbus/requestconfig.h"
+#include "vigine/api/topicbus/topicid.h"
 #include "vigine/core/threading/ithreadmanager.h"
-#include "vigine/topicbus/topicid.h"
+#include "vigine/result.h"
 
 #include <gtest/gtest.h>
 

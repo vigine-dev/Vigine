@@ -502,108 +502,110 @@ endif()
 
 # Topic-bus facade (R.3.3.1.3 / plan_17) -- public surface.
 set(HEADER_TOPICBUS
-    ${INCLUDE_DIR}/vigine/topicbus/topicid.h
-    ${INCLUDE_DIR}/vigine/topicbus/itopicbus.h
-    ${INCLUDE_DIR}/vigine/topicbus/abstracttopicbus.h
-    ${INCLUDE_DIR}/vigine/topicbus/defaulttopicbus.h
-    ${INCLUDE_DIR}/vigine/topicbus/factory.h
+    ${INCLUDE_DIR}/vigine/api/topicbus/topicid.h
+    ${INCLUDE_DIR}/vigine/api/topicbus/itopicbus.h
+    ${INCLUDE_DIR}/vigine/api/topicbus/abstracttopicbus.h
+    ${INCLUDE_DIR}/vigine/api/topicbus/factory.h
+    ${INCLUDE_DIR}/vigine/impl/topicbus/topicbus.h
 )
 
 # Topic-bus facade (R.3.3.1.3 / plan_17) -- internal concrete + factory.
 set(SOURCES_TOPICBUS
-    ${SRC_DIR}/topicbus/abstracttopicbus.cpp
-    ${SRC_DIR}/topicbus/defaulttopicbus.cpp
+    ${SRC_DIR}/api/topicbus/abstracttopicbus.cpp
+    ${SRC_DIR}/impl/topicbus/topicbus.cpp
     ${SRC_DIR}/topicbus/factory.cpp
 )
 
 # Channel factory facade (R.3.3.1.4 / plan_18) -- public surface.
 set(HEADER_CHANNELFACTORY
-    ${INCLUDE_DIR}/vigine/channelfactory/channelkind.h
-    ${INCLUDE_DIR}/vigine/channelfactory/ichannel.h
-    ${INCLUDE_DIR}/vigine/channelfactory/ichannelfactory.h
-    ${INCLUDE_DIR}/vigine/channelfactory/abstractchannelfactory.h
-    ${INCLUDE_DIR}/vigine/channelfactory/defaultchannelfactory.h
-    ${INCLUDE_DIR}/vigine/channelfactory/factory.h
+    ${INCLUDE_DIR}/vigine/api/channelfactory/channelkind.h
+    ${INCLUDE_DIR}/vigine/api/channelfactory/ichannel.h
+    ${INCLUDE_DIR}/vigine/api/channelfactory/ichannelfactory.h
+    ${INCLUDE_DIR}/vigine/api/channelfactory/abstractchannelfactory.h
+    ${INCLUDE_DIR}/vigine/api/channelfactory/factory.h
+    ${INCLUDE_DIR}/vigine/impl/channelfactory/channelfactory.h
 )
 
 # Channel factory facade (R.3.3.1.4 / plan_18) -- internal concrete + factory.
 set(SOURCES_CHANNELFACTORY
-    ${SRC_DIR}/channelfactory/abstractchannelfactory.cpp
+    ${SRC_DIR}/api/channelfactory/abstractchannelfactory.cpp
+    ${SRC_DIR}/impl/channelfactory/channelfactory.cpp
     ${SRC_DIR}/channelfactory/defaultchannel.h
     ${SRC_DIR}/channelfactory/defaultchannel.cpp
-    ${SRC_DIR}/channelfactory/defaultchannelfactory.cpp
     ${SRC_DIR}/channelfactory/factory.cpp
 )
 
 # Request-bus facade (R.3.3.2.1 / plan_19) -- public surface.
 set(HEADER_REQUESTBUS
-    ${INCLUDE_DIR}/vigine/requestbus/ifuture.h
-    ${INCLUDE_DIR}/vigine/requestbus/requestconfig.h
-    ${INCLUDE_DIR}/vigine/requestbus/irequestbus.h
-    ${INCLUDE_DIR}/vigine/requestbus/abstractrequestbus.h
-    ${INCLUDE_DIR}/vigine/requestbus/defaultrequestbus.h
-    ${INCLUDE_DIR}/vigine/requestbus/factory.h
+    ${INCLUDE_DIR}/vigine/api/requestbus/ifuture.h
+    ${INCLUDE_DIR}/vigine/api/requestbus/requestconfig.h
+    ${INCLUDE_DIR}/vigine/api/requestbus/irequestbus.h
+    ${INCLUDE_DIR}/vigine/api/requestbus/abstractrequestbus.h
+    ${INCLUDE_DIR}/vigine/api/requestbus/factory.h
+    ${INCLUDE_DIR}/vigine/impl/requestbus/requestbus.h
 )
 
 # Request-bus facade (R.3.3.2.1 / plan_19) -- internal concrete + factory.
 set(SOURCES_REQUESTBUS
-    ${SRC_DIR}/requestbus/abstractrequestbus.cpp
-    ${SRC_DIR}/requestbus/defaultrequestbus.cpp
+    ${SRC_DIR}/api/requestbus/abstractrequestbus.cpp
+    ${SRC_DIR}/impl/requestbus/requestbus.cpp
+    ${SRC_DIR}/requestbus/factory.cpp
 )
 
 # Reactive-stream facade -- public surface. The `factory.h` entry
 # matches the convention used by every other facade (signal / topic
 # / channel / request / actor / pipeline / event scheduler): a
 # factory-only public header that does not pull the concrete
-# `DefaultReactiveStream` into callers' translation units.
+# `ReactiveStream` into callers' translation units.
 set(HEADER_REACTIVESTREAM
-    ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscription.h
-    ${INCLUDE_DIR}/vigine/reactivestream/ireactivesubscriber.h
-    ${INCLUDE_DIR}/vigine/reactivestream/ireactivepublisher.h
-    ${INCLUDE_DIR}/vigine/reactivestream/ireactivestream.h
-    ${INCLUDE_DIR}/vigine/reactivestream/abstractreactivestream.h
-    ${INCLUDE_DIR}/vigine/reactivestream/defaultreactivestream.h
-    ${INCLUDE_DIR}/vigine/reactivestream/factory.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/ireactivesubscription.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/ireactivesubscriber.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/ireactivepublisher.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/ireactivestream.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/abstractreactivestream.h
+    ${INCLUDE_DIR}/vigine/api/reactivestream/factory.h
+    ${INCLUDE_DIR}/vigine/impl/reactivestream/reactivestream.h
 )
 
 # Reactive-stream facade (R.3.3.2.2 / plan_20) -- internal concrete + factory.
 set(SOURCES_REACTIVESTREAM
-    ${SRC_DIR}/reactivestream/abstractreactivestream.cpp
-    ${SRC_DIR}/reactivestream/defaultreactivestream.cpp
+    ${SRC_DIR}/api/reactivestream/abstractreactivestream.cpp
+    ${SRC_DIR}/impl/reactivestream/reactivestream.cpp
+    ${SRC_DIR}/reactivestream/factory.cpp
 )
 
 # Actor-host facade (R.3.3.2.3 / plan_21) -- public surface.
 set(HEADER_ACTORHOST
-    ${INCLUDE_DIR}/vigine/actorhost/actorid.h
-    ${INCLUDE_DIR}/vigine/actorhost/iactor.h
-    ${INCLUDE_DIR}/vigine/actorhost/iactormailbox.h
-    ${INCLUDE_DIR}/vigine/actorhost/iactorhost.h
-    ${INCLUDE_DIR}/vigine/actorhost/abstractactorhost.h
-    ${INCLUDE_DIR}/vigine/actorhost/defaultactorhost.h
-    ${INCLUDE_DIR}/vigine/actorhost/factory.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/actorid.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/iactor.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/iactormailbox.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/iactorhost.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/abstractactorhost.h
+    ${INCLUDE_DIR}/vigine/api/actorhost/factory.h
+    ${INCLUDE_DIR}/vigine/impl/actorhost/actorhost.h
 )
 
 # Actor-host facade (R.3.3.2.3 / plan_21) -- internal concrete + factory.
 set(SOURCES_ACTORHOST
-    ${SRC_DIR}/actorhost/abstractactorhost.cpp
-    ${SRC_DIR}/actorhost/defaultactorhost.cpp
+    ${SRC_DIR}/api/actorhost/abstractactorhost.cpp
+    ${SRC_DIR}/impl/actorhost/actorhost.cpp
     ${SRC_DIR}/actorhost/factory.cpp
 )
 
 # Pipeline-builder facade (R.3.3.2.4 / plan_22) -- public surface.
 set(HEADER_PIPELINEBUILDER
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipelinestage.h
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipeline.h
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/ipipelinebuilder.h
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/abstractpipelinebuilder.h
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/defaultpipelinebuilder.h
-    ${INCLUDE_DIR}/vigine/pipelinebuilder/factory.h
+    ${INCLUDE_DIR}/vigine/api/pipelinebuilder/ipipelinestage.h
+    ${INCLUDE_DIR}/vigine/api/pipelinebuilder/ipipeline.h
+    ${INCLUDE_DIR}/vigine/api/pipelinebuilder/ipipelinebuilder.h
+    ${INCLUDE_DIR}/vigine/api/pipelinebuilder/abstractpipelinebuilder.h
+    ${INCLUDE_DIR}/vigine/api/pipelinebuilder/factory.h
+    ${INCLUDE_DIR}/vigine/impl/pipelinebuilder/pipelinebuilder.h
 )
 
 # Pipeline-builder facade (R.3.3.2.4 / plan_22) -- internal concrete + factory.
 set(SOURCES_PIPELINEBUILDER
-    ${SRC_DIR}/pipelinebuilder/abstractpipelinebuilder.cpp
-    ${SRC_DIR}/pipelinebuilder/defaultpipelinebuilder.cpp
+    ${SRC_DIR}/api/pipelinebuilder/abstractpipelinebuilder.cpp
+    ${SRC_DIR}/impl/pipelinebuilder/pipelinebuilder.cpp
     ${SRC_DIR}/pipelinebuilder/factory.cpp
 )
 

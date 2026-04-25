@@ -3,10 +3,10 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/messaging/imessagepayload.h"
 #include "vigine/payload/payloadtypeid.h"
-#include "vigine/reactivestream/defaultreactivestream.h"
-#include "vigine/reactivestream/ireactivestream.h"
-#include "vigine/reactivestream/ireactivesubscriber.h"
-#include "vigine/reactivestream/ireactivesubscription.h"
+#include "vigine/api/reactivestream/ireactivestream.h"
+#include "vigine/api/reactivestream/ireactivesubscriber.h"
+#include "vigine/api/reactivestream/ireactivesubscription.h"
+#include "vigine/impl/reactivestream/reactivestream.h"
 #include "vigine/result.h"
 #include "vigine/core/threading/factory.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -151,7 +151,7 @@ class ReactiveStreamSmoke : public ::testing::Test
         cfg.backpressure = BackpressurePolicy::Error;
         _bus = createMessageBus(cfg, *_tm);
 
-        _stream = std::make_unique<DefaultReactiveStream>(*_bus, *_tm);
+        _stream = std::make_unique<ReactiveStream>(*_bus, *_tm);
     }
 
     void TearDown() override
@@ -173,7 +173,7 @@ class ReactiveStreamSmoke : public ::testing::Test
 
     std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<IMessageBus>                        _bus;
-    std::unique_ptr<DefaultReactiveStream>              _stream;
+    std::unique_ptr<ReactiveStream>              _stream;
 };
 
 // ---------------------------------------------------------------------------

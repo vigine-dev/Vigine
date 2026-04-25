@@ -7,16 +7,15 @@
 #include "vigine/messaging/isubscriptiontoken.h"
 #include "vigine/messaging/messagekind.h"
 #include "vigine/payload/payloadtypeid.h"
-#include "vigine/requestbus/defaultrequestbus.h"
-#include "vigine/requestbus/factory.h"
-#include "vigine/requestbus/ifuture.h"
-#include "vigine/requestbus/irequestbus.h"
-#include "vigine/requestbus/requestconfig.h"
+#include "vigine/api/requestbus/factory.h"
+#include "vigine/api/requestbus/ifuture.h"
+#include "vigine/api/requestbus/irequestbus.h"
+#include "vigine/api/requestbus/requestconfig.h"
 #include "vigine/result.h"
 #include "vigine/core/threading/factory.h"
 #include "vigine/core/threading/ithreadmanager.h"
 #include "vigine/core/threading/threadmanagerconfig.h"
-#include "vigine/topicbus/topicid.h"
+#include "vigine/api/topicbus/topicid.h"
 
 #include <gtest/gtest.h>
 
