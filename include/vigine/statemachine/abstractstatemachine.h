@@ -1,7 +1,9 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <memory>
+#include <thread>
 
 #include "vigine/result.h"
 #include "vigine/statemachine/istatemachine.h"
@@ -107,6 +109,11 @@ class AbstractStateMachine : public IStateMachine
     [[nodiscard]] RouteMode routeMode() const noexcept override;
     void                    setRouteMode(RouteMode mode) noexcept override;
 
+    // ------ IStateMachine: thread affinity ------
+
+    void                          bindToControllerThread(std::thread::id controllerId) override;
+    [[nodiscard]] std::thread::id controllerThread() const noexcept override;
+
     AbstractStateMachine(const AbstractStateMachine &)            = delete;
     AbstractStateMachine &operator=(const AbstractStateMachine &) = delete;
     AbstractStateMachine(AbstractStateMachine &&)                 = delete;
@@ -141,6 +148,25 @@ class AbstractStateMachine : public IStateMachine
      * @ref transition instead.
      */
     [[nodiscard]] StateId defaultState() const noexcept;
+
+    /**
+     * @brief Debug-only thread-affinity gate for sync mutators.
+     *
+     * Reads the controller binding installed through
+     * @ref bindToControllerThread. When a binding is present and the
+     * current thread is not the controller, the helper fires an
+     * @c assert in Debug builds. Release builds compile the body to a
+     * no-op — the assert is wrapped in @c \#ifndef NDEBUG so the helper
+     * disappears entirely with optimisation on. When no binding has
+     * been installed yet the helper is a no-op too, matching the
+     * "un-bound = assert inactive" contract documented on
+     * @ref bindToControllerThread.
+     *
+     * @c noexcept so it stays safe to call from @c noexcept mutators
+     * if any arrive in the future; today every call-site is a
+     * plain mutator, but the gate must never throw by design.
+     */
+    void checkThreadAffinity() const noexcept;
 
   private:
     /**
@@ -186,6 +212,26 @@ class AbstractStateMachine : public IStateMachine
      * reason as @c _current — a single-byte enum, always lock-free.
      */
     std::atomic<RouteMode> _routeMode{RouteMode::Bubble};
+
+    /**
+     * @brief Controller thread binding (one-shot, default-constructed
+     *        sentinel means @e unbound).
+     *
+     * Installed once through @ref bindToControllerThread via a
+     * compare-exchange on the default-constructed @c std::thread::id
+     * sentinel, so a second bind attempt observes a non-sentinel
+     * expected value and fails — Debug fires the contract assert,
+     * Release keeps the original binding silently. Read back with
+     * acquire semantics so the debug gate in @ref checkThreadAffinity
+     * and the public @ref controllerThread getter both observe the
+     * latest published value.
+     *
+     * Atomic because the binding is installed by the controller
+     * thread but the @ref controllerThread getter is documented as
+     * thread-safe; @c std::atomic<std::thread::id> is lock-free on
+     * every supported target.
+     */
+    std::atomic<std::thread::id> _controllerThreadId{};
 };
 
 } // namespace vigine::statemachine

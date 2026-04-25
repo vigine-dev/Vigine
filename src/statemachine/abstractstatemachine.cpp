@@ -1,6 +1,8 @@
 #include "vigine/statemachine/abstractstatemachine.h"
 
+#include <cassert>
 #include <memory>
+#include <thread>
 
 #include "statemachine/statetopology.h"
 #include "vigine/result.h"
@@ -56,6 +58,7 @@ StateId AbstractStateMachine::defaultState() const noexcept
 
 StateId AbstractStateMachine::addState()
 {
+    checkThreadAffinity();
     return _topology->addState();
 }
 
@@ -70,6 +73,7 @@ bool AbstractStateMachine::hasState(StateId state) const noexcept
 
 Result AbstractStateMachine::addChildState(StateId parent, StateId child)
 {
+    checkThreadAffinity();
     return _topology->addChildEdge(parent, child);
 }
 
@@ -91,6 +95,7 @@ bool AbstractStateMachine::isAncestorOf(StateId ancestor, StateId descendant) co
 
 Result AbstractStateMachine::setInitial(StateId state)
 {
+    checkThreadAffinity();
     if (!_topology->hasState(state))
     {
         return Result(Result::Code::Error, "initial state not registered");
@@ -101,6 +106,7 @@ Result AbstractStateMachine::setInitial(StateId state)
 
 Result AbstractStateMachine::transition(StateId state)
 {
+    checkThreadAffinity();
     if (!_topology->hasState(state))
     {
         return Result(Result::Code::Error, "transition target not registered");
@@ -127,7 +133,61 @@ RouteMode AbstractStateMachine::routeMode() const noexcept
 
 void AbstractStateMachine::setRouteMode(RouteMode mode) noexcept
 {
+    checkThreadAffinity();
     _routeMode = mode;
+}
+
+// ---------------------------------------------------------------------------
+// IStateMachine: thread affinity.
+//
+// bindToControllerThread is a one-shot contract: the first successful call
+// installs the binding, a second call is rejected. Implementing the
+// one-shot with compare_exchange_strong on the default-constructed
+// sentinel lets the bind remain lock-free and also lets the
+// checkThreadAffinity gate observe the published id with acquire
+// semantics without taking a mutex. The contract says Debug asserts on a
+// repeat bind and Release silently keeps the original — that is exactly
+// the behaviour a failing compare_exchange gives us: when the CAS fails
+// Release simply returns, leaving the first-install id untouched.
+// ---------------------------------------------------------------------------
+
+void AbstractStateMachine::bindToControllerThread(std::thread::id controllerId)
+{
+    std::thread::id expected{}; // default-constructed = unbound sentinel
+    if (!_controllerThreadId.compare_exchange_strong(
+            expected,
+            controllerId,
+            std::memory_order_release,
+            std::memory_order_acquire))
+    {
+        assert(false && "AbstractStateMachine::bindToControllerThread called twice");
+    }
+}
+
+std::thread::id AbstractStateMachine::controllerThread() const noexcept
+{
+    return _controllerThreadId.load(std::memory_order_acquire);
+}
+
+// ---------------------------------------------------------------------------
+// checkThreadAffinity: Debug-only gate at the entry of every sync mutator.
+//
+// The unbound case (default-constructed id sentinel) is intentionally a
+// no-op so the 191 existing tests — which never bind — keep passing
+// unchanged. The Release case disappears entirely because the whole
+// body is wrapped in @c \#ifndef NDEBUG.
+// ---------------------------------------------------------------------------
+
+void AbstractStateMachine::checkThreadAffinity() const noexcept
+{
+#ifndef NDEBUG
+    const auto bound = _controllerThreadId.load(std::memory_order_acquire);
+    if (bound != std::thread::id{})
+    {
+        assert(std::this_thread::get_id() == bound
+               && "AbstractStateMachine: sync mutation from non-controller thread");
+    }
+#endif
 }
 
 } // namespace vigine::statemachine
