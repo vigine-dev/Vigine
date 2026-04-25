@@ -687,6 +687,7 @@ add_executable(${FULL_CONTRACT_TARGET}
     contract/scenario_14_statemachine_hsm.cpp
     contract/scenario_18_fsm_async_transition.cpp
     contract/scenario_21_stale_engine_token.cpp
+    contract/scenario_22_token_expiration_callback.cpp
 )
 
 target_include_directories(${FULL_CONTRACT_TARGET}
