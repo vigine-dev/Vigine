@@ -14,11 +14,12 @@ AbstractState *StateMachine::addState(StateUPtr state)
         return nullptr;
 
     // Propagate the state machine's context binding only when one is
-    // installed. The constructor may receive a null context on the
-    // legacy path (Engine wires a non-null Context, but tests can
-    // exercise the machine before any binding); the state in that
-    // case keeps its default null binding until a real setContext
-    // propagates later.
+    // installed. StateMachine receives its Context once via the private
+    // constructor (Engine-only), so production callers always see a
+    // non-null binding here; the null branch covers tests that
+    // instantiate StateMachine through a friend hook before any Engine
+    // wiring. The state keeps its default null binding in that case --
+    // there is no later propagation step on StateMachine.
     if (_context != nullptr)
         state->setContext(*_context);
     // Store the state

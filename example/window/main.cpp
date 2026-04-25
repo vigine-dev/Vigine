@@ -39,7 +39,7 @@
 using namespace vigine;
 
 std::unique_ptr<TaskFlow> createInitTaskFlow(messaging::ISignalEmitter *signalEmitter,
-                                             Context *context,
+                                             Context &context,
                                              std::shared_ptr<TextEditState> textEditState,
                                              std::shared_ptr<TextEditorSystem> textEditorSystem)
 {
@@ -48,9 +48,10 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(messaging::ISignalEmitter *signalEm
     // non-Any branch can reach the engine-owned IThreadManager (see
     // TaskFlow::signal and the accompanying code comment). The
     // downcast happens once in main(); here we simply install it. The
-    // setContext signature now takes Context& so we dereference the
-    // non-null pointer received from main() (asserted there).
-    taskFlow->setContext(*context);
+    // setContext signature takes Context& so this function follows
+    // suit -- the parameter is a reference, matching the non-null
+    // contract enforced at the call site.
+    taskFlow->setContext(context);
 
     auto *initWindow          = taskFlow->addTask(std::make_unique<InitWindowTask>());
     auto *initVulkan          = taskFlow->addTask(std::make_unique<InitVulkanTask>());
@@ -81,11 +82,12 @@ std::unique_ptr<TaskFlow> createInitTaskFlow(messaging::ISignalEmitter *signalEm
     // Pool affinity wraps the subscriber in a scheduled-delivery adapter
     // that hands the clone to IThreadManager::schedule. The engine's
     // Context owns a real IThreadManager (Engine::Engine plumbs it on
-    // construction), and main() hands that concrete Context* into
-    // createInitTaskFlow, which installs it via taskFlow->setContext(context)
-    // above. Input handlers therefore run on a pool worker thread, off
-    // the Win32 message pump thread, and clicking the window does not
-    // stall rendering if the handler grows heavier later.
+    // construction), and main() hands that concrete Context into
+    // createInitTaskFlow by reference, which installs it via
+    // taskFlow->setContext(context) above. Input handlers therefore run
+    // on a pool worker thread, off the Win32 message pump thread, and
+    // clicking the window does not stall rendering if the handler grows
+    // heavier later.
     static_cast<void>(taskFlow->signal(runWindow, processInputEventTask,
                                        kMouseButtonDownPayloadTypeId,
                                        core::threading::ThreadAffinity::Pool));
@@ -171,7 +173,7 @@ int main()
     auto closePtr         = stMachine->addState(std::move(closeState));
 
     initPtr->setTaskFlow(
-        createInitTaskFlow(signalEmitter.get(), legacyCtx, textEditState, textEditorSystem));
+        createInitTaskFlow(signalEmitter.get(), *legacyCtx, textEditState, textEditorSystem));
     workPtr->setTaskFlow(createWorkTaskFlow());
     errorPtr->setTaskFlow(createErrorTaskFlow());
     closePtr->setTaskFlow(createCloseTaskFlow());
