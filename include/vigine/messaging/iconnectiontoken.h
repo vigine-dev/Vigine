@@ -59,11 +59,21 @@ class IConnectionToken
     /**
      * @brief Returns @c true when the subscription slot is still live.
      *
-     * A token becomes inactive when the underlying bus is marked dead
-     * (either through @ref IBusControlBlock::markDead or the bus being
-     * destroyed), when the token's slot has been explicitly
-     * unregistered, or after @ref cancel has been called. Once
-     * @ref active returns @c false, it never returns @c true again.
+     * A token becomes inactive when any of the following happen:
+     *  - @ref cancel is called on the token (the same atomic flag
+     *    that drives the unregister-and-barrier sequence is also
+     *    consulted here, so once @ref cancel has run @ref active
+     *    must report @c false);
+     *  - the slot is explicitly unregistered out-of-band (e.g. the
+     *    bus drives @c unregisterTarget on its own and flips the
+     *    shared @ref SlotState's @c cancelled flag without going
+     *    through this token's @ref cancel) — implementations MUST
+     *    consult that flag in addition to their own internal one;
+     *  - the underlying bus is marked dead (either through
+     *    @ref IBusControlBlock::markDead or the bus being destroyed).
+     *
+     * Once @ref active returns @c false it never returns @c true
+     * again.
      */
     [[nodiscard]] virtual bool active() const noexcept = 0;
 

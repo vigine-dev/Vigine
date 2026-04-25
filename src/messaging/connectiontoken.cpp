@@ -93,6 +93,24 @@ bool ConnectionToken::active() const noexcept
     {
         return false;
     }
+    // The slot's shared SlotState may also be flipped from outside
+    // this token — for example when the bus drives unregisterTarget
+    // on its own (programmatic teardown) or when a sibling cancel
+    // path on the same SlotState ran without going through this
+    // token's own _cancelled atomic. The flag is a plain bool, and
+    // every writer flips it under an exclusive lock on
+    // lifecycleMutex; a reader that touched it without any lock
+    // would race with that exclusive write. We therefore take a
+    // shared_lock for the read so concurrent readers stay parallel
+    // while writers still get exclusive ownership during the flip.
+    if (_slotState)
+    {
+        std::shared_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
+        if (_slotState->cancelled)
+        {
+            return false;
+        }
+    }
     auto ctrl = _control.lock();
     return static_cast<bool>(ctrl) && ctrl->isAlive();
 }

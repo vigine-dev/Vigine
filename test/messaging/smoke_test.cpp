@@ -674,4 +674,50 @@ TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
     EXPECT_EQ(block->unregisterCalls(), 1u);
 }
 
+// ---------------------------------------------------------------------------
+// Case 11 -- ConnectionToken::active() honours an explicit unregister.
+//
+// Pins the L-B6 contract: once a token has been cancelled (which
+// trips its own atomic _cancelled flag AND, on the way through, the
+// shared SlotState->cancelled flag under lifecycleMutex), active()
+// must report false even though the FakeBusControlBlock is still
+// alive and reachable through the weak_ptr. Without the new
+// _cancelled / _slotState->cancelled short-circuits inside
+// ConnectionToken::active(), the call would still walk all the way
+// down to ctrl->isAlive() and return true.
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, ConnectionTokenActiveHonorsCancel)
+{
+    auto block      = std::make_shared<FakeBusControlBlock>();
+    auto allocation = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    auto token = std::make_unique<ConnectionToken>(
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state);
+
+    // Pre-cancel: the bus is alive, the id is valid, and neither the
+    // token's own _cancelled atomic nor the shared SlotState's
+    // cancelled flag has been flipped — active() must say true.
+    EXPECT_TRUE(token->active())
+        << "fresh token over a live bus must report active() == true";
+    EXPECT_TRUE(block->isAlive());
+
+    // Cancel runs the full unregister-plus-barrier sequence. After
+    // it returns, both the token's own _cancelled atomic and the
+    // shared SlotState->cancelled flag are true; the bus itself is
+    // still alive (cancel does not mark the bus dead).
+    token->cancel();
+
+    EXPECT_TRUE(block->isAlive())
+        << "cancel() must not affect the bus's own alive flag";
+    EXPECT_TRUE(allocation.state->cancelled)
+        << "cancel() must trip the shared SlotState->cancelled flag";
+    EXPECT_FALSE(token->active())
+        << "active() must observe the explicit unregister and report false";
+}
+
 } // namespace
