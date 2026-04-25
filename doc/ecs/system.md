@@ -50,12 +50,20 @@ token's lifetime through the state machine; the task flow is the only
 caller of `ITask::setApi`. The wiring lives in
 [`TaskFlow::runCurrentTask`](../../src/impl/taskflow/taskflow.cpp):
 
-1. The task flow asks the context for a token bound to the current
-   state via `IContext::makeEngineToken`.
+1. The task flow asks the context for a token through
+   `IContext::makeEngineToken`. The current call site passes the
+   invalid-sentinel `StateId{}` rather than the live FSM state — the
+   `IStateMachine::current()` lookup that will seed the bound state
+   lands together with the upcoming TaskFlow rewrite. On the legacy
+   `vigine::Context` aggregator, the factory ignores the argument and
+   returns `nullptr` unconditionally; on the modern
+   `vigine::context::Context` aggregator, the factory tolerates the
+   sentinel and threads it into the concrete `EngineToken`.
 2. It calls `_currTask->setApi(token.get())` to publish that pointer
-   to the task.
-3. It invokes `_currTask->run()` synchronously, inside the bound
-   state's scope.
+   to the task. When the legacy path returned `nullptr`, the task
+   simply observes a null `api()`.
+3. It invokes `_currTask->run()` synchronously while the binding is
+   live.
 4. An RAII `ApiBindingGuard` clears the binding (`setApi(nullptr)`)
    when the scope exits — even if `run()` throws.
 5. The `unique_ptr<IEngineToken>` releases the token after the guard
@@ -126,7 +134,8 @@ vigine::service::IService &svc = outcome.value();
 These resources are engine-lifetime singletons. They outlive every
 state and remain valid even after the bound state has transitioned
 away. **Reaching into a non-gated accessor after expiration is the
-supported path for graceful drain.**
+supported path for graceful drain — provided you still hold a
+non-null token pointer when you do it.**
 
 | Accessor                       | Resource                                              |
 |--------------------------------|-------------------------------------------------------|
@@ -135,8 +144,23 @@ supported path for graceful drain.**
 | `api()->signalEmitter()`       | `vigine::messaging::ISignalEmitter&`                  |
 | `api()->stateMachine()`        | `vigine::statemachine::IStateMachine&`                |
 
+Inside the body of `run()` the engine guarantees `api()` is non-null
+on the modern context path, so you can call these accessors directly:
+
 ```cpp
-auto &tm = api()->threadManager(); // safe even if api() has expired
+auto &tm = api()->threadManager(); // safe inside run()
+```
+
+Outside `run()` (for example from a deferred callback or an event
+handler that fires between ticks) the task flow has already cleared
+the binding via `setApi(nullptr)`, so `api()` returns `nullptr` even
+for ungated reads. Null-check before dereferencing:
+
+```cpp
+if (auto *token = api()) {
+    auto &tm = token->threadManager();
+    // ... use tm
+}
 ```
 
 ### What happens when `api()` is called after the FSM transitions
@@ -154,11 +178,16 @@ Two distinct cases:
    references. The task should observe the typed `Expired` and return
    an error `Result` from `run()` so the flow does not advance.
 
-Inside the body of `run()` immediately after the task flow called
-`setApi`, the engine guarantees the token is bound and live; null
-checks on `api()` and `isAlive()` checks are not required for the
-first access. They become required as soon as the task posts work
-that may run on a different thread or after a future state hop.
+When the engine boots a modern `vigine::context::Context`, the token
+bound to your task is non-null and live for the duration of `run()`,
+so null checks on `api()` and `isAlive()` checks are not required for
+the first access inside `run()`. They become required as soon as the
+task posts work that may run on a different thread or after a future
+state hop. On the legacy `vigine::Context` path
+(`vigine::Context::makeEngineToken` returns `nullptr`; the path is
+deprecated and scheduled for removal in #282), the binding may be
+null — code that runs through that path should null-check `api()`
+defensively, even on the very first access inside `run()`.
 
 ### Best-practice example
 
@@ -208,8 +237,8 @@ class DecodeFrameTask final : public vigine::AbstractTask
         //    accessor. This reference stays live even if the FSM
         //    transitions during the schedule call below; that is the
         //    supported drain path.
-        auto &tm = token->stateMachine();
-        (void)tm; // (state machine inspection elided)
+        auto &tm = token->threadManager();
+        (void)tm; // (follow-up runnable schedule elided)
 
         // 4. Use the live service reference. Real work elided.
         (void)worker;
@@ -225,23 +254,48 @@ class DecodeFrameTask final : public vigine::AbstractTask
 
 The lifecycle the engine drives around this task is exactly:
 
-1. The task flow calls `setApi(token.get())` with a token bound to
-   the current FSM state.
+1. The task flow mints a token (today: bound to the sentinel
+   `StateId{}`; future: bound to the current FSM state) and calls
+   `setApi(token.get())`.
 2. The task flow calls `run()`. Inside, `api()` returns the bound
    token; gated accessors resolve normally.
 3. `run()` returns. The `ApiBindingGuard` in
    `TaskFlow::runCurrentTask` calls `setApi(nullptr)`. The owning
-   `unique_ptr<IEngineToken>` releases the token.
-4. After expiration, any deferred work the task posted to
-   `threadManager()` or `systemBus()` keeps running through the
-   non-gated singletons; any deferred work that calls back through
-   `api()->service(...)` observes `engine::Result::Code::Expired`
-   and bails out cleanly.
+   `unique_ptr<IEngineToken>` then runs out of scope and **destroys
+   the token**.
 
-A task that needs an explicit clean-up hook on state-exit registers
-it through `subscribeExpiration` on the bound token; see
-[`engine-token.md` § Self-destruct contract](engine-token.md#self-destruct-contract)
-for that contract.
+Deferred work has no way to keep using the token after step 3,
+because the token object itself is gone. A captured `IEngineToken*`
+points into freed memory; a captured reference is dangling. In
+practice that means deferred work the task posted from inside `run()`
+must do one of three things:
+
+- **Finish before `run()` returns.** If the work is short enough to
+  complete synchronously (or before the task flow advances), the
+  token is still alive throughout.
+- **Capture data, not the token.** Snapshot whatever the deferred
+  work needs (an entity id, a service handle that owns its own
+  lifetime, a message payload) into the closure and let the closure
+  reach back through some non-token mechanism — for example, a
+  long-lived `IThreadManager` reference held elsewhere, or a posted
+  signal that will be delivered through a fresh subscriber on the
+  next tick.
+- **Re-acquire the token on a future tick.** The next time the task
+  flow runs this task, it mints a new token and calls `setApi`
+  again. Code that wants to resume work across ticks reads `api()`
+  fresh on each entry into `run()` rather than holding the previous
+  pointer.
+
+`subscribeExpiration` on the bound token (see
+[`engine-token.md` § Self-destruct contract](engine-token.md#self-destruct-contract))
+is therefore most useful for tokens that **outlive** the `run()`
+body — a long-running task that holds a token across multiple ticks
+or hands it to an external owner. Under today's per-`run()`
+lifecycle the token is destroyed at the end of the same call that
+minted it, so an `subscribeExpiration` registration installed inside
+`run()` will fire (or be torn down) almost immediately as part of
+the token's destruction. Treat it as the contract for the future
+multi-tick wiring rather than a per-tick hook today.
 
 ## Cross-references
 
