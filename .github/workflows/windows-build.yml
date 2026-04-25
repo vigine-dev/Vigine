@@ -9,7 +9,7 @@ on:
 jobs:
   windows-build:
     name: Windows ${{ matrix.config }} (MSVC + Vulkan)
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
@@ -25,26 +25,31 @@ jobs:
         with:
           arch: x64
 
-      - name: Cache vcpkg_installed
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/build/vcpkg_installed
-          key: vcpkg-windows-latest-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-windows-latest-
-
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.1.1
         with:
           version: 1.3.290.0
           cache: true
 
+      # Examples are enabled to exercise the example-tree wiring. Non-stub
+      # example/window currently compiles only on Windows because its source
+      # uses unguarded <windows.h> APIs, so on Win32 we let it build. The
+      # other three slots (threaded_bus / parallel_fsm / fanout_fsm) are
+      # EXISTS-guarded inside example/CMakeLists.txt, so flipping them ON
+      # is a safe no-op until the stubs become real. vcpkg toolchain is not
+      # wired here because VIGINE_ENABLE_EXPERIMENTAL=OFF gates the only
+      # current consumer (libpqxx); re-add a cache step when manifest
+      # dependencies become required outside the experimental umbrella.
       - name: Configure
         run: >
           cmake -S . -B build
           -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           -DENABLE_UNITTEST=ON
-          -DENABLE_EXAMPLE=OFF
+          -DENABLE_EXAMPLE=ON
+          -DBUILD_EXAMPLE_WINDOW=ON
+          -DBUILD_EXAMPLE_THREADED_BUS=ON
+          -DBUILD_EXAMPLE_PARALLEL_FSM=ON
+          -DBUILD_EXAMPLE_FANOUT_FSM=ON
           -DVIGINE_ENABLE_EXPERIMENTAL=OFF
 
       - name: Build

@@ -35,12 +35,24 @@ jobs:
             googletest \
             libgtest-dev
 
+      # example/window's source uses <windows.h> without a CMake-level
+      # skip-guard, so on Linux we keep ENABLE_EXAMPLE=ON to exercise the
+      # example-tree wiring but disable the window slot via
+      # BUILD_EXAMPLE_WINDOW=OFF. The CMake skip-guard for the window
+      # example is tracked in #299. The other three slots
+      # (threaded_bus / parallel_fsm / fanout_fsm) are EXISTS-guarded in
+      # example/CMakeLists.txt, so flipping them ON is a safe no-op until
+      # the stubs become real.
       - name: Configure
         run: >
           cmake -S . -B build
           -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           -DENABLE_UNITTEST=ON
-          -DENABLE_EXAMPLE=OFF
+          -DENABLE_EXAMPLE=ON
+          -DBUILD_EXAMPLE_WINDOW=OFF
+          -DBUILD_EXAMPLE_THREADED_BUS=ON
+          -DBUILD_EXAMPLE_PARALLEL_FSM=ON
+          -DBUILD_EXAMPLE_FANOUT_FSM=ON
           -DVIGINE_ENABLE_EXPERIMENTAL=OFF
 
       - name: Build
