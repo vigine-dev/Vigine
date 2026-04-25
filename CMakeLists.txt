@@ -142,6 +142,15 @@ endif()
 option(ENABLE_EXAMPLE "Build example projects" ON)
 option(ENABLE_UNITTEST "Enable tests" OFF)
 
+# Per-example opt-in switches for the new examples landing under the
+# v0.1.0 readiness umbrella. Default OFF; the matching subdirectory
+# stubs hold only a placeholder until a follow-up PR replaces them
+# with real sources, so flipping these ON today is a safe no-op
+# guarded by EXISTS in example/CMakeLists.txt.
+option(BUILD_EXAMPLE_THREADED_BUS "Build the threaded_bus example" OFF)
+option(BUILD_EXAMPLE_PARALLEL_FSM "Build the parallel_fsm example" OFF)
+option(BUILD_EXAMPLE_FANOUT_FSM "Build the fanout_fsm example" OFF)
+
 if(ENABLE_UNITTEST AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
     # enable_testing() must be called from the top-level CMakeLists.txt so
     # that ctest picks up tests registered with gtest_discover_tests in the
