@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/abstracttask.h"
+#include "vigine/api/taskflow/abstracttask.h"
 
 namespace vigine
 {

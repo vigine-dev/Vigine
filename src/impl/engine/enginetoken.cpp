@@ -21,9 +21,9 @@
 #include "vigine/result.h"
 #include "vigine/api/messaging/isignalemitter.h"
 #include "vigine/api/messaging/payload/isignalpayload.h"
-#include "vigine/statemachine/abstractstatemachine.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/abstractstatemachine.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine::engine
 {

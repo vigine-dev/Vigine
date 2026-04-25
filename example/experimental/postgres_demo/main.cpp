@@ -1,5 +1,5 @@
-#include <vigine/statemachine.h>
-#include <vigine/taskflow.h>
+#include <vigine/impl/statemachine/statemachine.h>
+#include <vigine/impl/taskflow/taskflow.h>
 #include <vigine/vigine.h>
 
 #include "state/closestate.h"

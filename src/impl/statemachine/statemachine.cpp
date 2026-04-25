@@ -1,4 +1,4 @@
-#include "vigine/statemachine.h"
+#include "vigine/impl/statemachine/statemachine.h"
 
 #include "vigine/context.h"
 

@@ -21,7 +21,7 @@
 
 #include "vigine/api/context/icontext.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/istatemachine.h"
 
 #include <gtest/gtest.h>
 

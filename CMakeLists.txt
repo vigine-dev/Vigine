@@ -162,10 +162,10 @@ endif()
 set(HEADER
     ${INCLUDE_DIR}/vigine/vigine.h
     ${INCLUDE_DIR}/vigine/result.h
-    ${INCLUDE_DIR}/vigine/statemachine.h
-    ${INCLUDE_DIR}/vigine/abstractstate.h
-    ${INCLUDE_DIR}/vigine/taskflow.h
-    ${INCLUDE_DIR}/vigine/abstracttask.h
+    ${INCLUDE_DIR}/vigine/impl/statemachine/statemachine.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/abstractstate.h
+    ${INCLUDE_DIR}/vigine/impl/taskflow/taskflow.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/abstracttask.h
     ${INCLUDE_DIR}/vigine/abstractservice.h
     ${INCLUDE_DIR}/vigine/context.h
     ${INCLUDE_DIR}/vigine/property.h
@@ -210,23 +210,23 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/core/threading/threadmanager.h
     ${INCLUDE_DIR}/vigine/core/threading/factory.h
     ${INCLUDE_DIR}/vigine/core/threading/parallel_for.h
-    ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/istatemachine.h
     ${INCLUDE_DIR}/vigine/api/context/icontext.h
     ${INCLUDE_DIR}/vigine/api/ecs/ientitymanager.h
     ${INCLUDE_DIR}/vigine/api/ecs/componentkind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
-    ${INCLUDE_DIR}/vigine/taskflow/kind.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/kind.h
 )
 
 set(SOURCES
     ${SRC_DIR}/vigine.cpp
     ${SRC_DIR}/result.cpp
-    ${SRC_DIR}/statemachine.cpp
-    ${SRC_DIR}/taskflow.cpp
+    ${SRC_DIR}/impl/statemachine/statemachine.cpp
+    ${SRC_DIR}/impl/taskflow/taskflow.cpp
     ${SRC_DIR}/context.cpp
     ${SRC_DIR}/impl/ecs/componentmanager.cpp
     ${SRC_DIR}/impl/ecs/entity.cpp
-    ${SRC_DIR}/abstracttask.cpp
+    ${SRC_DIR}/api/taskflow/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/contextholder.cpp
     ${SRC_DIR}/impl/ecs/entitymanager.cpp
@@ -347,40 +347,40 @@ set(SOURCES_ECS_CORE
 
 # Level-1 state machine wrapper (R.4.3) -- public surface.
 set(HEADER_STATEMACHINE_CORE
-    ${INCLUDE_DIR}/vigine/statemachine/stateid.h
-    ${INCLUDE_DIR}/vigine/statemachine/routemode.h
-    ${INCLUDE_DIR}/vigine/statemachine/abstractstatemachine.h
-    ${INCLUDE_DIR}/vigine/statemachine/factory.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/stateid.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/routemode.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/abstractstatemachine.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/factory.h
 )
 
 # Level-1 state machine wrapper (R.4.3) -- internal state topology + base impl.
 set(SOURCES_STATEMACHINE_CORE
     ${SRC_DIR}/statemachine/statetopology.h
     ${SRC_DIR}/statemachine/statetopology.cpp
-    ${SRC_DIR}/statemachine/abstractstatemachine.cpp
+    ${SRC_DIR}/api/statemachine/abstractstatemachine.cpp
     ${SRC_DIR}/statemachine/defaultstatemachine.h
     ${SRC_DIR}/statemachine/defaultstatemachine.cpp
-    ${SRC_DIR}/statemachine/factory.cpp
+    ${SRC_DIR}/impl/statemachine/factory.cpp
 )
 
 # Level-1 task flow wrapper (R.4.4) -- public surface.
 set(HEADER_TASKFLOW_CORE
-    ${INCLUDE_DIR}/vigine/taskflow/taskid.h
-    ${INCLUDE_DIR}/vigine/taskflow/resultcode.h
-    ${INCLUDE_DIR}/vigine/taskflow/routemode.h
-    ${INCLUDE_DIR}/vigine/taskflow/itaskflow.h
-    ${INCLUDE_DIR}/vigine/taskflow/abstracttaskflow.h
-    ${INCLUDE_DIR}/vigine/taskflow/factory.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/taskid.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/resultcode.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/routemode.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/itaskflow.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/abstracttaskflow.h
+    ${INCLUDE_DIR}/vigine/api/taskflow/factory.h
 )
 
 # Level-1 task flow wrapper (R.4.4) -- internal orchestrator + base impl.
 set(SOURCES_TASKFLOW_CORE
     ${SRC_DIR}/taskflow/taskorchestrator.h
     ${SRC_DIR}/taskflow/taskorchestrator.cpp
-    ${SRC_DIR}/taskflow/abstracttaskflow.cpp
+    ${SRC_DIR}/api/taskflow/abstracttaskflow.cpp
     ${SRC_DIR}/taskflow/defaulttaskflow.h
     ${SRC_DIR}/taskflow/defaulttaskflow.cpp
-    ${SRC_DIR}/taskflow/factory.cpp
+    ${SRC_DIR}/impl/taskflow/factory.cpp
 )
 
 # Context aggregator (R.4.5) -- public surface.

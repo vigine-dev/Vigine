@@ -5,7 +5,7 @@
 
 #include "windoweventpayload.h"
 
-#include <vigine/abstracttask.h>
+#include <vigine/api/taskflow/abstracttask.h>
 #include <vigine/api/messaging/isubscriber.h>
 #include <vigine/api/messaging/isubscriptiontoken.h>
 #include <vigine/api/messaging/routemode.h>

@@ -1,12 +1,12 @@
-#include "vigine/taskflow/abstracttaskflow.h"
+#include "vigine/api/taskflow/abstracttaskflow.h"
 
 #include <memory>
 
 #include "taskflow/taskorchestrator.h"
 #include "vigine/result.h"
-#include "vigine/taskflow/resultcode.h"
-#include "vigine/taskflow/routemode.h"
-#include "vigine/taskflow/taskid.h"
+#include "vigine/api/taskflow/resultcode.h"
+#include "vigine/api/taskflow/routemode.h"
+#include "vigine/api/taskflow/taskid.h"
 
 namespace vigine::taskflow
 {

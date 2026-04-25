@@ -23,7 +23,7 @@
 #include <atomic>
 
 #include "vigine/api/engine/iengine_token.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine::engine
 {

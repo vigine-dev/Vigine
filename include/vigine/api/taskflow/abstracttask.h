@@ -5,8 +5,8 @@
  * @brief Legacy base class for a single unit of work run inside a TaskFlow.
  */
 
-#include "contextholder.h"
-#include "result.h"
+#include "vigine/contextholder.h"
+#include "vigine/result.h"
 
 namespace vigine
 {

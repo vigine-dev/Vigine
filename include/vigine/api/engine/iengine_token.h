@@ -54,7 +54,7 @@
 
 #include "vigine/api/messaging/isubscriptiontoken.h"
 #include "vigine/api/service/serviceid.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 // Forward declarations for the references the gated and ungated
 // accessors return. Kept as forward declarations so this header does

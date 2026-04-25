@@ -1,9 +1,9 @@
 #pragma once
 
-#include "abstracttask.h"
-#include "api/messaging/payload/payloadtypeid.h"
-#include "result.h"
-#include "core/threading/threadaffinity.h"
+#include "vigine/api/taskflow/abstracttask.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
+#include "vigine/core/threading/threadaffinity.h"
+#include "vigine/result.h"
 
 #include <memory>
 #include <unordered_map>

@@ -49,9 +49,9 @@
 #include "vigine/core/threading/threadaffinity.h"
 #include "vigine/core/threading/threadmanagerconfig.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/factory.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/factory.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <atomic>
 #include <chrono>

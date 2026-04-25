@@ -57,9 +57,9 @@
 #include "vigine/api/messaging/routemode.h"
 #include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/factory.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/factory.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <atomic>
 #include <chrono>

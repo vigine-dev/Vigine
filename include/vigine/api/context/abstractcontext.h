@@ -16,9 +16,9 @@
 #include "vigine/api/messaging/busid.h"
 #include "vigine/api/messaging/imessagebus.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/statemachine/stateid.h"
-#include "vigine/taskflow/itaskflow.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
+#include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::context

@@ -14,8 +14,8 @@
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/ecs/iecs.h"
 #include "vigine/api/messaging/imessagebus.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/taskflow/itaskflow.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>

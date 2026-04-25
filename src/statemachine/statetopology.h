@@ -7,7 +7,7 @@
 #include "vigine/core/graph/abstractgraph.h"
 #include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine::statemachine
 {

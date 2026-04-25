@@ -9,8 +9,8 @@
 #include "vigine/api/service/abstractservice.h"
 #include "vigine/impl/ecs/factory.h"
 #include "vigine/impl/engine/enginetoken.h"
-#include "vigine/statemachine/factory.h"
-#include "vigine/taskflow/factory.h"
+#include "vigine/api/statemachine/factory.h"
+#include "vigine/api/taskflow/factory.h"
 #include "vigine/core/threading/factory.h"
 
 namespace vigine::context

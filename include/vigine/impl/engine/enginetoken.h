@@ -68,7 +68,7 @@
 #include "vigine/api/engine/abstractengine_token.h"
 #include "vigine/api/engine/iengine_token.h"
 #include "vigine/api/messaging/isubscriptiontoken.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine
 {

@@ -1,4 +1,4 @@
-#include "vigine/statemachine/abstractstatemachine.h"
+#include "vigine/api/statemachine/abstractstatemachine.h"
 
 #include <cassert>
 #include <cstdint>
@@ -12,8 +12,8 @@
 
 #include "statemachine/statetopology.h"
 #include "vigine/result.h"
-#include "vigine/statemachine/routemode.h"
-#include "vigine/statemachine/stateid.h"
+#include "vigine/api/statemachine/routemode.h"
+#include "vigine/api/statemachine/stateid.h"
 
 namespace vigine::statemachine
 {
