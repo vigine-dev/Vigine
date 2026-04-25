@@ -7,11 +7,13 @@ per-subscriber serialisation contract documented on `IMessageBus::post`).
 
 The example runs eight publishers on the worker pool, each posting 100
 messages back-to-back to a shared-policy bus. A single `CountingSubscriber`
-maintains an in-flight atomic counter; if the bus ever broke the
-serialisation contract, the counter would observe a value greater than
-one and the demo would report a non-zero `Reentry violations` line. With
-the contract intact the counter stays at zero across all 800 dispatches
-and the program exits with status 0.
+maintains an in-flight atomic counter; the property being verified is
+that the counter rises to one on entry to each `onMessage()` call and
+never exceeds one. If the bus ever broke the serialisation contract,
+two threads would observe each other's increments and the demo would
+report a non-zero `Reentry violations` line. With the contract intact
+the violation counter stays at zero across all 800 dispatches and the
+program exits with status 0.
 
 ## Build
 

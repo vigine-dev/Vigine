@@ -15,7 +15,8 @@ target_link_libraries(${PROJECT_THREADED_BUS_NAME}
     vigine
 )
 
-target_include_directories(${PROJECT_THREADED_BUS_NAME}
-    PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-)
+# The vigine target PUBLIC-exports its include dirs, so consumers
+# linking against it (PRIVATE here) inherit them automatically. No
+# need to add ${CMAKE_SOURCE_DIR}/include manually -- that variable
+# would point at a parent project when Vigine is added via
+# add_subdirectory and could leak the wrong include root.
