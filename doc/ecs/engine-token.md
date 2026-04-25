@@ -43,8 +43,9 @@ state-scoped reference uniformly, by construction".
 ## Class pyramid
 
 `IEngineToken` ships in three tiers, mirroring the
-[INV-10 naming convention](../README.md) the rest of the engine
-follows:
+[INV-10 naming convention](../../include/vigine/api/engine/iengine_token.h)
+the rest of the engine follows (`I` prefix for pure-virtual
+interfaces, `Abstract` prefix for stateful base classes):
 
 | Tier               | Class                                                                                                   | Role                                                                                                                                                                            |
 |--------------------|---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -62,13 +63,13 @@ heart of the R-StateScope rule:
 
 ### Domain accessors (gated, return `Result<T>`)
 
-| Accessor                        | Resource                          | Failure modes                                            |
-|---------------------------------|-----------------------------------|----------------------------------------------------------|
-| `service(ServiceId id)`         | `vigine::service::IService&`      | `Expired`, `NotFound`                                    |
-| `system(SystemId id)`           | `vigine::ecs::ISystem&`           | `Expired`, `NotFound`, `Unavailable` (#197 follow-up)    |
-| `entityManager()`               | `vigine::IEntityManager&`         | `Expired`, `Unavailable` (#197 follow-up)                |
-| `components()`                  | `vigine::IComponentManager&`      | `Expired`, `Unavailable` (#197 follow-up)                |
-| `ecs()`                         | `vigine::ecs::IECS&`              | `Expired`, `NotFound`                                    |
+| Accessor                        | Resource                          | Failure modes                                                              |
+|---------------------------------|-----------------------------------|----------------------------------------------------------------------------|
+| `service(ServiceId id)`         | `vigine::service::IService&`      | `Expired` (token dropped); `NotFound` (id invalid or registry slot recycled) |
+| `system(SystemId id)`           | `vigine::ecs::ISystem&`           | `Expired` (token dropped); `Unavailable` (always today, #197 follow-up wires the lookup) |
+| `entityManager()`               | `vigine::IEntityManager&`         | `Expired` (token dropped); `Unavailable` (always today, #197 follow-up)    |
+| `components()`                  | `vigine::IComponentManager&`      | `Expired` (token dropped); `Unavailable` (always today, #197 follow-up)    |
+| `ecs()`                         | `vigine::ecs::IECS&`              | `Expired` (token dropped); otherwise `Ok` -- the context never returns a partial wrapper |
 
 These resources sit in registries the engine may recycle between ticks
 or across state transitions. The first thing each gated accessor does
@@ -81,9 +82,11 @@ the lookup outcome into the `Result` wrapper. Callers branch on
 ```cpp
 auto outcome = token.service(myServiceId);
 if (!outcome.ok()) {
-    // outcome.code() is Expired, NotFound, or Unavailable.
+    // outcome.code() is Expired or NotFound for service().
+    // Treat Expired as a graceful no-op (the FSM has moved on);
+    // NotFound is a real error the caller must report.
     return outcome.code() == decltype(outcome)::Code::Expired
-        ? Result(Result::Code::Skip)
+        ? Result(Result::Code::Success)
         : Result(Result::Code::Error, "service unavailable");
 }
 vigine::service::IService& svc = outcome.value();
@@ -173,8 +176,8 @@ sequenceDiagram
     ASM->>ASM: capture oldState = stateA
     ASM->>Token: fireInvalidationListeners(stateA)
     Note over Token: matches boundState
+    Token->>Task: cb() runs here, on controller thread (alive flag still true)
     Token->>Token: markExpired() (alive flag → false)
-    Token->>Task: cb() runs here, on controller thread
     ASM->>ASM: _current.store(stateB)
 
     Note over Task,ASM: ... post-transition ...
@@ -185,15 +188,22 @@ sequenceDiagram
     Token-->>Task: live reference (ungated)
 ```
 
-Two ordering details worth highlighting:
+Three ordering details worth highlighting:
 
-1. **Listeners fire BEFORE `_current` flips.** `transition()` captures
+1. **Callbacks fire BEFORE the alive flag flips.**
+   `EngineToken::onStateInvalidated` calls `fireExpirationCallbacks()`
+   first and only then `markExpired()`. While a callback runs,
+   `isAlive()` still returns `true` and the gated accessors still
+   resolve, which is what lets a callback issue last-mile cleanup
+   that depends on a live token (drain a service handle, post a
+   final bus message, and so on).
+2. **Listeners fire BEFORE `_current` flips.** `transition()` captures
    `oldState` first, calls `fireInvalidationListeners(oldState)`, and
    *then* stores the new state. A listener that calls back into
    `stateMachine().current()` therefore sees the OLD active state, not
    the NEW one. This ordering is asserted in the engine-token smoke
    suite (`test/engine_token/smoke_test.cpp`).
-2. **No-op transitions do not fire the listener.** A
+3. **No-op transitions do not fire the listener.** A
    `transition(stateA)` call when `_current == stateA` returns success
    with no side effect, and no token bound to `stateA` is invalidated.
    Idempotent `transition(currentState)` is therefore safe.
@@ -246,12 +256,11 @@ void runStateScopedWork(vigine::IContext &ctx,
     // 3. Resolve a domain handle through the gated accessor.
     auto outcome = token->service(workerId);
     if (!outcome.ok()) {
-        // Three failure modes:
-        //   - Expired:     state has already changed — bail out.
-        //   - NotFound:    workerId is the invalid sentinel or its
-        //                  registry slot has been recycled.
-        //   - Unavailable: the underlying surface is still
-        //                  initialising or has been torn down.
+        // Two failure modes the service() accessor reports today
+        // (see src/impl/engine/enginetoken.cpp):
+        //   - Expired:  state has already changed — bail out.
+        //   - NotFound: workerId is the invalid sentinel or its
+        //               registry slot has been recycled.
         return;
     }
     vigine::service::IService &worker = outcome.value();
@@ -261,9 +270,13 @@ void runStateScopedWork(vigine::IContext &ctx,
     //    keeps working — that is what lets a task drain in-flight
     //    pool work after a state transition.
     vigine::core::threading::IThreadManager &tm = token->threadManager();
-    (void)tm.schedule([&worker]() {
-        // ... background work that may outlive the token ...
-    }, vigine::core::threading::ThreadAffinity::Pool);
+    // Pseudo-code: the real IThreadManager::schedule signature takes
+    //   std::unique_ptr<IRunnable> runnable, ThreadAffinity affinity
+    // (see include/vigine/core/threading/ithreadmanager.h). A
+    // production caller wraps the closure in an IRunnable subclass
+    // (or a project-wide LambdaRunnable adapter) before the call.
+    // (void)tm.schedule(makeRunnable([&worker]() { /* drain */ }),
+    //                   vigine::core::threading::ThreadAffinity::Pool);
 }
 ```
 
