@@ -390,6 +390,45 @@ gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     DISCOVERY_MODE PRE_TEST
 )
 
+# ====================== EngineToken Smoke Target =======================
+# Smoke coverage for the concrete @ref vigine::engine::EngineToken: bound-
+# state introspection, hybrid gating (gated accessors flip to Expired on
+# invalidation while ungated accessors stay valid), FSM-driven invalidation
+# via @ref AbstractStateMachine::addInvalidationListener, exactly-once
+# expiration callback firing, defensive same-thread fire when subscribing
+# post-invalidation, no-op-transition-no-fire, multi-subscriber + cancel
+# round trip, and per-state isolation between independent tokens.
+set(ENGINETOKEN_SMOKE_TARGET enginetoken-smoke)
+
+add_executable(${ENGINETOKEN_SMOKE_TARGET}
+    engine_token/smoke_test.cpp
+)
+
+target_include_directories(${ENGINETOKEN_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${ENGINETOKEN_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ENGINETOKEN_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+gtest_discover_tests(${ENGINETOKEN_SMOKE_TARGET}
+    PROPERTIES LABELS "enginetoken-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
 # ====================== Sync Primitives Smoke Target ===================
 # Smoke coverage for the four factory-produced sync primitives on
 # IThreadManager: IMutex (lock / tryLock / lockFor timeout), ISemaphore

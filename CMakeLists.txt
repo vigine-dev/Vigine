@@ -608,13 +608,21 @@ set(SOURCES_ENGINE
     ${SRC_DIR}/engine/factory.cpp
 )
 
-# Engine-token scaffolding (#220) -- pure interface + thin abstract
-# base only. No concrete EngineToken, no factory, no FSM invalidation
-# hook; those land in follow-up issues under the #197 umbrella.
+# Engine-token scaffolding -- pure interface (#220) + thin abstract
+# base + concrete EngineToken final (#287). The FSM-level invalidation
+# hook ships alongside this leaf as an extension to AbstractStateMachine
+# (no new sources needed under SOURCES_STATEMACHINE; the hook bodies live
+# in src/statemachine/abstractstatemachine.cpp).
 set(HEADER_ENGINE_TOKEN
     ${INCLUDE_DIR}/vigine/api/engine/iengine_token.h
     ${INCLUDE_DIR}/vigine/api/engine/abstractengine_token.h
     ${INCLUDE_DIR}/vigine/api/messaging/payload/stateinvalidatedpayload.h
+    ${INCLUDE_DIR}/vigine/impl/engine/enginetoken.h
+)
+
+# Engine-token concrete implementation (#287).
+set(SOURCES_ENGINE_TOKEN
+    ${SRC_DIR}/impl/engine/enginetoken.cpp
 )
 
 # Postgres ECS subsystem lives under the experimental opt-in umbrella.
@@ -738,6 +746,7 @@ add_library(${PROJECT_NAME}
     ${HEADER_ENGINE}
     ${SOURCES_ENGINE}
     ${HEADER_ENGINE_TOKEN}
+    ${SOURCES_ENGINE_TOKEN}
     ${HEADER_POSTGRESQL}
     ${SOURCES_POSTGRESQL}
     ${SOURCES_POSTGRESQL_EXTRA}

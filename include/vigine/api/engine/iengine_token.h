@@ -98,10 +98,21 @@ namespace vigine::statemachine
 class IStateMachine;
 } // namespace vigine::statemachine
 
-namespace vigine::threading
+// The thread manager lives in @c vigine::core::threading today. The
+// IEngineToken signature predates that move and uses the shorter
+// @c vigine::threading alias for clarity. The alias below makes the
+// existing forward declarations and accessor signatures resolve
+// against the real type without a behaviour change. A future leaf
+// that renames the canonical namespace can drop the alias.
+namespace vigine::core::threading
 {
 class IThreadManager;
-} // namespace vigine::threading
+} // namespace vigine::core::threading
+
+namespace vigine
+{
+namespace threading = ::vigine::core::threading;
+} // namespace vigine
 
 namespace vigine
 {
@@ -354,14 +365,22 @@ class IEngineToken
     /**
      * @brief Subscribes @p callback to the token's expiration event.
      *
-     * The engine invokes @p callback exactly once, on a worker
-     * thread picked by the engine's thread manager, when the bound
-     * state transitions away. Dropping the returned subscription
-     * token before expiration detaches the callback cleanly; after
-     * expiration the returned token is inert.
+     * The engine invokes @p callback exactly once when the bound
+     * state transitions away. The concrete implementation in
+     * @ref vigine::engine::EngineToken runs the callback
+     * synchronously on whichever thread executed the FSM
+     * transition (the controller thread, by the
+     * @ref vigine::statemachine::IStateMachine thread-affinity
+     * contract); a future leaf may post the firing through the
+     * engine's thread manager if a different threading model is
+     * required, but the "exactly once on transition away" guarantee
+     * is invariant. Dropping the returned subscription token before
+     * expiration detaches the callback cleanly.
      *
      * Returns a null subscription token when @p callback is empty
      * or when the token is already expired at registration time.
+     * Callers branching on the return value must therefore check
+     * for null before dereferencing the @c std::unique_ptr.
      */
     [[nodiscard]] virtual std::unique_ptr<vigine::messaging::ISubscriptionToken>
         subscribeExpiration(std::function<void()> callback) = 0;
