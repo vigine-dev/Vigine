@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -646,7 +647,7 @@ TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
     // Preconditions: the fresh token is live, no unregister yet.
     EXPECT_TRUE(token.active());
     EXPECT_EQ(block->unregisterCalls(), 0u);
-    EXPECT_FALSE(allocation.state->cancelled);
+    EXPECT_FALSE(allocation.state->cancelled.load(std::memory_order_acquire));
 
     // First cancel: runs the full unregister-plus-barrier sequence.
     token.cancel();
@@ -657,7 +658,7 @@ TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
         << "first cancel() must drive exactly one unregisterTarget";
     EXPECT_EQ(block->lastUnregisteredId(), allocation.id)
         << "unregisterTarget must be called with the token's own id";
-    EXPECT_TRUE(allocation.state->cancelled)
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
         << "the shared SlotState's cancelled flag must be true after cancel()";
 
     // Second cancel: idempotent no-op. The control block must not see
@@ -667,11 +668,115 @@ TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
     EXPECT_FALSE(token.active());
     EXPECT_EQ(block->unregisterCalls(), 1u)
         << "second cancel() must not drive another unregisterTarget";
-    EXPECT_TRUE(allocation.state->cancelled);
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire));
 
     // A third cancel: same invariants as the second.
     token.cancel();
     EXPECT_EQ(block->unregisterCalls(), 1u);
+}
+
+// ---------------------------------------------------------------------------
+// Case 11 -- ConnectionToken::active() honours an OUT-OF-BAND unregister.
+//
+// Pins the L-B6 contract: once the shared SlotState->cancelled flag
+// has been flipped from outside the token (e.g. the bus driving its
+// own programmatic unregisterTarget without anyone calling cancel()
+// on the token first), active() must report false even though the
+// FakeBusControlBlock is still alive and the token's own _cancelled
+// atomic is still false. This is exactly the path that exercises the
+// new _slotState->cancelled short-circuit inside
+// ConnectionToken::active() — without it, the call would walk
+// straight past the token-side _cancelled check (still false) and
+// down to ctrl->isAlive() and return true.
+//
+// The flip is issued directly on the SlotState shared with the token;
+// we do NOT call token->cancel() here precisely so the token's own
+// _cancelled atomic stays false. The store mirrors what every real
+// writer does (release store under exclusive lifecycleMutex), which
+// is also the synchronisation the new lock-free reader inside
+// active() pairs with via memory_order_acquire.
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, ConnectionTokenActiveHonorsExternalUnregister)
+{
+    auto block      = std::make_shared<FakeBusControlBlock>();
+    auto allocation = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    auto token = std::make_unique<ConnectionToken>(
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state);
+
+    // Pre-flip: the bus is alive, the id is valid, neither the token's
+    // own _cancelled atomic nor the shared SlotState's cancelled flag
+    // is set — active() must say true.
+    EXPECT_TRUE(token->active())
+        << "fresh token over a live bus must report active() == true";
+    EXPECT_TRUE(block->isAlive());
+    EXPECT_FALSE(allocation.state->cancelled.load(std::memory_order_acquire));
+
+    // Out-of-band unregister: simulate the bus driving its own
+    // unregisterTarget (or any other path that flips the shared
+    // SlotState without ever going through this token's cancel()).
+    // We DO NOT call token->cancel() — the token's _cancelled atomic
+    // must stay false so the assertion below proves that active()
+    // returned false because of the SlotState short-circuit, not
+    // because of the token-side gate.
+    {
+        std::unique_lock<std::shared_mutex> ex{allocation.state->lifecycleMutex};
+        allocation.state->cancelled.store(true, std::memory_order_release);
+    }
+
+    EXPECT_TRUE(block->isAlive())
+        << "external unregister must not affect the bus's own alive flag";
+    EXPECT_EQ(block->unregisterCalls(), 0u)
+        << "we did not call cancel(); the control block must not have "
+           "seen any unregisterTarget";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
+        << "external writer must have set the shared SlotState->cancelled "
+           "flag";
+    EXPECT_FALSE(token->active())
+        << "active() must observe the external unregister via the new "
+           "_slotState->cancelled short-circuit and report false";
+}
+
+// ---------------------------------------------------------------------------
+// Case 11b -- ConnectionToken::active() honours its own cancel().
+//
+// Companion to the external-unregister case: covers the path where
+// the user explicitly calls token->cancel() on a still-live bus. The
+// short-circuit that fires here is the token-side _cancelled atomic
+// (the SlotState short-circuit also happens, but the test does not
+// distinguish the two — Case 11 above is what isolates the new
+// SlotState path).
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, ConnectionTokenActiveHonorsCancel)
+{
+    auto block      = std::make_shared<FakeBusControlBlock>();
+    auto allocation = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    auto token = std::make_unique<ConnectionToken>(
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state);
+
+    EXPECT_TRUE(token->active())
+        << "fresh token over a live bus must report active() == true";
+    EXPECT_TRUE(block->isAlive());
+
+    token->cancel();
+
+    EXPECT_TRUE(block->isAlive())
+        << "cancel() must not affect the bus's own alive flag";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
+        << "cancel() must trip the shared SlotState->cancelled flag";
+    EXPECT_FALSE(token->active())
+        << "active() must observe the cancel() and report false";
 }
 
 } // namespace

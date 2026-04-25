@@ -106,16 +106,34 @@ class ConnectionToken final : public IConnectionToken
     void cancel() override;
 
     /**
-     * @brief Returns @c true when the id is valid, the token has not
-     *        been cancelled, the control block is reachable, and
-     *        @ref IBusControlBlock::isAlive reports @c true.
+     * @brief Returns @c true only when (a) the id is valid, (b) this
+     *        token's own @c _cancelled atomic is still @c false, (c)
+     *        the shared @ref SlotState reports @c cancelled == @c false
+     *        (so a sibling unregister path that flipped the slot
+     *        without going through this token's @ref cancel still
+     *        retires @ref active here), and (d) the control block is
+     *        reachable and @ref IBusControlBlock::isAlive reports
+     *        @c true.
      *
-     * Cheap: one valid-id check, one atomic load on @c _cancelled,
-     * one @c weak_ptr::lock, one atomic load on the bus alive flag.
-     * The return value is a momentary snapshot; callers racing with
-     * @ref IBusControlBlock::markDead or a concurrent @ref cancel may
-     * observe the transition between the check and any follow-up
-     * operation.
+     * The middle SlotState check is what makes @ref active honour an
+     * explicit unregister driven from outside the token: the bus may
+     * call @ref IBusControlBlock::unregisterTarget on its own (e.g.
+     * programmatic teardown of a target's slots) which flips
+     * @c slotState->cancelled under @c lifecycleMutex; once that
+     * happens the slot is gone from the registry and any caller still
+     * holding the token must observe @ref active as @c false even
+     * before the bus itself goes dead.
+     *
+     * Cheap: one valid-id check, one acquire-load on @c _cancelled,
+     * one acquire-load on @c _slotState->cancelled (also
+     * @c std::atomic<bool> — pairs with the release store every
+     * unregister path issues under @c lifecycleMutex), one
+     * @c weak_ptr::lock, one atomic load on the bus alive flag. No
+     * lock acquisitions in the hot path. The return value is a
+     * momentary snapshot; callers racing with
+     * @ref IBusControlBlock::markDead, a concurrent @ref cancel, or a
+     * sibling unregister path may observe the transition between the
+     * check and any follow-up operation.
      */
     [[nodiscard]] bool active() const noexcept override;
 

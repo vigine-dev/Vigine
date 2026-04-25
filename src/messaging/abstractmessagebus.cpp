@@ -576,7 +576,7 @@ DispatchResult AbstractMessageBus::deliver(const SubscriptionSlot &slot,
     if (state != nullptr)
     {
         lifeLock = std::shared_lock<std::shared_mutex>{state->lifecycleMutex};
-        if (state->cancelled)
+        if (state->cancelled.load(std::memory_order_acquire))
         {
             return DispatchResult::Pass;
         }

@@ -50,11 +50,14 @@ void ConnectionToken::cancel()
     // same SlotState. The `unique_lock` on the shared_mutex blocks
     // until every concurrent shared holder (every in-flight
     // `onMessage`) has released, which is the dtor-blocks contract
-    // that the IConnectionToken header documents.
+    // that the IConnectionToken header documents. The `cancelled`
+    // store uses release ordering so the lock-free reader in
+    // `active()` (which only does an acquire-load and never takes
+    // this lock) sees the flip on its very next call.
     if (_slotState)
     {
         std::unique_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
-        _slotState->cancelled = true;
+        _slotState->cancelled.store(true, std::memory_order_release);
     }
 
     // Step 2: ask the control block to retire the registry slot. On
@@ -90,6 +93,27 @@ bool ConnectionToken::active() const noexcept
     // own `_cancelled` flag, so the two RAII tokens report a
     // consistent view of live/dead through `active()`.
     if (_cancelled.load(std::memory_order_acquire))
+    {
+        return false;
+    }
+    // The slot's shared SlotState may also be flipped from outside
+    // this token — for example when the bus drives unregisterTarget
+    // on its own (programmatic teardown) or when a sibling cancel
+    // path on the same SlotState ran without going through this
+    // token's own _cancelled atomic. The flag is `std::atomic<bool>`
+    // and every writer pairs an exclusive `lifecycleMutex` (which
+    // gives it the lifetime barrier for in-flight dispatches) with a
+    // release store on the atomic (which gives it the visibility
+    // pair for lock-free readers). This reader therefore needs only
+    // an acquire load: the flag is monotonic — once it is `true` it
+    // never returns to `false` — so observing it `true` is a
+    // permanent retire signal, and observing it `false` is a
+    // momentary live snapshot consistent with everything else
+    // `active()` returns. Skipping the shared_lock here keeps the
+    // hot path lock-free and removes the unnecessary contention
+    // against concurrent dispatchers that already hold the same
+    // shared_mutex shared.
+    if (_slotState && _slotState->cancelled.load(std::memory_order_acquire))
     {
         return false;
     }

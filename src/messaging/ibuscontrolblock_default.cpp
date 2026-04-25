@@ -148,11 +148,13 @@ void DefaultBusControlBlock::unregisterTarget(ConnectionId id) noexcept
         // dispatch that reached this slot through `lookup` holds it
         // SHARED for the duration of onMessage, so the exclusive
         // acquisition blocks until all of them have returned. Once we
-        // hold the lock we flip `cancelled` so that any later lookup
-        // racing the registry erase observes the flag and returns an
-        // empty guard — matching the subscriber-side flow.
+        // hold the lock we flip `cancelled` with a release store so
+        // that any later lookup racing the registry erase — including
+        // the lock-free `ConnectionToken::active` reader — observes
+        // the flag and returns an empty guard / `false`. Matching the
+        // subscriber-side flow.
         std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
-        state->cancelled = true;
+        state->cancelled.store(true, std::memory_order_release);
     }
 }
 
@@ -246,12 +248,12 @@ void DefaultBusControlBlock::unregisterSubscription(std::uint64_t serial) noexce
         // Acquire lifecycleMutex EXCLUSIVELY. Every concurrent
         // deliver() holds it SHARED for the duration of onMessage, so
         // the exclusive acquisition blocks until all of them have
-        // returned. Once we hold the lock we flip `cancelled` so that
-        // any snapshot copy still waiting to enter the shared region
-        // will observe the flag and skip onMessage without running
-        // the subscriber.
+        // returned. Once we hold the lock we flip `cancelled` with a
+        // release store so that any snapshot copy still waiting to
+        // enter the shared region will observe the flag and skip
+        // onMessage without running the subscriber.
         std::unique_lock<std::shared_mutex> ex{state->lifecycleMutex};
-        state->cancelled = true;
+        state->cancelled.store(true, std::memory_order_release);
     }
 }
 
@@ -306,7 +308,7 @@ DefaultBusControlBlock::lookup(ConnectionId id) const noexcept
     if (slotState)
     {
         lifecycleLock = std::shared_lock<std::shared_mutex>{slotState->lifecycleMutex};
-        if (slotState->cancelled)
+        if (slotState->cancelled.load(std::memory_order_acquire))
         {
             // The slot was cancelled between the registry probe and
             // the lifecycle acquisition; an empty guard skips
