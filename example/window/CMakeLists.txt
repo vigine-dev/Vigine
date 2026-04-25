@@ -284,6 +284,13 @@ target_link_libraries(${PROJECT_WINDOW_NAME}
     vigine
 )
 
+# WIN32_LEAN_AND_MEAN trims <windows.h>. Scoped per-target so it stays
+# off the bundled FreeType command line (which redefines the macro
+# internally and would otherwise emit C4005).
+if(WIN32)
+    target_compile_definitions(${PROJECT_WINDOW_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
+
 target_include_directories(${PROJECT_WINDOW_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}

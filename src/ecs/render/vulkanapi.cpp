@@ -257,7 +257,7 @@ bool VulkanAPI::endFrame()
     return true;
 }
 
-void VulkanAPI::submitDrawCall(const DrawCallDesc &desc)
+void VulkanAPI::submitDrawCall([[maybe_unused]] const DrawCallDesc &desc)
 {
     // Draw call submission logic will be extracted from drawFrame() in future phases
 }
@@ -282,7 +282,7 @@ void VulkanAPI::destroyPipeline(PipelineHandle handle)
         _vulkanPipelineStore->destroyPipeline(handle);
 }
 
-BufferHandle VulkanAPI::createBuffer(const BufferDesc &desc)
+BufferHandle VulkanAPI::createBuffer([[maybe_unused]] const BufferDesc &desc)
 {
     // Buffer creation logic will be implemented when migrating geometry to components
     BufferHandle handle;
@@ -290,7 +290,8 @@ BufferHandle VulkanAPI::createBuffer(const BufferDesc &desc)
     return handle;
 }
 
-void VulkanAPI::uploadBuffer(BufferHandle handle, const void *data, size_t size)
+void VulkanAPI::uploadBuffer([[maybe_unused]] BufferHandle handle, [[maybe_unused]] const void *data,
+                             [[maybe_unused]] size_t size)
 {
     // Buffer upload logic will be implemented when migrating geometry to components
 }
