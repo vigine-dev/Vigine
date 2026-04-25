@@ -8,6 +8,7 @@
 
 #include "vigine/api/context/contextconfig.h"
 #include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/iengine_token.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/api/ecs/iecs.h"
@@ -16,6 +17,7 @@
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/istatemachine.h"
+#include "vigine/statemachine/stateid.h"
 #include "vigine/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
@@ -108,6 +110,59 @@ class AbstractContext : public IContext
 
     [[nodiscard]] Result
         registerService(std::shared_ptr<service::IService> service) override;
+
+    // ------ IContext: engine-token factory ------
+
+    [[nodiscard]] std::unique_ptr<vigine::engine::IEngineToken>
+        makeEngineToken(vigine::statemachine::StateId boundState) override;
+
+    // ------ Engine-internal scope-bypass accessors -------------------------
+    //
+    // The accessors below mirror the gated domain accessors on
+    // @ref IContext but stay OFF the public @ref IContext interface --
+    // they exist so engine-internal code (the concrete EngineToken,
+    // diagnostics, lifecycle wiring) can reach the underlying
+    // resources without going through a state-scoped token. The
+    // public surface keeps the gated semantics; the engine reaches
+    // the substrate directly through the @c *Internal trio. This
+    // matches the R-StateScope architecture rule: tasks see a gated
+    // view; the engine itself sees a direct view.
+    //
+    // Naming: the @c *Internal suffix flags the engine-internal scope.
+    // Public on @ref AbstractContext (concrete closers consume them
+    // verbatim) but never lifted to @ref IContext.
+    // ----------------------------------------------------------------------
+
+    /**
+     * @brief Engine-internal direct accessor for @ref service.
+     *
+     * Mirrors @ref IContext::service: looks up the service registered
+     * under @p id without taking the gated detour through an
+     * @ref vigine::engine::IEngineToken. Returns the raw shared
+     * pointer so callers can branch on null without juggling a
+     * @ref vigine::engine::Result wrapper. Used by
+     * @ref vigine::engine::EngineToken's gated accessor body and by
+     * any future engine-side diagnostics that want to inspect the
+     * service registry without minting a token first.
+     *
+     * The thread-safety contract matches @ref IContext::service: the
+     * registry mutex serialises the lookup against concurrent
+     * @ref registerService calls.
+     */
+    [[nodiscard]] std::shared_ptr<service::IService>
+        serviceInternal(service::ServiceId id) const;
+
+    /**
+     * @brief Engine-internal direct accessor for @ref ecs.
+     *
+     * Mirrors @ref IContext::ecs and returns the same reference;
+     * exposed under the @c *Internal name so engine-side code paths
+     * that resolve domain accessors uniformly through the
+     * @c *Internal surface (not through the gated token) have a
+     * consistent entry point. The reference stays live for the
+     * lifetime of this @ref AbstractContext.
+     */
+    [[nodiscard]] ecs::IECS &ecsInternal() noexcept;
 
     // ------ IContext: lifecycle ------
 

@@ -71,6 +71,13 @@ class Context : public IContext
     [[nodiscard]] Result
         registerService(std::shared_ptr<service::IService> service) override;
 
+    // Legacy stub: the pre-R.4.5 Context carries no live state machine
+    // so the engine-token factory cannot produce a usable token. Returns
+    // @c nullptr per the IContext docstring's legacy-stub clause; new
+    // callers go through @c vigine::context::createContext.
+    [[nodiscard]] std::unique_ptr<engine::IEngineToken>
+        makeEngineToken(statemachine::StateId boundState) override;
+
     void              freeze() noexcept override;
     [[nodiscard]] bool isFrozen() const noexcept override;
 
