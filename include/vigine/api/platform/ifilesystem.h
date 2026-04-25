@@ -17,6 +17,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
+#include <optional>
 #include <string_view>
 
 namespace vigine
@@ -37,8 +39,14 @@ using FileHandle = std::uint64_t;
 /**
  * @brief Sentinel returned when a file operation cannot produce a
  *        valid handle.
+ *
+ * Concretely the all-ones bit pattern: matches Win32's
+ * @c INVALID_HANDLE_VALUE (cast of (HANDLE)-1) and stays distinct
+ * from every legal POSIX file descriptor (0..INT_MAX). Zero is NOT
+ * used because it is a valid POSIX descriptor (stdin) and a valid
+ * value on platforms whose handles are integer-counted from zero.
  */
-inline constexpr FileHandle kInvalidFileHandle = 0;
+inline constexpr FileHandle kInvalidFileHandle = (std::numeric_limits<FileHandle>::max)();
 
 /**
  * @brief Open mode flag set used by @ref IFileSystem::open.
@@ -91,10 +99,18 @@ class IFileSystem
     /**
      * @brief Read up to @p size bytes from the file into @p buffer.
      *
-     * @return Number of bytes actually read. Zero indicates EOF or
-     *         error; SIZE_MAX is reserved for "operation failed".
+     * EOF and read failures are distinct outcomes:
+     *   - engaged optional carrying value > 0: bytes actually read.
+     *   - engaged optional carrying value 0:    end-of-file (no error).
+     *   - empty optional (@c std::nullopt):     read failed (I/O error,
+     *                                           handle invalid, etc.).
+     *
+     * Concrete @ref IFileSystem implementations must distinguish these
+     * three states so callers can act on EOF without conflating it
+     * with a partial-buffer / I/O-failure case.
      */
-    [[nodiscard]] virtual std::size_t read(FileHandle handle, void *buffer, std::size_t size) = 0;
+    [[nodiscard]] virtual std::optional<std::size_t>
+    read(FileHandle handle, void *buffer, std::size_t size) = 0;
 
     /**
      * @brief Write up to @p size bytes from @p data to the file.

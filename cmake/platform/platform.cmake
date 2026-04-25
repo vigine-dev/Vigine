@@ -32,12 +32,20 @@
 #       Called after add_library() has produced the target.
 
 if(NOT DEFINED VIGINE_PLATFORM OR VIGINE_PLATFORM STREQUAL "")
-    string(TOLOWER "${CMAKE_SYSTEM_NAME}" _vigine_platform_lower)
-    if(_vigine_platform_lower STREQUAL "darwin")
-        set(VIGINE_PLATFORM "macos")
-    else()
-        set(VIGINE_PLATFORM "${_vigine_platform_lower}")
-    endif()
+    set(VIGINE_PLATFORM "${CMAKE_SYSTEM_NAME}")
+endif()
+
+# Normalise the resolved name regardless of whether it came from the
+# user (-DVIGINE_PLATFORM=Windows) or from CMAKE_SYSTEM_NAME. The
+# fragment lookup below is case-sensitive on POSIX filesystems, so a
+# mixed-case input would fail to resolve cmake/platform/<x>/config.cmake.
+string(TOLOWER "${VIGINE_PLATFORM}" VIGINE_PLATFORM)
+
+# Map well-known aliases onto the canonical fragment-directory names
+# (e.g. CMAKE_SYSTEM_NAME=Darwin -> "macos"). Add new entries here when
+# adopting a new platform.
+if(VIGINE_PLATFORM STREQUAL "darwin")
+    set(VIGINE_PLATFORM "macos")
 endif()
 
 set(_vigine_platform_dir "${CMAKE_CURRENT_LIST_DIR}/${VIGINE_PLATFORM}")

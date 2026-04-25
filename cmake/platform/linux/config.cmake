@@ -20,8 +20,11 @@ function(vigine_platform_setup_global)
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
 
     # libxcb is required for the XCB window backend + VK_KHR_xcb_surface.
+    # The pkg_check_modules() call below intentionally omits REQUIRED
+    # so the manual XCB_FOUND check can emit a hint pointing the
+    # developer at the right system package.
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(XCB REQUIRED xcb)
+    pkg_check_modules(XCB xcb)
     if(NOT XCB_FOUND)
         message(FATAL_ERROR "libxcb not found. Install libxcb-dev (Ubuntu) or libxcb-devel (Fedora).")
     endif()

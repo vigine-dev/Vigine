@@ -56,7 +56,7 @@ list(APPEND CMAKE_MODULE_PATH
 # cmake/platform/<platform>/config.cmake fragment. Each fragment
 # defines three callbacks consumed below: vigine_platform_setup_global,
 # vigine_platform_collect_sources, and vigine_platform_apply_target.
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/platform.cmake)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/platform/platform.cmake")
 vigine_platform_setup_global()
 
 # Build FreeType from external submodule.
