@@ -6,11 +6,17 @@
 #include "vigine/messaging/busid.h"
 #include "vigine/result.h"
 #include "vigine/api/service/serviceid.h"
+#include "vigine/statemachine/stateid.h"
 
 namespace vigine::ecs
 {
 class IECS;
 } // namespace vigine::ecs
+
+namespace vigine::engine
+{
+class IEngineToken;
+} // namespace vigine::engine
 
 namespace vigine::messaging
 {
@@ -56,12 +62,35 @@ namespace vigine
  *   - One service locator (@c service, @c registerService).
  *   - One user-bus factory (@c createMessageBus) and an id-keyed
  *     lookup (@c messageBus).
+ *   - One engine-token factory (@c makeEngineToken) that mints
+ *     @ref vigine::engine::IEngineToken handles bound to a state. The
+ *     token is the state-scoped DI surface tasks receive at
+ *     @c onEnter; see the gating split below.
  *   - A freeze-after-run boundary (@c freeze, @c isFrozen) that blocks
  *     topology mutation once @c Engine::run starts the main loop.
  *     After @ref freeze is called, @c createMessageBus returns
  *     @c nullptr and @c registerService returns
  *     @ref Result::Code::TopologyFrozen. Read-only accessors stay
  *     available.
+ *
+ * Gating split (R-StateScope hybrid policy, mirrored on
+ * @ref vigine::engine::IEngineToken):
+ *   - @b Domain accessors -- @ref service, @ref ecs (and the
+ *     follow-up @c entityManager / @c components / system-by-id
+ *     surfaces). Lookups carry lifecycle uncertainty: a registry
+ *     slot may recycle between ticks, and @ref freeze may have
+ *     dropped a previously-known id since the caller last looked
+ *     it up. The engine-token wrapper exposes these through
+ *     @ref vigine::engine::Result so callers branch on a typed
+ *     reason; the @ref IContext API itself returns the underlying
+ *     handle (@c std::shared_ptr / reference) directly because
+ *     services using @ref IContext during onInit run before any
+ *     state transitions can invalidate them.
+ *   - @b Infrastructure accessors -- @ref threadManager,
+ *     @ref systemBus, @ref stateMachine, @ref taskFlow. These
+ *     resources outlive every state transition (the context owns
+ *     them for the engine's whole lifetime), so they are always
+ *     non-gated and return references directly.
  *
  * Strict construction order (AD-5 C8, encoded by @ref AbstractContext):
  *   1. @ref core::threading::IThreadManager (created first).
@@ -197,6 +226,71 @@ class IContext
      */
     [[nodiscard]] virtual Result
         registerService(std::shared_ptr<service::IService> service) = 0;
+
+    // ------ Engine-token factory ------
+
+    /**
+     * @brief Mints a fresh @ref vigine::engine::IEngineToken bound to
+     *        @p boundState.
+     *
+     * The returned token is the state-scoped DI surface a task receives
+     * during @c onEnter. For domain accessors it calls this aggregator's
+     * non-gated accessors (which return @c std::shared_ptr / a raw
+     * reference) and wraps the outcome in a @ref vigine::engine::Result
+     * -- adding the alive-state gate that flips to
+     * @ref vigine::engine::Result::Code::Expired after invalidation. For
+     * infrastructure accessors it forwards directly (ungated, raw
+     * reference) per the R-StateScope hybrid policy described on the
+     * class docstring.
+     *
+     * The token observes the engine's @ref vigine::statemachine::IStateMachine
+     * for invalidation: when the FSM transitions out of @p boundState,
+     * the token's gated accessors start reporting
+     * @ref vigine::engine::Result::Code::Expired and any callback
+     * registered through @c subscribeExpiration fires exactly once. The
+     * ungated accessors keep working until the token is destroyed so
+     * an invalidated task can still drain in-flight scheduling.
+     *
+     * Ownership: the caller owns the returned @c std::unique_ptr.
+     * Tasks typically receive the token by reference through their
+     * wiring path; the state machine keeps the returned unique_ptr
+     * alive for the duration of the bound state.
+     *
+     * Lifetime invariants of the token wiring:
+     *   - The token captures a non-owning reference to this context
+     *     and to its @ref stateMachine. Both must outlive the token;
+     *     the engine's strict construction order guarantees this
+     *     (the context owns the state machine; both are torn down
+     *     after every token has been dropped).
+     *   - When the engine-wide signal-emitter façade has not yet been
+     *     wired through @ref IContext (the wrapper follow-up under the
+     *     #197 umbrella ships separately), the token falls back to a
+     *     file-private @c NullSignalEmitter stub so the ungated
+     *     @c signalEmitter accessor honours its "cannot fail" contract
+     *     even in the unwired configuration. Once the façade lands,
+     *     this factory passes the real wrapper through and the stub
+     *     stays uninstantiated.
+     *
+     * @param boundState State the new token is bound to. The token
+     *        does not validate that @p boundState is registered on
+     *        the FSM; passing an unregistered id yields a token that
+     *        observes the FSM but never matches any transition --
+     *        effectively a permanently-alive handle. Callers that
+     *        want a stricter contract pre-validate the id through
+     *        @ref stateMachine.
+     * @return A live token from the new aggregator
+     *         (@ref vigine::context::AbstractContext path). Token
+     *         construction is allocation-only and any
+     *         @c std::bad_alloc surfaces as an exception per the
+     *         standard library contract. The legacy
+     *         @ref vigine::Context stub (kept compiling for the
+     *         pre-R.4.5 @c Engine front door) carries no live
+     *         @ref vigine::statemachine::IStateMachine and therefore
+     *         returns @c nullptr; new code that needs a live token
+     *         goes through @c vigine::context::createContext.
+     */
+    [[nodiscard]] virtual std::unique_ptr<vigine::engine::IEngineToken>
+        makeEngineToken(vigine::statemachine::StateId boundState) = 0;
 
     // ------ Lifecycle boundary ------
 

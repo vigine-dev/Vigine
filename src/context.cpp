@@ -1,6 +1,7 @@
 #include "vigine/context.h"
 
 #include "vigine/api/ecs/iecs.h"
+#include "vigine/api/engine/iengine_token.h"
 #include "vigine/impl/ecs/platform/windowsystem.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
@@ -234,6 +235,20 @@ vigine::Context::registerService(std::shared_ptr<vigine::service::IService> /*se
     return Result{
         Result::Code::Error,
         "legacy vigine::Context does not accept service registrations; use vigine::context::createContext"};
+}
+
+std::unique_ptr<vigine::engine::IEngineToken>
+vigine::Context::makeEngineToken(vigine::statemachine::StateId /*boundState*/)
+{
+    // The legacy aggregator never wired up an IStateMachine, so the
+    // engine-token wiring (back-reference to context + FSM listener
+    // registration) cannot proceed. Return @c nullptr per the
+    // IContext docstring's legacy-stub clause; callers that need a
+    // live token construct a context through
+    // @c vigine::context::createContext, which routes through the
+    // R.4.5 aggregator @ref vigine::context::AbstractContext where
+    // the factory is fully wired.
+    return nullptr;
 }
 
 void vigine::Context::freeze() noexcept

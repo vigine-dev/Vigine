@@ -1,10 +1,13 @@
 #include "vigine/api/context/abstractcontext.h"
 
+#include <memory>
 #include <mutex>
 #include <utility>
 
+#include "vigine/api/engine/iengine_token.h"
 #include "vigine/api/service/abstractservice.h"
 #include "vigine/impl/ecs/factory.h"
+#include "vigine/impl/engine/enginetoken.h"
 #include "vigine/messaging/factory.h"
 #include "vigine/statemachine/factory.h"
 #include "vigine/taskflow/factory.h"
@@ -224,6 +227,72 @@ Result AbstractContext::registerService(std::shared_ptr<service::IService> servi
     }
     _services.emplace(stamped.index, std::move(service));
     return Result{};
+}
+
+// ---------------------------------------------------------------------
+// Engine-token factory
+// ---------------------------------------------------------------------
+
+std::unique_ptr<vigine::engine::IEngineToken>
+AbstractContext::makeEngineToken(vigine::statemachine::StateId boundState)
+{
+    // Mint a fresh @ref engine::EngineToken bound to @p boundState.
+    // The token captures:
+    //   - this aggregator by reference (so its gated accessors can
+    //     delegate to @ref serviceInternal / @ref ecsInternal etc.),
+    //   - the engine's @ref IStateMachine wrapper (so the token can
+    //     register an invalidation listener via the
+    //     @ref AbstractStateMachine subclass back-end and observe
+    //     transitions out of @p boundState),
+    //   - a @c nullptr signal-emitter pointer because the engine-wide
+    //     @ref ISignalEmitter façade has not yet been wired through
+    //     @ref IContext (the wrapper follow-up under the #197 umbrella
+    //     ships separately, see #283). The @c EngineToken constructor
+    //     handles the null path by allocating a file-private
+    //     @c NullSignalEmitter stub so the ungated @c signalEmitter
+    //     accessor never crashes; once the real façade lands, this
+    //     factory passes the live wrapper through and the stub stays
+    //     uninstantiated.
+    //
+    // The token does NOT inspect this aggregator's freeze flag: a task
+    // can request a fresh token after @ref freeze (e.g. when a state
+    // transition mints one for an onEnter handler) just like every
+    // read-only accessor stays available post-freeze. The freeze
+    // boundary blocks topology mutation; minting a state-scoped DI
+    // handle is not a topology mutation.
+    return std::make_unique<vigine::engine::EngineToken>(
+        boundState, *this, *_stateMachine, /*signalEmitter=*/nullptr);
+}
+
+// ---------------------------------------------------------------------
+// Engine-internal scope-bypass accessors
+// ---------------------------------------------------------------------
+
+std::shared_ptr<service::IService>
+AbstractContext::serviceInternal(service::ServiceId id) const
+{
+    // Engine-internal direct lookup. Mirrors @ref service exactly --
+    // the engine-side scope-bypass surface intentionally shares the
+    // same generational guarantees as the public surface so callers
+    // who switch between gated (token) and ungated (internal) code
+    // paths observe identical results for the same @p id. The
+    // implementation reuses @ref service to avoid drift; the only
+    // reason this is a separate symbol is the R-StateScope split
+    // between the public @ref IContext surface (gated through tokens
+    // in the engine-token wrapper) and the engine-internal direct
+    // surface that exists on @ref AbstractContext but not on
+    // @ref IContext.
+    return service(id);
+}
+
+ecs::IECS &AbstractContext::ecsInternal() noexcept
+{
+    // Engine-internal direct alias for @ref ecs. The underlying
+    // wrapper lives for the aggregator's lifetime (it is owned
+    // through @ref _ecs, the unique_ptr declared in this class) so
+    // returning a reference is safe regardless of any state-machine
+    // transition or freeze event.
+    return *_ecs;
 }
 
 // ---------------------------------------------------------------------

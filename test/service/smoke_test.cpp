@@ -15,9 +15,11 @@
 // ---------------------------------------------------------------------------
 
 #include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/iengine_token.h"
 #include "vigine/api/service/factory.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/result.h"
+#include "vigine/statemachine/stateid.h"
 
 #include <gtest/gtest.h>
 
@@ -81,6 +83,12 @@ class ThrowingContext final : public vigine::IContext
         registerService(std::shared_ptr<vigine::service::IService>) override
     {
         throw std::runtime_error{"smoke ThrowingContext: registerService called"};
+    }
+
+    [[nodiscard]] std::unique_ptr<vigine::engine::IEngineToken>
+        makeEngineToken(vigine::statemachine::StateId) override
+    {
+        throw std::runtime_error{"smoke ThrowingContext: makeEngineToken called"};
     }
 
     void freeze() noexcept override {}
