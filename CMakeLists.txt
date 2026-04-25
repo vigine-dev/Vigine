@@ -234,6 +234,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/core/threading/abstractthreadmanager.h
     ${INCLUDE_DIR}/vigine/core/threading/threadmanager.h
     ${INCLUDE_DIR}/vigine/core/threading/factory.h
+    ${INCLUDE_DIR}/vigine/core/threading/parallel_for.h
     ${INCLUDE_DIR}/vigine/payload/payloadtypeid.h
     ${INCLUDE_DIR}/vigine/payload/payloadrange.h
     ${INCLUDE_DIR}/vigine/payload/ipayloadregistry.h
@@ -313,6 +314,7 @@ set(SOURCES
     ${SRC_DIR}/core/threading/defaultmessagechannel.cpp
     ${SRC_DIR}/core/threading/defaultthreadmanager_factories.cpp
     ${SRC_DIR}/core/threading/factory.cpp
+    ${SRC_DIR}/core/threading/parallel_for.cpp
     ${SRC_DIR}/payload/abstractpayloadregistry.h
     ${SRC_DIR}/payload/abstractpayloadregistry.cpp
     ${SRC_DIR}/payload/defaultpayloadregistry.h
