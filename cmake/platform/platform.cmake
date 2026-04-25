@@ -20,11 +20,19 @@
 #       directory-scope compile definitions, find packages whose
 #       absence is fatal on this platform, etc.
 #
-#   vigine_platform_collect_sources(<headers_list_var> <sources_list_var>)
-#       Append platform-specific header / source paths onto the named
-#       lists. Used to compose the SOURCES_PLATFORM / HEADER_PLATFORM
-#       sets and the platform-specific surface factory + os-signal
-#       source pulled into the vigine target.
+#   vigine_platform_collect_sources(
+#           <headers_ecs_platform_var>
+#           <sources_ecs_platform_var>
+#           <sources_ecs_graphics_var>
+#           <sources_eventscheduler_var>)
+#       Append platform-specific header / source paths onto the four
+#       named lists. The lists target distinct subsystems:
+#         1. ECS platform (window component header / source)
+#         2. ECS graphics (Vulkan surface factory source)
+#         3. Event scheduler (OS-signal source)
+#       Each fragment appends its concretes via the SAME positional API
+#       so the root CMakeLists.txt has a single dispatcher call and zero
+#       if(WIN32 / APPLE / UNIX) branches (R-PlatformPortability).
 #
 #   vigine_platform_apply_target(<target>)
 #       Apply target-scoped compile definitions, include directories,

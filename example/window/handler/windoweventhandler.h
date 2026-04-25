@@ -1,20 +1,20 @@
 #pragma once
 
-#include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
 
 #include <functional>
 #include <string>
 
-class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
+class WindowEventHandler : public vigine::ecs::platform::IWindowEventHandlerComponent
 {
   public:
-    using MouseButtonDownCallback = std::function<void(vigine::platform::MouseButton, int, int)>;
-    using MouseButtonUpCallback   = std::function<void(vigine::platform::MouseButton, int, int)>;
+    using MouseButtonDownCallback = std::function<void(vigine::ecs::platform::MouseButton, int, int)>;
+    using MouseButtonUpCallback   = std::function<void(vigine::ecs::platform::MouseButton, int, int)>;
     using MouseMoveCallback       = std::function<void(int, int)>;
     using MouseWheelCallback      = std::function<void(int, int, int)>;
-    using KeyDownCallback         = std::function<void(const vigine::platform::KeyEvent &)>;
-    using KeyUpCallback           = std::function<void(const vigine::platform::KeyEvent &)>;
-    using CharCallback            = std::function<void(const vigine::platform::TextEvent &)>;
+    using KeyDownCallback         = std::function<void(const vigine::ecs::platform::KeyEvent &)>;
+    using KeyUpCallback           = std::function<void(const vigine::ecs::platform::KeyEvent &)>;
+    using CharCallback            = std::function<void(const vigine::ecs::platform::TextEvent &)>;
     using WindowResizedCallback   = std::function<void(int, int)>;
 
     explicit WindowEventHandler(std::string handlerId = "Handler");
@@ -39,14 +39,14 @@ class WindowEventHandler : public vigine::platform::IWindowEventHandlerComponent
     void onMouseLeave() override;
     void onMouseWheel(int delta, int x, int y) override;
     void onMouseHorizontalWheel(int delta, int x, int y) override;
-    void onMouseButtonDown(vigine::platform::MouseButton button, int x, int y) override;
-    void onMouseButtonUp(vigine::platform::MouseButton button, int x, int y) override;
-    void onMouseButtonDoubleClick(vigine::platform::MouseButton button, int x, int y) override;
+    void onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y) override;
+    void onMouseButtonUp(vigine::ecs::platform::MouseButton button, int x, int y) override;
+    void onMouseButtonDoubleClick(vigine::ecs::platform::MouseButton button, int x, int y) override;
 
-    void onKeyDown(const vigine::platform::KeyEvent &event) override;
-    void onKeyUp(const vigine::platform::KeyEvent &event) override;
-    void onChar(const vigine::platform::TextEvent &event) override;
-    void onDeadChar(const vigine::platform::TextEvent &event) override;
+    void onKeyDown(const vigine::ecs::platform::KeyEvent &event) override;
+    void onKeyUp(const vigine::ecs::platform::KeyEvent &event) override;
+    void onChar(const vigine::ecs::platform::TextEvent &event) override;
+    void onDeadChar(const vigine::ecs::platform::TextEvent &event) override;
 
   private:
     std::string _handlerId;

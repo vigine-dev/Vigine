@@ -2,9 +2,9 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/rendersystem.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <algorithm>
 #include <cmath>
@@ -27,8 +27,8 @@ TextEditorSystem::TextEditorSystem(std::shared_ptr<TextEditState> state) : _stat
 }
 
 void TextEditorSystem::bind(vigine::Context *context,
-                            vigine::graphics::GraphicsService *graphicsService,
-                            vigine::graphics::RenderSystem *renderSystem)
+                            vigine::ecs::graphics::GraphicsService *graphicsService,
+                            vigine::ecs::graphics::RenderSystem *renderSystem)
 {
     _context         = context;
     _graphicsService = graphicsService;
@@ -316,13 +316,13 @@ void TextEditorSystem::onKeyDown(unsigned int keyCode)
     }
 }
 
-void TextEditorSystem::onChar(const vigine::platform::TextEvent &event, uint8_t movementKeyMask)
+void TextEditorSystem::onChar(const vigine::ecs::platform::TextEvent &event, uint8_t movementKeyMask)
 {
     if (!_state)
         return;
 
-    const bool isCtrlAltCombo = (event.modifiers & vigine::platform::KeyModifierControl) != 0 ||
-                                (event.modifiers & vigine::platform::KeyModifierAlt) != 0;
+    const bool isCtrlAltCombo = (event.modifiers & vigine::ecs::platform::KeyModifierControl) != 0 ||
+                                (event.modifiers & vigine::ecs::platform::KeyModifierAlt) != 0;
     if (isCtrlAltCombo || movementKeyMask != 0)
         return;
 

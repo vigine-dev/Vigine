@@ -3,7 +3,7 @@
 #include "vigine/impl/ecs/entitymanager.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
-#include <vigine/service/platformservice.h>
+#include <vigine/impl/ecs/platform/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
 
@@ -18,7 +18,7 @@ void InitWindowTask::contextChanged()
         return;
     }
 
-    _platformService = dynamic_cast<vigine::platform::PlatformService *>(
+    _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
         context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
 }
 

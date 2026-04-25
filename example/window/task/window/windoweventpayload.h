@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
 #include <vigine/payload/payloadtypeid.h>
 #include <vigine/signalemitter/isignalpayload.h>
 
@@ -45,7 +45,7 @@ inline constexpr vigine::payload::PayloadTypeId kKeyDownPayloadTypeId{0x20102u};
 class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayload
 {
   public:
-    MouseButtonDownPayload(vigine::platform::MouseButton button, int x, int y) noexcept
+    MouseButtonDownPayload(vigine::ecs::platform::MouseButton button, int x, int y) noexcept
         : _button(button), _x(x), _y(y)
     {
     }
@@ -63,12 +63,12 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
         return std::make_unique<MouseButtonDownPayload>(_button, _x, _y);
     }
 
-    [[nodiscard]] vigine::platform::MouseButton button() const noexcept { return _button; }
+    [[nodiscard]] vigine::ecs::platform::MouseButton button() const noexcept { return _button; }
     [[nodiscard]] int                           x() const noexcept { return _x; }
     [[nodiscard]] int                           y() const noexcept { return _y; }
 
   private:
-    const vigine::platform::MouseButton _button;
+    const vigine::ecs::platform::MouseButton _button;
     const int                           _x;
     const int                           _y;
 };
@@ -76,7 +76,7 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
 /**
  * @brief Immutable payload describing a key-down event.
  *
- * Wraps a copy of the originating @ref vigine::platform::KeyEvent so
+ * Wraps a copy of the originating @ref vigine::ecs::platform::KeyEvent so
  * that subscribers can read @c keyCode, @c scanCode, @c modifiers,
  * @c repeatCount, and @c isRepeat without reaching back into the
  * platform layer. The wrapped struct is held by value; exposing it by
@@ -85,7 +85,7 @@ class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayloa
 class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
 {
   public:
-    explicit KeyDownPayload(const vigine::platform::KeyEvent &event) noexcept : _event(event) {}
+    explicit KeyDownPayload(const vigine::ecs::platform::KeyEvent &event) noexcept : _event(event) {}
 
     ~KeyDownPayload() override = default;
 
@@ -100,8 +100,8 @@ class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
         return std::make_unique<KeyDownPayload>(_event);
     }
 
-    [[nodiscard]] const vigine::platform::KeyEvent &event() const noexcept { return _event; }
+    [[nodiscard]] const vigine::ecs::platform::KeyEvent &event() const noexcept { return _event; }
 
   private:
-    const vigine::platform::KeyEvent _event;
+    const vigine::ecs::platform::KeyEvent _event;
 };

@@ -10,12 +10,14 @@
 
 namespace vigine
 {
+namespace ecs
+{
 namespace graphics
 {
 class GraphicsService;
 }
+} // namespace ecs
 } // namespace vigine
-
 // Creates two entities for the 3D text editor:
 //   "TextEditBgEntity"  - flat rectangular background panel (MeshComponent plane)
 //   "TextEditEntity"    - bitmap text with individual character planes
@@ -35,5 +37,5 @@ class SetupTextEditTask : public vigine::AbstractTask
   private:
     std::shared_ptr<TextEditState> _state;
     std::shared_ptr<TextEditorSystem> _editorSystem;
-    vigine::graphics::GraphicsService *_graphicsService{nullptr};
+    vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
 };

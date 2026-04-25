@@ -3,10 +3,10 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/rendersystem.h>
-#include <vigine/ecs/render/texturecomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/texturecomponent.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -20,12 +20,12 @@ void LoadTexturesTask::contextChanged()
         return;
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
 
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 }
@@ -140,14 +140,14 @@ vigine::Result LoadTexturesTask::execute()
 
         // Set texture data
         textureComponent->setDimensions(imageData.width, imageData.height);
-        textureComponent->setFormat(vigine::graphics::TextureFormat::RGBA8_SRGB);
+        textureComponent->setFormat(vigine::ecs::graphics::TextureFormat::RGBA8_SRGB);
         textureComponent->setPixelData(imageData.pixels);
 
         // Set filtering and wrapping
-        textureComponent->setFilterMode(vigine::graphics::TextureFilter::Linear,
-                                        vigine::graphics::TextureFilter::Linear);
-        textureComponent->setWrapMode(vigine::graphics::TextureWrapMode::Repeat,
-                                      vigine::graphics::TextureWrapMode::Repeat);
+        textureComponent->setFilterMode(vigine::ecs::graphics::TextureFilter::Linear,
+                                        vigine::ecs::graphics::TextureFilter::Linear);
+        textureComponent->setWrapMode(vigine::ecs::graphics::TextureWrapMode::Repeat,
+                                      vigine::ecs::graphics::TextureWrapMode::Repeat);
 
         _graphicsService->unbindEntity();
 

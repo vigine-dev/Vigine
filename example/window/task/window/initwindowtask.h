@@ -1,19 +1,21 @@
 #pragma once
 
 #include <vigine/abstracttask.h>
-#include <vigine/ecs/platform/iwindoweventhandler.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
 
 #include <memory>
 #include <vector>
 
 namespace vigine
 {
+namespace ecs
+{
 namespace platform
 {
 class PlatformService;
 }
+} // namespace ecs
 } // namespace vigine
-
 class InitWindowTask : public vigine::AbstractTask
 {
   public:
@@ -23,8 +25,8 @@ class InitWindowTask : public vigine::AbstractTask
     vigine::Result execute() override;
 
   private:
-    vigine::platform::PlatformService *_platformService{nullptr};
-    std::vector<std::unique_ptr<vigine::platform::IWindowEventHandlerComponent>> _eventHandlers;
+    vigine::ecs::platform::PlatformService *_platformService{nullptr};
+    std::vector<std::unique_ptr<vigine::ecs::platform::IWindowEventHandlerComponent>> _eventHandlers;
 
     void createEventHandlers();
 };

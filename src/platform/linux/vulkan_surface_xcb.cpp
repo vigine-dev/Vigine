@@ -1,6 +1,6 @@
 #if defined(__linux__)
 
-#include "ecs/render/surfacefactory.h"
+#include "impl/ecs/graphics/surfacefactory.h"
 
 #include <iostream>
 
@@ -8,6 +8,8 @@
 #include <xcb/xcb.h>
 
 namespace vigine
+{
+namespace ecs
 {
 namespace graphics
 {
@@ -88,6 +90,7 @@ std::unique_ptr<SurfaceFactory> getPlatformSurfaceFactory()
 }
 
 } // namespace graphics
+} // namespace ecs
 } // namespace vigine
 
 #endif // __linux__

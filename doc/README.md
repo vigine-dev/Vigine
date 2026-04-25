@@ -13,14 +13,17 @@ If a task description does not include the project folder layout, use this secti
 - `include/vigine/service/` public service interfaces and implementations exposed through `Context`.
 - `include/vigine/signalemitter/` `ISignalEmitter` facade over `IMessageBus` for the signal-slot pattern used by `TaskFlow`.
 - `include/vigine/messaging/` `IMessageBus`, `ISubscriber`, `MessageFilter`, and the message envelope contracts the facade posts onto.
-- `include/vigine/ecs/` ECS-facing engine types.
-- `include/vigine/ecs/platform/` platform-agnostic window and input interfaces.
-- `include/vigine/ecs/render/` rendering interfaces and systems.
-- `include/vigine/ecs/postgresql/` PostgreSQL data and system API.
+- `include/vigine/api/ecs/` ECS-facing engine interfaces (entities, components, systems).
+- `include/vigine/api/ecs/platform/` platform-agnostic window and input interfaces.
+- `include/vigine/api/ecs/graphics/` rendering interfaces and abstractions.
+- `include/vigine/impl/ecs/` concrete ECS types (entity, component manager, factory).
+- `include/vigine/impl/ecs/platform/` platform window components and dispatch types.
+- `include/vigine/impl/ecs/graphics/` concrete rendering components and systems.
+- `include/vigine/experimental/ecs/postgresql/` PostgreSQL data and system API.
 - `src/` engine implementations for the public headers.
-- `src/ecs/platform/` platform window components and dispatch internals; currently includes WinAPI and Cocoa implementations.
-- `src/ecs/render/` rendering implementation.
-- `src/ecs/postgresql/` PostgreSQL implementation details.
+- `src/impl/ecs/platform/` platform window component implementations; currently includes WinAPI and Cocoa.
+- `src/impl/ecs/graphics/` rendering implementation (Vulkan backend, render system, pipeline cache).
+- `src/experimental/ecs/postgresql/` PostgreSQL implementation details.
 - `example/` example applications built on top of the engine.
 - `test/` tests for engine components and architecture.
 
@@ -55,16 +58,16 @@ If a task description does not include the project folder layout, use this secti
 - `TextureComponent` stores CPU pixel data, dimensions, format, GPU `TextureHandle`, and descriptor set binding info; used for SDF atlases and future texture-based rendering.
 - `PipelineCache` (owned by `RenderSystem`) maps `ShaderComponent` configs to `PipelineHandle` via hash-based caching; creates Vulkan pipelines on first use.
 - `EntityDrawGroup` groups entities sharing the same pipeline for draw-call submission.
-- `GraphicsBackend` is the abstract rendering API interface; `VulkanAPI` is the concrete backend.
+- `IGraphicsBackend` is the abstract rendering API interface; `VulkanAPI` is the concrete backend.
 - `VulkanAPI` is a thin orchestrator (~380 lines); all Vulkan-specific work is delegated to five internal helper classes:
-  - `VulkanDevice` (`src/ecs/render/`) — Vulkan instance, physical device, logical device, surface, and queues. Also wraps `SurfaceFactory` for platform-specific surface creation.
-  - `VulkanSwapchain` (`src/ecs/render/`) — swapchain lifecycle, render pass, framebuffers, command pool, sync primitives (semaphores + fences), and per-frame acquire/present logic.
-  - `VulkanTextureStore` (`src/ecs/render/`) — texture CRUD (`createTexture`, `uploadTexture`, `destroyTexture`), staging upload with fence-guarded cleanup, and entity texture descriptor set management.
-  - `VulkanPipelineStore` (`src/ecs/render/`) — pipeline and shader module CRUD; maps opaque `PipelineHandle`/`ShaderModuleHandle` to internal `vk::Pipeline`/`vk::ShaderModule` objects.
-  - `VulkanFrameRenderer` (`src/ecs/render/`) — per-frame command recording; owns SDF pipeline, per-image glyph/instance buffers, entity draw group dispatch, and rotation animation state.
-- `VulkanTypes` (`src/ecs/render/vulkantypes.h`) — shared `PushConstants` struct used by swapchain pipeline layout and frame renderer push constant writes.
-- `GraphicsBackend::createTexture()` and `uploadTexture()` manage texture creation and pixel upload; `VulkanAPI` delegates these to `VulkanTextureStore` which uses staging buffers and image layout transitions.
-- SDF atlas for text rendering is implemented via `TextureHandle` and managed through `GraphicsBackend` methods instead of direct Vulkan objects.
+  - `VulkanDevice` (`src/impl/ecs/graphics/`) — Vulkan instance, physical device, logical device, surface, and queues. Also wraps `SurfaceFactory` for platform-specific surface creation.
+  - `VulkanSwapchain` (`src/impl/ecs/graphics/`) — swapchain lifecycle, render pass, framebuffers, command pool, sync primitives (semaphores + fences), and per-frame acquire/present logic.
+  - `VulkanTextureStore` (`src/impl/ecs/graphics/`) — texture CRUD (`createTexture`, `uploadTexture`, `destroyTexture`), staging upload with fence-guarded cleanup, and entity texture descriptor set management.
+  - `VulkanPipelineStore` (`src/impl/ecs/graphics/`) — pipeline and shader module CRUD; maps opaque `PipelineHandle`/`ShaderModuleHandle` to internal `vk::Pipeline`/`vk::ShaderModule` objects.
+  - `VulkanFrameRenderer` (`src/impl/ecs/graphics/`) — per-frame command recording; owns SDF pipeline, per-image glyph/instance buffers, entity draw group dispatch, and rotation animation state.
+- `VulkanTypes` (`src/impl/ecs/graphics/vulkantypes.h`) — shared `PushConstants` struct used by swapchain pipeline layout and frame renderer push constant writes.
+- `IGraphicsBackend::createTexture()` and `uploadTexture()` manage texture creation and pixel upload; `VulkanAPI` delegates these to `VulkanTextureStore` which uses staging buffers and image layout transitions.
+- SDF atlas for text rendering is implemented via `TextureHandle` and managed through `IGraphicsBackend` methods instead of direct Vulkan objects.
 - Entity pipelines are created on demand by `PipelineCache`, not hardcoded in `createSwapchain()`.
 - `PostgreSQLSystem : AbstractSystem`
 - `PostgreSQLResult : Result`

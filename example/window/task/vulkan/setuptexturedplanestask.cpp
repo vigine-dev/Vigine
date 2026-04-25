@@ -2,13 +2,13 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/texturecomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/texturecomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <cmath>
 #include <iostream>
@@ -21,12 +21,12 @@ void SetupTexturedPlanesTask::contextChanged()
         return;
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
 
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 }
@@ -115,13 +115,13 @@ vigine::Result SetupTexturedPlanesTask::execute()
         }
 
         // Create plane mesh (procedural in shader - 6 vertices for 2 triangles)
-        auto planeMesh = vigine::graphics::MeshComponent();
+        auto planeMesh = vigine::ecs::graphics::MeshComponent();
         planeMesh.setProceduralInShader(true, 6);
 
         renderComponent->setMesh(planeMesh);
 
         // Set textured plane shader
-        vigine::graphics::ShaderComponent shader("textured_plane.vert.spv",
+        vigine::ecs::graphics::ShaderComponent shader("textured_plane.vert.spv",
                                                  "textured_plane.frag.spv");
         shader.setHasTextureBinding(true);
         renderComponent->setShader(shader);
@@ -156,7 +156,7 @@ vigine::Result SetupTexturedPlanesTask::execute()
         _graphicsService->bindEntity(planeEntity);
 
         // Set transform
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition(config.position);
         transform.setScale({planeScale.x, planeScale.y, 1.0f});
         transform.setBillboard(true);

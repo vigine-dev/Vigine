@@ -79,7 +79,7 @@ void ProcessInputEventTask::onKeyDown(const KeyDownPayload &payload)
 {
     _hasKeyEvent = true;
 
-    const vigine::platform::KeyEvent &event = payload.event();
+    const vigine::ecs::platform::KeyEvent &event = payload.event();
 
     std::cout << "[ProcessInputEventTask::onKeyDown] Key down: code=" << event.keyCode
               << ", scan=" << event.scanCode << ", mods=" << event.modifiers

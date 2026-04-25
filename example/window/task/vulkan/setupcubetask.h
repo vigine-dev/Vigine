@@ -4,12 +4,14 @@
 
 namespace vigine
 {
+namespace ecs
+{
 namespace graphics
 {
 class GraphicsService;
 }
+} // namespace ecs
 } // namespace vigine
-
 class SetupCubeTask : public vigine::AbstractTask
 {
   public:
@@ -19,5 +21,5 @@ class SetupCubeTask : public vigine::AbstractTask
     vigine::Result execute() override;
 
   private:
-    vigine::graphics::GraphicsService *_graphicsService{nullptr};
+    vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
 };

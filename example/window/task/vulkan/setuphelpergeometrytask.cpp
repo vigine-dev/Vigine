@@ -2,12 +2,12 @@
 
 #include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
 #include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <iostream>
 
@@ -21,12 +21,12 @@ void SetupHelperGeometryTask::contextChanged()
         return;
     }
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
         context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
 
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
+        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
             context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
     }
 }
@@ -58,15 +58,15 @@ vigine::Result SetupHelperGeometryTask::execute()
                               "Render component is unavailable for PyramidEntity");
     }
 
-    auto pyramidMesh = vigine::graphics::MeshComponent::createCube();
+    auto pyramidMesh = vigine::ecs::graphics::MeshComponent::createCube();
     pyramidMesh.setProceduralInShader(true, 18); // Pyramid shader generates 18 vertices
     pyramidRC->setMesh(pyramidMesh);
     {
-        vigine::graphics::ShaderComponent shader("pyramid.vert.spv", "pyramid.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("pyramid.vert.spv", "pyramid.frag.spv");
         pyramidRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent pyramidTransform;
+    vigine::ecs::graphics::TransformComponent pyramidTransform;
     pyramidTransform.setPosition({0.0f, 0.0f, 0.0f});
     pyramidTransform.setScale({1.0f, 1.0f, 1.0f});
     pyramidRC->setTransform(pyramidTransform);
@@ -90,15 +90,15 @@ vigine::Result SetupHelperGeometryTask::execute()
                               "Render component is unavailable for GridEntity");
     }
 
-    auto gridMesh = vigine::graphics::MeshComponent::createCube();
+    auto gridMesh = vigine::ecs::graphics::MeshComponent::createCube();
     gridMesh.setProceduralInShader(true, 6); // Grid shader generates 6 vertices
     gridRC->setMesh(gridMesh);
     {
-        vigine::graphics::ShaderComponent shader("grid.vert.spv", "grid.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("grid.vert.spv", "grid.frag.spv");
         gridRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent gridTransform;
+    vigine::ecs::graphics::TransformComponent gridTransform;
     gridTransform.setPosition({0.0f, 0.0f, 0.0f});
     gridTransform.setScale({1.0f, 1.0f, 1.0f});
     gridRC->setTransform(gridTransform);
@@ -122,15 +122,15 @@ vigine::Result SetupHelperGeometryTask::execute()
                               "Render component is unavailable for SunEntity");
     }
 
-    auto sunMesh = vigine::graphics::MeshComponent::createCube();
+    auto sunMesh = vigine::ecs::graphics::MeshComponent::createCube();
     sunMesh.setProceduralInShader(true, 768); // UV-sphere: 16 lon x 8 lat x 2 tri x 3 vert
     sunRC->setMesh(sunMesh);
     {
-        vigine::graphics::ShaderComponent shader("sun.vert.spv", "sun.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("sun.vert.spv", "sun.frag.spv");
         sunRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent sunTransform;
+    vigine::ecs::graphics::TransformComponent sunTransform;
     sunTransform.setPosition({0.0f, 0.0f, 0.0f});
     sunTransform.setScale({1.0f, 1.0f, 1.0f});
     sunRC->setTransform(sunTransform);
