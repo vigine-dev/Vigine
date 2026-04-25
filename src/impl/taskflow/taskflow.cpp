@@ -469,17 +469,35 @@ void TaskFlow::runCurrentTask() {
     // upcoming TaskFlow rewrite.
     token = _context->makeEngineToken(vigine::statemachine::StateId{});
   }
-  _currTask->setApi(token.get());
 
-  // Run the task (canonical R-StateScope entry point). The Result
-  // drives the result-code-keyed transitions registered through
-  // route().
-  auto currStatus = _currTask->run();
+  // RAII scope guard: ensures setApi(nullptr) runs even if run()
+  // throws. The guard's destructor clears the binding before the
+  // owning unique_ptr below releases the token, so the task cannot
+  // observe a dangling IEngineToken* through a stray callback.
+  struct ApiBindingGuard {
+    AbstractTask *task;
+    explicit ApiBindingGuard(AbstractTask *t) : task(t) {}
+    ~ApiBindingGuard() {
+      if (task)
+        task->setApi(nullptr);
+    }
+    ApiBindingGuard(const ApiBindingGuard &)            = delete;
+    ApiBindingGuard &operator=(const ApiBindingGuard &) = delete;
+    ApiBindingGuard(ApiBindingGuard &&)                 = delete;
+    ApiBindingGuard &operator=(ApiBindingGuard &&)      = delete;
+  };
 
-  // Clear the binding before the token expires so the task cannot
-  // accidentally reach the dying token from a callback that fires
-  // outside the run() scope.
-  _currTask->setApi(nullptr);
+  Result currStatus;
+  {
+    _currTask->setApi(token.get());
+    [[maybe_unused]] ApiBindingGuard guard(_currTask);
+
+    // Run the task (canonical R-StateScope entry point). The Result
+    // drives the result-code-keyed transitions registered through
+    // route(). If run() throws, the guard above clears the binding
+    // before stack unwinding releases `token`.
+    currStatus = _currTask->run();
+  }
   token.reset();
 
   // Check possible transitions

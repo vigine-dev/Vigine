@@ -8,9 +8,11 @@
  * @ref ITask is the task-side half of the @ref vigine::engine::IEngineToken
  * contract documented in @c architecture.md § R-StateScope. The task
  * flow hands every concrete task a state-scoped @ref IEngineToken via
- * @ref setApi before invoking @ref run; the task reaches engine
- * subsystems exclusively through the bound token instead of caching a
- * raw @ref vigine::IContext pointer.
+ * @ref setApi before invoking @ref run; tasks SHOULD prefer the bound
+ * token for engine access. Legacy @c context()-based access remains
+ * available during the v0.1.0 migration window for tasks still derived
+ * from the @ref vigine::ContextHolder mixin; future versions will
+ * remove the legacy path and require the bound token exclusively.
  *
  * Lifecycle:
  *   - @ref setApi binds a non-owning @ref vigine::engine::IEngineToken

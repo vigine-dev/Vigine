@@ -23,8 +23,9 @@ void AddSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Або дописати реальний insert-сценарій, або прибрати задачу; зараз вона завершується
-// успішно без жодної дії та без перевірки entity/_dbService.
+// COPILOT_TODO: Either implement a real insert scenario or remove
+// this task; it currently returns Success without doing any work and
+// without validating entity/_dbService.
 vigine::Result AddSomeDataTask::run()
 {
     std::println("-- AddSomeDataTask::run()");

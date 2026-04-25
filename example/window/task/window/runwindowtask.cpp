@@ -117,8 +117,9 @@ void RunWindowTask::contextChanged()
         _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
 }
 
-// COPILOT_TODO: Гарантувати unbindEntity() на всіх ранніх виходах через
-// RAII/guard, інакше PlatformService може залишитися прив'язаним після помилки.
+// COPILOT_TODO: Guarantee unbindEntity() on every early exit via an
+// RAII/scope guard; otherwise PlatformService can stay bound to the
+// entity after an error return path.
 vigine::Result RunWindowTask::run()
 {
     if ((!_platformService || !_graphicsService) && context())
