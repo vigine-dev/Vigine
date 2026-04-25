@@ -13,7 +13,7 @@
 #include "vigine/result.h"
 #include "vigine/service/databaseservice.h"
 #include "vigine/service/graphicsservice.h"
-#include "vigine/service/iservice.h"
+#include "vigine/api/service/iservice.h"
 #include "vigine/service/platformservice.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/taskflow/itaskflow.h"

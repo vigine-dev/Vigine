@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "vigine/engine/engineconfig.h"
-#include "vigine/engine/iengine.h"
+#include "vigine/api/engine/engineconfig.h"
+#include "vigine/api/engine/iengine.h"
 
 namespace vigine::engine
 {

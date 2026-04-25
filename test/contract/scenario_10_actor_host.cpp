@@ -25,7 +25,7 @@
 #include "vigine/actorhost/iactor.h"
 #include "vigine/actorhost/iactorhost.h"
 #include "vigine/actorhost/iactormailbox.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/messaging/imessage.h"
 #include "vigine/messaging/imessagebus.h"
 #include "vigine/messaging/messagekind.h"

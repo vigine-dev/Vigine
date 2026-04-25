@@ -5,8 +5,8 @@
 #include <memory>
 #include <mutex>
 
-#include "vigine/engine/engineconfig.h"
-#include "vigine/engine/iengine.h"
+#include "vigine/api/engine/engineconfig.h"
+#include "vigine/api/engine/iengine.h"
 
 namespace vigine
 {
@@ -22,8 +22,8 @@ namespace vigine::engine
  * @ref AbstractEngine is the stateful layer of the @ref IEngine recipe:
  * it owns the context aggregator and encodes the strict construction
  * and destruction order required by AD-5 C8. A concrete closer (see
- * @ref DefaultEngine in @c src/engine) seals the inheritance chain so
- * the factory can hand out @c std::unique_ptr<IEngine>.
+ * @ref Engine in @c include/vigine/impl/engine) seals the inheritance
+ * chain so the factory can hand out @c std::unique_ptr<IEngine>.
  *
  * The class carries state, so it uses the project's @c Abstract naming
  * convention. All data members are @c private per the strict

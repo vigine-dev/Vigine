@@ -1,14 +1,14 @@
 #pragma once
 
-#include "vigine/engine/abstractengine.h"
-#include "vigine/engine/engineconfig.h"
+#include "vigine/api/engine/abstractengine.h"
+#include "vigine/api/engine/engineconfig.h"
 
 namespace vigine::engine
 {
 /**
  * @brief Minimal concrete engine that seals the wrapper recipe.
  *
- * @ref DefaultEngine exists so @ref createEngine can return a real
+ * @ref Engine exists so @ref createEngine can return a real
  * owning @c std::unique_ptr<IEngine>. It carries no domain-specific
  * behaviour; its accessors fall through to @ref AbstractEngine. The
  * class is @c final to close the inheritance chain for this leaf;
@@ -16,16 +16,16 @@ namespace vigine::engine
  * embedded harnesses) derive from @ref AbstractEngine directly and
  * supply their own factory entry points.
  */
-class DefaultEngine final : public AbstractEngine
+class Engine final : public AbstractEngine
 {
   public:
-    explicit DefaultEngine(const EngineConfig &config);
-    ~DefaultEngine() override;
+    explicit Engine(const EngineConfig &config);
+    ~Engine() override;
 
-    DefaultEngine(const DefaultEngine &)            = delete;
-    DefaultEngine &operator=(const DefaultEngine &) = delete;
-    DefaultEngine(DefaultEngine &&)                 = delete;
-    DefaultEngine &operator=(DefaultEngine &&)      = delete;
+    Engine(const Engine &)            = delete;
+    Engine &operator=(const Engine &) = delete;
+    Engine(Engine &&)                 = delete;
+    Engine &operator=(Engine &&)      = delete;
 };
 
 } // namespace vigine::engine

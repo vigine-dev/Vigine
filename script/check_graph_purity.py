@@ -24,10 +24,13 @@ from pathlib import Path
 FORBIDDEN_INCLUDE_SEGMENTS: list[str] = [
     "vigine/messaging/",
     "vigine/service/",
+    "vigine/api/service/",
     "vigine/ecs/",
     "vigine/fsm/",
     "vigine/taskflow/",
     "vigine/context/",
+    "vigine/api/context/",
+    "vigine/impl/context/",
 ]
 
 # ---------------------------------------------------------------------------

@@ -238,7 +238,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/messaging/systemmessagebus.h
     ${INCLUDE_DIR}/vigine/messaging/factory.h
     ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
-    ${INCLUDE_DIR}/vigine/context/icontext.h
+    ${INCLUDE_DIR}/vigine/api/context/icontext.h
     ${INCLUDE_DIR}/vigine/ecs/ientitymanager.h
     ${INCLUDE_DIR}/vigine/ecs/kind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
@@ -325,12 +325,12 @@ set(HEADER_SERVICE
     ${INCLUDE_DIR}/vigine/service/graphicsservice.h
     ${INCLUDE_DIR}/vigine/service/platformservice.h
     # Level-1 service wrapper (R.4.1) — public surface.
-    ${INCLUDE_DIR}/vigine/service/serviceid.h
-    ${INCLUDE_DIR}/vigine/service/dependencykind.h
-    ${INCLUDE_DIR}/vigine/service/initpolicy.h
-    ${INCLUDE_DIR}/vigine/service/iservice.h
-    ${INCLUDE_DIR}/vigine/service/abstractservice.h
-    ${INCLUDE_DIR}/vigine/service/factory.h
+    ${INCLUDE_DIR}/vigine/api/service/serviceid.h
+    ${INCLUDE_DIR}/vigine/api/service/dependencykind.h
+    ${INCLUDE_DIR}/vigine/api/service/initpolicy.h
+    ${INCLUDE_DIR}/vigine/api/service/iservice.h
+    ${INCLUDE_DIR}/vigine/api/service/abstractservice.h
+    ${INCLUDE_DIR}/vigine/api/service/factory.h
 )
 
 set(SOURCES_SERVICE
@@ -340,7 +340,7 @@ set(SOURCES_SERVICE
     # Level-1 service wrapper (R.4.1) — internal registry + base impl.
     ${SRC_DIR}/service/serviceregistry.h
     ${SRC_DIR}/service/serviceregistry.cpp
-    ${SRC_DIR}/service/abstractservice.cpp
+    ${SRC_DIR}/api/service/abstractservice.cpp
     ${SRC_DIR}/service/defaultservice.h
     ${SRC_DIR}/service/defaultservice.cpp
     ${SRC_DIR}/service/factory.cpp
@@ -405,16 +405,16 @@ set(SOURCES_TASKFLOW_CORE
 
 # Context aggregator (R.4.5) -- public surface.
 set(HEADER_CONTEXT_AGGREGATOR
-    ${INCLUDE_DIR}/vigine/context/contextconfig.h
-    ${INCLUDE_DIR}/vigine/context/abstractcontext.h
-    ${INCLUDE_DIR}/vigine/context/factory.h
+    ${INCLUDE_DIR}/vigine/api/context/contextconfig.h
+    ${INCLUDE_DIR}/vigine/api/context/abstractcontext.h
+    ${INCLUDE_DIR}/vigine/api/context/factory.h
+    ${INCLUDE_DIR}/vigine/impl/context/context.h
 )
 
 # Context aggregator (R.4.5) -- internal concrete + factory + base impl.
 set(SOURCES_CONTEXT_AGGREGATOR
-    ${SRC_DIR}/context/abstractcontext.cpp
-    ${SRC_DIR}/context/defaultcontext.h
-    ${SRC_DIR}/context/defaultcontext.cpp
+    ${SRC_DIR}/api/context/abstractcontext.cpp
+    ${SRC_DIR}/impl/context/context.cpp
     ${SRC_DIR}/context/factory.cpp
 )
 
@@ -582,17 +582,17 @@ set(SOURCES_PIPELINEBUILDER
 
 # Engine runtime + lifecycle (R.5.1 / plan_23) -- public surface.
 set(HEADER_ENGINE
-    ${INCLUDE_DIR}/vigine/engine/engineconfig.h
-    ${INCLUDE_DIR}/vigine/engine/iengine.h
-    ${INCLUDE_DIR}/vigine/engine/abstractengine.h
-    ${INCLUDE_DIR}/vigine/engine/defaultengine.h
-    ${INCLUDE_DIR}/vigine/engine/factory.h
+    ${INCLUDE_DIR}/vigine/api/engine/engineconfig.h
+    ${INCLUDE_DIR}/vigine/api/engine/iengine.h
+    ${INCLUDE_DIR}/vigine/api/engine/abstractengine.h
+    ${INCLUDE_DIR}/vigine/api/engine/factory.h
+    ${INCLUDE_DIR}/vigine/impl/engine/engine.h
 )
 
 # Engine runtime + lifecycle (R.5.1 / plan_23) -- internal concrete + factory.
 set(SOURCES_ENGINE
-    ${SRC_DIR}/engine/abstractengine.cpp
-    ${SRC_DIR}/engine/defaultengine.cpp
+    ${SRC_DIR}/api/engine/abstractengine.cpp
+    ${SRC_DIR}/impl/engine/engine.cpp
     ${SRC_DIR}/engine/factory.cpp
 )
 

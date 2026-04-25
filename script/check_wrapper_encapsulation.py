@@ -38,11 +38,11 @@ WAIVER_MARKER = "// INV-11 EXEMPTION:"
 
 # Default scan roots relative to repo root -- one entry per wrapper domain.
 DEFAULT_WRAPPER_PATHS: list[str] = [
-    "include/vigine/service",
+    "include/vigine/api/service",
     "include/vigine/ecs",
     "include/vigine/statemachine",
     "include/vigine/taskflow",
-    "include/vigine/context",
+    "include/vigine/api/context",
     "include/vigine/messaging",
     "include/vigine/payload",
     "include/vigine/threading",

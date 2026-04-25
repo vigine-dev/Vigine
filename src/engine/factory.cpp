@@ -1,8 +1,8 @@
-#include "vigine/engine/factory.h"
+#include "vigine/api/engine/factory.h"
 
 #include <memory>
 
-#include "vigine/engine/defaultengine.h"
+#include "vigine/impl/engine/engine.h"
 
 namespace vigine::engine
 {
@@ -15,7 +15,7 @@ namespace vigine::engine
 
 std::unique_ptr<IEngine> createEngine(const EngineConfig &config)
 {
-    return std::make_unique<DefaultEngine>(config);
+    return std::make_unique<Engine>(config);
 }
 
 } // namespace vigine::engine

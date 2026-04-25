@@ -1,9 +1,9 @@
-#include "vigine/engine/abstractengine.h"
+#include "vigine/api/engine/abstractengine.h"
 
 #include <chrono>
 
-#include "vigine/context/factory.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/factory.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/core/threading/ithreadmanager.h"
 
 namespace vigine::engine

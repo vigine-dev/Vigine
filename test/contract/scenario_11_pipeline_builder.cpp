@@ -19,7 +19,7 @@
 #include "vigine/channelfactory/defaultchannelfactory.h"
 #include "vigine/channelfactory/ichannel.h"
 #include "vigine/channelfactory/ichannelfactory.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/messaging/imessagepayload.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/pipelinebuilder/factory.h"

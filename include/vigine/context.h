@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/ecs/abstractsystem.h"
 #include <vigine/abstractservice.h>
 

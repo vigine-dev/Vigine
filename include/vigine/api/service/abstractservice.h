@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "vigine/result.h"
-#include "vigine/service/iservice.h"
-#include "vigine/service/serviceid.h"
+#include "vigine/api/service/iservice.h"
+#include "vigine/api/service/serviceid.h"
 
 namespace vigine::service
 {

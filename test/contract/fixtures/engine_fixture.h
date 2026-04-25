@@ -34,9 +34,9 @@
 //     methods only (project_vigine_strict_encapsulation).
 // ---------------------------------------------------------------------------
 
-#include "vigine/context/contextconfig.h"
-#include "vigine/context/factory.h"
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/contextconfig.h"
+#include "vigine/api/context/factory.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/factory.h"
 #include "vigine/messaging/imessagebus.h"

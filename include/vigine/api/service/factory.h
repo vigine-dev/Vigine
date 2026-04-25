@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "vigine/service/iservice.h"
+#include "vigine/api/service/iservice.h"
 
 namespace vigine::service
 {

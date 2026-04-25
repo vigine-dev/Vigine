@@ -20,10 +20,10 @@
 
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/result.h"
-#include "vigine/service/iservice.h"
-#include "vigine/service/serviceid.h"
+#include "vigine/api/service/iservice.h"
+#include "vigine/api/service/serviceid.h"
 
 #include <gtest/gtest.h>
 
