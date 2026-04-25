@@ -389,11 +389,15 @@ Result AbstractMessageBus::shutdown()
     }
     _queueCv.notify_all();
 
-    // Drain the remaining queue. Workers that are still running will
-    // pick up the shutdown flag on their next loop iteration and exit.
-    drainQueue(true);
-
-    // Mark the control block dead. This does three things:
+    // Mark the control block dead BEFORE draining the queue. This closes
+    // a dead-bus visibility race window: if drain ran first, a concurrent
+    // token cancel path could observe `_control->isAlive() == true`
+    // between the drain completing and markDead firing, and proceed down
+    // a soon-to-be-dead path. By flipping the alive bit first we make the
+    // dead-bus state visible before any in-flight dispatch / cancel /
+    // token path observes the drain.
+    //
+    // markDead does three things:
     //   1. Every outstanding ConnectionToken destructor becomes a safe
     //      no-op (unchanged behaviour).
     //   2. Every outstanding SubscriptionToken destructor becomes a
@@ -416,6 +420,13 @@ Result AbstractMessageBus::shutdown()
     {
         _control->markDead();
     }
+
+    // Drain the remaining queue. Workers that are still running will
+    // pick up the shutdown flag on their next loop iteration and exit.
+    // Any in-flight dispatch the drain waits on now sees the bus as
+    // already-dead via the control block, so cancel/token paths racing
+    // with the drain take their no-op branch instead of the live path.
+    drainQueue(true);
 
     return Result{};
 }
