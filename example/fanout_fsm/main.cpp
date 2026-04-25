@@ -70,8 +70,8 @@ namespace
 constexpr std::size_t kFsmCount = 16;
 
 // Wall-clock safety belt for the aggregated wait(). The fan-out body
-// is purely local and trivially fast on every modern machine; one
-// second is two orders of magnitude over the expected runtime.
+// is purely local and trivially fast on every modern machine; five
+// seconds is two orders of magnitude over the expected runtime.
 constexpr auto kWaitTimeout = std::chrono::seconds{5};
 
 // Per-body bit pattern used to record "this index completed its FSM
@@ -110,10 +110,11 @@ int main()
 
     // ---- Fan out -----------------------------------------------------------
     //
-    // Each body constructs its own IStateMachine, registers an Idle and
-    // a Done state, walks the FSM through Idle (the auto-provisioned
-    // default) -> Working -> Done, and records its completion bit. No
-    // body shares any state with any other body.
+    // Each body constructs its own IStateMachine, treats the auto-
+    // provisioned default state as Idle, and registers Working and Done
+    // states for the cycle. The body walks Idle -> Working -> Done and
+    // records its completion bit. No body shares any state with any
+    // other body.
     auto handle = vigine::core::threading::parallelFor(
         *threadManager,
         kFsmCount,
@@ -134,14 +135,11 @@ int main()
             }
 
             // Register the working and final states. The FSM auto-
-            // provisions a default state in its constructor (UD-3),
-            // which we treat as the Idle slot.
+            // provisions a default state in its constructor, which we
+            // treat as the Idle slot. addState() always returns a valid
+            // StateId, so no defensive guard is needed here.
             const vigine::statemachine::StateId working = fsm->addState();
             const vigine::statemachine::StateId done    = fsm->addState();
-            if (!working.valid() || !done.valid())
-            {
-                return;
-            }
 
             // Walk the cycle. Each transition is sync; the FSM is not
             // bound to a controller thread, so checkThreadAffinity is
