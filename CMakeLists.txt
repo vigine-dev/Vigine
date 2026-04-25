@@ -43,11 +43,17 @@ if(WIN32)
     # accidentally used elsewhere would fail to compile here. Bump
     # `_WIN32_WINNT` + `NTDDI_VERSION` together when a newer feature
     # set is needed (e.g. NTDDI_WIN10_VB = 0x0A000008 for 1903+).
+    #
+    # WIN32_LEAN_AND_MEAN is intentionally NOT in this directory-scoped
+    # block: bundled FreeType (`add_subdirectory(... EXCLUDE_FROM_ALL)`)
+    # would otherwise inherit it on its command line and re-define it
+    # internally, producing C4005 macro-redefinition warnings. The
+    # macro is instead pushed onto the `vigine` (and example/test)
+    # targets via `target_compile_definitions(... PRIVATE)` below.
     add_compile_definitions(
         VK_USE_PLATFORM_WIN32_KHR
         _WIN32_WINNT=0x0A00
         NTDDI_VERSION=0x0A000000
-        WIN32_LEAN_AND_MEAN
         NOMINMAX
     )
 endif()
@@ -766,6 +772,13 @@ add_library(${PROJECT_NAME}
 # Scoped via target_compile_options inside the helper so FreeType and
 # other vendored dependencies are not affected.
 vigine_apply_compile_options(${PROJECT_NAME})
+
+# WIN32_LEAN_AND_MEAN trims <windows.h>. Scoped to vigine so the bundled
+# FreeType build (which defines the macro internally for its own TUs)
+# does not see it on its compile line and emit C4005 redefinition.
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
 
 # Apply sanitizer flags when VIGINE_SANITIZER is set. Guarded by the same
 # condition used at include-time above so the helper is only called when the

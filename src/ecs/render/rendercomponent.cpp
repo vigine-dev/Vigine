@@ -163,7 +163,8 @@ FontAtlas &cachedAtlas(const std::string &fontPath, uint32_t pixelSize)
     return atlas;
 }
 
-const GlyphInfo &ensureGlyph(FontAtlas &atlas, FT_Face face, uint32_t codepoint, uint32_t pixelSize)
+const GlyphInfo &ensureGlyph(FontAtlas &atlas, FT_Face face, uint32_t codepoint,
+                             [[maybe_unused]] uint32_t pixelSize)
 {
     auto it = atlas.glyphs.find(codepoint);
     if (it != atlas.glyphs.end())
