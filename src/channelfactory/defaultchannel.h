@@ -7,8 +7,8 @@
 #include <mutex>
 #include <queue>
 
-#include "vigine/channelfactory/channelkind.h"
-#include "vigine/channelfactory/ichannel.h"
+#include "vigine/api/channelfactory/channelkind.h"
+#include "vigine/api/channelfactory/ichannel.h"
 #include "vigine/messaging/imessagepayload.h"
 #include "vigine/payload/payloadtypeid.h"
 #include "vigine/result.h"
@@ -21,7 +21,7 @@ namespace vigine::channelfactory
  *
  * @ref DefaultChannel is the internal implementation of @ref IChannel. It is
  * never exposed in the public include tree; callers receive an @ref IChannel
- * pointer from @ref DefaultChannelFactory::create.
+ * pointer from @ref ChannelFactory::create.
  *
  * Implementation notes (v1):
  *   - NOT lock-free in v1 (documented here; lock-free is Q-FC3, deferred to
@@ -45,7 +45,7 @@ class DefaultChannel final : public IChannel
      * @brief Constructs a channel of @p kind with @p capacity and expected
      *        payload type @p expectedTypeId.
      *
-     * Pre-conditions (enforced by @ref DefaultChannelFactory::create before
+     * Pre-conditions (enforced by @ref ChannelFactory::create before
      * constructing this object):
      *   - Bounded  => capacity >= 1.
      *   - Unbounded => capacity == 0.
