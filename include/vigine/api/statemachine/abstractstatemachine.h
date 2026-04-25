@@ -81,12 +81,55 @@ class StateTopology;
  *     concrete derivatives can extend the default implementation
  *     without re-exporting the substrate on their own public surface.
  *
- * Thread-safety: the base inherits the state topology's thread-safety
- * policy (reader-writer mutex on the substrate primitive). Callers
- * may query and mutate concurrently; each mutation takes the
- * exclusive lock while each query takes a shared lock. The wrapper
- * layer does not add further synchronisation — every state-machine
- * access path funnels through the topology.
+ * Threading model — single controller thread + async drain (locked policy):
+ *   - @ref AbstractStateMachine implements the dual-API transition
+ *     contract documented on @ref IStateMachine. There is exactly
+ *     ONE controller thread per machine, installed once via
+ *     @ref bindToControllerThread; the binding is one-shot and a
+ *     second attempt fails the compare-exchange against the
+ *     default-constructed @c std::thread::id sentinel (Debug fires
+ *     the contract assert; Release silently keeps the original).
+ *   - The @b synchronous mutator surface — @ref setInitial,
+ *     @ref transition, @ref addState, @ref addChildState,
+ *     @ref setRouteMode — and the drain pump
+ *     @ref processQueuedTransitions are gated through
+ *     @ref checkThreadAffinity once the controller binding is in
+ *     place. Stray callers from another thread fire an @c assert in
+ *     Debug builds and are undefined behaviour in Release. The
+ *     binding is opt-in per the contract on
+ *     @ref bindToControllerThread: a consumer that calls it before
+ *     the first sync mutation gets the affinity gate; a consumer
+ *     that never calls it stays in the unbound mode for the life of
+ *     the machine and the gate stays inactive.
+ *   - The @b asynchronous request surface — @ref requestTransition —
+ *     is the only path open to non-controller threads. It posts the
+ *     target onto an internal FIFO queue and returns immediately.
+ *     Multiple producers may post concurrently; pushes are serialised
+ *     under the queue's synchronisation primitive and FIFO order
+ *     matches the order in which those pushes were admitted.
+ *   - The drain pump @ref processQueuedTransitions is the
+ *     controller-thread end of the async path. It takes ONE snapshot
+ *     of the queue per call (atomic detach of the live queue under
+ *     the queue's synchronisation primitive) and walks the snapshot
+ *     outside the lock, delegating each entry to the synchronous
+ *     @ref transition call site. Requests posted from inside an
+ *     @c onEnter / @c onExit hook or a listener during a drain land
+ *     on the @b live queue and are applied on the @b next drain —
+ *     never inside the same drain — so the controller thread is
+ *     free of unbounded reentry.
+ *   - The owner of the controller-thread loop is responsible for
+ *     calling @ref processQueuedTransitions on a periodic cadence
+ *     while the machine is live and once at teardown (best-effort).
+ *     Tests and ad-hoc embedders that own the controller loop call
+ *     it directly when they need a deterministic pump point.
+ *   - Read-only queries (@ref hasState, @ref parent,
+ *     @ref isAncestorOf, @ref current, @ref routeMode,
+ *     @ref controllerThread) are safe from any thread and either
+ *     take a shared lock on the topology or an atomic load on the
+ *     wrapper-side cache. The wrapper layer adds no further
+ *     synchronisation beyond the controller-thread gate, the queue
+ *     mutex, and the listener-registry mutex documented on
+ *     @ref addInvalidationListener.
  */
 class AbstractStateMachine : public IStateMachine
 {
@@ -135,8 +178,8 @@ class AbstractStateMachine : public IStateMachine
      * transition, with the @ref StateId of the state that has just been
      * vacated (i.e. the state @ref current returned immediately before
      * the new state took effect). Listeners always fire BEFORE the
-     * machine flips the @c _current member, so observers see the OLD
-     * state id consistently.
+     * machine flips the active state, so observers see the OLD state
+     * id consistently.
      *
      * No-op transitions (target equal to the current state) and
      * transitions rejected because the target is not registered DO NOT

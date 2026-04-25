@@ -81,12 +81,35 @@ namespace vigine::statemachine
  *     Flat FSM users select @ref RouteMode::Direct to keep the legacy
  *     behaviour.
  *
- * Thread-safety: the contract does not fix one. The default
- * implementation inherits the substrate's reader-writer policy; the
- * concrete machine exposed through @c createStateMachine serialises
- * mutations with the same @c std::shared_mutex the underlying graph
- * uses. Concurrent queries are safe with each other; concurrent
- * mutations take the exclusive lock.
+ * Threading model — single controller thread + async drain (locked policy):
+ *   - The machine has @b one controller thread, bound via
+ *     @ref bindToControllerThread (one-shot, before the first sync
+ *     mutation). Until the binding lands the controller-thread gate
+ *     is intentionally inactive.
+ *   - Synchronous mutators — @ref setInitial, @ref transition,
+ *     @ref addState, @ref addChildState, @ref setRouteMode — and the
+ *     drain pump @ref processQueuedTransitions are
+ *     @b controller-thread-only once a binding is in place. Calls
+ *     from any other thread fire the
+ *     @c AbstractStateMachine::checkThreadAffinity contract assert in
+ *     Debug builds and are undefined behaviour in Release.
+ *   - Asynchronous transition requests via @ref requestTransition are
+ *     thread-safe by construction and may be posted from
+ *     @b any thread (controller, worker pool, message-bus delivery,
+ *     OS callback). The post is fire-and-forget; the controller
+ *     thread later applies the queued request through
+ *     @ref processQueuedTransitions, which delegates to the
+ *     synchronous @ref transition path on its own thread.
+ *   - The owner of the controller-thread loop is responsible for
+ *     calling @ref processQueuedTransitions on a periodic cadence
+ *     while the machine is live, and once at teardown to drain
+ *     whatever requests are still queued. The interface does not
+ *     prescribe @e who that owner is; concrete embedders, hosting
+ *     subsystems, or test harnesses each pick their own pump point.
+ *   - Read-only queries (@ref hasState, @ref parent,
+ *     @ref isAncestorOf, @ref current, @ref routeMode,
+ *     @ref controllerThread) are safe to call from any thread and
+ *     take only the substrate's reader lock or an atomic load.
  *
  * INV-1 compliance: the surface uses no template parameters. INV-10
  * compliance: the name carries the @c I prefix for a pure-virtual
@@ -184,15 +207,43 @@ class IStateMachine
     virtual Result setInitial(StateId state) = 0;
 
     /**
-     * @brief Transitions the machine to @p state as the new current
-     *        state.
+     * @brief Synchronously transitions the machine to @p state as the
+     *        new current state.
      *
-     * The referenced state must have been registered. Reports
-     * @ref Result::Code::Error when @p state is stale; on success the
-     * next @ref current call returns @p state. The call does not
-     * invoke enter/exit hooks by itself — those live on the state
-     * base class that a later leaf adds; the wrapper only tracks
-     * which state id is the active one.
+     * @par Threading contract — controller-thread-only
+     * This entry point is the @b synchronous half of the dual-API
+     * transition surface. Per the locked policy it MUST be called only
+     * from the controller thread that has been bound to the machine via
+     * @ref bindToControllerThread. A call from any other thread fires
+     * the @c AbstractStateMachine::checkThreadAffinity contract assert
+     * in Debug builds and is undefined behaviour in Release. Code that
+     * sits on a non-controller thread (worker pools, message-bus
+     * delivery threads, OS callback threads) MUST NOT call
+     * @ref transition directly — it queues a request through
+     * @ref requestTransition instead and lets the controller-thread
+     * drain pump apply it.
+     *
+     * @par Semantics
+     * The referenced state must have been registered through
+     * @ref addState. Reports @ref Result::Code::Error when @p state is
+     * stale; on success the next @ref current call returns @p state.
+     * The call applies the new state immediately and synchronously: by
+     * the time @ref transition returns the active state has flipped and
+     * every observer (the listener registry on
+     * @ref AbstractStateMachine, future enter/exit hooks added by a
+     * later leaf) has been invoked on the calling — controller —
+     * thread. The wrapper itself only tracks which state id is active;
+     * enter/exit hooks live on the state base class added by a future
+     * leaf.
+     *
+     * @par Relationship to the async surface
+     * @ref requestTransition is the asynchronous companion. Producers
+     * on any thread post requests to a FIFO queue that the controller
+     * thread later drains via @ref processQueuedTransitions; the drain
+     * delegates each entry to @ref transition under the same
+     * controller-thread-only contract. There is no other path to
+     * mutate the active state — every mutation funnels through this
+     * synchronous call site.
      */
     virtual Result transition(StateId state) = 0;
 
@@ -232,68 +283,160 @@ class IStateMachine
     /**
      * @brief Binds the state machine to its controller thread.
      *
-     * One-shot. Must be called once before the first sync mutation
-     * (setInitial / transition / addChildState). A second call is
-     * rejected: Debug builds assert; Release silently keeps the original
-     * binding.
+     * @par Two supported modes
+     * The machine supports two mutually exclusive operation modes,
+     * and the consumer chooses between them by either calling this
+     * method or skipping it:
+     *   - @b Bound mode (affinity gate active): the consumer calls
+     *     @ref bindToControllerThread exactly once, before the first
+     *     sync mutation (@ref setInitial, @ref transition,
+     *     @ref addChildState) and before the first drain
+     *     (@ref processQueuedTransitions). After the binding lands,
+     *     every subsequent sync-mutator call is gated against
+     *     @p controllerId via
+     *     @c AbstractStateMachine::checkThreadAffinity. This is the
+     *     mode production embedders pick when they want the assert
+     *     to catch stray cross-thread mutations.
+     *   - @b Unbound mode (affinity gate inactive): the consumer
+     *     never calls @ref bindToControllerThread. The gate stays
+     *     inactive for the life of the machine; sync mutators skip
+     *     the assert and run on whichever thread issued them. This
+     *     is the documented escape hatch for tests, ad-hoc embedders,
+     *     and any caller that opts out of the dual-API policy and
+     *     prefers to serialise mutations on its own.
+     *
+     * The two modes are not meant to be mixed: once the consumer
+     * has decided to enable the gate via this call, the gate stays
+     * active for the rest of the machine's life.
+     *
+     * @par Re-binding
+     * A second call is rejected. The implementation installs the
+     * binding via a compare-exchange against the default-constructed
+     * @c std::thread::id sentinel, so a second attempt observes a
+     * non-sentinel expected value and fails. Debug builds fire the
+     * contract assert; Release silently keeps the original binding so
+     * the machine remains usable but with the original controller.
+     *
+     * @par Thread-safety
+     * Safe to call from any thread; the compare-exchange against the
+     * controller-id atomic is the synchronisation point. The natural
+     * call site is the controller thread itself, immediately after the
+     * machine is constructed and before any worker thread can post a
+     * request.
      */
     virtual void bindToControllerThread(std::thread::id controllerId) = 0;
 
     /**
      * @brief Returns the bound controller thread id.
      *
-     * Default-constructed @c std::thread::id when not yet bound.
+     * Default-constructed @c std::thread::id when no binding has been
+     * installed yet. Reads use acquire semantics so the value reflects
+     * the most recently published binding from
+     * @ref bindToControllerThread. Safe to call from any thread.
      */
     [[nodiscard]] virtual std::thread::id controllerThread() const noexcept = 0;
 
     // ------ Asynchronous transition request ------
 
     /**
-     * @brief Request a transition from any thread.
+     * @brief Asynchronously requests a transition to @p target from
+     *        any thread.
      *
-     * Thread-safe. Pushes @p target onto an internal FIFO queue under
-     * an internal mutex; the call neither validates the id nor mutates
-     * the active state. The request is applied later, on the controller
-     * thread, by @ref processQueuedTransitions. Stale ids are
-     * intentionally not surfaced: the drain delegates each entry to the
-     * synchronous @ref transition call and discards its
-     * @ref Result, so a stale @p target is silently dropped instead of
-     * being reported back to the producer. Callers who need pre-flight
-     * validation use @ref hasState before requesting; a separate future
-     * leaf may add a diagnostic-sink callback API for visibility into
-     * drain rejections.
+     * @par Threading contract — any-thread, fire-and-forget
+     * This entry point is the @b asynchronous half of the dual-API
+     * transition surface. It is the ONLY way to drive a transition
+     * from a non-controller thread. The call is thread-safe by
+     * construction: it enqueues @p target onto an internal FIFO under
+     * the queue's synchronisation primitive and returns immediately,
+     * without validating the id, taking the topology lock, or touching
+     * the active-state field. The controller thread later drains the
+     * queue via @ref processQueuedTransitions and applies each entry
+     * through the synchronous @ref transition call site, on its own
+     * thread.
      *
-     * The call is idempotent in the sense that pushing the same target
-     * twice queues two separate transitions. Multiple producers may
-     * post concurrently; the queue mutex serialises pushes so the
-     * observed FIFO order matches the order of mutex acquisitions.
+     * @par No back-pressure to the producer
+     * Stale ids and other failures are intentionally not surfaced to
+     * the caller. The drain delegates each entry to @ref transition
+     * and discards its @ref Result, so a stale @p target is silently
+     * dropped instead of being reported back to the producer. Callers
+     * that need pre-flight validation use @ref hasState before
+     * requesting; a future diagnostic-sink callback API may add
+     * visibility into drain rejections without changing the contract
+     * here.
+     *
+     * @par Ordering and idempotency
+     * The call is non-idempotent in effect: posting the same target
+     * twice queues two separate transitions, both of which the drain
+     * applies in order. Multiple producers may post concurrently;
+     * pushes are serialised under the queue's synchronisation primitive,
+     * so the observed FIFO order matches the order in which those
+     * pushes were admitted. A request posted from inside an @c onEnter
+     * / @c onExit hook (i.e. during a drain) sits on the @b live queue
+     * and is applied on the @b next drain pass — the drain takes one
+     * snapshot per call by design (see @ref processQueuedTransitions).
+     *
+     * @par Relationship to the sync surface
+     * Code that already runs on the controller thread does not need to
+     * route through this queue and can call @ref transition directly
+     * for immediate effect. The async surface exists so worker pools,
+     * message-bus delivery threads, OS callback threads, and any other
+     * non-controller producer can drive transitions safely without
+     * violating the controller-thread-only contract on
+     * @ref transition.
      */
     virtual void requestTransition(StateId target) = 0;
 
     /**
-     * @brief Drain the request queue on the controller thread.
+     * @brief Drains the request queue on the controller thread.
      *
-     * Must be called from the controller thread once a binding has
-     * been installed via @ref bindToControllerThread. The thread
-     * binding is one-shot and optional — when no binding has been
-     * installed the gate is intentionally inactive (the
-     * "un-bound = assert inactive" contract that the rest of the
-     * sync mutators in this interface follow), so callers that opt
-     * out of binding can call this method from any thread; once a
-     * binding is in place a stray caller from another thread fires
-     * the @c AbstractStateMachine::checkThreadAffinity contract
-     * assert in Debug and is undefined behaviour in Release. Per-
-     * request failures are intentionally not surfaced: the drain
-     * discards the @ref Result returned by each delegated
-     * @ref transition call. The drain takes one snapshot of the queue
-     * under the queue mutex (atomically swapping it with an empty
-     * deque) and then walks the snapshot in FIFO order, applying each
-     * entry through @ref transition. The single-pass guarantee is
-     * intentional: requests pushed by @c onEnter / @c onExit hooks
-     * during the drain land on the live queue and are applied on the
-     * @b next @ref processQueuedTransitions call, never inside the
-     * same drain. That keeps the controller thread free of unbounded
-     * reentry and gives state code a stable "tick" boundary.
+     * @par Threading contract — controller-thread drain pump
+     * This is the controller-thread end of the async transition path.
+     * Once a binding is in place via @ref bindToControllerThread the
+     * call MUST run on the controller thread; a stray call from any
+     * other thread fires the
+     * @c AbstractStateMachine::checkThreadAffinity contract assert in
+     * Debug and is undefined behaviour in Release. The "un-bound =
+     * gate inactive" contract documented on
+     * @ref bindToControllerThread applies here too: a consumer that
+     * has opted into the unbound mode can call this method from any
+     * thread.
+     *
+     * @par Pump shape — controller-thread owner drives the cadence
+     * Calling this method is the responsibility of whichever component
+     * owns the controller-thread loop. That owner is expected to drain
+     * on a periodic cadence while the machine is live and once at
+     * teardown (best-effort, draining whatever is still queued at stop
+     * time). The interface does not name a specific owner; in
+     * practice, embedders that host the FSM inside a tick loop pump
+     * it from there, while tests and ad-hoc embedders pump it
+     * explicitly when they need a deterministic boundary.
+     *
+     * @par Single-pass snapshot
+     * The drain takes ONE snapshot of the queued requests per call by
+     * atomically detaching the live queue (replacing it with an empty
+     * one) under the queue's synchronisation primitive, then walks the
+     * snapshot in FIFO order outside the lock. Each entry is applied
+     * through the synchronous @ref transition call site, which means
+     * listeners and (future) enter/exit hooks fire on the controller
+     * thread inside this method. Per-entry failures are intentionally
+     * not surfaced: the drain discards the @ref Result returned by
+     * each delegated @ref transition.
+     *
+     * @par Re-entrancy boundary
+     * The single-pass guarantee is deliberate. A request pushed from
+     * inside an @c onEnter / @c onExit hook (or any listener) during
+     * the drain lands on the live queue and is applied on the @b next
+     * @ref processQueuedTransitions call, never inside the same
+     * drain. That keeps the controller thread free of unbounded
+     * reentry and gives state code a stable per-tick boundary.
+     *
+     * @par Ordering with sync calls
+     * Sync @ref transition calls issued by the controller thread
+     * between two drains take effect immediately and are interleaved
+     * naturally with the queued requests that the next drain will
+     * apply — both paths funnel through the same @ref transition
+     * implementation, so the active state evolves in a single,
+     * controller-thread-serialised stream.
      */
     virtual void processQueuedTransitions() = 0;
 
