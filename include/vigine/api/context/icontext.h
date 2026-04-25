@@ -234,10 +234,14 @@ class IContext
      *        @p boundState.
      *
      * The returned token is the state-scoped DI surface a task receives
-     * during @c onEnter; it forwards calls to this aggregator's domain
-     * accessors (gated, @ref vigine::engine::Result wrapper) and to the
-     * infrastructure accessors (ungated, direct reference) per the
-     * R-StateScope hybrid policy described on the class docstring.
+     * during @c onEnter. For domain accessors it calls this aggregator's
+     * non-gated accessors (which return @c std::shared_ptr / a raw
+     * reference) and wraps the outcome in a @ref vigine::engine::Result
+     * -- adding the alive-state gate that flips to
+     * @ref vigine::engine::Result::Code::Expired after invalidation. For
+     * infrastructure accessors it forwards directly (ungated, raw
+     * reference) per the R-StateScope hybrid policy described on the
+     * class docstring.
      *
      * The token observes the engine's @ref vigine::statemachine::IStateMachine
      * for invalidation: when the FSM transitions out of @p boundState,

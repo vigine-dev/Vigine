@@ -124,8 +124,10 @@ class AbstractContext : public IContext
     // diagnostics, lifecycle wiring) can reach the underlying
     // resources without going through a state-scoped token. The
     // public surface keeps the gated semantics; the engine reaches
-    // the substrate directly through the @c *Internal trio. This
-    // matches the R-StateScope architecture rule: tasks see a gated
+    // the substrate directly through the @c *Internal pair
+    // (@ref serviceInternal + @ref ecsInternal -- additional
+    // @c *Internal accessors land alongside future scope-bypass needs).
+    // This matches the R-StateScope architecture rule: tasks see a gated
     // view; the engine itself sees a direct view.
     //
     // Naming: the @c *Internal suffix flags the engine-internal scope.
@@ -140,10 +142,14 @@ class AbstractContext : public IContext
      * under @p id without taking the gated detour through an
      * @ref vigine::engine::IEngineToken. Returns the raw shared
      * pointer so callers can branch on null without juggling a
-     * @ref vigine::engine::Result wrapper. Used by
-     * @ref vigine::engine::EngineToken's gated accessor body and by
-     * any future engine-side diagnostics that want to inspect the
-     * service registry without minting a token first.
+     * @ref vigine::engine::Result wrapper. Intended for
+     * @ref vigine::engine::EngineToken-style aggregators when they
+     * need an engine-internal scope-bypass path, plus any engine-side
+     * diagnostics that want to inspect the service registry without
+     * minting a token first. The concrete @ref vigine::engine::EngineToken
+     * landed under #287 calls @ref IContext::service directly; a
+     * follow-up leaf will switch it to consume the @c *Internal accessors
+     * uniformly.
      *
      * The thread-safety contract matches @ref IContext::service: the
      * registry mutex serialises the lookup against concurrent
