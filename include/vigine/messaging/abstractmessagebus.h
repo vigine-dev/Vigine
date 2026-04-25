@@ -9,7 +9,7 @@
 #include <mutex>
 #include <vector>
 
-#include "vigine/graph/abstractgraph.h"  // INV-11 EXEMPTION: AbstractMessageBus inherits graph substrate for internal routing
+#include "vigine/core/graph/abstractgraph.h"  // INV-11 EXEMPTION: AbstractMessageBus inherits graph substrate for internal routing
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/messaging/connectionid.h"
@@ -39,7 +39,7 @@ class DefaultBusControlBlock;
  * @ref AbstractMessageBus is level 4 of the five-layer wrapper recipe
  * (see @c theory_wrapper_creation_recipe.md). It inherits
  * @ref IMessageBus @c public so the bus surface sits at offset zero for
- * zero-cost up-casts, and @ref vigine::graph::AbstractGraph
+ * zero-cost up-casts, and @ref vigine::core::graph::AbstractGraph
  * @c protected so the graph substrate is available to wrapper code
  * without leaking into the bus's public surface.
  *
@@ -81,7 +81,7 @@ class DefaultBusControlBlock;
  */
 class AbstractMessageBus
     : public IMessageBus
-    , protected vigine::graph::AbstractGraph  // INV-11 EXEMPTION: routing substrate is an internal implementation detail
+    , protected vigine::core::graph::AbstractGraph  // INV-11 EXEMPTION: routing substrate is an internal implementation detail
 {
   public:
     ~AbstractMessageBus() override;

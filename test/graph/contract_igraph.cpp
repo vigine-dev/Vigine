@@ -1,9 +1,9 @@
 #include "fixtures/graph_fixture_7n10e.h"
 
-#include "vigine/graph/factory.h"
-#include "vigine/graph/igraph.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/factory.h"
+#include "vigine/core/graph/igraph.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
@@ -16,12 +16,12 @@
 //
 // Exercises the IGraph public surface through a GraphFactory parameter.
 // Every test in this file works against any concrete IGraph that honours
-// the surface declared in include/vigine/graph/; the factory registered
+// the surface declared in include/vigine/core/graph/; the factory registered
 // at the bottom is the engine's own createGraph, and a second concrete
 // graph wires into the same suite by adding another INSTANTIATE_TEST_SUITE_P.
 // =============================================================================
 
-namespace vigine::graph::contract
+namespace vigine::core::graph::contract
 {
 
 using LifecycleContract = ContractFixture;
@@ -335,4 +335,4 @@ INSTANTIATE_TEST_SUITE_P(contract_igraph,
                          ::testing::Values(defaultGraphFactory()),
                          GraphFactoryNamer{});
 
-} // namespace vigine::graph::contract
+} // namespace vigine::core::graph::contract

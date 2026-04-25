@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Control flow directive returned by @ref IGraphVisitor.
@@ -18,4 +18,4 @@ enum class VisitResult : std::uint8_t
     Stop     = 3, ///< Stop the traversal completely (early exit).
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

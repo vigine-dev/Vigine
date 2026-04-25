@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Byte-wide tag classifying a node.
@@ -44,4 +44,4 @@ namespace edge_kind
 inline constexpr EdgeKind Generic = 1;
 } // namespace edge_kind
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

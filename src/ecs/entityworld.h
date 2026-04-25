@@ -6,8 +6,8 @@
 
 #include "vigine/ecs/ecstypes.h"
 #include "vigine/ecs/iecs.h"
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 
 namespace vigine::ecs
@@ -16,7 +16,7 @@ namespace vigine::ecs
  * @brief Internal graph specialisation that the ECS wrapper uses to
  *        hold its entity-and-component storage.
  *
- * @ref EntityWorld is a concrete @c vigine::graph::AbstractGraph
+ * @ref EntityWorld is a concrete @c vigine::core::graph::AbstractGraph
  * subtype that seals the inheritance chain for the ECS wrapper. It
  * carries the translation between the ECS's own POD handles
  * (@ref EntityId, @ref ComponentHandle) and the substrate's
@@ -25,7 +25,7 @@ namespace vigine::ecs
  * the public wrapper surface.
  *
  * This header lives under @c src/ecs on purpose: the INV-11 rule
- * forbids @c vigine::graph types from surfacing in
+ * forbids @c vigine::core::graph types from surfacing in
  * @c include/vigine/ecs. Only the wrapper implementation consumes the
  * world; callers of @ref IECS / @ref AbstractECS see neither the
  * world nor its graph base.
@@ -43,7 +43,7 @@ namespace vigine::ecs
  *   - @c vigine::ecs::edge_kind::Attached for the directed edge that
  *     ties a component node back to its owning entity.
  */
-class EntityWorld final : public vigine::graph::AbstractGraph
+class EntityWorld final : public vigine::core::graph::AbstractGraph
 {
   public:
     EntityWorld();
@@ -143,13 +143,13 @@ class EntityWorld final : public vigine::graph::AbstractGraph
      * same layout; the helper exists for type-safety, not for
      * arithmetic.
      */
-    [[nodiscard]] static vigine::graph::NodeId toNodeId(EntityId entity) noexcept;
+    [[nodiscard]] static vigine::core::graph::NodeId toNodeId(EntityId entity) noexcept;
 
     /**
      * @brief Translates an @ref ComponentHandle to the substrate's
      *        @c NodeId.
      */
-    [[nodiscard]] static vigine::graph::NodeId toNodeId(ComponentHandle handle) noexcept;
+    [[nodiscard]] static vigine::core::graph::NodeId toNodeId(ComponentHandle handle) noexcept;
 
     /**
      * @brief Translates a substrate @c NodeId back to an
@@ -158,14 +158,14 @@ class EntityWorld final : public vigine::graph::AbstractGraph
      * Only the wrapper implementation calls this; callers of the
      * public ECS API never see the substrate type.
      */
-    [[nodiscard]] static EntityId toEntityId(vigine::graph::NodeId node) noexcept;
+    [[nodiscard]] static EntityId toEntityId(vigine::core::graph::NodeId node) noexcept;
 
     /**
      * @brief Translates a substrate @c NodeId back to a
      *        @ref ComponentHandle.
      */
     [[nodiscard]] static ComponentHandle
-        toComponentHandle(vigine::graph::NodeId node) noexcept;
+        toComponentHandle(vigine::core::graph::NodeId node) noexcept;
 
   private:
     /**
@@ -187,7 +187,7 @@ class EntityWorld final : public vigine::graph::AbstractGraph
      * without probing the substrate via fragile index math. Mutated
      * only by @ref createEntity (push) and @ref removeEntity (erase).
      */
-    std::vector<vigine::graph::NodeId> _entities;
+    std::vector<vigine::core::graph::NodeId> _entities;
 };
 
 } // namespace vigine::ecs

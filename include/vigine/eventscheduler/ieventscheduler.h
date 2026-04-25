@@ -36,8 +36,8 @@ namespace vigine::eventscheduler
  *   - INV-1: no template parameters in the public surface.
  *   - INV-9: factory @ref createEventScheduler returns @c std::unique_ptr.
  *   - INV-10: @c I prefix for this pure-virtual interface (no state).
- *   - INV-11: no graph types (@ref vigine::graph::NodeId,
- *             @ref vigine::graph::INode, etc.) appear in this header.
+ *   - INV-11: no graph types (@ref vigine::core::graph::NodeId,
+ *             @ref vigine::core::graph::INode, etc.) appear in this header.
  *   - FF-1: @ref schedule returns @c std::unique_ptr<IEventHandle>.
  *
  * The concrete implementation (@ref DefaultEventScheduler) is private to

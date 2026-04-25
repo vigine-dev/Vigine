@@ -24,7 +24,7 @@ class EntityWorld;
  * world — and supplies default implementations of every
  * @ref IECS lifecycle and query method so that a minimal concrete
  * ECS only needs to seal the inheritance chain. The internal entity
- * world specialises the graph substrate (@c vigine::graph::AbstractGraph)
+ * world specialises the graph substrate (@c vigine::core::graph::AbstractGraph)
  * and translates between @ref EntityId and the substrate's own
  * identifier types inside its implementation.
  *

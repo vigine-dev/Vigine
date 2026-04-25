@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vigine/graph/kind.h>  // INV-11 EXEMPTION: kind.h maps wrapper constants onto graph substrate ranges
+#include <vigine/core/graph/kind.h>  // INV-11 EXEMPTION: kind.h maps wrapper constants onto graph substrate ranges
 
 // wrapper-kind-waiver: engine-concept kind constants in a wrapper subspace.
 
@@ -11,12 +11,12 @@ namespace vigine::ecs
  *
  * Carved out of the reserved range `[32..47]` in the graph substrate. Every
  * ECS-specific node carries one of these tags so the core graph stays free
- * of engine-specific concepts (see @ref vigine::graph::NodeKind).
+ * of engine-specific concepts (see @ref vigine::core::graph::NodeKind).
  */
 namespace kind
 {
-inline constexpr vigine::graph::NodeKind Entity = 32;    // INV-11 EXEMPTION: kind constant mapping
-inline constexpr vigine::graph::NodeKind Component = 33; // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::NodeKind Entity = 32;    // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::NodeKind Component = 33; // INV-11 EXEMPTION: kind constant mapping
 } // namespace kind
 
 /**
@@ -26,7 +26,7 @@ inline constexpr vigine::graph::NodeKind Component = 33; // INV-11 EXEMPTION: ki
  */
 namespace edge_kind
 {
-inline constexpr vigine::graph::EdgeKind Attached = 32;  // INV-11 EXEMPTION: kind constant mapping
+inline constexpr vigine::core::graph::EdgeKind Attached = 32;  // INV-11 EXEMPTION: kind constant mapping
 } // namespace edge_kind
 
 } // namespace vigine::ecs

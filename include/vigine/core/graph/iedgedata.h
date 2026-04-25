@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Optional polymorphic payload carried by an edge.
@@ -42,4 +42,4 @@ class IEdgeData
     IEdgeData &operator=(IEdgeData &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

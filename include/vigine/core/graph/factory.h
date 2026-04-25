@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "vigine/graph/igraph.h"
+#include "vigine/core/graph/igraph.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Constructs the default in-memory @ref IGraph implementation.
@@ -19,4 +19,4 @@ namespace vigine::graph
  */
 [[nodiscard]] std::unique_ptr<IGraph> createGraph();
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph

@@ -4,13 +4,13 @@
 #include <memory>
 
 #include "vigine/fsm/kind.h"
-#include "vigine/graph/abstractgraph.h"
-#include "vigine/graph/edgeid.h"
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/igraphquery.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/abstractgraph.h"
+#include "vigine/core/graph/edgeid.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/igraphquery.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 #include "vigine/result.h"
 #include "vigine/statemachine/stateid.h"
 
@@ -35,28 +35,28 @@ namespace
  * flows back to @c id() without a round-trip through the graph.
  */
 class StateNode final
-    : public vigine::graph::INode
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::INode
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
     StateNode() = default;
 
-    [[nodiscard]] vigine::graph::NodeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::NodeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::NodeKind kind() const noexcept override
     {
         return vigine::fsm::kind::State;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = nodeId;
         (void)edgeId;
     }
 
   private:
-    vigine::graph::NodeId _id{};
+    vigine::core::graph::NodeId _id{};
 };
 
 /**
@@ -68,39 +68,39 @@ class StateNode final
  * @c outEdgesOfKind on the child vertex.
  */
 class ChildOfEdge final
-    : public vigine::graph::IEdge
-    , public vigine::graph::AbstractGraph::IdStamp
+    : public vigine::core::graph::IEdge
+    , public vigine::core::graph::AbstractGraph::IdStamp
 {
   public:
-    ChildOfEdge(vigine::graph::NodeId from, vigine::graph::NodeId to) noexcept
+    ChildOfEdge(vigine::core::graph::NodeId from, vigine::core::graph::NodeId to) noexcept
         : _from{from}, _to{to}
     {
     }
 
-    [[nodiscard]] vigine::graph::EdgeId id() const noexcept override { return _id; }
-    [[nodiscard]] vigine::graph::EdgeKind kind() const noexcept override
+    [[nodiscard]] vigine::core::graph::EdgeId id() const noexcept override { return _id; }
+    [[nodiscard]] vigine::core::graph::EdgeKind kind() const noexcept override
     {
         return vigine::fsm::edge_kind::ChildOf;
     }
-    [[nodiscard]] vigine::graph::NodeId from() const noexcept override { return _from; }
-    [[nodiscard]] vigine::graph::NodeId to() const noexcept override { return _to; }
-    [[nodiscard]] const vigine::graph::IEdgeData *data() const noexcept override
+    [[nodiscard]] vigine::core::graph::NodeId from() const noexcept override { return _from; }
+    [[nodiscard]] vigine::core::graph::NodeId to() const noexcept override { return _to; }
+    [[nodiscard]] const vigine::core::graph::IEdgeData *data() const noexcept override
     {
         return nullptr;
     }
 
     void onGraphIdAssigned(
-        vigine::graph::NodeId nodeId,
-        vigine::graph::EdgeId edgeId) noexcept override
+        vigine::core::graph::NodeId nodeId,
+        vigine::core::graph::EdgeId edgeId) noexcept override
     {
         _id = edgeId;
         (void)nodeId;
     }
 
   private:
-    vigine::graph::EdgeId _id{};
-    vigine::graph::NodeId _from{};
-    vigine::graph::NodeId _to{};
+    vigine::core::graph::EdgeId _id{};
+    vigine::core::graph::NodeId _from{};
+    vigine::core::graph::NodeId _to{};
 };
 
 } // namespace
@@ -115,17 +115,17 @@ StateTopology::~StateTopology() = default;
 
 // ---------------------------------------------------------------------------
 // POD translation helpers. The @ref StateId layout is intentionally
-// identical to @c vigine::graph::NodeId so the translation is a plain
+// identical to @c vigine::core::graph::NodeId so the translation is a plain
 // field-for-field copy; INV-11 allows it here because the conversion
 // lives entirely inside the wrapper implementation.
 // ---------------------------------------------------------------------------
 
-vigine::graph::NodeId StateTopology::toNodeId(StateId state) noexcept
+vigine::core::graph::NodeId StateTopology::toNodeId(StateId state) noexcept
 {
-    return vigine::graph::NodeId{state.index, state.generation};
+    return vigine::core::graph::NodeId{state.index, state.generation};
 }
 
-StateId StateTopology::toStateId(vigine::graph::NodeId node) noexcept
+StateId StateTopology::toStateId(vigine::core::graph::NodeId node) noexcept
 {
     return StateId{node.index, node.generation};
 }
@@ -141,7 +141,7 @@ StateId StateTopology::addState()
     // @c INode unique_ptr follows the IdStamp handshake — the node captures
     // the assigned id during insert.
     auto                        node = std::make_unique<StateNode>();
-    const vigine::graph::NodeId nid  = addNode(std::move(node));
+    const vigine::core::graph::NodeId nid  = addNode(std::move(node));
     return toStateId(nid);
 }
 
@@ -151,7 +151,7 @@ bool StateTopology::hasState(StateId state) const noexcept
     {
         return false;
     }
-    const vigine::graph::INode *n = node(toNodeId(state));
+    const vigine::core::graph::INode *n = node(toNodeId(state));
     return n != nullptr && n->kind() == vigine::fsm::kind::State;
 }
 
@@ -179,8 +179,8 @@ Result StateTopology::addChildEdge(StateId parent, StateId child)
     // dispatch path relies on.
     std::lock_guard<std::mutex> lock{_hierarchyMutex};
 
-    const vigine::graph::NodeId parentNode = toNodeId(parent);
-    const vigine::graph::NodeId childNode  = toNodeId(child);
+    const vigine::core::graph::NodeId parentNode = toNodeId(parent);
+    const vigine::core::graph::NodeId childNode  = toNodeId(child);
 
     if (!query().hasNode(parentNode))
     {
@@ -211,7 +211,7 @@ Result StateTopology::addChildEdge(StateId parent, StateId child)
     }
 
     auto                        edgePtr = std::make_unique<ChildOfEdge>(childNode, parentNode);
-    const vigine::graph::EdgeId eid     = addEdge(std::move(edgePtr));
+    const vigine::core::graph::EdgeId eid     = addEdge(std::move(edgePtr));
     if (!eid.valid())
     {
         return Result(Result::Code::Error, "failed to add child-of edge");
@@ -225,7 +225,7 @@ StateId StateTopology::parentOf(StateId state) const
     {
         return StateId{};
     }
-    const vigine::graph::NodeId nid = toNodeId(state);
+    const vigine::core::graph::NodeId nid = toNodeId(state);
     if (!query().hasNode(nid))
     {
         return StateId{};
@@ -236,7 +236,7 @@ StateId StateTopology::parentOf(StateId state) const
     {
         return StateId{};
     }
-    const vigine::graph::IEdge *e = edge(parents.front());
+    const vigine::core::graph::IEdge *e = edge(parents.front());
     if (e == nullptr)
     {
         return StateId{};

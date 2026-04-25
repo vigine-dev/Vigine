@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/graph/abstractgraph.h"
+#include "vigine/core/graph/abstractgraph.h"
 
 namespace vigine::service
 {
@@ -8,7 +8,7 @@ namespace vigine::service
  * @brief Internal graph specialisation that the service wrapper uses
  *        to hold its service-domain storage.
  *
- * @ref ServiceRegistry is a concrete @c vigine::graph::AbstractGraph
+ * @ref ServiceRegistry is a concrete @c vigine::core::graph::AbstractGraph
  * subtype that seals the inheritance chain for the services wrapper.
  * It carries no additional state and no additional virtual methods; it
  * exists only to keep the graph substrate in a typed wrapper so
@@ -16,7 +16,7 @@ namespace vigine::service
  * a public header without leaking any graph primitives.
  *
  * This header lives under @c src/service on purpose: the INV-11 rule
- * forbids @c vigine::graph types from surfacing in
+ * forbids @c vigine::core::graph types from surfacing in
  * @c include/vigine/service. Only the wrapper implementation consumes
  * the registry; callers of @ref IService / @ref AbstractService see
  * neither the registry nor its graph base.
@@ -26,7 +26,7 @@ namespace vigine::service
  * The wrapper layer does not add any additional synchronisation on
  * top; every service-side access path funnels through the registry.
  */
-class ServiceRegistry final : public vigine::graph::AbstractGraph
+class ServiceRegistry final : public vigine::core::graph::AbstractGraph
 {
   public:
     ServiceRegistry();

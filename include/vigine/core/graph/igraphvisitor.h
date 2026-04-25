@@ -1,11 +1,11 @@
 #pragma once
 
-#include "vigine/graph/iedge.h"
-#include "vigine/graph/inode.h"
-#include "vigine/graph/nodeid.h"
-#include "vigine/graph/visit_result.h"
+#include "vigine/core/graph/iedge.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/nodeid.h"
+#include "vigine/core/graph/visit_result.h"
 
-namespace vigine::graph
+namespace vigine::core::graph
 {
 /**
  * @brief Pure-virtual callback consumed by @ref IGraph::traverse.
@@ -52,4 +52,4 @@ class IGraphVisitor
     IGraphVisitor &operator=(IGraphVisitor &&)      = delete;
 };
 
-} // namespace vigine::graph
+} // namespace vigine::core::graph
