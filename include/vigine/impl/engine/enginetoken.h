@@ -25,12 +25,15 @@
  *     R-StateScope rule.
  *   - @ref subscribeExpiration registers a one-shot callback fired
  *     when the FSM transitions away from the bound state. The
- *     callback runs on the controller thread synchronously inside
- *     the @c AbstractStateMachine listener firing path and BEFORE
- *     the alive flag is observed cleared by future readers. When the
- *     token is already invalidated at registration time the
- *     callback fires immediately (defensive same-thread invocation)
- *     and the returned subscription token is inert.
+ *     callback runs synchronously on the FSM transition thread (the
+ *     controller thread, by the @ref IStateMachine thread-affinity
+ *     contract) inside the @c AbstractStateMachine listener firing
+ *     path and BEFORE the alive flag is observed cleared by future
+ *     readers. Per the @ref IEngineToken contract,
+ *     @ref subscribeExpiration returns a null subscription token
+ *     when the supplied callback is empty or when the token is
+ *     already expired at registration time -- the callback is not
+ *     invoked in either case.
  *
  * Lifetime and ownership:
  *   - The state machine owns the token instance. Clients never
@@ -144,11 +147,14 @@ class EngineToken final : public AbstractEngineToken
      * The optional @p signalEmitter pointer carries the
      * @ref ISignalEmitter façade the @ref signalEmitter accessor
      * returns. When the engine wiring does not yet expose one
-     * (the signal-emitter follow-up under #197 lands separately)
-     * pass @c nullptr and the @ref signalEmitter accessor will
-     * @c std::abort the program if a caller invokes it; the gated /
-     * ungated lifecycle the rest of the surface exercises stays
-     * functional regardless.
+     * (the signal-emitter follow-up under #283 lands separately)
+     * pass @c nullptr and the constructor falls back to a private
+     * @c NullSignalEmitter stub so the @ref signalEmitter accessor
+     * always honours its "ungated infrastructure accessor cannot
+     * fail" contract -- callers observe a live no-op stub instead
+     * of crashing the program. Once the real wrapper is wired
+     * through @ref vigine::IContext, callers pass a non-null
+     * pointer and the stub stays uninstantiated.
      */
     EngineToken(vigine::statemachine::StateId         boundState,
                 vigine::IContext                     &context,
@@ -241,6 +247,35 @@ class EngineToken final : public AbstractEngineToken
 
     /**
      * @brief Subscription token returned by @ref subscribeExpiration.
+     *
+     * Lifetime invariant: an @ref ExpirationToken must NEVER outlive
+     * the @ref EngineToken that issued it. The token holds @p _owner
+     * as a raw, non-owning pointer and dereferences it from
+     * @ref cancel; if the owning @ref EngineToken were destroyed
+     * first, @ref cancel would dereference a freed object
+     * (use-after-free).
+     *
+     * The invariant is enforced by the engine's wiring: the state
+     * machine owns the @ref EngineToken and hands tasks a reference,
+     * not a value. Tasks then own any @ref subscribeExpiration
+     * subscription tokens they request, and the engine's strict
+     * teardown order tears tasks down before the state machine
+     * tears the @ref EngineToken down. The lifetime ordering is the
+     * natural arrangement for the engine's construction chain.
+     *
+     * A control-block-based design (mirroring
+     * @ref vigine::messaging::IBusControlBlock for the message bus)
+     * would relax this invariant at the cost of an additional
+     * shared-state allocation per token. Once the
+     * task-wiring follow-up under the #197 umbrella exposes the
+     * concrete ownership boundary between tasks and the engine,
+     * a separate leaf may revisit this trade-off; for now the
+     * raw-pointer + lifetime-invariant approach matches the
+     * scope of the concrete EngineToken leaf and keeps the
+     * lifetime cost off the hot path. A debug-only assertion in
+     * @ref EngineToken's destructor (see the .cpp) guards against
+     * the case where any expiration subscription is still alive at
+     * teardown, surfacing a violation immediately under a debug build.
      */
     class ExpirationToken final : public vigine::messaging::ISubscriptionToken
     {
@@ -261,8 +296,38 @@ class EngineToken final : public AbstractEngineToken
         std::atomic<std::uint32_t> _id;
     };
 
-    vigine::IContext                       &_context;
-    vigine::statemachine::IStateMachine    &_stateMachine;
+    vigine::IContext                    &_context;
+    vigine::statemachine::IStateMachine &_stateMachine;
+
+    /**
+     * @brief Holds the file-private @c NullSignalEmitter stub when
+     *        the constructor receives a @c nullptr @p signalEmitter
+     *        argument.
+     *
+     * Empty when the engine wiring passes a real
+     * @ref vigine::signalemitter::ISignalEmitter through; in that
+     * case @ref _signalEmitter points at the caller-supplied
+     * wrapper directly. Holding the stub through a
+     * @c std::unique_ptr to the public interface keeps this header
+     * free of the file-private stub type while still tying the
+     * stub's lifetime to the token's lifetime exactly. The pointer
+     * is never re-seated after construction, so the @ref signalEmitter
+     * accessor's @c noexcept contract holds without further
+     * synchronisation.
+     */
+    std::unique_ptr<vigine::signalemitter::ISignalEmitter> _ownedNullSignalEmitter;
+
+    /**
+     * @brief Live pointer to the @ref ISignalEmitter the
+     *        @ref signalEmitter accessor returns.
+     *
+     * Either points at a caller-supplied wrapper (when one was
+     * passed to the constructor) or at the @c NullSignalEmitter
+     * owned by @ref _ownedNullSignalEmitter. The constructor
+     * post-condition (asserted in Debug) is that the pointer is
+     * non-null after construction, so the @c noexcept accessor
+     * never has to guard against a null.
+     */
     vigine::signalemitter::ISignalEmitter *_signalEmitter;
 
     /**
@@ -281,14 +346,30 @@ class EngineToken final : public AbstractEngineToken
     std::atomic<std::uint32_t>  _nextExpirationId{1};
 
     /**
+     * @brief Count of live @ref ExpirationToken handles still
+     *        addressing this token.
+     *
+     * Bumped by every @ref ExpirationToken constructor and decremented
+     * by every destructor. Used by the @ref EngineToken destructor in
+     * Debug builds to assert the lifetime-ordering invariant
+     * documented on @ref ExpirationToken: no subscription token is
+     * allowed to outlive its issuing @ref EngineToken. A non-zero
+     * count at @ref EngineToken teardown surfaces a wiring bug
+     * immediately under a debug build; Release builds skip the check
+     * to keep teardown cost zero.
+     */
+    std::atomic<std::uint32_t> _liveExpirationTokens{0};
+
+    /**
      * @brief Latch that marks the expiration callbacks as already
      *        fired.
      *
      * Set under @ref _expirationMutex when @ref fireExpirationCallbacks
-     * runs the first time. Subsequent registrations that observe a
-     * already-true latch fire the new callback inline (defensive
-     * same-thread invocation), matching the contract documented on
-     * @ref subscribeExpiration.
+     * runs the first time. Subsequent @ref subscribeExpiration calls
+     * that observe an already-raised latch return a null subscription
+     * token without registering or invoking the callback, matching
+     * the @ref IEngineToken contract for "expired at registration
+     * time".
      */
     std::atomic<bool> _expirationFired{false};
 };

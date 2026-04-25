@@ -34,7 +34,19 @@ AbstractStateMachine::AbstractStateMachine()
     _current      = _defaultState;
 }
 
-AbstractStateMachine::~AbstractStateMachine() = default;
+AbstractStateMachine::~AbstractStateMachine()
+{
+    // Debug-only lifetime invariant guard: no
+    // @ref InvalidationSubscriptionToken is allowed to outlive its
+    // owning @ref AbstractStateMachine. The token's @c cancel path
+    // dereferences the raw @c _owner back-pointer, so a token that
+    // survives its owner would dereference freed storage. Tracking
+    // the live-token count surfaces the misuse immediately under
+    // Debug; Release skips the check.
+    assert(_liveInvalidationTokens.load(std::memory_order_acquire) == 0u
+           && "AbstractStateMachine: invalidation subscription token "
+              "outlived its owning state machine");
+}
 
 // ---------------------------------------------------------------------------
 // Protected accessors — the derived classes reach the internal topology
@@ -320,10 +332,36 @@ AbstractStateMachine::addInvalidationListener(std::function<void(StateId)> liste
         return std::make_unique<InvalidationSubscriptionToken>(this, 0u);
     }
 
-    std::scoped_lock lock{_invalidationListenersMutex};
-    const std::uint32_t id =
-        _nextInvalidationListenerId.fetch_add(1, std::memory_order_acq_rel);
-    _invalidationListeners.push_back(InvalidationListenerSlot{id, std::move(listener)});
+    std::uint32_t id = 0u;
+    {
+        std::scoped_lock lock{_invalidationListenersMutex};
+
+        // Reuse-on-add: walk the registry looking for a cancelled
+        // slot (empty callback) we can repopulate before appending a
+        // new entry. The slot list is append-only at the firing
+        // site -- ids never shift, so reuse keeps the vector bounded
+        // by the live-subscription count even when long-running
+        // processes churn through many short-lived listeners. The
+        // bookkeeping is O(slot count) and the slot count is small
+        // in practice (one per live engine token), so the cost is
+        // dominated by the registration itself.
+        for (auto &slot : _invalidationListeners)
+        {
+            if (!slot.callback)
+            {
+                slot.id =
+                    _nextInvalidationListenerId.fetch_add(1, std::memory_order_acq_rel);
+                slot.callback = std::move(listener);
+                id            = slot.id;
+                break;
+            }
+        }
+        if (id == 0u)
+        {
+            id = _nextInvalidationListenerId.fetch_add(1, std::memory_order_acq_rel);
+            _invalidationListeners.push_back(InvalidationListenerSlot{id, std::move(listener)});
+        }
+    }
     return std::make_unique<InvalidationSubscriptionToken>(this, id);
 }
 
@@ -385,6 +423,16 @@ AbstractStateMachine::InvalidationSubscriptionToken::InvalidationSubscriptionTok
     std::uint32_t         id) noexcept
     : _owner(owner), _id(id)
 {
+    // Bump the owner's live-token counter so the owner's destructor
+    // can assert the lifetime-ordering invariant (token must not
+    // outlive the state machine; see the docstring on
+    // @ref addInvalidationListener). Inert tokens (id == 0) and
+    // tokens with a null owner do not participate -- they have
+    // nothing to cancel and cannot violate the invariant.
+    if (_owner != nullptr && id != 0u)
+    {
+        _owner->_liveInvalidationTokens.fetch_add(1, std::memory_order_acq_rel);
+    }
 }
 
 AbstractStateMachine::InvalidationSubscriptionToken::~InvalidationSubscriptionToken()
@@ -395,14 +443,15 @@ AbstractStateMachine::InvalidationSubscriptionToken::~InvalidationSubscriptionTo
 void AbstractStateMachine::InvalidationSubscriptionToken::cancel() noexcept
 {
     // Atomically fetch-and-clear the id so a concurrent @c cancel /
-    // destructor pair does not call @c cancelInvalidationListener twice
-    // with the same id. The @c noexcept @ref cancelInvalidationListener
-    // is itself idempotent on a stale id, but doing the work here keeps
-    // the cost bounded to one @c std::scoped_lock acquisition per token.
+    // destructor pair calls the registry-side cleanup at most once
+    // with the same id. The thread that observes a non-zero
+    // pre-exchange value owns the bookkeeping (registry slot drop
+    // AND the matching live-token decrement).
     const std::uint32_t id = _id.exchange(0u, std::memory_order_acq_rel);
     if (id != 0u && _owner != nullptr)
     {
         _owner->cancelInvalidationListener(id);
+        _owner->_liveInvalidationTokens.fetch_sub(1, std::memory_order_acq_rel);
     }
 }
 

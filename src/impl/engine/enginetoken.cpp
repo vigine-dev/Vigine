@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -14,15 +13,69 @@
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/messaging/abstractmessagetarget.h"
 #include "vigine/messaging/imessagebus.h"
+#include "vigine/messaging/isubscriber.h"
 #include "vigine/messaging/isubscriptiontoken.h"
+#include "vigine/messaging/messagefilter.h"
+#include "vigine/result.h"
 #include "vigine/signalemitter/isignalemitter.h"
+#include "vigine/signalemitter/isignalpayload.h"
 #include "vigine/statemachine/abstractstatemachine.h"
 #include "vigine/statemachine/istatemachine.h"
 #include "vigine/statemachine/stateid.h"
 
 namespace vigine::engine
 {
+
+namespace
+{
+
+// ---------------------------------------------------------------------------
+// NullSignalEmitter -- file-private no-op stub used when the engine wiring
+// does not yet pass a real ISignalEmitter to the token (the ISignalEmitter
+// follow-up under #197 lands separately, see #283).
+//
+// Returning a stub object instead of std::abort() lets the IEngineToken
+// contract's "infrastructure accessor cannot fail" promise hold even when
+// the wiring is incomplete: callers obtain a live reference whose every
+// emit/emitTo/subscribeSignal is a quiet no-op. The stub has no state, no
+// lifetime obligations beyond the EngineToken that owns it, and never
+// reaches outside its translation unit.
+// ---------------------------------------------------------------------------
+class NullSignalEmitter final : public vigine::signalemitter::ISignalEmitter
+{
+  public:
+    NullSignalEmitter() = default;
+
+    [[nodiscard]] vigine::Result emit(
+        std::unique_ptr<vigine::signalemitter::ISignalPayload> /*payload*/) override
+    {
+        // Drop the payload silently; the stub stands in for an unwired
+        // emitter and intentionally does nothing. Callers that need to
+        // observe delivery should not be calling through this stub.
+        return vigine::Result();
+    }
+
+    [[nodiscard]] vigine::Result emitTo(
+        const vigine::messaging::AbstractMessageTarget * /*target*/,
+        std::unique_ptr<vigine::signalemitter::ISignalPayload> /*payload*/) override
+    {
+        return vigine::Result();
+    }
+
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISubscriptionToken>
+        subscribeSignal(vigine::messaging::MessageFilter /*filter*/,
+                        vigine::messaging::ISubscriber * /*subscriber*/) override
+    {
+        // The contract says a null subscriber yields a null token; the
+        // stub generalises that: every subscription is inert because
+        // nothing will ever be emitted on this stub.
+        return nullptr;
+    }
+};
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Construction / destruction.
@@ -53,8 +106,23 @@ EngineToken::EngineToken(vigine::statemachine::StateId          boundState,
     : AbstractEngineToken(boundState),
       _context(context),
       _stateMachine(stateMachine),
-      _signalEmitter(signalEmitter)
+      _ownedNullSignalEmitter(signalEmitter == nullptr
+                                  ? std::make_unique<NullSignalEmitter>()
+                                  : nullptr),
+      _signalEmitter(signalEmitter != nullptr ? signalEmitter
+                                              : _ownedNullSignalEmitter.get())
 {
+    // The IEngineToken contract documents @ref signalEmitter as an
+    // ungated infrastructure accessor that always returns a live
+    // reference. When the engine wiring does not yet pass a real
+    // ISignalEmitter (the wrapper follow-up under #283 lands separately
+    // from this leaf) the constructor falls back to a file-private
+    // NullSignalEmitter stub so the accessor honours its "cannot fail"
+    // contract regardless of the wiring state. Once the real wrapper
+    // is wired through IContext, callers pass a non-null pointer and
+    // the stub stays default-empty.
+    assert(_signalEmitter != nullptr
+           && "EngineToken: _signalEmitter must be non-null after construction");
     // The IStateMachine wrapper interface does not surface the
     // invalidation-listener registry directly. The engine wiring
     // funnels every state machine through @ref createStateMachine which
@@ -82,6 +150,17 @@ EngineToken::~EngineToken()
     // expiration callbacks have already returned because the listener
     // path holds no token mutex across user code (snapshot pattern).
     _invalidationSub.reset();
+
+    // Debug-only lifetime invariant guard: no @ref ExpirationToken
+    // is allowed to outlive its owning @ref EngineToken (see the
+    // ExpirationToken docstring in the header). The token's
+    // @ref ExpirationToken::cancel path dereferences the raw
+    // @c _owner back-pointer, so a token that survives its owner
+    // would dereference freed storage. Tracking the live-handle
+    // count lets us surface the misuse immediately under Debug;
+    // Release skips the check to keep teardown cost zero.
+    assert(_liveExpirationTokens.load(std::memory_order_acquire) == 0u
+           && "EngineToken: ExpirationToken outlived its owning EngineToken");
 }
 
 // ---------------------------------------------------------------------------
@@ -200,16 +279,13 @@ vigine::messaging::IMessageBus &EngineToken::systemBus() noexcept
 
 vigine::signalemitter::ISignalEmitter &EngineToken::signalEmitter() noexcept
 {
-    // The IContext aggregator does not expose a signal-emitter accessor
-    // today — the ISignalEmitter wrapper is plumbed through follow-up
-    // leaves under the #197 umbrella. Until then, the token only honours
-    // calls when the engine wiring passes a non-null pointer to the
-    // constructor; otherwise this accessor terminates so a misuse is
-    // visible immediately rather than silently dereferencing a null.
-    if (_signalEmitter == nullptr)
-    {
-        std::abort();
-    }
+    // _signalEmitter is non-null by the constructor's post-condition:
+    // when the engine passes a real wrapper we point at it; otherwise
+    // we fall back to the NullSignalEmitter stub owned by the token
+    // (see _ownedNullSignalEmitter). Either way the accessor honours
+    // the "ungated infrastructure accessor cannot fail" promise of
+    // the IEngineToken contract — callers always observe a live
+    // reference, never a crashed program.
     return *_signalEmitter;
 }
 
@@ -222,60 +298,91 @@ vigine::statemachine::IStateMachine &EngineToken::stateMachine() noexcept
 // Expiration notification.
 //
 // Subscribers register a callback through @ref subscribeExpiration. The
-// callback fires exactly once, on whichever thread runs the FSM transition
-// that vacates the bound state — typically the controller thread.
+// callback fires exactly once on whichever thread runs the FSM transition
+// that vacates the bound state — the controller thread, by the
+// IStateMachine thread-affinity contract.
 //
-// Defensive same-thread fire: when a caller registers AFTER the token has
-// already invalidated, the contract says the callback fires "as soon as
-// the engine has finished its housekeeping". The simplest honoured shape
-// is "fire inline, on the registering thread" — the alternative
-// (post-back through the engine's thread manager) carries strictly more
-// timing surface for no behavioural gain, since the registering caller
-// has already observed an expired token.
+// Per the IEngineToken contract, @ref subscribeExpiration returns a null
+// subscription token when the supplied callback is empty OR when the
+// token has already expired by the time the registration arrives. Both
+// branches honour the contract literally without invoking the callback;
+// the registering caller (which has already observed an expired token,
+// or which never had a callback to begin with) is responsible for any
+// fall-back logic that would otherwise have run on the firing path.
+//
+// Locking pattern (Pattern B): the registry mutex is held only for the
+// slot mutation. We never hold the mutex across the user-supplied
+// callback. The firing path uses the same shape -- snapshot the active
+// callbacks under the mutex, release the mutex, then walk the snapshot.
+// This keeps callback bodies free to call back into the token (e.g.
+// @ref isAlive, @ref signalEmitter) without deadlocking on themselves.
 // ---------------------------------------------------------------------------
 
 std::unique_ptr<vigine::messaging::ISubscriptionToken>
 EngineToken::subscribeExpiration(std::function<void()> callback)
 {
+    // The IEngineToken contract says: "Returns a null subscription
+    // token when @p callback is empty or when the token is already
+    // expired at registration time." Both early-return paths honour
+    // that contract literally.
     if (!callback)
     {
-        // Inert token: id == 0 keeps @ref cancelExpirationCallback a
-        // no-op for it.
-        return std::make_unique<ExpirationToken>(this, 0u);
+        return nullptr;
     }
 
-    // If the token has already expired, fire the callback immediately
-    // and hand back an inert subscription. Reading the latch with
-    // acquire semantics happens-before the alive flag drop, so this
-    // branch only ever runs after @ref onStateInvalidated has already
-    // walked its snapshot and returned.
+    // Cheap unlocked latch read. If the latch is already raised the
+    // expiration callbacks have either already fired or are about to
+    // fire on the FSM transition thread; either way no new
+    // registration can usefully observe an expiration that already
+    // happened, so the contract returns a null token without
+    // attempting to register.
     if (_expirationFired.load(std::memory_order_acquire))
     {
-        callback();
-        return std::make_unique<ExpirationToken>(this, 0u);
+        return nullptr;
     }
 
-    std::scoped_lock lock{_expirationMutex};
-
-    // Re-check under the lock to close the small window between the
-    // unlocked latch read above and the registration: a transition may
-    // have fired the callbacks while we were entering the critical
-    // section. This guarantees the "exactly once" contract regardless
-    // of how the registering thread races the firing thread.
-    if (_expirationFired.load(std::memory_order_acquire))
+    // Take the registry mutex for the slot mutation only. We never
+    // run the user-supplied @p callback while holding this mutex --
+    // the firing path below uses the snapshot-and-fire pattern that
+    // copies the active callbacks aside under the lock and then
+    // releases the lock before invoking any of them.
+    std::uint32_t id = 0u;
     {
-        // Drop the lock before invoking the callback so a callback
-        // that re-enters the token (e.g. queries @ref isAlive) does
-        // not deadlock on the registry mutex.
-        std::unique_lock unlock{_expirationMutex, std::adopt_lock};
-        unlock.unlock();
-        callback();
-        return std::make_unique<ExpirationToken>(this, 0u);
-    }
+        std::scoped_lock lock{_expirationMutex};
 
-    const std::uint32_t id =
-        _nextExpirationId.fetch_add(1, std::memory_order_acq_rel);
-    _expirationCallbacks.push_back(ExpirationSlot{id, std::move(callback)});
+        // Re-check under the lock to close the small window between
+        // the unlocked latch read above and the registration. If the
+        // firing path got here first the latch is now raised and we
+        // honour the contract by returning a null token without
+        // registering anything.
+        if (_expirationFired.load(std::memory_order_acquire))
+        {
+            return nullptr;
+        }
+
+        // Reuse-on-add: walk the registry looking for a cancelled
+        // slot (empty callback) we can repopulate before appending a
+        // new entry. The slot list is append-only at the firing site
+        // (ids never shift), so reuse-on-add keeps the list bounded
+        // by the live-subscription count even when a long-running
+        // task churns through many short-lived subscriptions.
+        for (auto &slot : _expirationCallbacks)
+        {
+            if (!slot.callback)
+            {
+                slot.id =
+                    _nextExpirationId.fetch_add(1, std::memory_order_acq_rel);
+                slot.callback = std::move(callback);
+                id            = slot.id;
+                break;
+            }
+        }
+        if (id == 0u)
+        {
+            id = _nextExpirationId.fetch_add(1, std::memory_order_acq_rel);
+            _expirationCallbacks.push_back(ExpirationSlot{id, std::move(callback)});
+        }
+    }
     return std::make_unique<ExpirationToken>(this, id);
 }
 
@@ -295,16 +402,18 @@ void EngineToken::onStateInvalidated(vigine::statemachine::StateId leavingState)
     }
 
     // Order matters:
-    //   1. Fire the registered expiration callbacks first. They run on
-    //      the controller thread synchronously inside the FSM listener
-    //      path. The alive flag is still true at this point; a
-    //      callback that re-reads @ref isAlive would observe the live
-    //      state. That is the documented order — observers see
-    //      "callback runs, THEN alive flips false" — so a callback can
-    //      still issue last-mile cleanup that depends on a live token.
-    //   2. Mark the token expired. After this @ref isAlive flips false
-    //      and every subsequent gated accessor short-circuits to
-    //      @ref Result::Code::Expired.
+    //   1. Fire the registered expiration callbacks first. They run
+    //      synchronously on whichever thread executed the FSM
+    //      transition (the controller thread, by the IStateMachine
+    //      thread-affinity contract). The alive flag is still true
+    //      at this point; a callback that re-reads @ref isAlive
+    //      would observe the live state. That is the documented
+    //      order -- observers see "callback runs, THEN alive flips
+    //      false" -- so a callback can still issue last-mile cleanup
+    //      that depends on a live token.
+    //   2. Mark the token expired. After this @ref isAlive flips
+    //      false and every subsequent gated accessor short-circuits
+    //      to @ref Result::Code::Expired.
     fireExpirationCallbacks();
     markExpired();
 }
@@ -372,6 +481,17 @@ EngineToken::ExpirationToken::ExpirationToken(EngineToken *owner,
                                               std::uint32_t id) noexcept
     : _owner(owner), _id(id)
 {
+    // Bump the owner's live-token counter so the owner's destructor
+    // can assert the lifetime invariant (see ExpirationToken
+    // docstring in the header). Inert tokens (id == 0) and tokens
+    // with a null owner do not participate -- they have nothing to
+    // cancel, so they cannot violate the invariant. The matching
+    // decrement happens exactly once, on whichever of @ref cancel
+    // or the destructor first observes the active registration.
+    if (_owner != nullptr && id != 0u)
+    {
+        _owner->_liveExpirationTokens.fetch_add(1, std::memory_order_acq_rel);
+    }
 }
 
 EngineToken::ExpirationToken::~ExpirationToken()
@@ -381,10 +501,16 @@ EngineToken::ExpirationToken::~ExpirationToken()
 
 void EngineToken::ExpirationToken::cancel() noexcept
 {
+    // Exchange the id to zero so a concurrent cancel / destructor
+    // pair calls @ref cancelExpirationCallback at most once with the
+    // same id. The thread that observes a non-zero pre-exchange value
+    // is the one that owns the bookkeeping (the registry slot drop
+    // AND the matching decrement on @ref _liveExpirationTokens).
     const std::uint32_t id = _id.exchange(0u, std::memory_order_acq_rel);
     if (id != 0u && _owner != nullptr)
     {
         _owner->cancelExpirationCallback(id);
+        _owner->_liveExpirationTokens.fetch_sub(1, std::memory_order_acq_rel);
     }
 }
 
