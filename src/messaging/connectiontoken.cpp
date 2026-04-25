@@ -1,5 +1,7 @@
 #include "vigine/messaging/connectiontoken.h"
 
+#include <mutex>
+#include <shared_mutex>
 #include <utility>
 
 #include "vigine/messaging/ibuscontrolblock.h"
@@ -8,31 +10,41 @@ namespace vigine::messaging
 {
 
 ConnectionToken::ConnectionToken(std::weak_ptr<IBusControlBlock> control,
-                                 ConnectionId                   id) noexcept
-    : _control{std::move(control)}, _id{id}
+                                 ConnectionId                   id,
+                                 std::shared_ptr<SlotState>     slotState) noexcept
+    : _control{std::move(control)}, _id{id}, _slotState{std::move(slotState)}
 {
 }
 
 ConnectionToken::~ConnectionToken()
 {
-    // First, prevent new dispatches on this slot. If the bus is still
-    // alive we ask it to drop our registry entry; if it died first, the
-    // weak lock fails and we fall through to the drain wait.
+    // Step 1: ask the control block to retire the registry slot. On a
+    // live bus the block also drains every dispatch in flight on this
+    // slot by acquiring `_slotState->lifecycleMutex` exclusively
+    // before flipping `cancelled`. On a dead bus the weak_ptr.lock()
+    // returns null and the registry has already been reclaimed en
+    // masse — the cancel barrier below still has work to do for any
+    // dispatch snapshot still holding a copy of the same SlotState.
     if (auto ctrl = _control.lock())
     {
         ctrl->unregisterTarget(_id);
     }
 
-    // Strong-unsubscribe barrier: wait until every dispatch that
-    // observed the slot (before unregisterTarget took effect) has
-    // finished calling AbstractMessageTarget::onMessage. The bus is
-    // responsible for incrementing _inFlight before the call and
-    // decrementing it after the call; endDispatch signals the cv on
-    // the 1 -> 0 transition.
-    std::unique_lock<std::mutex> lock{_waitMutex};
-    _waitCv.wait(lock, [this] {
-        return _inFlight.load(std::memory_order_acquire) == 0;
-    });
+    // Step 2: defensive cancel barrier from the token side. Mirror of
+    // `SubscriptionToken::cancel`. Even when step 1 ran the same
+    // logic inside `unregisterTarget`, repeating it here costs only an
+    // already-uncontended lock acquisition and covers the bus-died-
+    // first path, where step 1 was a no-op but a racing dispatch may
+    // still be sitting on a snapshot copy of `_slotState`. The
+    // `unique_lock` on the shared_mutex blocks until every concurrent
+    // shared holder (every in-flight `onMessage`) has released, which
+    // is the dtor-blocks contract that the IConnectionToken header
+    // documents.
+    if (_slotState)
+    {
+        std::unique_lock<std::shared_mutex> lock{_slotState->lifecycleMutex};
+        _slotState->cancelled = true;
+    }
 }
 
 bool ConnectionToken::active() const noexcept
@@ -49,20 +61,6 @@ bool ConnectionToken::active() const noexcept
     }
     auto ctrl = _control.lock();
     return static_cast<bool>(ctrl) && ctrl->isAlive();
-}
-
-void ConnectionToken::beginDispatch() noexcept
-{
-    _inFlight.fetch_add(1, std::memory_order_acq_rel);
-}
-
-void ConnectionToken::endDispatch() noexcept
-{
-    if (_inFlight.fetch_sub(1, std::memory_order_acq_rel) == 1)
-    {
-        std::lock_guard<std::mutex> lock{_waitMutex};
-        _waitCv.notify_all();
-    }
 }
 
 } // namespace vigine::messaging

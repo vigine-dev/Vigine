@@ -159,11 +159,12 @@ Result AbstractMessageBus::registerTarget(AbstractMessageTarget *target)
 
     // Allocate the registry slot first so a failure past this point
     // only needs to roll back the allocation, not a half-built target
-    // connection. allocateSlot returns the sentinel id on failure; we
-    // translate that into an error result without mutating any state on
-    // the target side.
-    const ConnectionId connectionId = _control->allocateSlot(target);
-    if (!connectionId.valid())
+    // connection. `allocateSlot` returns a default-constructed
+    // SlotAllocation on failure (id sentinel + empty SlotState); we
+    // translate that into an error result without mutating any state
+    // on the target side.
+    SlotAllocation allocation = _control->allocateSlot(target);
+    if (!allocation.id.valid())
     {
         return Result{Result::Code::Error, "bus registry exhausted or dead"};
     }
@@ -175,11 +176,13 @@ Result AbstractMessageBus::registerTarget(AbstractMessageTarget *target)
     try
     {
         token = std::make_unique<ConnectionToken>(
-            std::weak_ptr<IBusControlBlock>(_control), connectionId);
+            std::weak_ptr<IBusControlBlock>(_control),
+            allocation.id,
+            allocation.state);
     }
     catch (...)
     {
-        _control->unregisterTarget(connectionId);
+        _control->unregisterTarget(allocation.id);
         throw;
     }
 
@@ -197,7 +200,7 @@ Result AbstractMessageBus::registerTarget(AbstractMessageTarget *target)
         // the argument -- which calls unregisterTarget through the
         // ConnectionToken destructor. Calling unregisterTarget a second
         // time is a documented no-op.
-        _control->unregisterTarget(connectionId);
+        _control->unregisterTarget(allocation.id);
         throw;
     }
 

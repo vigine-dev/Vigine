@@ -14,6 +14,31 @@ class AbstractMessageTarget;
 class ISubscriber;
 
 /**
+ * @brief Outcome of a successful @ref IBusControlBlock::allocateSlot
+ *        call.
+ *
+ * Carries both the freshly-issued @ref ConnectionId AND the shared
+ * @ref SlotState that pairs with the connection slot. The state lives
+ * behind a @c std::shared_ptr so the same object survives every value
+ * copy of the slot (the dispatch path takes value snapshots, see
+ * @ref SubscriptionSlot) and so the @ref ConnectionToken handed back
+ * to the caller can keep its own owning reference to the lifecycle
+ * mutex and cancellation flag without reaching back into the registry.
+ *
+ * On failure (bus already dead, registry exhausted, @c nullptr target)
+ * implementations return a default-constructed @ref SlotAllocation
+ * whose @c id has the zero-generation sentinel and whose @c state is
+ * empty. Callers detect failure by checking @c id.valid().
+ */
+struct SlotAllocation
+{
+    /// Generational id addressing the new registry entry.
+    ConnectionId               id{};
+    /// Shared per-slot state. Empty when allocation failed.
+    std::shared_ptr<SlotState> state{};
+};
+
+/**
  * @brief Pure-virtual shared-heap state owned jointly by a message bus
  *        and the connection tokens it hands out.
  *
@@ -44,10 +69,12 @@ class ISubscriber;
  *     remaining weak tokens to be destroyed cleanly. It is always
  *     allocated on the heap and only reached through a shared/weak
  *     pointer pair.
- *   - @ref allocateSlot records a raw, non-owning pointer to the target.
- *     The caller (the bus) must guarantee that the target outlives the
- *     corresponding token or that the token's destructor runs before the
- *     target is freed -- which is the invariant provided by
+ *   - @ref allocateSlot records a raw, non-owning pointer to the target
+ *     and creates a fresh @ref SlotState shared between the registry,
+ *     the dispatch path, and the @ref ConnectionToken. The caller (the
+ *     bus) must guarantee that the target outlives the corresponding
+ *     token or that the token's destructor runs before the target is
+ *     freed -- which is the invariant provided by
  *     @ref AbstractMessageTarget owning its tokens.
  *
  * Thread-safety: every entry point is safe to call from any thread.
@@ -79,28 +106,35 @@ class IBusControlBlock
 
     /**
      * @brief Allocates a new registry slot for @p target and returns its
-     *        generational id.
+     *        generational id paired with the slot's @ref SlotState.
      *
-     * The returned @ref ConnectionId always has a non-zero @c generation
-     * when allocation succeeded. When the bus is already dead or when
-     * the registry is exhausted, implementations return a default-
-     * constructed sentinel (@c generation == 0) so that call sites can
-     * detect the failure without needing a separate @ref Result.
-     *
-     * Passing @c nullptr is a programming error; implementations return
-     * the sentinel id and do not insert anything into the registry.
+     * The returned @ref SlotAllocation::id always has a non-zero
+     * @c generation when allocation succeeded, and @c state holds a
+     * non-empty @c std::shared_ptr to a fresh @ref SlotState that the
+     * registry, the dispatch path, and the resulting
+     * @ref ConnectionToken all share. When the bus is already dead, the
+     * registry is exhausted, or @p target is @c nullptr, implementations
+     * return a default-constructed @ref SlotAllocation (the @c id
+     * sentinel has @c generation == 0 and @c state is empty) so that
+     * call sites can detect the failure without needing a separate
+     * @ref Result.
      */
-    [[nodiscard]] virtual ConnectionId
+    [[nodiscard]] virtual SlotAllocation
         allocateSlot(AbstractMessageTarget *target) = 0;
 
     /**
-     * @brief Removes the registry entry addressed by @p id.
+     * @brief Removes the registry entry addressed by @p id and drains
+     *        every dispatch still in flight on that slot.
      *
      * Idempotent: unregistering a stale id or an id from a dead bus is a
      * no-op. After this call returns, no future dispatch on this bus
-     * reaches the slot addressed by @p id; in-flight dispatches on that
-     * slot are serialised separately by the token (see
-     * @ref ConnectionToken).
+     * reaches the slot addressed by @p id; on a live bus the slot's
+     * @ref SlotState is driven through the exclusive @c lifecycleMutex
+     * so every still-in-flight dispatch drains before this call
+     * returns. Snapshot copies that have not yet entered the dispatch
+     * shared region observe the @c cancelled flag and skip
+     * @c onMessage. This is the exact mirror of
+     * @ref unregisterSubscription on the subscriber side.
      */
     virtual void unregisterTarget(ConnectionId id) noexcept = 0;
 
