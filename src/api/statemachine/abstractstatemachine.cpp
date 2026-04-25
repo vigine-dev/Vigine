@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "statemachine/statetopology.h"
+#include "vigine/impl/taskflow/taskflow.h"
 #include "vigine/result.h"
 #include "vigine/api/statemachine/routemode.h"
 #include "vigine/api/statemachine/stateid.h"
@@ -411,6 +412,84 @@ void AbstractStateMachine::fireInvalidationListeners(StateId oldState)
     {
         cb(oldState);
     }
+}
+
+// ---------------------------------------------------------------------------
+// State-bound TaskFlow registry.
+//
+// The map associates a state (by StateId) with a runnable TaskFlow that
+// the engine pumps while the FSM is in that state. Registration is
+// controller-thread-only (gated by checkThreadAffinity) and validated
+// against the topology so a stale or unknown id is rejected; lookups
+// are safe from any thread and serve the engine's per-tick fast path.
+// The map owns each registered flow through std::unique_ptr — when the
+// state machine is destroyed, the map is destroyed, and every flow is
+// destroyed in turn. There is no removal API in this leaf; slots are
+// append-only for the machine's lifetime, matching the existing state
+// surface.
+//
+// Synchronisation: a dedicated mutex serialises register / lookup
+// against each other. Held only for a single map operation per call
+// so the controller stays responsive even when worker threads spam
+// taskFlowFor probes. The map storage uses a private StateIdHasher
+// declared on AbstractStateMachine; std::hash<StateId> is intentionally
+// not specialised at namespace scope so the symbol does not leak
+// through the public header tree.
+// ---------------------------------------------------------------------------
+
+Result AbstractStateMachine::addStateTaskFlow(
+    StateId                          state,
+    std::unique_ptr<vigine::TaskFlow> taskFlow)
+{
+    checkThreadAffinity();
+
+    if (taskFlow == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "addStateTaskFlow: null TaskFlow argument");
+    }
+
+    if (!_topology->hasState(state))
+    {
+        return Result(Result::Code::Error,
+                      "addStateTaskFlow: state is not registered");
+    }
+
+    std::scoped_lock lock{_stateTaskFlowsMutex};
+
+    // One-shot per state. A re-register attempt is a programming
+    // mistake (the caller is supposed to hand a freshly built flow
+    // exactly once during topology setup), so report an error rather
+    // than silently swap. The unique_ptr stays owned by the caller in
+    // the error path because emplace's return.second tells us whether
+    // the insertion happened.
+    auto [it, inserted] = _stateTaskFlows.emplace(state, std::move(taskFlow));
+    if (!inserted)
+    {
+        return Result(Result::Code::Error,
+                      "addStateTaskFlow: state already has a bound TaskFlow");
+    }
+
+    return Result();
+}
+
+vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state) const
+{
+    // Lookup is open to any thread: the engine's per-tick fast path
+    // calls this from the controller thread, but tests and
+    // diagnostics may probe the registry from worker threads too.
+    // The mutex hold is the few instructions of std::unordered_map::find;
+    // we copy the raw pointer out under the lock so the caller holds
+    // a stable handle even if a concurrent register adds a new entry
+    // (which would not invalidate iterators on emplace, but copying
+    // the raw pointer keeps the public contract loose).
+    std::scoped_lock lock{_stateTaskFlowsMutex};
+    auto it = _stateTaskFlows.find(state);
+    if (it == _stateTaskFlows.end())
+    {
+        return nullptr;
+    }
+    return it->second.get();
 }
 
 // ---------------------------------------------------------------------------

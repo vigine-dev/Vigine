@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <thread>
 
 #include "vigine/result.h"
@@ -8,6 +9,8 @@
 
 namespace vigine
 {
+class TaskFlow;
+
 /**
  * @brief Pure-virtual forward-declared stub for the legacy state-machine
  *        surface.
@@ -439,6 +442,60 @@ class IStateMachine
      * controller-thread-serialised stream.
      */
     virtual void processQueuedTransitions() = 0;
+
+    // ------ State-bound TaskFlow registry ------
+
+    /**
+     * @brief Associates a runnable @ref vigine::TaskFlow with @p state so
+     *        the engine pumps that flow's tasks while the FSM is in
+     *        @p state.
+     *
+     * The state machine takes ownership of @p taskFlow. The flow is
+     * destroyed when the machine itself is destroyed; there is no
+     * removal API in this leaf — registrations are append-only for the
+     * machine's lifetime. The state machine never invokes the flow on
+     * its own; the engine drives the per-tick advance via the shape
+     * documented on @ref vigine::engine::IEngine::run after looking up
+     * the active flow through @ref taskFlowFor.
+     *
+     * Reports @ref Result::Code::Error when @p state is not registered
+     * or when @p taskFlow is @c nullptr. Reports
+     * @ref Result::Code::Error when @p state already has a TaskFlow
+     * bound (one-shot; callers that need to swap a flow rebuild the
+     * machine). On error the @c std::unique_ptr is released back to the
+     * caller through the move so the caller may inspect or retry; on
+     * success the machine consumes the unique_ptr.
+     *
+     * Threading: controller-thread-only once a binding is in place via
+     * @ref bindToControllerThread. The registration walks the state
+     * topology to confirm @p state is a live id, then takes the
+     * registry mutex briefly to insert the entry. The mutex is the
+     * same one @ref taskFlowFor takes for its read side, so concurrent
+     * lookups on other threads always see a coherent table — but
+     * mutations stay on the controller per the locked policy.
+     */
+    virtual vigine::Result
+        addStateTaskFlow(StateId                          state,
+                         std::unique_ptr<vigine::TaskFlow> taskFlow) = 0;
+
+    /**
+     * @brief Returns the @ref vigine::TaskFlow bound to @p state, or
+     *        @c nullptr when no flow has been registered for it.
+     *
+     * The state machine retains ownership of every registered flow;
+     * the returned pointer is non-owning and stays valid until the
+     * machine is destroyed. The lookup is the engine's per-tick entry
+     * point: it inspects @ref current and asks for the flow bound to
+     * that id; a @c nullptr return is the explicit "no work registered
+     * for this state" signal that lets the engine fall through to the
+     * thread manager pump alone.
+     *
+     * Threading: safe from any thread. Takes the registry mutex
+     * briefly for the lookup; concurrent lookups serialise against
+     * each other and against @ref addStateTaskFlow.
+     */
+    [[nodiscard]] virtual vigine::TaskFlow *
+        taskFlowFor(StateId state) const = 0;
 
     IStateMachine(const IStateMachine &)            = delete;
     IStateMachine &operator=(const IStateMachine &) = delete;

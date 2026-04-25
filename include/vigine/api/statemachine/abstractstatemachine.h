@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include "vigine/api/messaging/isubscriptiontoken.h"
@@ -15,6 +16,11 @@
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/routemode.h"
 #include "vigine/api/statemachine/stateid.h"
+
+namespace vigine
+{
+class TaskFlow;
+} // namespace vigine
 
 namespace vigine::statemachine
 {
@@ -167,6 +173,14 @@ class AbstractStateMachine : public IStateMachine
 
     void requestTransition(StateId target) override;
     void processQueuedTransitions() override;
+
+    // ------ IStateMachine: state-bound TaskFlow registry ------
+
+    vigine::Result
+        addStateTaskFlow(StateId                          state,
+                         std::unique_ptr<vigine::TaskFlow> taskFlow) override;
+
+    [[nodiscard]] vigine::TaskFlow *taskFlowFor(StateId state) const override;
 
     // ------ State-invalidation listener registry ------
 
@@ -465,6 +479,64 @@ class AbstractStateMachine : public IStateMachine
      * back without contending the registry mutex on the cancel path.
      */
     std::atomic<std::uint32_t> _nextInvalidationListenerId{1};
+
+    /**
+     * @brief Hash specialisation for @ref StateId so the per-state
+     *        TaskFlow registry can use @c std::unordered_map.
+     *
+     * StateId is an 8-byte trivially-copyable pair of @c std::uint32_t
+     * fields; the hasher splices the index and generation into a single
+     * 64-bit value before delegating to the standard library's
+     * @c std::hash<std::uint64_t>. Declaring the hasher inside the
+     * private section keeps the symbol scoped to the registry's storage
+     * type — no namespace-level @c std::hash specialisation leaks out
+     * through the public header tree.
+     */
+    struct StateIdHasher
+    {
+        [[nodiscard]] std::size_t operator()(const StateId &state) const noexcept
+        {
+            const std::uint64_t blended =
+                (static_cast<std::uint64_t>(state.generation) << 32u)
+                | static_cast<std::uint64_t>(state.index);
+            return std::hash<std::uint64_t>{}(blended);
+        }
+    };
+
+    /**
+     * @brief State-bound TaskFlow registry.
+     *
+     * One entry per state: the engine looks the @ref vigine::TaskFlow
+     * up by @ref StateId on every tick of @c run() and drives
+     * @c runCurrentTask while the flow has tasks left to run. The
+     * machine owns each registered flow through a @c std::unique_ptr;
+     * destroying the machine destroys every flow. Slots are
+     * append-only in this leaf — there is no removal API yet, matching
+     * the rest of the wrapper surface (states themselves are
+     * append-only).
+     *
+     * Storage shape is a heterogeneous-key @c std::unordered_map keyed
+     * by @ref StateId via the @ref StateIdHasher above. The map is
+     * guarded by @ref _stateTaskFlowsMutex which the public
+     * @ref addStateTaskFlow / @ref taskFlowFor methods take briefly on
+     * insert and lookup; the engine holds the looked-up pointer for
+     * the duration of one tick after releasing the mutex, which is
+     * safe because no removal API races against the read.
+     */
+    std::unordered_map<StateId, std::unique_ptr<vigine::TaskFlow>, StateIdHasher>
+        _stateTaskFlows;
+
+    /**
+     * @brief Mutex serialising mutators / lookups on
+     *        @ref _stateTaskFlows.
+     *
+     * Held only briefly: insert is a single map @c emplace, and
+     * lookup is a single @c find. The mutex is @c mutable because
+     * @ref taskFlowFor is @c const and still needs to take the
+     * lock for its read-side protection against a concurrent
+     * registration on the controller thread.
+     */
+    mutable std::mutex _stateTaskFlowsMutex;
 
     /**
      * @brief Internal helper that fires every active listener with

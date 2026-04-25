@@ -7,7 +7,9 @@
 #include "vigine/api/context/factory.h"
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
 #include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/impl/taskflow/taskflow.h"
 
 namespace vigine::engine
 {
@@ -146,21 +148,73 @@ Result AbstractEngine::run()
     _running.store(true, std::memory_order_release);
 
     // Main-thread pump loop. Each iteration is the engine "tick" per
-    // AD-G3: we drain queued FSM transitions on the controller thread
-    // first (so requestTransition calls posted from worker threads are
-    // applied before any main-thread runnable observes the new state),
-    // then drain the thread manager's main-thread queue, then wait for
+    // AD-G3: we (1) advance the TaskFlow bound to the FSM's current
+    // state by exactly one step so tasks see a real state-bound
+    // engine token through the per-tick makeEngineToken call inside
+    // TaskFlow::runCurrentTask, (2) drain queued FSM transitions on
+    // the controller thread (so requestTransition calls posted from
+    // worker threads -- including those just posted by the task that
+    // ran in step 1 -- are applied before the next state read), (3)
+    // drain the thread manager's main-thread queue, then (4) wait for
     // either a shutdown request or the pump tick timeout so a
     // shutdown() call is observed with bounded latency. The shutdown
     // flag is checked twice per tick -- once under the mutex (so a
     // concurrent shutdown + notify pair cannot be lost) and once
     // lock-free before each drain (so a shutdown that arrives during
     // the drain is observed at the next predicate check).
+    //
+    // FSM-drive contract:
+    //   The engine looks up the TaskFlow bound to the FSM's current
+    //   state through IStateMachine::taskFlowFor(current()). When the
+    //   lookup hits, the engine drives exactly one TaskFlow step per
+    //   tick by calling runCurrentTask(). That call asks IContext for
+    //   a fresh engine token, binds it on the task via setApi, runs
+    //   the task once, clears the binding, and lets the token go out
+    //   of scope so any subscribeExpiration callbacks that fired
+    //   during run() can finish their bookkeeping. When the lookup
+    //   misses (no TaskFlow registered for the current state) or the
+    //   bound flow has no further task to run (hasTasksToRun() ==
+    //   false), the tick falls through to the FSM drain + main-thread
+    //   pump alone, matching the pre-FSM-drive behaviour for callers
+    //   that drive the engine without a state-bound flow.
+    //
+    //   The FSM-drive step skips entirely when the FSM is bound to an
+    //   alien thread (fsmDrainSafe == false) -- the caller asked the
+    //   engine to stay out of the FSM's controller-thread contract,
+    //   so we honour that and let them drive their own task pump
+    //   externally. This keeps tests that bind the FSM directly off
+    //   the shared context working without surprise tick-time mutations.
     core::threading::IThreadManager &tm = _context->threadManager();
     const auto tick = std::chrono::milliseconds{pumpTickMilliseconds()};
 
     while (!_shutdownRequested.load(std::memory_order_acquire))
     {
+        // FSM-drive step: advance the TaskFlow bound to the current
+        // state by one. The lookup is best-effort (a null result is
+        // the explicit "no flow registered" signal); the per-tick
+        // pump shape lets the FSM transition between ticks change
+        // which flow is driven without the engine needing to track
+        // any cross-tick state. Gated by fsmDrainSafe so an alien-
+        // bound FSM does not get a controller-thread mutation here:
+        // its embedder is responsible for driving its own flows.
+        if (fsmDrainSafe)
+        {
+            const statemachine::StateId currentState = fsm.current();
+            vigine::TaskFlow *bound = fsm.taskFlowFor(currentState);
+            if (bound != nullptr && bound->hasTasksToRun())
+            {
+                // runCurrentTask handles the per-task setApi /
+                // makeEngineToken / setApi(nullptr) lifecycle on its
+                // own through its ApiBindingGuard; the engine just
+                // tells it to advance once. Any FSM transition
+                // requested by the task during run() lands on the
+                // FSM's request queue and is drained on the very
+                // next call below, so the next tick observes the
+                // new state.
+                bound->runCurrentTask();
+            }
+        }
+
         // Drain queued FSM transitions on this (controller) thread.
         // processQueuedTransitions is single-pass and snapshot-swap;
         // requests posted during the drain land on the live queue and
