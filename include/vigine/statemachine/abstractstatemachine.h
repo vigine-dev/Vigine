@@ -2,7 +2,9 @@
 
 #include <atomic>
 #include <cassert>
+#include <deque>
 #include <memory>
+#include <mutex>
 #include <thread>
 
 #include "vigine/result.h"
@@ -113,6 +115,11 @@ class AbstractStateMachine : public IStateMachine
 
     void                          bindToControllerThread(std::thread::id controllerId) override;
     [[nodiscard]] std::thread::id controllerThread() const noexcept override;
+
+    // ------ IStateMachine: asynchronous transition request ------
+
+    void requestTransition(StateId target) override;
+    void processQueuedTransitions() override;
 
     AbstractStateMachine(const AbstractStateMachine &)            = delete;
     AbstractStateMachine &operator=(const AbstractStateMachine &) = delete;
@@ -232,6 +239,37 @@ class AbstractStateMachine : public IStateMachine
      * every supported target.
      */
     std::atomic<std::thread::id> _controllerThreadId{};
+
+    /**
+     * @brief Mutex serialising pushes to and the controller-thread
+     *        snapshot-swap of @c _transitionQueue.
+     *
+     * Held only for the duration of a single @c push_back or a single
+     * @c swap with a stack-local empty deque, so contention is bounded
+     * to a few instructions per producer call. Marked @c mutable
+     * because @ref requestTransition is documented as thread-safe but
+     * is not @c const (the queue grows); the mutex is the only
+     * mutation that happens through it though, so leaving it
+     * @c mutable mirrors the standard pattern for "logically thread-safe
+     * mutators that lock internally".
+     */
+    mutable std::mutex _queueMutex;
+
+    /**
+     * @brief FIFO of pending transition targets posted via
+     *        @ref requestTransition.
+     *
+     * Drained on the controller thread by
+     * @ref processQueuedTransitions. The drain takes a single snapshot
+     * by @c std::deque::swap with a fresh empty deque under
+     * @c _queueMutex, then walks the snapshot outside the lock so
+     * @c onEnter / @c onExit handlers fired from inside @ref transition
+     * may post follow-up requests without deadlocking. Those follow-up
+     * requests sit on the live queue and are processed on the @b next
+     * @ref processQueuedTransitions call, per the single-pass contract
+     * documented on @ref IStateMachine::processQueuedTransitions.
+     */
+    std::deque<StateId> _transitionQueue;
 };
 
 } // namespace vigine::statemachine
