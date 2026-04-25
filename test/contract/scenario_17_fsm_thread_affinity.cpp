@@ -50,6 +50,16 @@ namespace
 
 using FsmThreadAffinity = EngineFixture;
 
+// Death-test fixture alias declared up-front so both Debug-only
+// EXPECT_DEATH cases (Case 1b and Case 2) can share it. gtest
+// reorders DeathTest fixtures to run before non-death ones; the
+// "DeathTest" suffix on the fixture name opts into that ordering and
+// silences the "Death tests use fork()" warning emitted in some
+// sanitiser configurations.
+#if !defined(NDEBUG) && defined(GTEST_HAS_DEATH_TEST) && GTEST_HAS_DEATH_TEST
+using FsmThreadAffinityDeathTest = EngineFixture;
+#endif
+
 // -- Case 1 ------------------------------------------------------------------
 //
 // One-shot rebind rejection. The contract says
@@ -72,26 +82,73 @@ TEST_F(FsmThreadAffinity, RebindIsRejectedAndDoesNotOverwrite)
     EXPECT_EQ(sm.controllerThread(), testThreadId)
         << "first bind must record the calling thread id";
 
-    // Second bind from another thread. In Debug this fires an assert
-    // (the contract says rebind is rejected); in Release the CAS path
-    // silently keeps the original binding. We isolate the assert in
-    // the worker thread so the test process itself does not abort, and
-    // we capture the worker's bound id afterwards.
+    // Second bind from another thread. In Release the CAS path silently
+    // keeps the original binding, which is the observable contract we
+    // pin here. In Debug the same call would abort via assert, so we
+    // skip it from this non-death test; the dedicated DeathTest below
+    // exercises the abort surface explicitly without aborting the
+    // current test process.
     std::thread worker{[&sm] {
 #ifdef NDEBUG
         // Release: the CAS in bindToControllerThread fails silently,
         // so calling it from the worker is a no-op.
         sm.bindToControllerThread(std::this_thread::get_id());
+#else
+        // Debug: do nothing here. The
+        // FsmThreadAffinityDeathTest.SecondBindAbortsInDebug case below
+        // is the surface that fires the assert in isolation.
+        (void)sm;
 #endif
-        // Debug: do nothing here -- the assert path would abort the
-        // whole test binary. The Case-2 EXPECT_DEATH fixture is the
-        // surface that exercises the assert in isolation.
     }};
     worker.join();
 
     EXPECT_EQ(sm.controllerThread(), testThreadId)
         << "rebind must not overwrite the original controller thread id";
 }
+
+// -- Case 1b -----------------------------------------------------------------
+//
+// Debug-only: the second bindToControllerThread call must fire the
+// rebind assert. Case 1 above pins the *observable* outcome (no
+// overwrite) which is portable across Debug and Release; this case
+// pins the *fatal* surface that Debug builds also expose, by spawning
+// a child gtest process that performs two binds in a row.
+//
+// Without this case the documented "second bind asserts" path would
+// never actually be exercised by the suite -- a regression that
+// quietly turned the assert into a no-op would slip through.
+
+#if !defined(NDEBUG) && defined(GTEST_HAS_DEATH_TEST) && GTEST_HAS_DEATH_TEST
+
+TEST_F(FsmThreadAffinityDeathTest, SecondBindAbortsInDebug)
+{
+    auto &sm = context().stateMachine();
+
+    // Use threadsafe style for the same reason as Case 2: the
+    // multi-threaded parent must not fork() with partially-locked
+    // mutexes.
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+
+    EXPECT_DEATH(
+        ([&sm] {
+            // First bind succeeds in the child process (the death-test
+            // child re-execs into a fresh FSM under threadsafe style).
+            sm.bindToControllerThread(std::this_thread::get_id());
+
+            // Spawn a worker so the second bind comes from a thread
+            // that is genuinely different from the one that took the
+            // CAS slot. The assert inside bindToControllerThread fires,
+            // the child aborts, the parent observes the death-test
+            // pass.
+            std::thread worker{[&sm] {
+                sm.bindToControllerThread(std::this_thread::get_id());
+            }};
+            worker.join();
+        })(),
+        ".*");
+}
+
+#endif // !NDEBUG && GTEST_HAS_DEATH_TEST
 
 // -- Case 2 ------------------------------------------------------------------
 //
@@ -106,13 +163,9 @@ TEST_F(FsmThreadAffinity, RebindIsRejectedAndDoesNotOverwrite)
 
 #if !defined(NDEBUG) && defined(GTEST_HAS_DEATH_TEST) && GTEST_HAS_DEATH_TEST
 
-// Death-test naming convention: gtest reorders DeathTest fixtures
-// to run before non-death ones. The "DeathTest" suffix on the
-// fixture name opts into that ordering and silences the
-// "Death tests use fork()" warning emitted in some sanitiser
-// configurations.
-using FsmThreadAffinityDeathTest = EngineFixture;
-
+// FsmThreadAffinityDeathTest fixture is declared once at the top of
+// the anonymous namespace so it is in scope for every Debug-only
+// EXPECT_DEATH case below (Case 1b and Case 2).
 TEST_F(FsmThreadAffinityDeathTest, WrongThreadSyncMutationAbortsInDebug)
 {
     auto &sm = context().stateMachine();

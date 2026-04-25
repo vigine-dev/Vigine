@@ -58,6 +58,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -101,15 +102,36 @@ class SlowSubscriber final : public vigine::messaging::ISubscriber
         // lifecycleMutex. The test thread captures its own instant
         // either side of cancel(); the relative ordering between
         // those instants is what the FF-69 assertion compares.
-        _returnedAt =
-            std::chrono::steady_clock::now().time_since_epoch().count();
+        //
+        // Convert to nanoseconds explicitly: steady_clock::duration::rep
+        // is implementation-defined, so blindly storing the raw .count()
+        // in a long long is not portable (e.g. a future libc++ that
+        // widened rep to int128 would silently truncate). The
+        // duration_cast<nanoseconds>() expresses the unit of the stored
+        // value and the cast itself is well-defined for any rep.
+        const auto nowNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               std::chrono::steady_clock::now().time_since_epoch())
+                               .count();
+        _returnedAt.store(nowNs, std::memory_order_release);
         return vigine::messaging::DispatchResult::Handled;
     }
 
     void waitForEnter()
     {
         std::unique_lock<std::mutex> lock{_mtx};
-        _cv.wait(lock, [this] { return _entered; });
+        // Bounded wait so a regression that prevents the dispatcher
+        // from ever reaching onMessage cannot hang the test process
+        // forever (which would jam the whole CI run). 5 s is generous
+        // relative to kHandlerSleep (200 ms) and the surrounding
+        // schedule + post() latency; a real entry happens in under a
+        // millisecond on every platform we care about.
+        const bool entered = _cv.wait_for(
+            lock, std::chrono::seconds{5}, [this] { return _entered; });
+        if (!entered)
+        {
+            FAIL() << "SlowSubscriber::onMessage was never entered within "
+                      "5 s -- dispatcher likely never delivered the message";
+        }
     }
 
     [[nodiscard]] long long returnedAt() const noexcept
@@ -171,8 +193,20 @@ TEST_F(DtorBlocksInFlight, CancelWaitsForInFlightOnMessage)
     // the handler returns.
     subscriber.waitForEnter();
 
+    // Run cancel() on a worker future with a bounded wait. If FF-69
+    // regresses (the lifecycle mutex isn't held for the dispatch
+    // window) cancel() could deadlock with the in-flight handler and
+    // hang the whole test binary. Asserting wait_for == ready bounds
+    // the failure to this single test instead of a CI-wide stall.
     const auto cancelStart = std::chrono::steady_clock::now();
-    token->cancel();
+    auto       cancelFut   = std::async(std::launch::async, [&token] {
+        token->cancel();
+    });
+    const auto status = cancelFut.wait_for(std::chrono::seconds{5});
+    ASSERT_EQ(status, std::future_status::ready)
+        << "FF-69: token->cancel() did not return within 5 s -- the "
+           "dispatcher and the lifecycle gate are likely deadlocked";
+    cancelFut.get();
     const auto cancelEnd = std::chrono::steady_clock::now();
 
     // The handler captures its own return instant inside onMessage just
@@ -182,7 +216,13 @@ TEST_F(DtorBlocksInFlight, CancelWaitsForInFlightOnMessage)
     ASSERT_NE(handlerReturnedNs, 0)
         << "handler must have returned by the time cancel observed the gate";
 
-    const auto cancelEndNs = cancelEnd.time_since_epoch().count();
+    // Same unit conversion as the handler side: store nanoseconds so
+    // the comparison is apples-to-apples regardless of the
+    // platform-specific steady_clock::duration::rep.
+    const long long cancelEndNs =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            cancelEnd.time_since_epoch())
+            .count();
     EXPECT_GE(cancelEndNs, handlerReturnedNs)
         << "FF-69: cancel must not return before in-flight onMessage returns";
 

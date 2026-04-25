@@ -151,7 +151,16 @@ TEST_F(SubscriberSerialization, ConcurrentPublishersNeverReenterOnMessage)
     // dispatcher actually runs on the post()-caller thread. The fixture
     // stack offers an InlineOnly variant which would not exercise the
     // FF-70 contract (single-threaded by construction).
+    //
+    // Force at least 4 worker threads regardless of the host CPU count.
+    // The factory's default of poolSize == 0 derives the pool from
+    // std::thread::hardware_concurrency(), which can report 1 on a
+    // single-core CI runner; in that case publishers would run serially
+    // and the FF-70 reentry canary would never fire even if the
+    // serialisation invariant were broken (a false-pass risk). Pinning
+    // poolSize to 4 keeps the contract genuinely under test.
     vigine::core::threading::ThreadManagerConfig tmCfg{};
+    tmCfg.poolSize = 4;
     auto tm = vigine::core::threading::createThreadManager(tmCfg);
     ASSERT_NE(tm, nullptr);
 

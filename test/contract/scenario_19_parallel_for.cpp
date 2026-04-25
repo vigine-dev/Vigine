@@ -53,6 +53,7 @@
 #include <chrono>
 #include <cstddef>
 #include <memory>
+#include <thread>
 #include <vector>
 
 namespace vigine::contract
@@ -130,16 +131,21 @@ TEST_F(ParallelForCoverage, WaitBlocksUntilBodiesComplete)
     std::atomic<std::size_t> started{0};
     std::atomic<std::size_t> finished{0};
 
+    // Use a small subrange + a per-body sleep so the wait() barrier
+    // is genuinely under test. With a tight body that fanned out over
+    // 1024 indices the chunks complete before wait() is even called,
+    // which makes a broken barrier indistinguishable from a working
+    // one (false-pass risk). A 64-index range + 5 ms sleep keeps the
+    // body running long enough that the dispatcher must really gate
+    // wait() until the last chunk has returned.
+    constexpr std::size_t kBarrierIndexCount = 64;
+
     auto handle = vigine::core::threading::parallelFor(
         tm,
-        kIndexCount,
+        kBarrierIndexCount,
         [&](std::size_t /*i*/) {
             started.fetch_add(1, std::memory_order_acq_rel);
-            // No artificial sleep -- a tight body still guarantees
-            // every chunk has been dispatched and run by the time
-            // wait() returns. The counters expose the "didn't quite
-            // wait" failure mode without needing a sleep that would
-            // slow the contract suite down.
+            std::this_thread::sleep_for(std::chrono::milliseconds{5});
             finished.fetch_add(1, std::memory_order_acq_rel);
         });
     ASSERT_NE(handle, nullptr);
@@ -149,8 +155,8 @@ TEST_F(ParallelForCoverage, WaitBlocksUntilBodiesComplete)
     ASSERT_TRUE(waited.isSuccess())
         << "parallelFor wait must succeed; got: " << waited.message();
 
-    EXPECT_EQ(started.load(std::memory_order_acquire), kIndexCount);
-    EXPECT_EQ(finished.load(std::memory_order_acquire), kIndexCount)
+    EXPECT_EQ(started.load(std::memory_order_acquire), kBarrierIndexCount);
+    EXPECT_EQ(finished.load(std::memory_order_acquire), kBarrierIndexCount)
         << "wait() must not return before every body has completed";
 }
 
@@ -158,11 +164,18 @@ TEST_F(ParallelForCoverage, EmptyRangeReturnsImmediateSuccess)
 {
     auto &tm = context().threadManager();
 
-    bool bodyInvoked = false;
-    auto handle      = vigine::core::threading::parallelFor(
+    // Atomic flag so a regression that *does* invoke the body on a
+    // pool worker thread cannot race the main thread's read. With a
+    // plain bool the assertion would still fire, but the write/read
+    // pair would be UB (data race), masking the true failure cause
+    // under a sanitiser.
+    std::atomic<bool> bodyInvoked{false};
+    auto handle = vigine::core::threading::parallelFor(
         tm,
         /*count=*/0,
-        [&bodyInvoked](std::size_t) { bodyInvoked = true; });
+        [&bodyInvoked](std::size_t) {
+            bodyInvoked.store(true, std::memory_order_release);
+        });
     ASSERT_NE(handle, nullptr)
         << "parallelFor must return a non-null handle even for an empty range";
 
@@ -171,7 +184,7 @@ TEST_F(ParallelForCoverage, EmptyRangeReturnsImmediateSuccess)
     const vigine::Result waited = handle->wait();
     EXPECT_TRUE(waited.isSuccess())
         << "empty-range wait must report Success; got: " << waited.message();
-    EXPECT_FALSE(bodyInvoked)
+    EXPECT_FALSE(bodyInvoked.load(std::memory_order_acquire))
         << "an empty range must not invoke the body even once";
 }
 
