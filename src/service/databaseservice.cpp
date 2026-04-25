@@ -1,35 +1,58 @@
 #include "vigine/service/databaseservice.h"
 
-#include "vigine/context.h"
-#include "vigine/impl/ecs/entity.h"
-#include "vigine/impl/ecs/entitymanager.h"
+#include "vigine/api/context/icontext.h"
 #if VIGINE_POSTGRESQL
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h"
 #include <pqxx/pqxx>
 #endif
-#include "vigine/property.h"
 
 #include <iostream>
 
-// TODO: refactor. Check unbound entity
-
-vigine::DatabaseService::DatabaseService(const Name &name) : AbstractService(name) {}
-
-void vigine::DatabaseService::contextChanged()
+vigine::DatabaseService::DatabaseService(const Name &name)
+    : vigine::service::AbstractService()
+    , _name{name}
 {
-#if VIGINE_POSTGRESQL
-    _postgressSystem = dynamic_cast<vigine::experimental::ecs::postgresql::PostgreSQLSystem *>(
-        context()->system("PostgreSQL", "vigineBD", Property::New));
-#endif
 }
 
-#if !VIGINE_POSTGRESQL
-void vigine::DatabaseService::entityBound() {}
+const vigine::Name &vigine::DatabaseService::name() const noexcept { return _name; }
+
+vigine::Result vigine::DatabaseService::onInit(vigine::IContext &context)
+{
+    // Modern lifecycle: chain to the wrapper base so the
+    // @c isInitialised flag flips to @c true. Postgres-system
+    // attachment is intentionally NOT performed here; @ref IContext
+    // does not yet expose a system locator and the architect-deferred
+    // @c IContext::system accessor is out of scope for this leaf.
+    // The caller (engine bootstrapper) wires the postgres system in
+    // through @ref setPostgresSystem before calling any CRUD method.
+    return vigine::service::AbstractService::onInit(context);
+}
+
+vigine::Result vigine::DatabaseService::onShutdown(vigine::IContext &context)
+{
+#if VIGINE_POSTGRESQL
+    // Drop the non-owning postgres-system handle before chaining up.
+    // The system itself lives on the ECS substrate; we only release
+    // our observer pointer so post-shutdown CRUD calls see the same
+    // null-state guard the legacy path used to surface.
+    _postgressSystem = nullptr;
 #endif
+    return vigine::service::AbstractService::onShutdown(context);
+}
 
 #if VIGINE_POSTGRESQL
+void vigine::DatabaseService::setPostgresSystem(
+    vigine::experimental::ecs::postgresql::PostgreSQLSystem *system) noexcept
+{
+    _postgressSystem = system;
+}
+
 vigine::ResultUPtr vigine::DatabaseService::checkDatabaseScheme()
 {
+    if (!_postgressSystem)
+        return std::make_unique<Result>(Result::Code::Error,
+                                        "DatabaseService: postgres system not attached");
+
     return _postgressSystem->checkTablesScheme();
 }
 
@@ -42,6 +65,9 @@ vigine::ResultUPtr vigine::DatabaseService::createDatabaseScheme()
 
 vigine::experimental::ecs::postgresql::DatabaseConfiguration *vigine::DatabaseService::databaseConfiguration()
 {
+    if (!_postgressSystem)
+        return nullptr;
+
     return _postgressSystem->dbConfiguration();
 }
 
@@ -56,6 +82,9 @@ vigine::DatabaseService::readData(const std::string &tableName) const
 
 void vigine::DatabaseService::clearTable(const std::string &tableName) const
 {
+    if (!_postgressSystem)
+        return;
+
     std::string query = "TRUNCATE TABLE public.\"" + tableName + "\"";
 
     _postgressSystem->queryRequest(query);
@@ -64,6 +93,9 @@ void vigine::DatabaseService::clearTable(const std::string &tableName) const
 void vigine::DatabaseService::writeData(const std::string &tableName,
                                         const std::vector<experimental::ecs::postgresql::Column> columnsData)
 {
+    if (!_postgressSystem)
+        return;
+
     std::string query = "INSERT INTO public.\"" + tableName + "\"  (col1, col2, col3) VALUES ('" +
                         columnsData.at(0).name() + "', '" + columnsData.at(1).name() + "', '" +
                         columnsData.at(2).name() + "')";
@@ -71,19 +103,13 @@ void vigine::DatabaseService::writeData(const std::string &tableName,
     _postgressSystem->queryRequest(query);
 }
 
-void vigine::DatabaseService::entityBound()
-{
-    Entity *ent = getBoundEntity();
-
-    if (!_postgressSystem->hasComponents(ent))
-        _postgressSystem->createComponents(ent);
-
-    _postgressSystem->bindEntity(getBoundEntity());
-}
-
 vigine::ResultUPtr vigine::DatabaseService::connectToDb()
 {
     ResultUPtr result;
+
+    if (!_postgressSystem)
+        return std::make_unique<Result>(Result::Code::Error,
+                                        "DatabaseService: postgres system not attached");
 
     try
     {
@@ -97,5 +123,3 @@ vigine::ResultUPtr vigine::DatabaseService::connectToDb()
     return result;
 }
 #endif
-
-vigine::ServiceId vigine::DatabaseService::id() const { return "Database"; }

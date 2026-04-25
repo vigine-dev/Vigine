@@ -12,10 +12,7 @@
 #include "vigine/api/messaging/imessagebus.h"
 #include "vigine/property.h"
 #include "vigine/result.h"
-#include "vigine/service/databaseservice.h"
-#include "vigine/impl/ecs/graphics/graphicsservice.h"
 #include "vigine/api/service/iservice.h"
-#include "vigine/impl/ecs/platform/platformservice.h"
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -135,34 +132,22 @@ vigine::AbstractService *vigine::Context::service(const ServiceId id, const Name
     return retVal;
 }
 
-// COPILOT_TODO: Додати створення GraphicsService; зараз service("Graphics", ...) завжди повертає
-// nullptr, хоча сервіс присутній у публічному API.
-vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId &id, const Name &name)
+// Post-#330: PlatformService, GraphicsService, and DatabaseService have
+// been migrated off the legacy `vigine::AbstractService` root-namespace
+// base onto the modern `vigine::service::AbstractService` (see
+// include/vigine/api/service/abstractservice.h). They are no longer
+// constructible through this legacy factory; callers that previously
+// reached them via `Context::service(id, name, Property::New)` register
+// them on the modern aggregator (`vigine::context::AbstractContext`)
+// through `registerService` and resolve them through `service(ServiceId)`.
+//
+// The factory itself stays in place for any future legacy service that
+// has not yet migrated; the three migrated ids fall through to the
+// default `nullptr` return so callers see a clean "unknown id" signal
+// rather than a dangling cast target.
+vigine::AbstractServiceUPtr vigine::Context::createService(const ServiceId & /*id*/,
+                                                            const Name & /*name*/)
 {
-    if (id == "Platform")
-    {
-        auto platformService = std::make_unique<vigine::ecs::platform::PlatformService>(name);
-        platformService->setContext(this);
-
-        return std::move(platformService);
-    }
-
-    if (id == "Graphics")
-    {
-        auto graphicsService = std::make_unique<vigine::ecs::graphics::GraphicsService>(name);
-        graphicsService->setContext(this);
-
-        return std::move(graphicsService);
-    }
-
-    if (id == "Database")
-    {
-        auto dbServ = std::make_unique<DatabaseService>(name);
-        dbServ->setContext(this);
-
-        return std::move(dbServ);
-    }
-
     return nullptr;
 }
 
