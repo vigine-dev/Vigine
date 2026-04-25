@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/ecs/abstractecs.h"
+#include "vigine/api/ecs/abstractecs.h"
 
 namespace vigine::ecs
 {

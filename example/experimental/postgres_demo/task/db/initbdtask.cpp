@@ -1,7 +1,7 @@
 #include "initbdtask.h"
 
-#include "vigine/ecs/entity.h"
-#include "vigine/ecs/entitymanager.h"
+#include "vigine/impl/ecs/entity.h"
+#include "vigine/impl/ecs/entitymanager.h"
 #include "vigine/experimental/ecs/postgresql/impl/connectiondata.h"
 #include <vigine/context.h>
 #include <vigine/property.h>

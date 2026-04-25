@@ -1,7 +1,7 @@
 #include "setuptexttask.h"
 
 #include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/ecs/render/rendercomponent.h>
 #include <vigine/ecs/render/shadercomponent.h>
 #include <vigine/ecs/render/textcomponent.h>

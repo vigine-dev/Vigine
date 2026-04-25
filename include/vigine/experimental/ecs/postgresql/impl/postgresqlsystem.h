@@ -9,7 +9,7 @@
  *        database service delegates to.
  */
 
-#include "vigine/ecs/abstractsystem.h"
+#include "vigine/api/ecs/abstractsystem.h"
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlresult.h"
 #include "vigine/experimental/ecs/postgresql/impl/postgresqltypeconverter.h"
 

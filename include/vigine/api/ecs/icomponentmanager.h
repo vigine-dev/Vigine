@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "vigine/ecs/ecstypes.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/ecstypes.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/result.h"
 
 namespace vigine::ecs
@@ -13,32 +13,37 @@ namespace vigine::ecs
  * @brief Thin read-write view over an @ref IECS that presents only
  *        the component-attachment surface.
  *
- * @ref IComponentStore mirrors the four component-lifecycle methods
+ * @ref IComponentManager mirrors the four component-lifecycle methods
  * on @ref IECS (@c attachComponent, @c detachComponent,
  * @c findComponent, @c componentsOf) without re-exposing the entity
  * lifecycle and bulk-query surface. Systems that only need to manage
  * their own component type on behalf of externally created entities
  * depend on this narrower contract instead of taking a full
  * @ref IECS reference, which keeps their dependency surface minimal
- * and makes unit testing easier — a mock @ref IComponentStore is
+ * and makes unit testing easier — a mock @ref IComponentManager is
  * trivial to stand up.
  *
- * The store is a view, not a second storage layer: every concrete
- * @ref IComponentStore delegates to the underlying @ref IECS. The
+ * The manager is a view, not a second storage layer: every concrete
+ * @ref IComponentManager delegates to the underlying @ref IECS. The
  * split exists for the user, not for duplication.
  *
- * Ownership semantics mirror @ref IECS exactly: the store takes
+ * Ownership semantics mirror @ref IECS exactly: the manager takes
  * unique ownership of the component on attach and releases it on
  * detach or entity removal.
+ *
+ * Naming: the file ships under @c vigine/api/ecs/icomponentmanager.h
+ * after the @c icomponentstore.h rename so the wrapper-layer view
+ * type aligns with the manager terminology used by the rest of the
+ * Level-1 ECS stack (entity manager, component manager, system).
  *
  * INV-1 compliance: no template parameters. INV-10 compliance: @c I
  * prefix on a pure-virtual interface. INV-11 compliance: the surface
  * exposes only ECS domain handles; substrate graph types stay hidden.
  */
-class IComponentStore
+class IComponentManager
 {
   public:
-    virtual ~IComponentStore() = default;
+    virtual ~IComponentManager() = default;
 
     /**
      * @brief Takes ownership of @p component and attaches it to
@@ -84,13 +89,13 @@ class IComponentStore
     [[nodiscard]] virtual std::vector<const IComponent *>
         componentsOf(EntityId entity) const = 0;
 
-    IComponentStore(const IComponentStore &)            = delete;
-    IComponentStore &operator=(const IComponentStore &) = delete;
-    IComponentStore(IComponentStore &&)                 = delete;
-    IComponentStore &operator=(IComponentStore &&)      = delete;
+    IComponentManager(const IComponentManager &)            = delete;
+    IComponentManager &operator=(const IComponentManager &) = delete;
+    IComponentManager(IComponentManager &&)                 = delete;
+    IComponentManager &operator=(IComponentManager &&)      = delete;
 
   protected:
-    IComponentStore() = default;
+    IComponentManager() = default;
 };
 
 } // namespace vigine::ecs

@@ -1,6 +1,6 @@
 #include "initwindowtask.h"
 
-#include "vigine/ecs/entitymanager.h"
+#include "vigine/impl/ecs/entitymanager.h"
 #include <vigine/context.h>
 #include <vigine/property.h>
 #include <vigine/service/platformservice.h>

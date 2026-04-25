@@ -1,7 +1,7 @@
 #include "setuphelpergeometrytask.h"
 
 #include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/ecs/render/meshcomponent.h>
 #include <vigine/ecs/render/rendercomponent.h>
 #include <vigine/ecs/render/shadercomponent.h>

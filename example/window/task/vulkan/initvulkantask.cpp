@@ -1,7 +1,7 @@
 #include "initvulkantask.h"
 
 #include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/ecs/render/rendersystem.h>
 #include <vigine/property.h>
 #include <vigine/service/graphicsservice.h>

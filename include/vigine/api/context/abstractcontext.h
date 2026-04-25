@@ -10,7 +10,7 @@
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
-#include "vigine/ecs/iecs.h"
+#include "vigine/api/ecs/iecs.h"
 #include "vigine/messaging/busconfig.h"
 #include "vigine/messaging/busid.h"
 #include "vigine/messaging/imessagebus.h"

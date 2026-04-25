@@ -188,10 +188,16 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/abstractservice.h
     ${INCLUDE_DIR}/vigine/context.h
     ${INCLUDE_DIR}/vigine/property.h
-    ${INCLUDE_DIR}/vigine/ecs/abstractsystem.h
-    ${INCLUDE_DIR}/vigine/ecs/abstractcomponent.h
-    ${INCLUDE_DIR}/vigine/ecs/entity.h
-    ${INCLUDE_DIR}/vigine/ecs/componentmanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractsystem.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractcomponent.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractentity.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/entity.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/componentmanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractcomponentmanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractentitymanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/icomponent.h
+    ${INCLUDE_DIR}/vigine/api/ecs/ientity.h
+    ${INCLUDE_DIR}/vigine/api/ecs/isystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendersystem.h
     ${INCLUDE_DIR}/vigine/ecs/render/rendercomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/graphicsbackend.h
@@ -204,7 +210,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/ecs/render/texturecomponent.h
     ${INCLUDE_DIR}/vigine/ecs/render/pipelinecache.h
     ${INCLUDE_DIR}/vigine/contextholder.h
-    ${INCLUDE_DIR}/vigine/ecs/entitymanager.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/entitymanager.h
     ${INCLUDE_DIR}/vigine/entitybindinghost.h
     ${INCLUDE_DIR}/vigine/base/constant.h
     ${INCLUDE_DIR}/vigine/core/graph/nodeid.h
@@ -261,8 +267,8 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/messaging/factory.h
     ${INCLUDE_DIR}/vigine/statemachine/istatemachine.h
     ${INCLUDE_DIR}/vigine/api/context/icontext.h
-    ${INCLUDE_DIR}/vigine/ecs/ientitymanager.h
-    ${INCLUDE_DIR}/vigine/ecs/kind.h
+    ${INCLUDE_DIR}/vigine/api/ecs/ientitymanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/componentkind.h
     ${INCLUDE_DIR}/vigine/fsm/kind.h
     ${INCLUDE_DIR}/vigine/taskflow/kind.h
 )
@@ -273,7 +279,7 @@ set(SOURCES
     ${SRC_DIR}/statemachine.cpp
     ${SRC_DIR}/taskflow.cpp
     ${SRC_DIR}/context.cpp
-    ${SRC_DIR}/ecs/componentmanager.cpp
+    ${SRC_DIR}/impl/ecs/componentmanager.cpp
     ${SRC_DIR}/ecs/render/rendersystem.cpp
     ${SRC_DIR}/ecs/render/rendercomponent.cpp
     ${SRC_DIR}/ecs/render/camera.cpp
@@ -288,12 +294,12 @@ set(SOURCES
     ${SRC_DIR}/ecs/render/shadercomponent.cpp
     ${SRC_DIR}/ecs/render/texturecomponent.cpp
     ${SRC_DIR}/ecs/render/pipelinecache.cpp
-    ${SRC_DIR}/ecs/entity.cpp
+    ${SRC_DIR}/impl/ecs/entity.cpp
     ${SRC_DIR}/abstracttask.cpp
     ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/contextholder.cpp
-    ${SRC_DIR}/ecs/entitymanager.cpp
-    ${SRC_DIR}/ecs/abstractsystem.cpp
+    ${SRC_DIR}/impl/ecs/entitymanager.cpp
+    ${SRC_DIR}/api/ecs/abstractsystem.cpp
     ${SRC_DIR}/entitybindinghost.cpp
     ${SRC_DIR}/core/graph/abstractgraph.cpp
     ${SRC_DIR}/core/graph/defaultgraph.cpp
@@ -375,21 +381,21 @@ set(SOURCES_SERVICE
 
 # Level-1 ECS wrapper (R.4.2) -- public surface.
 set(HEADER_ECS_CORE
-    ${INCLUDE_DIR}/vigine/ecs/ecstypes.h
-    ${INCLUDE_DIR}/vigine/ecs/iecs.h
-    ${INCLUDE_DIR}/vigine/ecs/icomponentstore.h
-    ${INCLUDE_DIR}/vigine/ecs/abstractecs.h
-    ${INCLUDE_DIR}/vigine/ecs/factory.h
+    ${INCLUDE_DIR}/vigine/api/ecs/ecstypes.h
+    ${INCLUDE_DIR}/vigine/api/ecs/iecs.h
+    ${INCLUDE_DIR}/vigine/api/ecs/icomponentmanager.h
+    ${INCLUDE_DIR}/vigine/api/ecs/abstractecs.h
+    ${INCLUDE_DIR}/vigine/impl/ecs/factory.h
 )
 
 # Level-1 ECS wrapper (R.4.2) -- internal entity world + base impl.
 set(SOURCES_ECS_CORE
     ${SRC_DIR}/ecs/entityworld.h
     ${SRC_DIR}/ecs/entityworld.cpp
-    ${SRC_DIR}/ecs/abstractecs.cpp
+    ${SRC_DIR}/api/ecs/abstractecs.cpp
     ${SRC_DIR}/ecs/defaultecs.h
     ${SRC_DIR}/ecs/defaultecs.cpp
-    ${SRC_DIR}/ecs/factory.cpp
+    ${SRC_DIR}/impl/ecs/factory.cpp
 )
 
 # Level-1 state machine wrapper (R.4.3) -- public surface.

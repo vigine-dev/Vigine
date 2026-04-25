@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vigine/api/context/icontext.h"
-#include "vigine/ecs/abstractsystem.h"
+#include "vigine/api/ecs/abstractsystem.h"
 #include <vigine/abstractservice.h>
 
 #include <atomic>

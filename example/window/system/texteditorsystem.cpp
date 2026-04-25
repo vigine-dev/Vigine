@@ -1,7 +1,7 @@
 #include "texteditorsystem.h"
 
 #include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/ecs/render/rendercomponent.h>
 #include <vigine/ecs/render/rendersystem.h>
 #include <vigine/service/graphicsservice.h>
