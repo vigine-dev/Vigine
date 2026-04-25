@@ -57,6 +57,7 @@ enum class RunMode : std::uint8_t
  * @ref IContext::freeze on entry, after which topology mutation is
  * rejected with @ref Result::Code::TopologyFrozen.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct EngineConfig
 {
     /**

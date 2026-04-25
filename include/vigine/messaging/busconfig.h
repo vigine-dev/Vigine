@@ -71,6 +71,7 @@ enum class BackpressurePolicy : std::uint8_t
  * configured @ref BackpressurePolicy. When @c bounded is @c false the
  * queue grows dynamically and backpressure is effectively disabled.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct QueueCapacity
 {
     std::size_t maxMessages{1024};
@@ -93,6 +94,7 @@ struct QueueCapacity
  * backing storage alive for the lifetime of the bus (typically a
  * string literal).
  */
+// ENCAP EXEMPT: pure value aggregate
 struct BusConfig
 {
     BusId              id{};

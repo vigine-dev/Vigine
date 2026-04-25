@@ -11,6 +11,7 @@ namespace vigine::core::graph
  * POD value type with the same layout contract as @ref NodeId. Generation
  * `0` is the invalid sentinel; lookups with a stale identifier fail safely.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct EdgeId
 {
     std::uint32_t index{0};

@@ -22,6 +22,7 @@ namespace vigine::topicbus
  *   - A zero @c value is the sentinel for "invalid / not found".
  *   - INV-11: no graph types appear in this header.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct TopicId
 {
     std::uint32_t value{0};

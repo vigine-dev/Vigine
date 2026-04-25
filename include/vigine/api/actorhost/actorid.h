@@ -20,6 +20,7 @@ namespace vigine::actorhost
  *   - INV-10: POD value type; no template parameters (INV-1).
  *   - INV-11: no graph types here.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct ActorId
 {
     std::uint32_t value{0};

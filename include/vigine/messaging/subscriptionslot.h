@@ -47,6 +47,7 @@ class ISubscriber;
  * mutexes are neither. A lifetime share through @c std::shared_ptr is
  * how snapshot copies all point at the same live object.
  */
+// ENCAP EXEMPT: intentionally non-encapsulated shared mutable state
 struct SlotState
 {
     /// Serialises concurrent @c onMessage calls to the same subscriber.
@@ -93,6 +94,7 @@ struct SlotState
  * copies the pointer, the filter, the serial, the active flag, and
  * bumps the @c SlotState ref-count.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct SubscriptionSlot
 {
     ISubscriber               *subscriber{nullptr};

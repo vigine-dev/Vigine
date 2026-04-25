@@ -30,6 +30,7 @@ class ISubscriber;
  * whose @c id has the zero-generation sentinel and whose @c state is
  * empty. Callers detect failure by checking @c id.valid().
  */
+// ENCAP EXEMPT: pure value aggregate
 struct SlotAllocation
 {
     /// Generational id addressing the new registry entry.

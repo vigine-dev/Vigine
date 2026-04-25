@@ -27,6 +27,7 @@ namespace vigine::service
  * The pair is small (8 bytes), trivially copyable, and safe to pass by
  * value across thread boundaries.
  */
+// ENCAP EXEMPT: pure value aggregate
 struct ServiceId
 {
     std::uint32_t index{0};
