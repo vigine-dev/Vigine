@@ -9,10 +9,24 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <unordered_map>
+#include <vulkan/vulkan.hpp>
 
 using namespace vigine::graphics;
 
+// PIMPL container for state that requires the Vulkan SDK (vk::Buffer
+// and vk::DeviceMemory tables, handle counter). Keeping these fields
+// out of the public header is what lets vulkanapi.h compile without
+// `<vulkan/vulkan.hpp>` on the include path.
+struct VulkanAPI::Impl
+{
+    uint64_t nextHandleId{1};
+    std::unordered_map<uint64_t, vk::Buffer> bufferHandles;
+    std::unordered_map<uint64_t, vk::DeviceMemory> bufferMemoryHandles;
+};
+
 VulkanAPI::VulkanAPI()
+    : _impl(std::make_unique<Impl>())
 {
     _vulkanDevice        = std::make_unique<VulkanDevice>();
     _vulkanSwapchain     = std::make_unique<VulkanSwapchain>(*_vulkanDevice);
@@ -198,31 +212,6 @@ bool VulkanAPI::drawFrame(const glm::mat4 &viewProjection)
     }
 }
 
-uint32_t VulkanAPI::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
-{
-    return _vulkanDevice->findMemoryType(typeFilter, properties);
-}
-
-vk::Instance VulkanAPI::getInstance() const
-{
-    return _vulkanDevice ? _vulkanDevice->instance() : vk::Instance{};
-}
-
-vk::PhysicalDevice VulkanAPI::getPhysicalDevice() const
-{
-    return _vulkanDevice ? _vulkanDevice->physicalDevice() : vk::PhysicalDevice{};
-}
-
-vk::Device VulkanAPI::getLogicalDevice() const
-{
-    return _vulkanDevice ? _vulkanDevice->device() : vk::Device{};
-}
-
-vk::Queue VulkanAPI::getGraphicsQueue() const
-{
-    return _vulkanDevice ? _vulkanDevice->graphicsQueue() : vk::Queue{};
-}
-
 bool VulkanAPI::isInitialized() const { return _vulkanDevice && _vulkanDevice->isInitialized(); }
 
 bool VulkanAPI::hasSwapchain() const { return _vulkanSwapchain && _vulkanSwapchain->isValid(); }
@@ -297,7 +286,7 @@ BufferHandle VulkanAPI::createBuffer(const BufferDesc &desc)
 {
     // Buffer creation logic will be implemented when migrating geometry to components
     BufferHandle handle;
-    handle.value = _nextHandleId++;
+    handle.value = _impl->nextHandleId++;
     return handle;
 }
 
@@ -308,19 +297,19 @@ void VulkanAPI::uploadBuffer(BufferHandle handle, const void *data, size_t size)
 
 void VulkanAPI::destroyBuffer(BufferHandle handle)
 {
-    auto bufIt = _bufferHandles.find(handle.value);
-    auto memIt = _bufferMemoryHandles.find(handle.value);
+    auto bufIt = _impl->bufferHandles.find(handle.value);
+    auto memIt = _impl->bufferMemoryHandles.find(handle.value);
 
-    if (bufIt != _bufferHandles.end())
+    if (bufIt != _impl->bufferHandles.end())
     {
         _vulkanDevice->device().destroyBuffer(bufIt->second);
-        _bufferHandles.erase(bufIt);
+        _impl->bufferHandles.erase(bufIt);
     }
 
-    if (memIt != _bufferMemoryHandles.end())
+    if (memIt != _impl->bufferMemoryHandles.end())
     {
         _vulkanDevice->device().freeMemory(memIt->second);
-        _bufferMemoryHandles.erase(memIt);
+        _impl->bufferMemoryHandles.erase(memIt);
     }
 }
 
@@ -360,16 +349,6 @@ void VulkanAPI::setViewProjection(const glm::mat4 &viewProjection)
 }
 
 void VulkanAPI::setPushConstants(const PushConstantData &data) { _currentPushConstants = data; }
-
-vk::ImageView VulkanAPI::getTextureImageView(TextureHandle handle) const
-{
-    return _vulkanTextureStore ? _vulkanTextureStore->imageView(handle) : vk::ImageView{};
-}
-
-vk::Sampler VulkanAPI::getTextureSampler(TextureHandle handle) const
-{
-    return _vulkanTextureStore ? _vulkanTextureStore->sampler(handle) : vk::Sampler{};
-}
 
 void VulkanAPI::cleanupCompletedTextureUploads()
 {
