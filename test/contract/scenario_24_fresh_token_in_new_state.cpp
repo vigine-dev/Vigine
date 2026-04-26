@@ -59,7 +59,9 @@
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
-#include "vigine/impl/taskflow/taskflow.h"
+#include "vigine/api/taskflow/factory.h"
+#include "vigine/api/taskflow/itaskflow.h"
+#include "vigine/api/taskflow/taskid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
@@ -172,16 +174,25 @@ struct DriverGuard
     // shape. Each probe's runCount lets the test wait until the
     // engine has actually pumped the matching flow.
     {
-        auto flow        = std::make_unique<vigine::TaskFlow>();
+        auto flow        = vigine::taskflow::createTaskFlow();
         auto probeOwned  = std::make_unique<ProbeTask>();
         auto *probeRaw   = probeOwned.get();
-        auto *registered = flow->addTask(std::move(probeOwned));
-        if (registered == nullptr)
+        const vigine::taskflow::TaskId probeId = flow->addTask();
+        if (!probeId.valid())
         {
-            ADD_FAILURE() << "TaskFlow::addTask must register the StateA probe task";
+            ADD_FAILURE() << "ITaskFlow::addTask must yield a valid id for the StateA probe";
             return fx;
         }
-        flow->changeCurrentTaskTo(registered);
+        if (!flow->attachTaskRun(probeId, std::move(probeOwned)).isSuccess())
+        {
+            ADD_FAILURE() << "ITaskFlow::attachTaskRun must bind the StateA probe runnable";
+            return fx;
+        }
+        if (!flow->enqueue(probeId).isSuccess())
+        {
+            ADD_FAILURE() << "ITaskFlow::enqueue must position the cursor on the StateA probe";
+            return fx;
+        }
         if (!fsm.addStateTaskFlow(fx.stateA, std::move(flow)).isSuccess())
         {
             ADD_FAILURE() << "addStateTaskFlow(StateA) must succeed";
@@ -190,16 +201,25 @@ struct DriverGuard
         fx.probeA = probeRaw;
     }
     {
-        auto flow        = std::make_unique<vigine::TaskFlow>();
+        auto flow        = vigine::taskflow::createTaskFlow();
         auto probeOwned  = std::make_unique<ProbeTask>();
         auto *probeRaw   = probeOwned.get();
-        auto *registered = flow->addTask(std::move(probeOwned));
-        if (registered == nullptr)
+        const vigine::taskflow::TaskId probeId = flow->addTask();
+        if (!probeId.valid())
         {
-            ADD_FAILURE() << "TaskFlow::addTask must register the StateB probe task";
+            ADD_FAILURE() << "ITaskFlow::addTask must yield a valid id for the StateB probe";
             return fx;
         }
-        flow->changeCurrentTaskTo(registered);
+        if (!flow->attachTaskRun(probeId, std::move(probeOwned)).isSuccess())
+        {
+            ADD_FAILURE() << "ITaskFlow::attachTaskRun must bind the StateB probe runnable";
+            return fx;
+        }
+        if (!flow->enqueue(probeId).isSuccess())
+        {
+            ADD_FAILURE() << "ITaskFlow::enqueue must position the cursor on the StateB probe";
+            return fx;
+        }
         if (!fsm.addStateTaskFlow(fx.stateB, std::move(flow)).isSuccess())
         {
             ADD_FAILURE() << "addStateTaskFlow(StateB) must succeed";

@@ -1,12 +1,18 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "vigine/result.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
+
+namespace vigine
+{
+class ITask;
+} // namespace vigine
 
 namespace vigine::taskflow
 {
@@ -102,6 +108,13 @@ class AbstractTaskFlow : public ITaskFlow
         TaskId    next,
         RouteMode mode) override;
 
+    // ------ ITaskFlow: runnable attachment ------
+
+    Result               attachTaskRun(TaskId taskId,
+                                       std::unique_ptr<vigine::ITask> task) override;
+    void                 runCurrentTask() override;
+    [[nodiscard]] bool   hasTasksToRun() const noexcept override;
+
     // ------ ITaskFlow: flow control ------
 
     Result               enqueue(TaskId start) override;
@@ -170,6 +183,51 @@ class AbstractTaskFlow : public ITaskFlow
      * @ref enqueue.
      */
     TaskId _current{};
+
+    /**
+     * @brief Hasher for @ref TaskId so the runnable registry can use
+     *        @c std::unordered_map.
+     *
+     * @ref TaskId is an 8-byte trivially-copyable pair of
+     * @c std::uint32_t fields; the hasher splices the index and
+     * generation into a single 64-bit value before delegating to the
+     * standard library's @c std::hash<std::uint64_t>. Declared inside
+     * the private section so the symbol stays scoped to this header
+     * and no namespace-level @c std::hash specialisation leaks
+     * through the public header tree.
+     */
+    struct TaskIdHasher
+    {
+        [[nodiscard]] std::size_t operator()(const TaskId &task) const noexcept
+        {
+            const std::uint64_t blended =
+                (static_cast<std::uint64_t>(task.generation) << 32u)
+                | static_cast<std::uint64_t>(task.index);
+            return std::hash<std::uint64_t>{}(blended);
+        }
+    };
+
+    /**
+     * @brief Per-task runnable registry populated through
+     *        @ref attachTaskRun.
+     *
+     * Each entry binds a runnable @ref vigine::ITask to a
+     * @ref TaskId slot the orchestrator already tracks. The map
+     * owns each runnable through @c std::unique_ptr; destroying the
+     * flow tears down every attached runnable in turn. Lookups are
+     * by @ref TaskId; @ref runCurrentTask uses the lookup to find
+     * the runnable for @ref _current and to short-circuit cleanly
+     * when the slot is empty.
+     *
+     * Runnable lifetime: append-only. There is no detach surface in
+     * this leaf — once a runnable is attached it lives until the
+     * flow is destroyed. Callers that need to swap a runnable
+     * rebuild the flow from scratch, matching the
+     * @ref vigine::statemachine::IStateMachine::addStateTaskFlow
+     * one-shot-per-state contract.
+     */
+    std::unordered_map<TaskId, std::unique_ptr<vigine::ITask>, TaskIdHasher>
+        _runnables;
 };
 
 } // namespace vigine::taskflow

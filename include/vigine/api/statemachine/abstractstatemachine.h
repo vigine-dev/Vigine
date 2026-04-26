@@ -17,10 +17,10 @@
 #include "vigine/api/statemachine/routemode.h"
 #include "vigine/api/statemachine/stateid.h"
 
-namespace vigine
+namespace vigine::taskflow
 {
-class TaskFlow;
-} // namespace vigine
+class ITaskFlow;
+} // namespace vigine::taskflow
 
 namespace vigine::statemachine
 {
@@ -177,11 +177,11 @@ class AbstractStateMachine : public IStateMachine
     // ------ IStateMachine: state-bound TaskFlow registry ------
 
     vigine::Result
-        addStateTaskFlow(StateId                          state,
-                         std::unique_ptr<vigine::TaskFlow> taskFlow) override;
+        addStateTaskFlow(StateId                                       state,
+                         std::unique_ptr<vigine::taskflow::ITaskFlow> taskFlow) override;
 
-    [[nodiscard]] vigine::TaskFlow       *taskFlowFor(StateId state) override;
-    [[nodiscard]] const vigine::TaskFlow *taskFlowFor(StateId state) const override;
+    [[nodiscard]] vigine::taskflow::ITaskFlow       *taskFlowFor(StateId state) override;
+    [[nodiscard]] const vigine::taskflow::ITaskFlow *taskFlowFor(StateId state) const override;
 
     // ------ State-invalidation listener registry ------
 
@@ -507,14 +507,14 @@ class AbstractStateMachine : public IStateMachine
     /**
      * @brief State-bound TaskFlow registry.
      *
-     * One entry per state: the engine looks the @ref vigine::TaskFlow
-     * up by @ref StateId on every tick of @c run() and drives
-     * @c runCurrentTask while the flow has tasks left to run. The
-     * machine owns each registered flow through a @c std::unique_ptr;
-     * destroying the machine destroys every flow. Slots are
-     * append-only in this leaf — there is no removal API yet, matching
-     * the rest of the wrapper surface (states themselves are
-     * append-only).
+     * One entry per state: the engine looks the
+     * @ref vigine::taskflow::ITaskFlow up by @ref StateId on every
+     * tick of @c run() and drives @c runCurrentTask while the flow
+     * has tasks left to run. The machine owns each registered flow
+     * through a @c std::unique_ptr; destroying the machine destroys
+     * every flow. Slots are append-only in this leaf — there is no
+     * removal API yet, matching the rest of the wrapper surface
+     * (states themselves are append-only).
      *
      * Storage shape is a heterogeneous-key @c std::unordered_map keyed
      * by @ref StateId via the @ref StateIdHasher above. The map is
@@ -524,7 +524,9 @@ class AbstractStateMachine : public IStateMachine
      * the duration of one tick after releasing the mutex, which is
      * safe because no removal API races against the read.
      */
-    std::unordered_map<StateId, std::unique_ptr<vigine::TaskFlow>, StateIdHasher>
+    std::unordered_map<StateId,
+                       std::unique_ptr<vigine::taskflow::ITaskFlow>,
+                       StateIdHasher>
         _stateTaskFlows;
 
     /**

@@ -97,6 +97,29 @@ class TaskOrchestrator final : public vigine::core::graph::AbstractGraph
         TaskId    next,
         RouteMode mode);
 
+    /**
+     * @brief Resolves the next @ref TaskId reachable from @p source on
+     *        a transition keyed by @p code, or an invalid @ref TaskId
+     *        when no matching transition is registered.
+     *
+     * Walks the outgoing transition edges of @p source under the
+     * graph's shared lock, picks the first edge whose stored
+     * @ref ResultCode matches @p code, and translates the edge's
+     * destination @c NodeId back to a @ref TaskId. Returns the
+     * invalid sentinel when @p source is stale, when no matching
+     * transition exists, or when the destination node has been
+     * retired since the edge was registered.
+     *
+     * The lookup honours @ref RouteMode::FirstMatch by reporting the
+     * first registered target — every other mode (FanOut, Chain) is
+     * configured at registration time but the runnable-attached
+     * callable surface only walks one target per
+     * @ref AbstractTaskFlow::runCurrentTask call, matching the legacy
+     * @c vigine::TaskFlow shape that fires exactly one transition per
+     * task completion.
+     */
+    [[nodiscard]] TaskId nextTaskFor(TaskId source, ResultCode code) const noexcept;
+
     // ------ POD translation helpers ------
 
     /**

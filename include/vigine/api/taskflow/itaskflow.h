@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "vigine/result.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
@@ -7,6 +9,8 @@
 
 namespace vigine
 {
+class ITask;
+
 /**
  * @brief Pure-virtual forward-declared stub for the legacy task flow
  *        surface.
@@ -168,6 +172,89 @@ class ITaskFlow
         ResultCode code,
         TaskId    next,
         RouteMode mode) = 0;
+
+    // ------ Runnable attachment ------
+
+    /**
+     * @brief Binds a runnable @ref vigine::ITask to the slot identified
+     *        by @p taskId so @ref runCurrentTask invokes it when the
+     *        flow's cursor reaches that task.
+     *
+     * The flow takes ownership of @p task. A successful registration is
+     * one-shot per slot: callers that need to swap a runnable on an
+     * existing task rebuild the flow from scratch. The runnable lives
+     * until the flow is destroyed; there is no detach surface in this
+     * leaf.
+     *
+     * Reports @ref Result::Code::Error when @p taskId is stale (the
+     * orchestrator never registered or has retired it) or when @p task
+     * is @c nullptr. Reports @ref Result::Code::Error when a runnable
+     * was already bound to @p taskId; ownership of @p task is consumed
+     * regardless of result, matching the @ref addStateTaskFlow contract
+     * on @ref vigine::statemachine::IStateMachine — the parameter is
+     * taken by value, so the @c std::unique_ptr held by the parameter
+     * is destroyed at function return on every failure path and the
+     * runnable is released along with it.
+     *
+     * Threading: callers serialise @c attachTaskRun against any
+     * @ref runCurrentTask path on the same flow externally; the wrapper
+     * does not introduce a per-flow mutex on the runnable registry
+     * because the typical wiring loads every runnable during topology
+     * setup before the engine pump starts.
+     */
+    virtual Result attachTaskRun(TaskId taskId, std::unique_ptr<vigine::ITask> task) = 0;
+
+    /**
+     * @brief Executes the runnable bound to the current task slot and
+     *        advances the cursor to whichever next task the registered
+     *        transitions select.
+     *
+     * Mirrors the legacy @c vigine::TaskFlow::runCurrentTask shape that
+     * @ref vigine::engine::IEngine::run drives every pump tick:
+     *
+     *   1. Look up the runnable bound to @ref current. When no runnable
+     *      is attached the call is a no-op and the cursor clears so
+     *      @ref hasTasksToRun reports false on the next probe.
+     *   2. Invoke the runnable's @c run(). The returned @ref Result is
+     *      mapped to the closest @ref ResultCode (Success / Error) and
+     *      the orchestrator looks up the @c onResult transition for
+     *      the @c (current, code) pair.
+     *   3. When a matching transition exists the cursor advances to
+     *      the next task. When no transition is registered the cursor
+     *      clears and @ref hasTasksToRun reports false on the next
+     *      probe — the engine pump then falls through to the FSM drain
+     *      alone, matching the legacy completion shape.
+     *
+     * The engine wires a state-scoped @c IEngineToken into the
+     * runnable through @ref vigine::ITask::setApi before invoking
+     * @c run and clears the binding through an RAII guard so a
+     * throwing @c run still leaves the task with a null token; that
+     * sequencing matches the legacy implementation and is required by
+     * the R-StateScope contract documented on @ref vigine::ITask.
+     *
+     * Threading: not thread-safe. The engine pump calls this from the
+     * controller thread; callers that drive their own pump must
+     * serialise externally.
+     */
+    virtual void runCurrentTask() = 0;
+
+    /**
+     * @brief Reports whether the flow has more work to drive.
+     *
+     * Returns @c true when @ref current names a task slot with an
+     * attached runnable that has not yet been consumed — i.e. the next
+     * @ref runCurrentTask invocation will execute a runnable. Returns
+     * @c false when the cursor has been cleared (the previous
+     * @ref runCurrentTask returned a @ref ResultCode that has no
+     * transition wired) or when no runnable is attached to the current
+     * task slot.
+     *
+     * The engine pump probes this every tick and skips the
+     * @ref runCurrentTask call when it returns @c false, falling
+     * through to the FSM drain + main-thread pump alone — matching the
+     * legacy @c vigine::TaskFlow::hasTasksToRun semantics.
+     */
+    [[nodiscard]] virtual bool hasTasksToRun() const noexcept = 0;
 
     // ------ Flow control ------
 

@@ -8,8 +8,8 @@
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
+#include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
-#include "vigine/impl/taskflow/taskflow.h"
 
 namespace vigine::engine
 {
@@ -221,18 +221,17 @@ Result AbstractEngine::run()
         // its embedder is responsible for driving its own flows.
         if (fsmDrainSafe)
         {
-            const statemachine::StateId currentState = fsm.current();
-            vigine::TaskFlow *boundFlow = fsm.taskFlowFor(currentState);
+            const statemachine::StateId   currentState = fsm.current();
+            vigine::taskflow::ITaskFlow *boundFlow    = fsm.taskFlowFor(currentState);
             if (boundFlow != nullptr && boundFlow->hasTasksToRun())
             {
                 // runCurrentTask handles the per-task setApi /
-                // makeEngineToken / setApi(nullptr) lifecycle on its
-                // own through its ApiBindingGuard; the engine just
-                // tells it to advance once. Any FSM transition
-                // requested by the task during run() lands on the
-                // FSM's request queue and is drained on the very
-                // next call below, so the next tick observes the
-                // new state.
+                // setApi(nullptr) lifecycle on its own through its
+                // RAII guard; the engine just tells it to advance
+                // once. Any FSM transition requested by the task
+                // during run() lands on the FSM's request queue and
+                // is drained on the very next call below, so the
+                // next tick observes the new state.
                 boundFlow->runCurrentTask();
             }
         }
