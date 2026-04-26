@@ -7,6 +7,10 @@
 #include "vigine/result.h"
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
 #include "vigine/api/taskflow/itask.h"
@@ -256,6 +260,86 @@ void AbstractTaskFlow::setContext(vigine::IContext *context) noexcept
      * engine pump and that want to observe apiToken() == nullptr inside run().
      */
     _context = context;
+}
+
+void AbstractTaskFlow::setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept
+{
+    /*
+     * Plain raw-pointer assignment. The flow stores a non-owning back-
+     * pointer to the signal emitter wired by the host (typically the
+     * application's main()). A nullptr argument detaches the binding so
+     * subsequent signal() calls report Result::Code::Error until a
+     * fresh emitter lands.
+     */
+    _signalEmitter = emitter;
+}
+
+Result AbstractTaskFlow::signal(TaskId                                  source,
+                                TaskId                                  target,
+                                vigine::payload::PayloadTypeId        payloadTypeId,
+                                vigine::core::threading::ThreadAffinity affinity)
+{
+    /*
+     * Flow-level signal subscription. The flow owns the subscription
+     * token returned by ISignalEmitter::subscribeSignal so callers do
+     * not have to maintain an external sink for the subscription's
+     * lifetime. Tokens unwind at flow destruction in the reverse-order
+     * pass over @ref _signalSubscriptions, which is declared AFTER
+     * @ref _runnables so subscriptions cancel BEFORE the underlying
+     * subscriber objects (the runnables themselves) are freed.
+     *
+     * The @p affinity parameter is kept for the documented per-
+     * subscription dispatch hint; today the actual delivery thread is
+     * fixed by the emitter's bus configuration. The signature reserves
+     * the slot for a future emitter overload that takes an explicit
+     * per-subscription override without breaking the public surface.
+     */
+    static_cast<void>(affinity);
+
+    if (_signalEmitter == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: no signal emitter wired (call setSignalEmitter first)");
+    }
+    if (!_orchestrator->hasTask(source))
+    {
+        return Result(Result::Code::Error,
+                      "signal: source task is not registered");
+    }
+    if (!_orchestrator->hasTask(target))
+    {
+        return Result(Result::Code::Error,
+                      "signal: target task is not registered");
+    }
+
+    auto it = _runnables.find(target);
+    if (it == _runnables.end() || it->second == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: target task has no runnable attached");
+    }
+
+    auto *subscriber =
+        dynamic_cast<vigine::messaging::ISubscriber *>(it->second.get());
+    if (subscriber == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: target runnable does not implement ISubscriber");
+    }
+
+    vigine::messaging::MessageFilter filter{};
+    filter.kind   = vigine::messaging::MessageKind::Signal;
+    filter.typeId = payloadTypeId;
+
+    auto token = _signalEmitter->subscribeSignal(filter, subscriber);
+    if (!token)
+    {
+        return Result(Result::Code::Error,
+                      "signal: emitter subscribeSignal returned null");
+    }
+
+    _signalSubscriptions.push_back(std::move(token));
+    return Result();
 }
 
 void AbstractTaskFlow::setActiveState(vigine::statemachine::StateId state) noexcept

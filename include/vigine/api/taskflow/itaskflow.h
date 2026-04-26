@@ -3,10 +3,17 @@
 #include <memory>
 
 #include "vigine/result.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
+#include "vigine/core/threading/threadaffinity.h"
+
+namespace vigine::messaging
+{
+class ISignalEmitter;
+} // namespace vigine::messaging
 
 namespace vigine
 {
@@ -298,6 +305,58 @@ class ITaskFlow
      * @ref runCurrentTask, so the contract is naturally satisfied.
      */
     virtual void setActiveState(vigine::statemachine::StateId state) noexcept = 0;
+
+    // ------ Signal subscription ------
+
+    /**
+     * @brief Wires a non-owning @ref vigine::messaging::ISignalEmitter into
+     *        the flow so @ref signal can subscribe target tasks against it.
+     *
+     * The flow stores the pointer; the caller retains ownership of the
+     * emitter and must keep it alive at least as long as the flow.
+     * Passing @c nullptr detaches the binding; subsequent @ref signal
+     * calls report @ref Result::Code::Error until a fresh emitter is
+     * wired in.
+     */
+    virtual void setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept = 0;
+
+    /**
+     * @brief Subscribes @p target as an @c ISubscriber on the wired
+     *        signal emitter so it receives signals carrying
+     *        @p payloadTypeId. The @p source task identifies the
+     *        in-flow producer for documentation / future routing.
+     *
+     * Both @p source and @p target must have been registered through
+     * @ref addTask. @p target must additionally have a runnable
+     * attached via @ref attachTaskRun whose runtime type implements
+     * @ref vigine::messaging::ISubscriber so the flow can supply it as
+     * the subscriber to @c subscribeSignal. @p payloadTypeId selects
+     * which signal payload type the target is interested in;
+     * @c MessageKind is hard-wired to @c Signal.
+     *
+     * @p affinity expresses the caller's preference for the dispatch
+     * thread. The actual dispatch policy is fixed by the emitter's
+     * configuration (@ref vigine::messaging::sharedBusConfig and
+     * friends) — the parameter is recorded for future per-subscription
+     * overrides; today it serves as a documentation hint.
+     *
+     * The flow takes ownership of the returned subscription token and
+     * keeps it alive for as long as the flow itself, so the caller no
+     * longer needs an external sink for the subscription's lifetime.
+     * Subscriptions release in reverse-registration order at flow
+     * destruction so any state-bound emitter survives until each
+     * subscription has been cleanly cancelled.
+     *
+     * Reports @ref Result::Code::Error when the emitter is not wired,
+     * either task id is stale, the target has no runnable attached,
+     * the target's runnable does not implement
+     * @ref vigine::messaging::ISubscriber, or the emitter rejects the
+     * subscription request.
+     */
+    virtual Result signal(TaskId                            source,
+                          TaskId                            target,
+                          vigine::payload::PayloadTypeId  payloadTypeId,
+                          vigine::core::threading::ThreadAffinity affinity) = 0;
 
     // ------ Flow control ------
 

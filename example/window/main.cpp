@@ -86,9 +86,6 @@
 namespace
 {
 
-using SubscriptionTokenList =
-    std::vector<std::unique_ptr<vigine::messaging::ISubscriptionToken>>;
-
 struct InitFlowDeps
 {
     vigine::EntityManager *entityManager{nullptr};
@@ -98,13 +95,6 @@ struct InitFlowDeps
     vigine::messaging::ISignalEmitter *signalEmitter{nullptr};
     std::shared_ptr<TextEditState> textEditState{};
     std::shared_ptr<TextEditorSystem> textEditorSystem{};
-    // Sink for the input-signal subscription tokens so they outlive the
-    // flow itself. The flow's runnable registry holds the subscriber
-    // (ProcessInputEventTask) by unique_ptr; the token must be released
-    // before the subscriber is destroyed, which the engine guarantees
-    // by tearing the FSM (and with it the flow) down before the host
-    // drops these tokens at scope exit in main().
-    SubscriptionTokenList *signalSubscriptions{nullptr};
 };
 
 std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDeps &deps)
@@ -197,36 +187,21 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDe
     static_cast<void>(taskFlow->onResult(setupPlanesId, ResultCode::Success, setupTextEditId));
     static_cast<void>(taskFlow->onResult(setupTextEditId, ResultCode::Success, runWindowId));
 
-    // The legacy taskFlow->signal() helper merely subscribed the
-    // target task's ISubscriber adapter on the supplied emitter. The
-    // modern ITaskFlow surface no longer carries a signal-bus wrapper
-    // (the runnable-attached callable scope only models the synchronous
-    // routing path); so the demo subscribes directly through the
-    // signal emitter. The ProcessInputEventTask derives from
-    // ISubscriber, so it plugs straight into subscribeSignal. Pool
-    // affinity is preserved by routing through the bus's underlying
-    // policy -- the shared-pool emitter built in main() dispatches
-    // delivered messages on a pool worker by default.
-    if (deps.signalEmitter != nullptr && deps.signalSubscriptions != nullptr)
-    {
-        auto *subscriber = static_cast<vigine::messaging::ISubscriber *>(processInputRaw);
+    // Wire the host-built signal emitter into the flow so taskFlow->signal
+    // can subscribe target tasks against it. The flow owns the resulting
+    // subscription tokens and unwinds them at destruction in reverse-
+    // registration order, before the underlying ProcessInputEventTask
+    // (registered above through attachTaskRun) is destroyed.
+    static_cast<void>(processInputRaw); // raw pointer no longer needed for direct subscribe
+    taskFlow->setSignalEmitter(deps.signalEmitter);
 
-        vigine::messaging::MessageFilter mouseFilter{};
-        mouseFilter.kind   = vigine::messaging::MessageKind::Signal;
-        mouseFilter.typeId = kMouseButtonDownPayloadTypeId;
-        if (auto token = deps.signalEmitter->subscribeSignal(mouseFilter, subscriber))
-        {
-            deps.signalSubscriptions->push_back(std::move(token));
-        }
-
-        vigine::messaging::MessageFilter keyFilter{};
-        keyFilter.kind   = vigine::messaging::MessageKind::Signal;
-        keyFilter.typeId = kKeyDownPayloadTypeId;
-        if (auto token = deps.signalEmitter->subscribeSignal(keyFilter, subscriber))
-        {
-            deps.signalSubscriptions->push_back(std::move(token));
-        }
-    }
+    using vigine::core::threading::ThreadAffinity;
+    static_cast<void>(taskFlow->signal(runWindowId, processInputId,
+                                       kMouseButtonDownPayloadTypeId,
+                                       ThreadAffinity::Pool));
+    static_cast<void>(taskFlow->signal(runWindowId, processInputId,
+                                       kKeyDownPayloadTypeId,
+                                       ThreadAffinity::Pool));
 
     static_cast<void>(taskFlow->enqueue(initWindowId));
 
@@ -347,13 +322,9 @@ int main()
     // Bind a TaskFlow per state through the modern FSM-drive surface.
     // The signal-subscription token sink lives in main() because the
     // engine tears the FSM (and with it the flow that owns the
-    // ProcessInputEventTask subscriber) down before we drop these
-    // tokens at scope exit; cancelling the tokens after the
-    // subscriber has been destroyed would dereference dangling
-    // memory, so the token's RAII cancel must run with the
-    // subscriber still alive (the engine guarantees this through the
-    // ordering above).
-    SubscriptionTokenList signalSubscriptions{};
+    // Subscription tokens issued by taskFlow->signal are now owned by
+    // the flow itself (declared after _runnables in AbstractTaskFlow so
+    // they unwind first); the host no longer needs an external sink.
 
     InitFlowDeps initDeps{};
     initDeps.entityManager       = entityManager.get();
@@ -363,7 +334,6 @@ int main()
     initDeps.signalEmitter       = signalEmitter.get();
     initDeps.textEditState       = textEditState;
     initDeps.textEditorSystem    = textEditorSystem;
-    initDeps.signalSubscriptions = &signalSubscriptions;
 
     if (auto regResult = fsm.addStateTaskFlow(initState, createInitTaskFlow(initDeps));
         regResult.isError())

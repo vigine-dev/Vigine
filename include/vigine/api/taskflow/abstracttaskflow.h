@@ -3,13 +3,23 @@
 #include <memory>
 #include <unordered_map>
 
+#include <vector>
+
 #include "vigine/result.h"
 #include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
+#include "vigine/core/threading/threadaffinity.h"
+
+namespace vigine::messaging
+{
+class ISignalEmitter;
+} // namespace vigine::messaging
 
 namespace vigine
 {
@@ -119,6 +129,14 @@ class AbstractTaskFlow : public ITaskFlow
     [[nodiscard]] bool   hasTasksToRun() const noexcept override;
     void                 setContext(vigine::IContext *context) noexcept override;
     void                 setActiveState(vigine::statemachine::StateId state) noexcept override;
+
+    // ------ ITaskFlow: signal subscription ------
+
+    void   setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept override;
+    Result signal(TaskId                                  source,
+                  TaskId                                  target,
+                  vigine::payload::PayloadTypeId        payloadTypeId,
+                  vigine::core::threading::ThreadAffinity affinity) override;
 
     // ------ ITaskFlow: flow control ------
 
@@ -277,6 +295,26 @@ class AbstractTaskFlow : public ITaskFlow
      * task with a null apiToken() pointer once the call returns.
      */
     std::unique_ptr<vigine::engine::IEngineToken> _activeToken;
+
+    /**
+     * @brief Non-owning back-pointer to the signal emitter used by
+     *        @ref signal. Installed via @ref setSignalEmitter; @c nullptr
+     *        until the host wires it.
+     */
+    vigine::messaging::ISignalEmitter *_signalEmitter{nullptr};
+
+    /**
+     * @brief Holds every subscription token returned by @ref signal so
+     *        the flow itself controls the subscriptions' lifetime.
+     *
+     * Declared AFTER @ref _runnables on purpose: members destruct in
+     * reverse declaration order, so this vector unwinds first and
+     * cancels every subscription BEFORE @ref _runnables destroys the
+     * subscriber tasks. Without this ordering a subscription token's
+     * cancel path could dereference a freed @c ISubscriber.
+     */
+    std::vector<std::unique_ptr<vigine::messaging::ISubscriptionToken>>
+        _signalSubscriptions;
 };
 
 } // namespace vigine::taskflow
