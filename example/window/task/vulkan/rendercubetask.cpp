@@ -14,8 +14,10 @@ vigine::Result RenderCubeTask::run()
         // further work and return an error so the FSM transition table
         // can route the WorkState onto its error follow-on -- the
         // engine-token contract guarantees @ref api()->service /
-        // @ref api()->ecs return @ref Result::Code::Expired here too,
-        // but the explicit short-circuit makes the intent obvious.
+        // @ref api()->ecs return @ref vigine::engine::Result::Code::Expired
+        // here too (note: that is vigine::engine::Result<T>::Code, distinct
+        // from the vigine::Result::Code returned by run()), but the
+        // explicit short-circuit makes the intent obvious.
         std::cerr << "[RenderCubeTask] Bound state expired; stopping render loop"
                   << std::endl;
         return vigine::Result(vigine::Result::Code::Error,
