@@ -72,7 +72,7 @@ class TaskOrchestrator;
  *     the start (and current) task. A caller that never registers
  *     its own tasks still sees a valid @ref current id. A caller
  *     that registers its own tasks freely overrides the selection
- *     with @ref enqueue.
+ *     with @ref setRoot.
  *   - The default task id is stored as a private member so the
  *     concrete closer can expose it through an internal helper if it
  *     ever needs to (the public API does not surface it separately).
@@ -125,6 +125,7 @@ class AbstractTaskFlow : public ITaskFlow
 
     Result               attachTaskRun(TaskId taskId,
                                        std::unique_ptr<vigine::ITask> task) override;
+    [[nodiscard]] TaskId addTask(std::unique_ptr<vigine::ITask> task) override;
     void                 runCurrentTask() override;
     [[nodiscard]] bool   hasTasksToRun() const noexcept override;
     void                 setContext(vigine::IContext *context) noexcept override;
@@ -140,7 +141,7 @@ class AbstractTaskFlow : public ITaskFlow
 
     // ------ ITaskFlow: flow control ------
 
-    Result               enqueue(TaskId start) override;
+    Result               setRoot(TaskId root) override;
     [[nodiscard]] TaskId current() const noexcept override;
 
     AbstractTaskFlow(const AbstractTaskFlow &)            = delete;
@@ -172,7 +173,7 @@ class AbstractTaskFlow : public ITaskFlow
      * or expose the default task (e.g. for diagnostics) can reach it
      * without walking the orchestrator themselves. The public API
      * does not surface the default id separately because callers who
-     * register their own tasks use @ref enqueue instead.
+     * register their own tasks use @ref setRoot instead.
      */
     [[nodiscard]] TaskId defaultTask() const noexcept;
 
@@ -203,7 +204,7 @@ class AbstractTaskFlow : public ITaskFlow
      *
      * Initialised to @ref _defaultTask during construction so the
      * flow has a valid @ref current immediately. Updated by
-     * @ref enqueue.
+     * @ref setRoot.
      */
     TaskId _current{};
 

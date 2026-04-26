@@ -95,7 +95,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildInitFlow(
     static_cast<void>(flow->onResult(checkSchemaId, ResultCode::Success, toWorkId));
     static_cast<void>(flow->onResult(checkSchemaId, ResultCode::Error,   toErrorId));
 
-    static_cast<void>(flow->enqueue(initBdId));
+    static_cast<void>(flow->setRoot(initBdId));
     return flow;
 }
 
@@ -138,7 +138,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildWorkFlow(
     static_cast<void>(flow->onResult(removeId, ResultCode::Success, closeId));
     static_cast<void>(flow->onResult(removeId, ResultCode::Error,   errorId));
 
-    static_cast<void>(flow->enqueue(addId));
+    static_cast<void>(flow->setRoot(addId));
     return flow;
 }
 
@@ -154,7 +154,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildErrorFlow(
     auto toClose = std::make_unique<TransitionTask>(stateMachine, closeState);
     const vigine::taskflow::TaskId toCloseId = flow->addTask();
     static_cast<void>(flow->attachTaskRun(toCloseId, std::move(toClose)));
-    static_cast<void>(flow->enqueue(toCloseId));
+    static_cast<void>(flow->setRoot(toCloseId));
     return flow;
 }
 
@@ -168,7 +168,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildCloseFlow(vigine::engine::IEng
     auto shutdown = std::make_unique<ShutdownTask>(engine);
     const vigine::taskflow::TaskId shutdownId = flow->addTask();
     static_cast<void>(flow->attachTaskRun(shutdownId, std::move(shutdown)));
-    static_cast<void>(flow->enqueue(shutdownId));
+    static_cast<void>(flow->setRoot(shutdownId));
     return flow;
 }
 

@@ -214,6 +214,24 @@ class ITaskFlow
     virtual Result attachTaskRun(TaskId taskId, std::unique_ptr<vigine::ITask> task) = 0;
 
     /**
+     * @brief Allocates a fresh task slot AND binds @p task to it in a
+     *        single call. Overload of @ref addTask for the canonical
+     *        case where the caller has the runnable in hand and wants
+     *        the slot allocated and bound atomically.
+     *
+     * The flow takes ownership of @p task. Returns the freshly minted
+     * @ref TaskId on success, or an invalid @ref TaskId on failure
+     * (null @p task).
+     *
+     * Use the no-argument @ref addTask overload + @ref attachTaskRun
+     * when the task handle must be referenced from another transition
+     * before its runnable is available (forward-reference pattern);
+     * use this overload for the common back-to-back create + attach
+     * idiom.
+     */
+    [[nodiscard]] virtual TaskId addTask(std::unique_ptr<vigine::ITask> task) = 0;
+
+    /**
      * @brief Executes the runnable bound to the current task slot and
      *        advances the cursor to whichever next task the registered
      *        transitions select.
@@ -361,19 +379,20 @@ class ITaskFlow
     // ------ Flow control ------
 
     /**
-     * @brief Marks @p start as the task the flow begins with.
+     * @brief Marks @p root as the task the flow begins with — the root
+     *        of the task graph traversal driven by @ref runCurrentTask.
      *
      * The referenced task must have been registered through
-     * @ref addTask. Reports @ref Result::Code::Error when @p start is
-     * stale; on success the next @ref current call returns @p start.
+     * @ref addTask. Reports @ref Result::Code::Error when @p root is
+     * stale; on success the next @ref current call returns @p root.
      *
-     * The flow auto-provisions a default start task in its
-     * constructor per UD-3, so callers that never register their own
-     * tasks still observe a valid @ref current id. Callers that
-     * register their own tasks freely override the selection with
-     * this call before they begin driving the flow.
+     * The flow auto-provisions a default root task in its constructor
+     * per UD-3, so callers that never register their own tasks still
+     * observe a valid @ref current id. Callers that register their
+     * own tasks freely override the selection with this call before
+     * they begin driving the flow.
      */
-    virtual Result enqueue(TaskId start) = 0;
+    virtual Result setRoot(TaskId root) = 0;
 
     /**
      * @brief Returns the task the flow currently considers active.

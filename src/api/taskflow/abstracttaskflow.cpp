@@ -132,6 +132,31 @@ namespace
 
 } // namespace
 
+TaskId AbstractTaskFlow::addTask(std::unique_ptr<vigine::ITask> task)
+{
+    /*
+     * Convenience overload: allocate a slot AND bind the runnable in
+     * a single call. Reject a null @p task before allocating so we do
+     * not leave an orphan task id behind on misuse. After the slot is
+     * reserved we delegate to attachTaskRun for the binding so the
+     * storage and error-handling stays in one place.
+     */
+    if (task == nullptr)
+    {
+        return TaskId{};
+    }
+    const TaskId taskId = addTask();
+    if (!taskId.valid())
+    {
+        return taskId;
+    }
+    if (!attachTaskRun(taskId, std::move(task)).isSuccess())
+    {
+        return TaskId{};
+    }
+    return taskId;
+}
+
 Result AbstractTaskFlow::attachTaskRun(TaskId taskId,
                                        std::unique_ptr<vigine::ITask> task)
 {
@@ -384,13 +409,13 @@ bool AbstractTaskFlow::hasTasksToRun() const noexcept
 // observe an @ref Result::Code::Error and no state change.
 // ---------------------------------------------------------------------------
 
-Result AbstractTaskFlow::enqueue(TaskId start)
+Result AbstractTaskFlow::setRoot(TaskId root)
 {
-    if (!_orchestrator->hasTask(start))
+    if (!_orchestrator->hasTask(root))
     {
-        return Result(Result::Code::Error, "start task not registered");
+        return Result(Result::Code::Error, "setRoot: root task is not registered");
     }
-    _current = start;
+    _current = root;
     return Result();
 }
 

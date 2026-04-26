@@ -104,79 +104,65 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDe
 
     auto taskFlow = vigine::taskflow::createTaskFlow();
 
-    auto initWindowOwned      = std::make_unique<InitWindowTask>();
+    // Construct + configure each runnable, then hand it to the flow
+    // through the single-call addTask(unique_ptr) overload that
+    // allocates the slot and binds the runnable atomically. The flow
+    // owns each runnable from this point on; the caller only retains
+    // the returned TaskId for use in the onResult routing and the
+    // taskFlow->signal subscription wiring below.
+
+    auto initWindowOwned = std::make_unique<InitWindowTask>();
     initWindowOwned->setEntityManager(deps.entityManager);
     initWindowOwned->setPlatformServiceId(deps.platformServiceId);
+    const TaskId initWindowId = taskFlow->addTask(std::move(initWindowOwned));
 
-    auto initVulkanOwned      = std::make_unique<InitVulkanTask>();
+    auto initVulkanOwned = std::make_unique<InitVulkanTask>();
     initVulkanOwned->setEntityManager(deps.entityManager);
     initVulkanOwned->setPlatformServiceId(deps.platformServiceId);
     initVulkanOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId initVulkanId = taskFlow->addTask(std::move(initVulkanOwned));
 
-    auto setupHelperOwned     = std::make_unique<SetupHelperGeometryTask>();
+    auto setupHelperOwned = std::make_unique<SetupHelperGeometryTask>();
     setupHelperOwned->setEntityManager(deps.entityManager);
     setupHelperOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId setupHelperId = taskFlow->addTask(std::move(setupHelperOwned));
 
-    auto setupCubeOwned       = std::make_unique<SetupCubeTask>();
+    auto setupCubeOwned = std::make_unique<SetupCubeTask>();
     setupCubeOwned->setEntityManager(deps.entityManager);
     setupCubeOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId setupCubeId = taskFlow->addTask(std::move(setupCubeOwned));
 
-    auto setupTextOwned       = std::make_unique<SetupTextTask>();
+    auto setupTextOwned = std::make_unique<SetupTextTask>();
     setupTextOwned->setEntityManager(deps.entityManager);
     setupTextOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId setupTextId = taskFlow->addTask(std::move(setupTextOwned));
 
-    auto loadTexturesOwned    = std::make_unique<LoadTexturesTask>();
+    auto loadTexturesOwned = std::make_unique<LoadTexturesTask>();
     loadTexturesOwned->setEntityManager(deps.entityManager);
     loadTexturesOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId loadTexturesId = taskFlow->addTask(std::move(loadTexturesOwned));
 
-    auto setupPlanesOwned     = std::make_unique<SetupTexturedPlanesTask>();
+    auto setupPlanesOwned = std::make_unique<SetupTexturedPlanesTask>();
     setupPlanesOwned->setEntityManager(deps.entityManager);
     setupPlanesOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId setupPlanesId = taskFlow->addTask(std::move(setupPlanesOwned));
 
-    auto setupTextEditOwned   = std::make_unique<SetupTextEditTask>(
-        deps.textEditState, deps.textEditorSystem);
+    auto setupTextEditOwned =
+        std::make_unique<SetupTextEditTask>(deps.textEditState, deps.textEditorSystem);
     setupTextEditOwned->setEntityManager(deps.entityManager);
     setupTextEditOwned->setGraphicsServiceId(deps.graphicsServiceId);
+    const TaskId setupTextEditId = taskFlow->addTask(std::move(setupTextEditOwned));
 
-    auto runWindowOwned       = std::make_unique<RunWindowTask>();
+    auto runWindowOwned = std::make_unique<RunWindowTask>();
     runWindowOwned->setEntityManager(deps.entityManager);
     runWindowOwned->setPlatformServiceId(deps.platformServiceId);
     runWindowOwned->setGraphicsServiceId(deps.graphicsServiceId);
     runWindowOwned->setEngine(deps.engine);
     runWindowOwned->setTextEditorSystem(deps.textEditorSystem);
     runWindowOwned->setSignalEmitter(deps.signalEmitter);
+    const TaskId runWindowId = taskFlow->addTask(std::move(runWindowOwned));
 
-    auto processInputOwned    = std::make_unique<ProcessInputEventTask>();
-
-    // Allocate a slot per task and bind the runnable to it. The modern
-    // ITaskFlow surface separates slot allocation (addTask returns a
-    // TaskId) from runnable attachment (attachTaskRun consumes the
-    // unique_ptr). We capture each TaskId for the onResult routing
-    // below and the ProcessInputEventTask raw pointer for the signal
-    // subscription so the bus can deliver to it after attach.
-    const TaskId initWindowId         = taskFlow->addTask();
-    const TaskId initVulkanId         = taskFlow->addTask();
-    const TaskId setupHelperId        = taskFlow->addTask();
-    const TaskId setupCubeId          = taskFlow->addTask();
-    const TaskId setupTextId          = taskFlow->addTask();
-    const TaskId loadTexturesId       = taskFlow->addTask();
-    const TaskId setupPlanesId        = taskFlow->addTask();
-    const TaskId setupTextEditId      = taskFlow->addTask();
-    const TaskId runWindowId          = taskFlow->addTask();
-    const TaskId processInputId       = taskFlow->addTask();
-
-    ProcessInputEventTask *processInputRaw = processInputOwned.get();
-
-    static_cast<void>(taskFlow->attachTaskRun(initWindowId, std::move(initWindowOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(initVulkanId, std::move(initVulkanOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(setupHelperId, std::move(setupHelperOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(setupCubeId, std::move(setupCubeOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(setupTextId, std::move(setupTextOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(loadTexturesId, std::move(loadTexturesOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(setupPlanesId, std::move(setupPlanesOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(setupTextEditId, std::move(setupTextEditOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(runWindowId, std::move(runWindowOwned)));
-    static_cast<void>(taskFlow->attachTaskRun(processInputId, std::move(processInputOwned)));
+    const TaskId processInputId = taskFlow->addTask(std::make_unique<ProcessInputEventTask>());
 
     static_cast<void>(taskFlow->onResult(initWindowId, ResultCode::Success, initVulkanId));
     static_cast<void>(taskFlow->onResult(initVulkanId, ResultCode::Success, setupHelperId));
@@ -191,8 +177,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDe
     // can subscribe target tasks against it. The flow owns the resulting
     // subscription tokens and unwinds them at destruction in reverse-
     // registration order, before the underlying ProcessInputEventTask
-    // (registered above through attachTaskRun) is destroyed.
-    static_cast<void>(processInputRaw); // raw pointer no longer needed for direct subscribe
+    // (registered above through addTask) is destroyed.
     taskFlow->setSignalEmitter(deps.signalEmitter);
 
     using vigine::core::threading::ThreadAffinity;
@@ -203,7 +188,7 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDe
                                        kKeyDownPayloadTypeId,
                                        ThreadAffinity::Pool));
 
-    static_cast<void>(taskFlow->enqueue(initWindowId));
+    static_cast<void>(taskFlow->setRoot(initWindowId));
 
     return taskFlow;
 }
@@ -212,10 +197,9 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createWorkTaskFlow()
 {
     auto taskFlow = vigine::taskflow::createTaskFlow();
 
-    const vigine::taskflow::TaskId renderCubeId = taskFlow->addTask();
-    static_cast<void>(taskFlow->attachTaskRun(renderCubeId,
-                                              std::make_unique<RenderCubeTask>()));
-    static_cast<void>(taskFlow->enqueue(renderCubeId));
+    const vigine::taskflow::TaskId renderCubeId =
+        taskFlow->addTask(std::make_unique<RenderCubeTask>());
+    static_cast<void>(taskFlow->setRoot(renderCubeId));
 
     return taskFlow;
 }

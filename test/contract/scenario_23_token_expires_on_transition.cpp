@@ -208,9 +208,9 @@ struct DriverGuard
         ADD_FAILURE() << "ITaskFlow::attachTaskRun must bind the probe runnable";
         return fx;
     }
-    if (!flow->enqueue(probeId).isSuccess())
+    if (!flow->setRoot(probeId).isSuccess())
     {
-        ADD_FAILURE() << "ITaskFlow::enqueue must position the cursor on the probe";
+        ADD_FAILURE() << "ITaskFlow::setRoot must position the cursor on the probe";
         return fx;
     }
 
