@@ -160,15 +160,9 @@ endif()
 
 # Add source files
 set(HEADER
-    ${INCLUDE_DIR}/vigine/vigine.h
     ${INCLUDE_DIR}/vigine/result.h
-    ${INCLUDE_DIR}/vigine/impl/statemachine/statemachine.h
-    ${INCLUDE_DIR}/vigine/api/statemachine/abstractstate.h
-    ${INCLUDE_DIR}/vigine/impl/taskflow/taskflow.h
     ${INCLUDE_DIR}/vigine/api/taskflow/itask.h
     ${INCLUDE_DIR}/vigine/api/taskflow/abstracttask.h
-    ${INCLUDE_DIR}/vigine/abstractservice.h
-    ${INCLUDE_DIR}/vigine/context.h
     ${INCLUDE_DIR}/vigine/property.h
     ${INCLUDE_DIR}/vigine/api/ecs/abstractsystem.h
     ${INCLUDE_DIR}/vigine/api/ecs/abstractcomponent.h
@@ -218,15 +212,10 @@ set(HEADER
 )
 
 set(SOURCES
-    ${SRC_DIR}/vigine.cpp
     ${SRC_DIR}/result.cpp
-    ${SRC_DIR}/impl/statemachine/statemachine.cpp
-    ${SRC_DIR}/impl/taskflow/taskflow.cpp
-    ${SRC_DIR}/context.cpp
     ${SRC_DIR}/impl/ecs/componentmanager.cpp
     ${SRC_DIR}/impl/ecs/entity.cpp
     ${SRC_DIR}/api/taskflow/abstracttask.cpp
-    ${SRC_DIR}/abstractservice.cpp
     ${SRC_DIR}/impl/ecs/entitymanager.cpp
     ${SRC_DIR}/api/ecs/abstractsystem.cpp
     ${SRC_DIR}/core/graph/abstractgraph.cpp

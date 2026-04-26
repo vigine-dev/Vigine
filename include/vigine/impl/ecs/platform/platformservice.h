@@ -39,19 +39,15 @@ class WindowComponent;
  * the ECS-side @c WindowSystem. Callers reach the service through
  * the service container after registration.
  *
- * Wrapper base (post #330): the service derives from the modern
- * @ref vigine::service::AbstractService. The legacy
- * @ref vigine::AbstractService base is retired here. The window
- * system is wired in through @ref setWindowSystem because
- * @ref vigine::IContext does not yet expose a system locator.
+ * Wrapper base: the service derives from
+ * @ref vigine::service::AbstractService. The window system is wired
+ * in through @ref setWindowSystem because @ref vigine::IContext does
+ * not yet expose a system locator.
  *
- * Entity binding: previously the service tracked a single bound
- * entity through the legacy @ref bindEntity / @ref unbindEntity
- * mixin. The modern container has no entity-binding contract, so
- * callers pass the target entity to the per-call methods that need
+ * Entity binding: the service holds no per-entity state of its own.
+ * Callers pass the target entity to the per-call methods that need
  * it (@ref windowComponents, @ref windowEventHandlers,
- * @ref bindWindowEventHandler). The service holds no per-entity
- * state of its own.
+ * @ref bindWindowEventHandler).
  */
 class PlatformService : public vigine::service::AbstractService
 {
@@ -67,10 +63,9 @@ class PlatformService : public vigine::service::AbstractService
     /**
      * @brief Attaches the @c WindowSystem this service mediates.
      *
-     * Replaces the legacy @c contextChanged path that pulled the
-     * window system out of @c Context::system. Called by the engine
-     * bootstrapper after the window system has been constructed and
-     * registered on the ECS substrate. Passing @c nullptr detaches.
+     * Called by the engine bootstrapper after the window system has
+     * been constructed and registered on the ECS substrate. Passing
+     * @c nullptr detaches.
      */
     void setWindowSystem(WindowSystem *system) noexcept;
 
@@ -81,9 +76,8 @@ class PlatformService : public vigine::service::AbstractService
      * @brief Binds @p handler to @p window for events delivered to
      *        the entity addressed by @p entity.
      *
-     * The legacy two-arg overload that read the entity from the
-     * service's bound-entity slot is retired with the legacy base;
-     * callers now pass the target entity explicitly.
+     * Callers pass the target entity explicitly; the service holds
+     * no bound-entity slot of its own.
      */
     [[nodiscard]] vigine::Result bindWindowEventHandler(Entity *entity, WindowComponent *window,
                                                         IWindowEventHandlerComponent *handler);

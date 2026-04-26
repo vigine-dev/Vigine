@@ -209,8 +209,8 @@ class ITaskFlow
      *        advances the cursor to whichever next task the registered
      *        transitions select.
      *
-     * Mirrors the legacy @c vigine::TaskFlow::runCurrentTask shape that
-     * @ref vigine::engine::IEngine::run drives every pump tick:
+     * @ref vigine::engine::IEngine::run drives every pump tick along
+     * the following shape:
      *
      *   1. Look up the runnable bound to @ref current. When no runnable
      *      is attached the call is a no-op and the cursor clears so
@@ -223,14 +223,14 @@ class ITaskFlow
      *      the next task. When no transition is registered the cursor
      *      clears and @ref hasTasksToRun reports false on the next
      *      probe — the engine pump then falls through to the FSM drain
-     *      alone, matching the legacy completion shape.
+     *      alone.
      *
      * The engine wires a state-scoped @c IEngineToken into the
      * runnable through @ref vigine::ITask::setApi before invoking
      * @c run and clears the binding through an RAII guard so a
      * throwing @c run still leaves the task with a null token; that
-     * sequencing matches the legacy implementation and is required by
-     * the R-StateScope contract documented on @ref vigine::ITask.
+     * sequencing is required by the R-StateScope contract documented
+     * on @ref vigine::ITask.
      *
      * Threading: not thread-safe. The engine pump calls this from the
      * controller thread; callers that drive their own pump must
@@ -251,8 +251,7 @@ class ITaskFlow
      *
      * The engine pump probes this every tick and skips the
      * @ref runCurrentTask call when it returns @c false, falling
-     * through to the FSM drain + main-thread pump alone — matching the
-     * legacy @c vigine::TaskFlow::hasTasksToRun semantics.
+     * through to the FSM drain + main-thread pump alone.
      */
     [[nodiscard]] virtual bool hasTasksToRun() const noexcept = 0;
 

@@ -236,11 +236,10 @@ today*:
 
 - **The bound state is the sentinel, not `current()`.** The
   `IContext::makeEngineToken(stateId)` call site inside
-  `TaskFlow::runCurrentTask`
-  ([`src/impl/taskflow/taskflow.cpp`](../../src/impl/taskflow/taskflow.cpp))
+  `AbstractTaskFlow::runCurrentTask`
+  ([`src/api/taskflow/abstracttaskflow.cpp`](../../src/api/taskflow/abstracttaskflow.cpp))
   passes `vigine::statemachine::StateId{}` rather than the FSM's live
-  current state. The legacy `vigine::Context::makeEngineToken` ignores
-  the argument and returns `nullptr`; the modern
+  current state. The aggregator
   `vigine::context::Context::makeEngineToken` tolerates the sentinel
   and threads it into the concrete `EngineToken`. So a token observed
   through `api()` inside `run()` today carries `boundState() ==

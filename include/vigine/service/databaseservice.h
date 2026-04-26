@@ -66,24 +66,20 @@ class Column;
  * container but exposes only the lifecycle surface inherited from
  * @c AbstractService.
  *
- * Wrapper base (post #330): the service derives from the modern
- * @ref vigine::service::AbstractService (Level-1 wrapper recipe). The
- * legacy @ref vigine::AbstractService base is retired here; callers
- * that previously fetched the service through the pre-R.4.5
- * @ref vigine::Context registry now register it on the new
- * @ref vigine::context::AbstractContext via @c registerService and
- * receive a @ref vigine::service::ServiceId handle. Full modern wiring
- * of the underlying postgres ECS system waits for the architect-
- * approved @c IContext::system() accessor; until that accessor lands,
+ * Wrapper base: the service derives from
+ * @ref vigine::service::AbstractService (Level-1 wrapper recipe).
+ * Callers register it on the @ref vigine::context::AbstractContext
+ * via @c registerService and receive a
+ * @ref vigine::service::ServiceId handle. Full wiring of the
+ * underlying postgres ECS system waits for the architect-approved
+ * @c IContext::system() accessor; until that accessor lands,
  * @ref onInit only flips the lifecycle flag and the postgres system
  * pointer is wired up by the caller through a separate path
- * (typically the engine bootstrapper that owns the legacy Context
- * during the transition).
+ * (typically the engine bootstrapper).
  *
  * Carries an instance @ref vigine::Name supplied at construction so
- * existing call sites that distinguish service instances by name
- * (legacy @c Context::createService used the @c Name pair as the
- * registry key) keep a stable handle.
+ * call sites that distinguish service instances by name keep a stable
+ * handle.
  */
 class DatabaseService : public vigine::service::AbstractService
 {
@@ -93,11 +89,9 @@ class DatabaseService : public vigine::service::AbstractService
     /**
      * @brief Returns the instance name supplied at construction.
      *
-     * Distinct from the modern @ref vigine::service::IService::id, which
-     * is the generational handle stamped by the container during
-     * @c registerService. The name preserves the historical
-     * "DatabaseService instance called X" handle the legacy registry
-     * surfaced.
+     * Distinct from @ref vigine::service::IService::id, which is the
+     * generational handle stamped by the container during
+     * @c registerService.
      */
     [[nodiscard]] const Name &name() const noexcept;
 
@@ -135,13 +129,11 @@ class DatabaseService : public vigine::service::AbstractService
     /**
      * @brief Attaches the @c PostgreSQLSystem this service wraps.
      *
-     * Replaces the legacy @c contextChanged path that pulled the
-     * postgres system out of @c Context::system. The caller (typically
-     * the engine bootstrapper) constructs the system, registers it
-     * on the ECS substrate, and hands a non-owning pointer to the
-     * service so its CRUD methods can delegate. Passing @c nullptr
-     * detaches the system; subsequent CRUD calls report null state
-     * the same way they did under the legacy path.
+     * The caller (typically the engine bootstrapper) constructs the
+     * system, registers it on the ECS substrate, and hands a
+     * non-owning pointer to the service so its CRUD methods can
+     * delegate. Passing @c nullptr detaches the system; subsequent
+     * CRUD calls report null state.
      */
     void setPostgresSystem(experimental::ecs::postgresql::PostgreSQLSystem *system) noexcept;
 #endif

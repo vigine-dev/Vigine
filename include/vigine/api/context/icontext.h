@@ -278,16 +278,13 @@ class IContext
      *        effectively a permanently-alive handle. Callers that
      *        want a stricter contract pre-validate the id through
      *        @ref stateMachine.
-     * @return A live token from the new aggregator
+     * @return A live token from the aggregator
      *         (@ref vigine::context::AbstractContext path). Token
      *         construction is allocation-only and any
      *         @c std::bad_alloc surfaces as an exception per the
-     *         standard library contract. The legacy
-     *         @ref vigine::Context stub (kept compiling for the
-     *         pre-R.4.5 @c Engine front door) carries no live
-     *         @ref vigine::statemachine::IStateMachine and therefore
-     *         returns @c nullptr; new code that needs a live token
-     *         goes through @c vigine::context::createContext.
+     *         standard library contract. Callers reach a context
+     *         carrying a live @ref vigine::statemachine::IStateMachine
+     *         through @c vigine::context::createContext.
      */
     [[nodiscard]] virtual std::unique_ptr<vigine::engine::IEngineToken>
         makeEngineToken(vigine::statemachine::StateId boundState) = 0;

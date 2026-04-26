@@ -35,11 +35,10 @@ class TextEditorSystem
      * @brief Wires the editor system to the entity manager and the
      *        graphics service / render system pair.
      *
-     * The system used to take a legacy @c vigine::Context* and route
-     * every entity-manager lookup through it. Post-#299 the example
-     * holds the entity manager directly because the modern engine
-     * front door does not surface a legacy @c Context. The signature
-     * therefore takes the entity manager as its own parameter.
+     * The example holds the entity manager directly because the engine
+     * front door does not surface it through @ref vigine::IContext.
+     * The signature therefore takes the entity manager as its own
+     * parameter.
      */
     void bind(vigine::EntityManager *entityManager,
               vigine::ecs::graphics::GraphicsService *graphicsService,

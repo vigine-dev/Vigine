@@ -36,13 +36,11 @@ class TextureComponent;
  * the accessors @ref renderComponent and @ref textureComponent expose
  * per-entity render data for other services / systems to consume.
  *
- * Wrapper base (post #330): the service derives from the modern
- * @ref vigine::service::AbstractService. The legacy
- * @ref vigine::AbstractService base is retired here. The render
- * system itself is wired in through @ref setRenderSystem because
- * @ref vigine::IContext does not yet expose a system locator —
- * adding one is a separate architect decision tracked outside this
- * leaf.
+ * Wrapper base: the service derives from
+ * @ref vigine::service::AbstractService. The render system itself is
+ * wired in through @ref setRenderSystem because @ref vigine::IContext
+ * does not yet expose a system locator — adding one is tracked as a
+ * separate architect decision.
  */
 class GraphicsService : public vigine::service::AbstractService
 {
@@ -60,10 +58,9 @@ class GraphicsService : public vigine::service::AbstractService
     /**
      * @brief Attaches the @c RenderSystem this service exposes.
      *
-     * Replaces the legacy @c contextChanged path that pulled the
-     * render system out of @c Context::system. Called by the engine
-     * bootstrapper after the render system has been constructed and
-     * registered on the ECS substrate. Passing @c nullptr detaches.
+     * Called by the engine bootstrapper after the render system has
+     * been constructed and registered on the ECS substrate. Passing
+     * @c nullptr detaches.
      */
     void setRenderSystem(RenderSystem *system) noexcept;
 
