@@ -61,7 +61,7 @@ std::shared_ptr<TextEditState> TextEditorService::state() const noexcept
     return _state;
 }
 
-std::shared_ptr<TextEditorSystem> TextEditorService::system() const noexcept
+std::shared_ptr<TextEditorSystem> TextEditorService::textEditorSystem() const noexcept
 {
     return _system;
 }

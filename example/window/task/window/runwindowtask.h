@@ -11,46 +11,39 @@
 
 namespace vigine
 {
-class EntityManager;
 class Entity;
 
 namespace ecs
 {
 namespace platform
 {
-class PlatformService;
 class WindowComponent;
 } // namespace platform
 namespace graphics
 {
-class GraphicsService;
 class RenderSystem;
 } // namespace graphics
 } // namespace ecs
 
-namespace engine
-{
-class IEngine;
-} // namespace engine
-
 namespace messaging
 {
-class ISignalEmitter;
 class ISubscriptionToken;
 } // namespace messaging
 } // namespace vigine
 
-class TextEditorSystem;
-
 /**
  * @brief Window-driving task for the modern FSM-pumped engine.
  *
- * Every dependency the task needs (entity manager, platform / graphics
- * services, render system, engine back-ref, signal emitter, app-scope
- * text-editor service) is resolved through @ref apiToken at the call
- * site. The task carries no DI-result members — only task-private state
- * (focused entity, drag state, resize bookkeeping, the one-shot
- * expiration subscription token).
+ * Every dependency is resolved through @ref apiToken at the call site:
+ * the entity manager, platform / graphics services, signal emitter,
+ * engine back-ref, and app-scope text-editor service all flow through
+ * the engine token without any task-side caching.
+ *
+ * Task-private state covers only what the task needs to track across
+ * event callbacks fired during the platform showWindow loop — focused
+ * entity, drag state, mouse-ray helper handles, resize bookkeeping,
+ * the modifier-key bitmask, plus the one-shot expiration subscription
+ * token that ties the task's lifetime to the FSM-driven invalidation.
  *
  * Token-expiration cooperation: on entry @ref run subscribes a one-shot
  * callback through @ref apiToken()->subscribeExpiration. When the FSM
@@ -85,68 +78,26 @@ class RunWindowTask final : public vigine::AbstractTask
         MoveKeyE = 1u << 5,
     };
 
-    /**
-     * @brief Per-call resolution snapshot of every engine-known
-     *        dependency the task touches.
-     *
-     * Each member is a non-owning handle resolved fresh through
-     * @ref apiToken at the call site. A method that needs any subset
-     * checks the relevant pointer for null before dereferencing — the
-     * resolver tolerates a missing token / failed dynamic_cast and
-     * returns null pointers for the unresolved slots so callers can
-     * skip the work without surfacing an error to the FSM.
-     *
-     * Lifetime: the snapshot is short-lived. The pointers themselves
-     * resolve to engine-default services that live for the engine's
-     * entire lifetime, so the snapshot stays valid for as long as the
-     * caller keeps it on the stack — but each method re-resolves to
-     * keep the "no caching" rule visible at every touchpoint.
-     */
-    struct Deps
-    {
-        vigine::EntityManager                  *entityManager{nullptr};
-        vigine::ecs::platform::PlatformService *platformService{nullptr};
-        vigine::ecs::graphics::GraphicsService *graphicsService{nullptr};
-        vigine::ecs::graphics::RenderSystem    *renderSystem{nullptr};
-        vigine::engine::IEngine                *engine{nullptr};
-        vigine::messaging::ISignalEmitter      *signalEmitter{nullptr};
-        std::shared_ptr<TextEditorSystem>       textEditorSystem;
-    };
-
-    /**
-     * @brief Resolves every engine-known dependency through the
-     *        current @ref apiToken in a single call.
-     *
-     * Returns a snapshot with non-null members for every successfully
-     * resolved slot and null for the rest. A null token, an expired
-     * gated accessor, or an unexpected-type dynamic_cast each leave
-     * their respective slot null without touching the others.
-     */
-    [[nodiscard]] Deps resolveDeps() const;
-
     void onWindowResized(vigine::ecs::platform::WindowComponent *window, int width, int height);
-    void updateCameraMovementKey(vigine::ecs::graphics::RenderSystem *renderSystem,
-                                 unsigned int                          keyCode,
-                                 bool                                  pressed);
-    bool handleClipboardShortcut(const std::shared_ptr<TextEditorSystem> &textEditorSystem,
-                                 const vigine::ecs::platform::KeyEvent   &event);
-    bool isFocusedTextEditor(const std::shared_ptr<TextEditorSystem> &textEditorSystem) const;
-    void setFocusedEntity(const Deps &deps, vigine::Entity *entity);
-    bool ensureMouseRayEntity(const Deps &deps);
-    bool ensureMouseClickSphereEntity(const Deps &deps);
-    void updateMouseRayVisualization(const Deps &deps, int x, int y);
-    void updateMouseClickSphereVisualization(const Deps &deps, int x, int y);
-    bool beginObjectDrag(const Deps &deps, vigine::Entity *entity, int x, int y);
-    void updateObjectDrag(const Deps &deps, int x, int y, bool suppressZDelta = true);
+    void updateCameraMovementKey(unsigned int keyCode, bool pressed);
+    bool handleClipboardShortcut(const vigine::ecs::platform::KeyEvent &event);
+    bool isFocusedTextEditor() const;
+    void setFocusedEntity(vigine::Entity *entity);
+    bool ensureMouseRayEntity();
+    bool ensureMouseClickSphereEntity();
+    void updateMouseRayVisualization(int x, int y);
+    void updateMouseClickSphereVisualization(int x, int y);
+    bool beginObjectDrag(vigine::Entity *entity, int x, int y);
+    void updateObjectDrag(int x, int y, bool suppressZDelta = true);
     void endObjectDrag();
 
     // Task-private state. None of these are DI-resolved; they track the
     // task's own bookkeeping across event callbacks fired during the
     // platform showWindow loop.
-    vigine::Entity *_mainWindowEntity{nullptr};
     vigine::Entity *_focusedEntity{nullptr};
     vigine::Entity *_mouseRayEntity{nullptr};
     vigine::Entity *_mouseClickSphereEntity{nullptr};
+    vigine::Entity *_dragEntity{nullptr};
     glm::vec3 _focusedOriginalScale{1.0f, 1.0f, 1.0f};
     bool _hasFocusedOriginalScale{false};
     bool _mouseRayVisible{true};
@@ -156,7 +107,6 @@ class RunWindowTask final : public vigine::AbstractTask
     bool _ctrlHeld{false};
     bool _objectDragActive{false};
     bool _dragEditorGroup{false};
-    vigine::Entity *_dragEntity{nullptr};
     float _dragDistanceFromCamera{0.0f};
     glm::vec3 _dragGrabOffset{0.0f, 0.0f, 0.0f};
     vigine::ecs::platform::WindowComponent *_pendingResizeWindow{nullptr};

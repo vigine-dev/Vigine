@@ -99,7 +99,7 @@ vigine::Result SetupTextEditTask::run()
 
     editorService->ensureWired(token->engine().context());
     auto state        = editorService->state();
-    auto editorSystem = editorService->system();
+    auto editorSystem = editorService->textEditorSystem();
 
     if (!state)
         return vigine::Result(vigine::Result::Code::Error, "TextEditState is null");

@@ -34,7 +34,7 @@ class TextEditorSystem;
  *   if (!svc.ok()) return Error("text editor service unavailable");
  *   auto* tes = dynamic_cast<TextEditorService*>(&svc.value());
  *   tes->ensureWired(apiToken()->engine().context());
- *   auto editorSystem = tes->system();
+ *   auto editorSystem = tes->textEditorSystem();
  * @endcode
  *
  * Wiring: the underlying @c TextEditorSystem needs a one-time
@@ -70,7 +70,7 @@ class TextEditorService final : public vigine::service::AbstractService
     void ensureWired(vigine::IContext &context);
 
     [[nodiscard]] std::shared_ptr<TextEditState>    state() const noexcept;
-    [[nodiscard]] std::shared_ptr<TextEditorSystem> system() const noexcept;
+    [[nodiscard]] std::shared_ptr<TextEditorSystem> textEditorSystem() const noexcept;
 
   private:
     std::shared_ptr<TextEditState>    _state;
