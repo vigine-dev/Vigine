@@ -496,17 +496,6 @@ bool RenderComponent::rebuildSdfGlyphQuads()
         currentLine.localMinY = std::numeric_limits<float>::max();
         currentLine.localMaxY = std::numeric_limits<float>::lowest();
 
-        auto finishLine       = [&]() {
-            currentLine.byteEnd = 0; // will be set by caller
-            currentLine.penXEnd = penX;
-            _lineCache.push_back(std::move(currentLine));
-            currentLine           = {};
-            currentLine.localMinX = std::numeric_limits<float>::max();
-            currentLine.localMaxX = std::numeric_limits<float>::lowest();
-            currentLine.localMinY = std::numeric_limits<float>::max();
-            currentLine.localMaxY = std::numeric_limits<float>::lowest();
-        };
-
         std::size_t i = 0;
         while (i < str.size())
         {

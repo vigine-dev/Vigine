@@ -436,7 +436,12 @@ class SlowSubscriber final : public ISubscriber
 
     [[nodiscard]] DispatchResult onMessage(const IMessage & /*message*/) override
     {
-        // Signal that onMessage has started and record the entry time.
+        // Record the timestamp immediately before entering the sleep so the
+        // test can measure cancel()'s wait against the *actual* sleep window
+        // (rather than against waitForEntry()'s notify, which fires before
+        // the sleep starts and is therefore subject to OS scheduling jitter
+        // between notify and sleep_for).
+        _sleepStartedAt = std::chrono::steady_clock::now();
         _entered.store(true, std::memory_order_release);
         _enteredCv.notify_all();
 
@@ -465,10 +470,16 @@ class SlowSubscriber final : public ISubscriber
         return _exitedAt;
     }
 
+    [[nodiscard]] std::chrono::steady_clock::time_point sleepStartedAt() const noexcept
+    {
+        return _sleepStartedAt;
+    }
+
   private:
     std::chrono::milliseconds              _delay;
     std::atomic<bool>                      _entered{false};
     std::atomic<bool>                      _exited{false};
+    std::chrono::steady_clock::time_point  _sleepStartedAt{};
     std::chrono::steady_clock::time_point  _exitedAt{};
     mutable std::mutex                     _cvMutex;
     mutable std::condition_variable        _enteredCv;
@@ -504,7 +515,6 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
     // so we know the dispatch is in-flight when we cancel.
     slow.waitForEntry();
 
-    const auto cancelStart = std::chrono::steady_clock::now();
     token->cancel();
     const auto cancelEnd = std::chrono::steady_clock::now();
 
@@ -519,6 +529,32 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
         // Allow a small margin for OS scheduling jitter.
         EXPECT_GE(cancelEnd, slow.exitedAt())
             << "cancel() returned before onMessage() exited";
+
+        // Measure cancel()'s wait against the *handler-side* sleep start
+        // timestamp (recorded inside onMessage right before sleep_for),
+        // not against waitForEntry()'s release: waitForEntry signals the
+        // moment _entered is stored, which is BEFORE sleep_for begins.
+        // Using cancelStart from the test thread would let scheduling
+        // jitter between waitForEntry's release and the actual cancel()
+        // call eat into the measured window — on a loaded CI runner that
+        // jitter can exceed delay/2 and produce a false failure.
+        //
+        // Asserting against sleepStartedAt() instead pins the lower bound
+        // to the same clock domain as the subscriber's sleep window, so
+        // the test only fails when cancel() truly returned before the
+        // sleep finished (i.e. the dtor-blocks contract was violated).
+        const auto sleepSpan = std::chrono::duration_cast<std::chrono::milliseconds>(
+            cancelEnd - slow.sleepStartedAt());
+        // 5 ms jitter floor: covers timer-resolution slop on Windows
+        // (sleep_for can return slightly early on some configurations)
+        // without masking a non-blocking cancel(), which would return
+        // in microseconds — orders of magnitude below this threshold.
+        const auto minWait = delay - std::chrono::milliseconds{5};
+        EXPECT_GE(sleepSpan, minWait)
+            << "cancel() returned " << sleepSpan.count()
+            << " ms after onMessage entered sleep -- expected at least "
+            << minWait.count() << " ms (subscriber sleep was " << delay.count()
+            << " ms); cancel() likely did not block on the in-flight dispatch";
     }
 
     dispatcher.join();
