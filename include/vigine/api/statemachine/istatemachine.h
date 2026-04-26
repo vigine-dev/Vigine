@@ -7,9 +7,13 @@
 #include "vigine/api/statemachine/routemode.h"
 #include "vigine/api/statemachine/stateid.h"
 
+namespace vigine::taskflow
+{
+class ITaskFlow;
+} // namespace vigine::taskflow
+
 namespace vigine
 {
-class TaskFlow;
 
 /**
  * @brief Pure-virtual forward-declared stub for the legacy state-machine
@@ -446,9 +450,9 @@ class IStateMachine
     // ------ State-bound TaskFlow registry ------
 
     /**
-     * @brief Associates a runnable @ref vigine::TaskFlow with @p state so
-     *        the engine pumps that flow's tasks while the FSM is in
-     *        @p state.
+     * @brief Associates a runnable @ref vigine::taskflow::ITaskFlow with
+     *        @p state so the engine pumps that flow's tasks while the
+     *        FSM is in @p state.
      *
      * The state machine takes ownership of @p taskFlow. The flow is
      * destroyed when the machine itself is destroyed; there is no
@@ -460,13 +464,13 @@ class IStateMachine
      *
      * Reports @ref Result::Code::Error when @p state is not registered
      * or when @p taskFlow is @c nullptr. Reports
-     * @ref Result::Code::Error when @p state already has a TaskFlow
-     * bound (one-shot; callers that need to swap a flow rebuild the
+     * @ref Result::Code::Error when @p state already has a flow bound
+     * (one-shot; callers that need to swap a flow rebuild the
      * machine). Ownership is consumed by this call regardless of
      * result: @p taskFlow is taken by value, so on every failure path
      * the @c std::unique_ptr held by the parameter is destroyed at
-     * function return — its TaskFlow is released along with it. There
-     * is no hand-back to the caller. On success the machine takes the
+     * function return — its flow is released along with it. There is
+     * no hand-back to the caller. On success the machine takes the
      * flow into its registry; on failure the flow is destroyed before
      * the call returns.
      *
@@ -479,12 +483,13 @@ class IStateMachine
      * mutations stay on the controller per the locked policy.
      */
     virtual vigine::Result
-        addStateTaskFlow(StateId                          state,
-                         std::unique_ptr<vigine::TaskFlow> taskFlow) = 0;
+        addStateTaskFlow(StateId                                       state,
+                         std::unique_ptr<vigine::taskflow::ITaskFlow> taskFlow) = 0;
 
     /**
-     * @brief Returns the @ref vigine::TaskFlow bound to @p state, or
-     *        @c nullptr when no flow has been registered for it.
+     * @brief Returns the @ref vigine::taskflow::ITaskFlow bound to
+     *        @p state, or @c nullptr when no flow has been registered
+     *        for it.
      *
      * The state machine retains ownership of every registered flow;
      * the returned pointer is non-owning and stays valid until the
@@ -495,21 +500,22 @@ class IStateMachine
      * thread manager pump alone.
      *
      * Two overloads are provided so callers observe a const-correct
-     * surface: a non-const machine returns a mutable @ref vigine::TaskFlow
-     * pointer (the engine needs that handle to call @c runCurrentTask
-     * each tick), while a const machine returns @c const @ref vigine::TaskFlow
-     * pointer so a @c const @ref IStateMachine reference cannot be used to
-     * mutate the bound flow. Both overloads share the same lookup body
-     * and lock policy below.
+     * surface: a non-const machine returns a mutable
+     * @ref vigine::taskflow::ITaskFlow pointer (the engine needs that
+     * handle to call @c runCurrentTask each tick), while a const
+     * machine returns @c const @ref vigine::taskflow::ITaskFlow
+     * pointer so a @c const @ref IStateMachine reference cannot be
+     * used to mutate the bound flow. Both overloads share the same
+     * lookup body and lock policy below.
      *
      * Threading: safe from any thread. Takes the registry mutex
      * briefly for the lookup; concurrent lookups serialise against
      * each other and against @ref addStateTaskFlow.
      */
-    [[nodiscard]] virtual vigine::TaskFlow *
+    [[nodiscard]] virtual vigine::taskflow::ITaskFlow *
         taskFlowFor(StateId state) = 0;
 
-    [[nodiscard]] virtual const vigine::TaskFlow *
+    [[nodiscard]] virtual const vigine::taskflow::ITaskFlow *
         taskFlowFor(StateId state) const = 0;
 
     IStateMachine(const IStateMachine &)            = delete;

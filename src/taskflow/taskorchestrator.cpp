@@ -250,6 +250,58 @@ RouteMode TaskOrchestrator::storedModeFor(
     return fallback;
 }
 
+TaskId TaskOrchestrator::nextTaskFor(TaskId source, ResultCode code) const noexcept
+{
+    if (!source.valid())
+    {
+        return TaskId{};
+    }
+
+    const vigine::core::graph::NodeId srcNode = toNodeId(source);
+    if (!query().hasNode(srcNode))
+    {
+        return TaskId{};
+    }
+
+    // Walk the outgoing transition edges of @p source and pick the first
+    // edge that carries the matching @ref ResultCode. The graph stores
+    // edges in registration order; FirstMatch resolution maps to the
+    // first hit, which matches the legacy @c vigine::TaskFlow shape and
+    // the back-compat path documented on @ref RouteMode::FirstMatch.
+    const auto edges
+        = query().outEdgesOfKind(srcNode, vigine::taskflow::edge_kind::Transition);
+    for (const auto eid : edges)
+    {
+        const vigine::core::graph::IEdge *e = edge(eid);
+        if (e == nullptr)
+        {
+            continue;
+        }
+        const vigine::core::graph::IEdgeData *d = e->data();
+        if (d == nullptr || d->dataTypeId() != kTransitionDataTypeId)
+        {
+            continue;
+        }
+        const auto *td = static_cast<const TransitionData *>(d);
+        if (td->code() != code)
+        {
+            continue;
+        }
+
+        const vigine::core::graph::NodeId destNode = e->to();
+        if (!query().hasNode(destNode))
+        {
+            // Edge points at a retired slot; treat as no-match so the
+            // caller observes a clean cursor stop instead of a silent
+            // dereference of stale storage.
+            return TaskId{};
+        }
+        return toTaskId(destNode);
+    }
+
+    return TaskId{};
+}
+
 Result TaskOrchestrator::addTransition(
     TaskId    source,
     ResultCode code,

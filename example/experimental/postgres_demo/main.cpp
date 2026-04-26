@@ -37,7 +37,10 @@
 #include <vigine/api/engine/iengine.h>
 #include <vigine/api/statemachine/istatemachine.h>
 #include <vigine/api/statemachine/stateid.h>
-#include <vigine/impl/taskflow/taskflow.h>
+#include <vigine/api/taskflow/factory.h>
+#include <vigine/api/taskflow/itaskflow.h>
+#include <vigine/api/taskflow/resultcode.h>
+#include <vigine/api/taskflow/taskid.h>
 #include <vigine/result.h>
 #include <vigine/service/databaseservice.h>
 
@@ -59,13 +62,16 @@ namespace
 // the error state (or, in the close phase, asks the engine to shut
 // down).
 
-std::unique_ptr<vigine::TaskFlow> buildInitFlow(
-    vigine::DatabaseService                *dbService,
-    vigine::statemachine::IStateMachine    *stateMachine,
-    vigine::statemachine::StateId           workState,
-    vigine::statemachine::StateId           errorState)
+std::unique_ptr<vigine::taskflow::ITaskFlow> buildInitFlow(
+    vigine::DatabaseService             *dbService,
+    vigine::statemachine::IStateMachine *stateMachine,
+    vigine::statemachine::StateId        workState,
+    vigine::statemachine::StateId        errorState)
 {
-    auto flow = std::make_unique<vigine::TaskFlow>();
+    using vigine::taskflow::ResultCode;
+    using vigine::taskflow::TaskId;
+
+    auto flow = vigine::taskflow::createTaskFlow();
 
     auto initBd        = std::make_unique<InitBDTask>();
     initBd->setDatabaseService(dbService);
@@ -74,27 +80,35 @@ std::unique_ptr<vigine::TaskFlow> buildInitFlow(
     auto toWork        = std::make_unique<TransitionTask>(stateMachine, workState);
     auto toError       = std::make_unique<TransitionTask>(stateMachine, errorState);
 
-    auto *initBdRaw     = flow->addTask(std::move(initBd));
-    auto *checkSchemaRaw = flow->addTask(std::move(checkSchema));
-    auto *toWorkRaw      = flow->addTask(std::move(toWork));
-    auto *toErrorRaw     = flow->addTask(std::move(toError));
+    const TaskId initBdId      = flow->addTask();
+    const TaskId checkSchemaId = flow->addTask();
+    const TaskId toWorkId      = flow->addTask();
+    const TaskId toErrorId     = flow->addTask();
 
-    static_cast<void>(flow->route(initBdRaw,     checkSchemaRaw, vigine::Result::Code::Success));
-    static_cast<void>(flow->route(initBdRaw,     toErrorRaw,     vigine::Result::Code::Error));
-    static_cast<void>(flow->route(checkSchemaRaw, toWorkRaw,     vigine::Result::Code::Success));
-    static_cast<void>(flow->route(checkSchemaRaw, toErrorRaw,    vigine::Result::Code::Error));
+    static_cast<void>(flow->attachTaskRun(initBdId, std::move(initBd)));
+    static_cast<void>(flow->attachTaskRun(checkSchemaId, std::move(checkSchema)));
+    static_cast<void>(flow->attachTaskRun(toWorkId, std::move(toWork)));
+    static_cast<void>(flow->attachTaskRun(toErrorId, std::move(toError)));
 
-    flow->changeCurrentTaskTo(initBdRaw);
+    static_cast<void>(flow->onResult(initBdId,      ResultCode::Success, checkSchemaId));
+    static_cast<void>(flow->onResult(initBdId,      ResultCode::Error,   toErrorId));
+    static_cast<void>(flow->onResult(checkSchemaId, ResultCode::Success, toWorkId));
+    static_cast<void>(flow->onResult(checkSchemaId, ResultCode::Error,   toErrorId));
+
+    static_cast<void>(flow->enqueue(initBdId));
     return flow;
 }
 
-std::unique_ptr<vigine::TaskFlow> buildWorkFlow(
-    vigine::DatabaseService                *dbService,
-    vigine::statemachine::IStateMachine    *stateMachine,
-    vigine::statemachine::StateId           closeState,
-    vigine::statemachine::StateId           errorState)
+std::unique_ptr<vigine::taskflow::ITaskFlow> buildWorkFlow(
+    vigine::DatabaseService             *dbService,
+    vigine::statemachine::IStateMachine *stateMachine,
+    vigine::statemachine::StateId        closeState,
+    vigine::statemachine::StateId        errorState)
 {
-    auto flow = std::make_unique<vigine::TaskFlow>();
+    using vigine::taskflow::ResultCode;
+    using vigine::taskflow::TaskId;
+
+    auto flow = vigine::taskflow::createTaskFlow();
 
     auto addData    = std::make_unique<AddSomeDataTask>();
     addData->setDatabaseService(dbService);
@@ -105,48 +119,56 @@ std::unique_ptr<vigine::TaskFlow> buildWorkFlow(
     auto toClose    = std::make_unique<TransitionTask>(stateMachine, closeState);
     auto toError    = std::make_unique<TransitionTask>(stateMachine, errorState);
 
-    auto *addRaw     = flow->addTask(std::move(addData));
-    auto *readRaw    = flow->addTask(std::move(readData));
-    auto *removeRaw  = flow->addTask(std::move(removeData));
-    auto *closeRaw   = flow->addTask(std::move(toClose));
-    auto *errorRaw   = flow->addTask(std::move(toError));
+    const TaskId addId    = flow->addTask();
+    const TaskId readId   = flow->addTask();
+    const TaskId removeId = flow->addTask();
+    const TaskId closeId  = flow->addTask();
+    const TaskId errorId  = flow->addTask();
 
-    static_cast<void>(flow->route(addRaw,    readRaw,   vigine::Result::Code::Success));
-    static_cast<void>(flow->route(addRaw,    errorRaw,  vigine::Result::Code::Error));
-    static_cast<void>(flow->route(readRaw,   removeRaw, vigine::Result::Code::Success));
-    static_cast<void>(flow->route(readRaw,   errorRaw,  vigine::Result::Code::Error));
-    static_cast<void>(flow->route(removeRaw, closeRaw,  vigine::Result::Code::Success));
-    static_cast<void>(flow->route(removeRaw, errorRaw,  vigine::Result::Code::Error));
+    static_cast<void>(flow->attachTaskRun(addId,    std::move(addData)));
+    static_cast<void>(flow->attachTaskRun(readId,   std::move(readData)));
+    static_cast<void>(flow->attachTaskRun(removeId, std::move(removeData)));
+    static_cast<void>(flow->attachTaskRun(closeId,  std::move(toClose)));
+    static_cast<void>(flow->attachTaskRun(errorId,  std::move(toError)));
 
-    flow->changeCurrentTaskTo(addRaw);
+    static_cast<void>(flow->onResult(addId,    ResultCode::Success, readId));
+    static_cast<void>(flow->onResult(addId,    ResultCode::Error,   errorId));
+    static_cast<void>(flow->onResult(readId,   ResultCode::Success, removeId));
+    static_cast<void>(flow->onResult(readId,   ResultCode::Error,   errorId));
+    static_cast<void>(flow->onResult(removeId, ResultCode::Success, closeId));
+    static_cast<void>(flow->onResult(removeId, ResultCode::Error,   errorId));
+
+    static_cast<void>(flow->enqueue(addId));
     return flow;
 }
 
-std::unique_ptr<vigine::TaskFlow> buildErrorFlow(
+std::unique_ptr<vigine::taskflow::ITaskFlow> buildErrorFlow(
     vigine::statemachine::IStateMachine *stateMachine,
     vigine::statemachine::StateId        closeState)
 {
-    auto flow = std::make_unique<vigine::TaskFlow>();
+    auto flow = vigine::taskflow::createTaskFlow();
 
     // Error phase prints the reached-error notice and falls through to
     // close so the engine can shut down cleanly. No domain work runs
     // in this state.
-    auto toClose       = std::make_unique<TransitionTask>(stateMachine, closeState);
-    auto *toCloseRaw   = flow->addTask(std::move(toClose));
-    flow->changeCurrentTaskTo(toCloseRaw);
+    auto toClose = std::make_unique<TransitionTask>(stateMachine, closeState);
+    const vigine::taskflow::TaskId toCloseId = flow->addTask();
+    static_cast<void>(flow->attachTaskRun(toCloseId, std::move(toClose)));
+    static_cast<void>(flow->enqueue(toCloseId));
     return flow;
 }
 
-std::unique_ptr<vigine::TaskFlow> buildCloseFlow(vigine::engine::IEngine *engine)
+std::unique_ptr<vigine::taskflow::ITaskFlow> buildCloseFlow(vigine::engine::IEngine *engine)
 {
-    auto flow = std::make_unique<vigine::TaskFlow>();
+    auto flow = vigine::taskflow::createTaskFlow();
 
     // Close phase asks the engine to stop the main loop. The
     // ShutdownTask returns Success, the flow has no further routes
     // out of it, and Engine::run() exits on the next pump tick.
-    auto shutdown      = std::make_unique<ShutdownTask>(engine);
-    auto *shutdownRaw  = flow->addTask(std::move(shutdown));
-    flow->changeCurrentTaskTo(shutdownRaw);
+    auto shutdown = std::make_unique<ShutdownTask>(engine);
+    const vigine::taskflow::TaskId shutdownId = flow->addTask();
+    static_cast<void>(flow->attachTaskRun(shutdownId, std::move(shutdown)));
+    static_cast<void>(flow->enqueue(shutdownId));
     return flow;
 }
 

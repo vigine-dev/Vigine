@@ -71,7 +71,9 @@
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
-#include "vigine/impl/taskflow/taskflow.h"
+#include "vigine/api/taskflow/factory.h"
+#include "vigine/api/taskflow/itaskflow.h"
+#include "vigine/api/taskflow/taskid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>
@@ -192,16 +194,25 @@ struct DriverGuard
     // fixture after the TaskFlow has been successfully moved into the
     // FSM -- if any step before that fails, fx.probe stays null and
     // the caller's ASSERT_NE bails before any dereference.
-    auto flow        = std::make_unique<vigine::TaskFlow>();
+    auto flow        = vigine::taskflow::createTaskFlow();
     auto probeOwned  = std::make_unique<ProbeTask>();
     auto *probeRaw   = probeOwned.get();
-    auto *registered = flow->addTask(std::move(probeOwned));
-    if (registered == nullptr)
+    const vigine::taskflow::TaskId probeId = flow->addTask();
+    if (!probeId.valid())
     {
-        ADD_FAILURE() << "TaskFlow::addTask must register the probe task";
+        ADD_FAILURE() << "ITaskFlow::addTask must yield a valid task id for the probe";
         return fx;
     }
-    flow->changeCurrentTaskTo(registered);
+    if (!flow->attachTaskRun(probeId, std::move(probeOwned)).isSuccess())
+    {
+        ADD_FAILURE() << "ITaskFlow::attachTaskRun must bind the probe runnable";
+        return fx;
+    }
+    if (!flow->enqueue(probeId).isSuccess())
+    {
+        ADD_FAILURE() << "ITaskFlow::enqueue must position the cursor on the probe";
+        return fx;
+    }
 
     if (!fsm.addStateTaskFlow(fx.stateA, std::move(flow)).isSuccess())
     {

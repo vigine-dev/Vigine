@@ -39,12 +39,21 @@
 #include <vigine/api/engine/iengine.h>
 #include <vigine/api/context/icontext.h>
 #include <vigine/api/messaging/factory.h>
+#include <vigine/api/messaging/isignalemitter.h>
+#include <vigine/api/messaging/isubscriber.h>
+#include <vigine/api/messaging/isubscriptiontoken.h>
+#include <vigine/api/messaging/messagefilter.h>
+#include <vigine/api/messaging/messagekind.h>
 #include <vigine/api/messaging/payload/factory.h>
 #include <vigine/api/messaging/payload/ipayloadregistry.h>
 #include <vigine/api/messaging/payload/payloadtypeid.h>
 #include <vigine/api/service/serviceid.h>
 #include <vigine/api/statemachine/istatemachine.h>
 #include <vigine/api/statemachine/stateid.h>
+#include <vigine/api/taskflow/factory.h>
+#include <vigine/api/taskflow/itaskflow.h>
+#include <vigine/api/taskflow/resultcode.h>
+#include <vigine/api/taskflow/taskid.h>
 #include <vigine/core/threading/ithreadmanager.h>
 #include <vigine/core/threading/threadaffinity.h>
 #include <vigine/impl/ecs/entitymanager.h>
@@ -53,7 +62,7 @@
 #include <vigine/impl/ecs/platform/platformservice.h>
 #include <vigine/impl/ecs/platform/windowsystem.h>
 #include <vigine/impl/messaging/signalemitter.h>
-#include <vigine/impl/taskflow/taskflow.h>
+#include <vigine/result.h>
 
 #include "system/texteditorsystem.h"
 #include "task/vulkan/initvulkantask.h"
@@ -72,9 +81,14 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace
 {
+
+using SubscriptionTokenList =
+    std::vector<std::unique_ptr<vigine::messaging::ISubscriptionToken>>;
+
 struct InitFlowDeps
 {
     vigine::EntityManager *entityManager{nullptr};
@@ -84,53 +98,55 @@ struct InitFlowDeps
     vigine::messaging::ISignalEmitter *signalEmitter{nullptr};
     std::shared_ptr<TextEditState> textEditState{};
     std::shared_ptr<TextEditorSystem> textEditorSystem{};
+    // Sink for the input-signal subscription tokens so they outlive the
+    // flow itself. The flow's runnable registry holds the subscriber
+    // (ProcessInputEventTask) by unique_ptr; the token must be released
+    // before the subscriber is destroyed, which the engine guarantees
+    // by tearing the FSM (and with it the flow) down before the host
+    // drops these tokens at scope exit in main().
+    SubscriptionTokenList *signalSubscriptions{nullptr};
 };
 
-std::unique_ptr<vigine::TaskFlow> createInitTaskFlow(const InitFlowDeps &deps)
+std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow(const InitFlowDeps &deps)
 {
-    auto taskFlow             = std::make_unique<vigine::TaskFlow>();
+    using vigine::taskflow::ResultCode;
+    using vigine::taskflow::TaskId;
+
+    auto taskFlow = vigine::taskflow::createTaskFlow();
 
     auto initWindowOwned      = std::make_unique<InitWindowTask>();
     initWindowOwned->setEntityManager(deps.entityManager);
     initWindowOwned->setPlatformServiceId(deps.platformServiceId);
-    auto *initWindow          = taskFlow->addTask(std::move(initWindowOwned));
 
     auto initVulkanOwned      = std::make_unique<InitVulkanTask>();
     initVulkanOwned->setEntityManager(deps.entityManager);
     initVulkanOwned->setPlatformServiceId(deps.platformServiceId);
     initVulkanOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *initVulkan          = taskFlow->addTask(std::move(initVulkanOwned));
 
     auto setupHelperOwned     = std::make_unique<SetupHelperGeometryTask>();
     setupHelperOwned->setEntityManager(deps.entityManager);
     setupHelperOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *setupHelperGeometry = taskFlow->addTask(std::move(setupHelperOwned));
 
     auto setupCubeOwned       = std::make_unique<SetupCubeTask>();
     setupCubeOwned->setEntityManager(deps.entityManager);
     setupCubeOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *setupCube           = taskFlow->addTask(std::move(setupCubeOwned));
 
     auto setupTextOwned       = std::make_unique<SetupTextTask>();
     setupTextOwned->setEntityManager(deps.entityManager);
     setupTextOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *setupText           = taskFlow->addTask(std::move(setupTextOwned));
 
     auto loadTexturesOwned    = std::make_unique<LoadTexturesTask>();
     loadTexturesOwned->setEntityManager(deps.entityManager);
     loadTexturesOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *loadTextures        = taskFlow->addTask(std::move(loadTexturesOwned));
 
     auto setupPlanesOwned     = std::make_unique<SetupTexturedPlanesTask>();
     setupPlanesOwned->setEntityManager(deps.entityManager);
     setupPlanesOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *setupTexturedPlanes = taskFlow->addTask(std::move(setupPlanesOwned));
 
     auto setupTextEditOwned   = std::make_unique<SetupTextEditTask>(
         deps.textEditState, deps.textEditorSystem);
     setupTextEditOwned->setEntityManager(deps.entityManager);
     setupTextEditOwned->setGraphicsServiceId(deps.graphicsServiceId);
-    auto *setupTextEdit       = taskFlow->addTask(std::move(setupTextEditOwned));
 
     auto runWindowOwned       = std::make_unique<RunWindowTask>();
     runWindowOwned->setEntityManager(deps.entityManager);
@@ -139,57 +155,104 @@ std::unique_ptr<vigine::TaskFlow> createInitTaskFlow(const InitFlowDeps &deps)
     runWindowOwned->setEngine(deps.engine);
     runWindowOwned->setTextEditorSystem(deps.textEditorSystem);
     runWindowOwned->setSignalEmitter(deps.signalEmitter);
-    auto *runWindow           = taskFlow->addTask(std::move(runWindowOwned));
 
-    auto *processInputOwned   = taskFlow->addTask(std::make_unique<ProcessInputEventTask>());
+    auto processInputOwned    = std::make_unique<ProcessInputEventTask>();
 
-    taskFlow->setSignalEmitter(deps.signalEmitter);
+    // Allocate a slot per task and bind the runnable to it. The modern
+    // ITaskFlow surface separates slot allocation (addTask returns a
+    // TaskId) from runnable attachment (attachTaskRun consumes the
+    // unique_ptr). We capture each TaskId for the onResult routing
+    // below and the ProcessInputEventTask raw pointer for the signal
+    // subscription so the bus can deliver to it after attach.
+    const TaskId initWindowId         = taskFlow->addTask();
+    const TaskId initVulkanId         = taskFlow->addTask();
+    const TaskId setupHelperId        = taskFlow->addTask();
+    const TaskId setupCubeId          = taskFlow->addTask();
+    const TaskId setupTextId          = taskFlow->addTask();
+    const TaskId loadTexturesId       = taskFlow->addTask();
+    const TaskId setupPlanesId        = taskFlow->addTask();
+    const TaskId setupTextEditId      = taskFlow->addTask();
+    const TaskId runWindowId          = taskFlow->addTask();
+    const TaskId processInputId       = taskFlow->addTask();
 
-    static_cast<void>(taskFlow->route(initWindow, initVulkan));
-    static_cast<void>(taskFlow->route(initVulkan, setupHelperGeometry));
-    static_cast<void>(taskFlow->route(setupHelperGeometry, setupCube));
-    static_cast<void>(taskFlow->route(setupCube, setupText));
-    static_cast<void>(taskFlow->route(setupText, loadTextures));
-    static_cast<void>(taskFlow->route(loadTextures, setupTexturedPlanes));
-    static_cast<void>(taskFlow->route(setupTexturedPlanes, setupTextEdit));
-    static_cast<void>(taskFlow->route(setupTextEdit, runWindow));
-    // Pool affinity wraps the subscriber in a scheduled-delivery adapter
-    // that hands the clone to IThreadManager::schedule. The engine's
-    // context owns the IThreadManager and the TaskFlow's signal path
-    // routes through ISignalEmitter, so input handlers run on a pool
-    // worker thread, off the Win32 message-pump thread, and clicking
-    // the window does not stall rendering if the handler grows heavier
-    // later.
-    static_cast<void>(taskFlow->signal(runWindow, processInputOwned,
-                                       kMouseButtonDownPayloadTypeId,
-                                       vigine::core::threading::ThreadAffinity::Pool));
-    static_cast<void>(taskFlow->signal(runWindow, processInputOwned,
-                                       kKeyDownPayloadTypeId,
-                                       vigine::core::threading::ThreadAffinity::Pool));
+    ProcessInputEventTask *processInputRaw = processInputOwned.get();
 
-    taskFlow->changeCurrentTaskTo(initWindow);
+    static_cast<void>(taskFlow->attachTaskRun(initWindowId, std::move(initWindowOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(initVulkanId, std::move(initVulkanOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(setupHelperId, std::move(setupHelperOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(setupCubeId, std::move(setupCubeOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(setupTextId, std::move(setupTextOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(loadTexturesId, std::move(loadTexturesOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(setupPlanesId, std::move(setupPlanesOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(setupTextEditId, std::move(setupTextEditOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(runWindowId, std::move(runWindowOwned)));
+    static_cast<void>(taskFlow->attachTaskRun(processInputId, std::move(processInputOwned)));
+
+    static_cast<void>(taskFlow->onResult(initWindowId, ResultCode::Success, initVulkanId));
+    static_cast<void>(taskFlow->onResult(initVulkanId, ResultCode::Success, setupHelperId));
+    static_cast<void>(taskFlow->onResult(setupHelperId, ResultCode::Success, setupCubeId));
+    static_cast<void>(taskFlow->onResult(setupCubeId, ResultCode::Success, setupTextId));
+    static_cast<void>(taskFlow->onResult(setupTextId, ResultCode::Success, loadTexturesId));
+    static_cast<void>(taskFlow->onResult(loadTexturesId, ResultCode::Success, setupPlanesId));
+    static_cast<void>(taskFlow->onResult(setupPlanesId, ResultCode::Success, setupTextEditId));
+    static_cast<void>(taskFlow->onResult(setupTextEditId, ResultCode::Success, runWindowId));
+
+    // The legacy taskFlow->signal() helper merely subscribed the
+    // target task's ISubscriber adapter on the supplied emitter. The
+    // modern ITaskFlow surface no longer carries a signal-bus wrapper
+    // (the runnable-attached callable scope only models the synchronous
+    // routing path); so the demo subscribes directly through the
+    // signal emitter. The ProcessInputEventTask derives from
+    // ISubscriber, so it plugs straight into subscribeSignal. Pool
+    // affinity is preserved by routing through the bus's underlying
+    // policy -- the shared-pool emitter built in main() dispatches
+    // delivered messages on a pool worker by default.
+    if (deps.signalEmitter != nullptr && deps.signalSubscriptions != nullptr)
+    {
+        auto *subscriber = static_cast<vigine::messaging::ISubscriber *>(processInputRaw);
+
+        vigine::messaging::MessageFilter mouseFilter{};
+        mouseFilter.kind   = vigine::messaging::MessageKind::Signal;
+        mouseFilter.typeId = kMouseButtonDownPayloadTypeId;
+        if (auto token = deps.signalEmitter->subscribeSignal(mouseFilter, subscriber))
+        {
+            deps.signalSubscriptions->push_back(std::move(token));
+        }
+
+        vigine::messaging::MessageFilter keyFilter{};
+        keyFilter.kind   = vigine::messaging::MessageKind::Signal;
+        keyFilter.typeId = kKeyDownPayloadTypeId;
+        if (auto token = deps.signalEmitter->subscribeSignal(keyFilter, subscriber))
+        {
+            deps.signalSubscriptions->push_back(std::move(token));
+        }
+    }
+
+    static_cast<void>(taskFlow->enqueue(initWindowId));
 
     return taskFlow;
 }
 
-std::unique_ptr<vigine::TaskFlow> createWorkTaskFlow()
+std::unique_ptr<vigine::taskflow::ITaskFlow> createWorkTaskFlow()
 {
-    auto taskFlow    = std::make_unique<vigine::TaskFlow>();
+    auto taskFlow = vigine::taskflow::createTaskFlow();
 
-    auto *renderCube = taskFlow->addTask(std::make_unique<RenderCubeTask>());
-    taskFlow->changeCurrentTaskTo(renderCube);
+    const vigine::taskflow::TaskId renderCubeId = taskFlow->addTask();
+    static_cast<void>(taskFlow->attachTaskRun(renderCubeId,
+                                              std::make_unique<RenderCubeTask>()));
+    static_cast<void>(taskFlow->enqueue(renderCubeId));
 
     return taskFlow;
 }
 
-std::unique_ptr<vigine::TaskFlow> createErrorTaskFlow()
+std::unique_ptr<vigine::taskflow::ITaskFlow> createErrorTaskFlow()
 {
-    return std::make_unique<vigine::TaskFlow>();
+    return vigine::taskflow::createTaskFlow();
 }
 
-std::unique_ptr<vigine::TaskFlow> createCloseTaskFlow()
+std::unique_ptr<vigine::taskflow::ITaskFlow> createCloseTaskFlow()
 {
-    return std::make_unique<vigine::TaskFlow>();
+    return vigine::taskflow::createTaskFlow();
 }
 
 } // namespace
@@ -282,14 +345,25 @@ int main()
     const vigine::statemachine::StateId closeState = fsm.addState();
 
     // Bind a TaskFlow per state through the modern FSM-drive surface.
+    // The signal-subscription token sink lives in main() because the
+    // engine tears the FSM (and with it the flow that owns the
+    // ProcessInputEventTask subscriber) down before we drop these
+    // tokens at scope exit; cancelling the tokens after the
+    // subscriber has been destroyed would dereference dangling
+    // memory, so the token's RAII cancel must run with the
+    // subscriber still alive (the engine guarantees this through the
+    // ordering above).
+    SubscriptionTokenList signalSubscriptions{};
+
     InitFlowDeps initDeps{};
-    initDeps.entityManager     = entityManager.get();
-    initDeps.platformServiceId = platformServiceId;
-    initDeps.graphicsServiceId = graphicsServiceId;
-    initDeps.engine            = engine.get();
-    initDeps.signalEmitter     = signalEmitter.get();
-    initDeps.textEditState     = textEditState;
-    initDeps.textEditorSystem  = textEditorSystem;
+    initDeps.entityManager       = entityManager.get();
+    initDeps.platformServiceId   = platformServiceId;
+    initDeps.graphicsServiceId   = graphicsServiceId;
+    initDeps.engine              = engine.get();
+    initDeps.signalEmitter       = signalEmitter.get();
+    initDeps.textEditState       = textEditState;
+    initDeps.textEditorSystem    = textEditorSystem;
+    initDeps.signalSubscriptions = &signalSubscriptions;
 
     if (auto regResult = fsm.addStateTaskFlow(initState, createInitTaskFlow(initDeps));
         regResult.isError())

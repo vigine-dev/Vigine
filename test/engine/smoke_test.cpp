@@ -5,8 +5,10 @@
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
+#include "vigine/api/taskflow/factory.h"
+#include "vigine/api/taskflow/itaskflow.h"
+#include "vigine/api/taskflow/taskid.h"
 #include "vigine/impl/engine/engine.h"
-#include "vigine/impl/taskflow/taskflow.h"
 #include "vigine/result.h"
 #include "vigine/core/threading/irunnable.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -281,16 +283,15 @@ TEST(EngineSmoke, RunFreezesTheContext)
 //   verifies the FSM-drive pump fired at least once before shutdown.
 //
 // Note on engine-token observation:
-//   The legacy @c vigine::TaskFlow::runCurrentTask path calls
-//   @c IContext::makeEngineToken when a context is bound through
-//   @c setContext. The modern aggregator built by @c createEngine is a
-//   @c vigine::context::AbstractContext, NOT a @c vigine::Context
-//   (legacy), so @c TaskFlow::setContext (which expects the legacy
-//   class) cannot be wired here. The probe still observes that it ran
-//   — that is enough to prove the engine pumped the flow each tick.
-//   The token-observation aspect is covered by the existing
-//   engine-token contract suite (@c scenario_21/22) and by the
-//   demos that exercise the legacy front door.
+//   The modern @c vigine::taskflow::ITaskFlow::runCurrentTask path runs
+//   the bound runnable without minting an engine token (the wrapper
+//   does not own an aggregator handle in this leaf -- that wiring is a
+//   follow-up). The probe still observes that it ran -- that is enough
+//   to prove the engine pumped the flow each tick. The token-observation
+//   aspect is covered by the existing engine-token contract suite
+//   (@c scenario_21/22) and by the engine-driven scenarios
+//   @c scenario_23 / @c scenario_24 that mint tokens off the engine
+//   context directly.
 // ---------------------------------------------------------------------------
 
 namespace
@@ -379,13 +380,19 @@ TEST(EngineSmoke, RunPumpsBoundTaskFlowEachTick)
 
     auto &fsm = engine->context().stateMachine();
 
-    auto flow = std::make_unique<vigine::TaskFlow>();
+    // Modern wiring: createTaskFlow -> addTask -> attachTaskRun ->
+    // enqueue. Each step is the wrapper's documented contract for
+    // turning an empty task slot into a runnable target the engine can
+    // pump.
+    auto flow = vigine::taskflow::createTaskFlow();
+    ASSERT_NE(flow, nullptr);
 
     auto       probeOwned = std::make_unique<ProbeTask>();
     ProbeTask *probe      = probeOwned.get();
-    auto      *task       = flow->addTask(std::move(probeOwned));
-    ASSERT_NE(task, nullptr);
-    flow->changeCurrentTaskTo(task);
+    const vigine::taskflow::TaskId probeId = flow->addTask();
+    ASSERT_TRUE(probeId.valid());
+    ASSERT_TRUE(flow->attachTaskRun(probeId, std::move(probeOwned)).isSuccess());
+    ASSERT_TRUE(flow->enqueue(probeId).isSuccess());
 
     const vigine::statemachine::StateId currentState = fsm.current();
     ASSERT_TRUE(currentState.valid());
@@ -442,13 +449,13 @@ TEST(EngineSmoke, AddStateTaskFlowRejectsBadInput)
     {
         const vigine::statemachine::StateId valid = fsm.current();
         const Result nullCase =
-            fsm.addStateTaskFlow(valid, std::unique_ptr<vigine::TaskFlow>{});
+            fsm.addStateTaskFlow(valid, std::unique_ptr<vigine::taskflow::ITaskFlow>{});
         EXPECT_TRUE(nullCase.isError());
     }
 
     // Stale id rejected.
     {
-        auto         flow = std::make_unique<vigine::TaskFlow>();
+        auto         flow = vigine::taskflow::createTaskFlow();
         const vigine::statemachine::StateId stale{42, 42};
         const Result staleCase = fsm.addStateTaskFlow(stale, std::move(flow));
         EXPECT_TRUE(staleCase.isError());
@@ -457,7 +464,7 @@ TEST(EngineSmoke, AddStateTaskFlowRejectsBadInput)
     // Valid registration succeeds.
     const vigine::statemachine::StateId valid = fsm.current();
     {
-        auto         flow = std::make_unique<vigine::TaskFlow>();
+        auto         flow = vigine::taskflow::createTaskFlow();
         const Result okCase = fsm.addStateTaskFlow(valid, std::move(flow));
         EXPECT_TRUE(okCase.isSuccess());
         EXPECT_NE(fsm.taskFlowFor(valid), nullptr);
@@ -465,7 +472,7 @@ TEST(EngineSmoke, AddStateTaskFlowRejectsBadInput)
 
     // Re-register on the same state errors out (one-shot per state).
     {
-        auto         flow = std::make_unique<vigine::TaskFlow>();
+        auto         flow = vigine::taskflow::createTaskFlow();
         const Result dupCase = fsm.addStateTaskFlow(valid, std::move(flow));
         EXPECT_TRUE(dupCase.isError());
     }

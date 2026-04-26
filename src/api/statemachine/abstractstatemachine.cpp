@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "statemachine/statetopology.h"
-#include "vigine/impl/taskflow/taskflow.h"
+#include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/result.h"
 #include "vigine/api/statemachine/routemode.h"
 #include "vigine/api/statemachine/stateid.h"
@@ -438,8 +438,8 @@ void AbstractStateMachine::fireInvalidationListeners(StateId oldState)
 // ---------------------------------------------------------------------------
 
 Result AbstractStateMachine::addStateTaskFlow(
-    StateId                          state,
-    std::unique_ptr<vigine::TaskFlow> taskFlow)
+    StateId                                       state,
+    std::unique_ptr<vigine::taskflow::ITaskFlow> taskFlow)
 {
     checkThreadAffinity();
 
@@ -479,22 +479,22 @@ Result AbstractStateMachine::addStateTaskFlow(
     return Result();
 }
 
-vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state)
+vigine::taskflow::ITaskFlow *AbstractStateMachine::taskFlowFor(StateId state)
 {
     // Non-const overload: the engine's per-tick fast path calls this
     // through a non-const IStateMachine reference because runCurrentTask
-    // mutates the flow's internal _currTask field. Delegating to the
-    // const overload through a const_cast keeps the lookup logic in one
-    // place; the cast is sound because the underlying registry slot
-    // owns the TaskFlow through a std::unique_ptr and "the registry
-    // hands out a non-owning pointer" is the public contract — the
-    // const overload was never doing more than reading the slot value
-    // out from under the registry mutex.
+    // mutates the flow's internal cursor and runnable bookkeeping.
+    // Delegating to the const overload through a const_cast keeps the
+    // lookup logic in one place; the cast is sound because the
+    // underlying registry slot owns the flow through a std::unique_ptr
+    // and "the registry hands out a non-owning pointer" is the public
+    // contract -- the const overload was never doing more than reading
+    // the slot value out from under the registry mutex.
     const auto *self = this;
-    return const_cast<vigine::TaskFlow *>(self->taskFlowFor(state));
+    return const_cast<vigine::taskflow::ITaskFlow *>(self->taskFlowFor(state));
 }
 
-const vigine::TaskFlow *AbstractStateMachine::taskFlowFor(StateId state) const
+const vigine::taskflow::ITaskFlow *AbstractStateMachine::taskFlowFor(StateId state) const
 {
     // Lookup is open to any thread: the engine's per-tick fast path
     // calls this from the controller thread, but tests and
