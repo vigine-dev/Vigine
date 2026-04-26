@@ -10,6 +10,11 @@ namespace vigine::core::threading
 class IThreadManager;
 } // namespace vigine::core::threading
 
+namespace vigine::payload
+{
+class IPayloadRegistry;
+} // namespace vigine::payload
+
 namespace vigine::messaging
 {
 
@@ -42,6 +47,10 @@ class SignalEmitter final : public AbstractSignalEmitter
      * The inline-only threading policy keeps the signal dispatch
      * synchronous on the caller's thread, which is the historical
      * default and the shape exercised by the facade contract case.
+     *
+     * No payload-id validation: callers that want
+     * @ref vigine::payload::IPayloadRegistry-backed validation use the
+     * registry-aware constructor below.
      */
     explicit SignalEmitter(vigine::core::threading::IThreadManager &threadManager);
 
@@ -55,6 +64,22 @@ class SignalEmitter final : public AbstractSignalEmitter
      */
     SignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                          vigine::messaging::BusConfig       config);
+
+    /**
+     * @brief Constructs the emitter with payload-id validation backed
+     *        by @p registry.
+     *
+     * Every @ref emit / @ref emitTo call resolves the payload's
+     * @ref vigine::payload::PayloadTypeId against @p registry before
+     * posting; an unregistered id surfaces as an error
+     * @ref vigine::Result with a diagnostic message instead of a
+     * silently-dropped message. @p registry must outlive the emitter
+     * (the engine context guarantees this through member declaration
+     * order).
+     */
+    SignalEmitter(vigine::core::threading::IThreadManager &threadManager,
+                  vigine::messaging::BusConfig             config,
+                  vigine::payload::IPayloadRegistry       &registry);
 
     ~SignalEmitter() override = default;
 
@@ -74,6 +99,17 @@ class SignalEmitter final : public AbstractSignalEmitter
     SignalEmitter &operator=(const SignalEmitter &) = delete;
     SignalEmitter(SignalEmitter &&)                  = delete;
     SignalEmitter &operator=(SignalEmitter &&)       = delete;
+
+  private:
+    /**
+     * @brief Optional non-owning reference to the payload-id registry.
+     *
+     * Set by the validation-aware constructor; remains @c nullptr
+     * for the legacy two no-validation constructors. When non-null,
+     * @ref emit / @ref emitTo consult the registry before posting and
+     * fail-fast on an unregistered id.
+     */
+    vigine::payload::IPayloadRegistry *_payloadRegistry{nullptr};
 };
 
 /**
@@ -120,5 +156,19 @@ class SignalEmitter final : public AbstractSignalEmitter
 [[nodiscard]] std::unique_ptr<ISignalEmitter>
     createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                         vigine::messaging::BusConfig       config);
+
+/**
+ * @brief Factory that builds a validation-aware emitter — every
+ *        @c emit / @c emitTo consults @p registry and rejects an
+ *        unregistered @ref vigine::payload::PayloadTypeId.
+ *
+ * @p registry must outlive the returned emitter; the engine context
+ * guarantees this through member declaration order. @p threadManager
+ * must outlive the registry.
+ */
+[[nodiscard]] std::unique_ptr<ISignalEmitter>
+    createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
+                        vigine::messaging::BusConfig             config,
+                        vigine::payload::IPayloadRegistry       &registry);
 
 } // namespace vigine::messaging

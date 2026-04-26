@@ -11,10 +11,13 @@
 #include "vigine/api/messaging/imessagepayload.h"
 #include "vigine/api/messaging/messagekind.h"
 #include "vigine/api/messaging/routemode.h"
+#include "vigine/api/messaging/payload/ipayloadregistry.h"
 #include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 #include "vigine/api/messaging/payload/isignalpayload.h"
 #include "vigine/core/threading/ithreadmanager.h"
+
+#include <sstream>
 
 namespace vigine::messaging
 {
@@ -152,12 +155,41 @@ SignalEmitter::SignalEmitter(
 {
 }
 
+SignalEmitter::SignalEmitter(
+    vigine::core::threading::IThreadManager &threadManager,
+    vigine::messaging::BusConfig             config,
+    vigine::payload::IPayloadRegistry       &registry)
+    : AbstractSignalEmitter{std::move(config), threadManager}
+    , _payloadRegistry{&registry}
+{
+}
+
+namespace
+{
+// Build a hex-formatted "0xNNNN" diagnostic for an unregistered id.
+[[nodiscard]] std::string formatUnregisteredId(
+    const char                            *prefix,
+    vigine::payload::PayloadTypeId         id)
+{
+    std::ostringstream out;
+    out << prefix << ": payload type id 0x" << std::hex << id.value
+        << " is not registered in the payload registry";
+    return out.str();
+}
+} // namespace
+
 vigine::Result
 SignalEmitter::emit(std::unique_ptr<ISignalPayload> payload)
 {
     if (!payload)
     {
         return vigine::Result{vigine::Result::Code::Error, "emit: null payload"};
+    }
+    if (_payloadRegistry != nullptr &&
+        !_payloadRegistry->isRegistered(payload->typeId()))
+    {
+        return vigine::Result{vigine::Result::Code::Error,
+                              formatUnregisteredId("emit", payload->typeId())};
     }
     auto msg = std::make_unique<SignalMessage>(
         std::move(payload),
@@ -178,6 +210,12 @@ SignalEmitter::emitTo(
     if (!payload)
     {
         return vigine::Result{vigine::Result::Code::Error, "emitTo: null payload"};
+    }
+    if (_payloadRegistry != nullptr &&
+        !_payloadRegistry->isRegistered(payload->typeId()))
+    {
+        return vigine::Result{vigine::Result::Code::Error,
+                              formatUnregisteredId("emitTo", payload->typeId())};
     }
     auto msg = std::make_unique<SignalMessage>(
         std::move(payload),
@@ -209,6 +247,14 @@ createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
                     vigine::messaging::BusConfig       config)
 {
     return std::make_unique<SignalEmitter>(threadManager, std::move(config));
+}
+
+std::unique_ptr<ISignalEmitter>
+createSignalEmitter(vigine::core::threading::IThreadManager &threadManager,
+                    vigine::messaging::BusConfig             config,
+                    vigine::payload::IPayloadRegistry       &registry)
+{
+    return std::make_unique<SignalEmitter>(threadManager, std::move(config), registry);
 }
 
 } // namespace vigine::messaging

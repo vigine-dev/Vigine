@@ -30,6 +30,11 @@ class IMessageBus;
 class ISignalEmitter;
 } // namespace vigine::messaging
 
+namespace vigine::payload
+{
+class IPayloadRegistry;
+} // namespace vigine::payload
+
 namespace vigine::service
 {
 class IService;
@@ -265,6 +270,25 @@ class IContext
      * entire lifetime.
      */
     [[nodiscard]] virtual engine::IEngine &engine() = 0;
+
+    /**
+     * @brief Returns the engine-wide payload-id registry.
+     *
+     * The aggregator builds a default @ref payload::IPayloadRegistry
+     * during construction (engine-bundled ranges Control / System /
+     * SystemExt / Reserved auto-registered under owner
+     * @c "vigine.core"). Application code registers its own user-range
+     * ids by calling @c registerRange on the returned reference; the
+     * default signal emitter validates every @ref ISignalEmitter::emit
+     * payload against this registry before posting it on the bus, so
+     * an unregistered id surfaces as an error result instead of a
+     * silently-dropped message.
+     *
+     * The registry is owned by the context for its full lifetime and
+     * cannot be replaced after construction — callers must not retain
+     * the reference past the context's destruction.
+     */
+    [[nodiscard]] virtual payload::IPayloadRegistry &payloadRegistry() = 0;
 
     // ------ Service registry ------
 

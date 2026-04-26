@@ -9,6 +9,8 @@
 #include "vigine/api/messaging/busconfig.h"
 #include "vigine/api/messaging/factory.h"
 #include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/payload/factory.h"
+#include "vigine/api/messaging/payload/ipayloadregistry.h"
 #include "vigine/api/service/abstractservice.h"
 #include "vigine/api/service/wellknown.h"
 #include "vigine/impl/ecs/entitymanager.h"
@@ -58,15 +60,20 @@ AbstractContext::AbstractContext(const ContextConfig &config)
     , _stateMachine{statemachine::createStateMachine()}
     , _taskFlow{taskflow::createTaskFlow()}
     // Step 6: engine-environment defaults. The aggregator owns a
-    // default EntityManager and SignalEmitter so every task observes a
-    // live IContext::entityManager() / signalEmitter() reference
-    // through @c apiToken() without anyone wiring them up explicitly.
+    // default EntityManager, payload registry, and SignalEmitter so
+    // every task observes a live IContext::entityManager() /
+    // payloadRegistry() / signalEmitter() reference through
+    // @c apiToken() without anyone wiring them up explicitly.
     // Applications override either default through @ref setEntityManager
     // / @ref setSignalEmitter and the prior owner is destroyed via the
-    // unique_ptr slot's RAII chain.
+    // unique_ptr slot's RAII chain. The payload registry is internal —
+    // not replaceable via setter — because the SignalEmitter holds a
+    // long-lived reference into it for its emit-time validation path.
     , _entityManager{std::make_unique<vigine::EntityManager>()}
+    , _payloadRegistry{payload::createPayloadRegistry()}
     , _signalEmitter{messaging::createSignalEmitter(*_threadManager,
-                                                    messaging::sharedBusConfig())}
+                                                    messaging::sharedBusConfig(),
+                                                    *_payloadRegistry)}
 // Steps 7--9: empty registries + cleared freeze flag + null engine
 // back-ref are covered by the member default initialisers declared
 // on @c AbstractContext. The default Platform/Graphics services are
@@ -253,6 +260,12 @@ void AbstractContext::setSignalEmitter(std::unique_ptr<messaging::ISignalEmitter
     if (!signalEmitter)
         return;
     _signalEmitter = std::move(signalEmitter);
+}
+
+payload::IPayloadRegistry &AbstractContext::payloadRegistry()
+{
+    assert(_payloadRegistry && "AbstractContext::payloadRegistry: slot is null");
+    return *_payloadRegistry;
 }
 
 engine::IEngine &AbstractContext::engine()
