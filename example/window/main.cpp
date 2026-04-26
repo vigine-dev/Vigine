@@ -88,10 +88,10 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow()
 
     using vigine::core::threading::ThreadAffinity;
     static_cast<void>(taskFlow->signal(runWindowId, processInputId,
-                                       example::payloads::mouseButtonDown,
+                                       MouseButtonDownPayload::staticTypeId(),
                                        ThreadAffinity::Pool));
     static_cast<void>(taskFlow->signal(runWindowId, processInputId,
-                                       example::payloads::keyDown,
+                                       KeyDownPayload::staticTypeId(),
                                        ThreadAffinity::Pool));
 
     static_cast<void>(taskFlow->setRoot(initWindowId));
@@ -148,27 +148,19 @@ int main()
         return 1;
     }
 
-    // Allocate the user-range payload ids the window input pipeline
-    // will publish through the registry's broker API. The engine-bundled
-    // ranges (Control / System / SystemExt / Reserved) are auto-
-    // registered by the context's default payload registry under owner
-    // "vigine.core"; the broker walks the user range
-    // ([0x10000 .. 0xFFFFFFFF]) and returns the first free slot, so the
-    // example never picks numeric ids itself. Every signalEmitter->emit
-    // through the engine context validates the payload's PayloadTypeId
-    // against this registry; an unregistered id surfaces as an error
-    // Result instead of a silently-dropped message on the bus.
-    auto &payloadRegistry = context.payloadRegistry();
-    auto mouseIdOpt = payloadRegistry.allocateId("example-window.mouse.button.down");
-    auto keyIdOpt   = payloadRegistry.allocateId("example-window.key.down");
-    if (!mouseIdOpt || !keyIdOpt)
-    {
-        std::cerr << "[example-window] payloadRegistry.allocateId returned nullopt"
-                  << std::endl;
-        return 1;
-    }
-    example::payloads::mouseButtonDown = *mouseIdOpt;
-    example::payloads::keyDown          = *keyIdOpt;
+    // Each window-event payload class registers itself with the
+    // engine's payload registry: the call allocates a fresh user-range
+    // id under a class-scoped owner string and stores it on a private
+    // static member. After the call, MouseButtonDownPayload::staticTypeId()
+    // and KeyDownPayload::staticTypeId() return the allocated ids; every
+    // payload instance reads the same id through its typeId() override.
+    // Engine-bundled ranges (Control / System / SystemExt / Reserved)
+    // are auto-registered by the context's default payload registry
+    // under owner "vigine.core"; the broker walks the user range
+    // ([0x10000 .. 0xFFFFFFFF]) and returns the first free slot, so
+    // the example never picks numeric ids itself.
+    MouseButtonDownPayload::registerWith(context.payloadRegistry());
+    KeyDownPayload::registerWith(context.payloadRegistry());
 
     // FSM states: Init -> Work -> Close, Error as the failure off-ramp.
     // Reuse the FSM's auto-provisioned default state as InitState so
