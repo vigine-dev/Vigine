@@ -54,6 +54,16 @@ class AbstractPayloadRegistry : public IPayloadRegistry
     [[nodiscard]] Result
         unregister(std::string_view owner) override;
 
+    [[nodiscard]] std::optional<PayloadRange>
+        allocateRange(std::uint32_t   count,
+                      std::string_view owner) override;
+
+    [[nodiscard]] std::optional<PayloadTypeId>
+        allocateId(std::string_view owner) override;
+
+    [[nodiscard]] std::vector<std::pair<std::string, PayloadRange>>
+        labelsOf(std::string_view ownerPrefix = std::string_view{}) const override;
+
   protected:
     AbstractPayloadRegistry();
 
@@ -90,6 +100,20 @@ class AbstractPayloadRegistry : public IPayloadRegistry
 
     [[nodiscard]] const RangeEntry *
         findContainingLocked(std::uint32_t value) const noexcept;
+
+    /**
+     * @brief Walks the user range looking for the first gap of size at
+     *        least @p count and returns its lower bound, or
+     *        @c std::nullopt when no such gap exists.
+     *
+     * Caller must hold the exclusive lock; the helper relies on the
+     * range table being stable for the duration of the scan and on the
+     * follow-up @ref registerRangeLocked happening under the same
+     * lock so concurrent @ref allocateRange calls do not race for the
+     * same gap.
+     */
+    [[nodiscard]] std::optional<std::uint32_t>
+        findFirstFreeBlockLocked(std::uint32_t count) const noexcept;
 
     mutable std::shared_mutex _mutex;
     std::vector<RangeEntry>   _ranges;

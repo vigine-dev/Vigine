@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "vigine/api/messaging/payload/payloadtypeid.h"
+
 namespace vigine::payload
 {
 /**
@@ -58,5 +60,21 @@ inline constexpr std::uint32_t kUserBegin      = 0x10000u;
  *        apart from user-owned ones.
  */
 inline constexpr const char *kEngineOwner = "vigine.core";
+
+/**
+ * @brief Inclusive `[min, max]` slice of the @c PayloadTypeId space.
+ *
+ * The two endpoints are themselves @c PayloadTypeId values so callers
+ * can use the result of an allocation directly as a payload id without
+ * unwrapping. The struct is a pure value aggregate; it carries no owner
+ * label — the @c IPayloadRegistry stores that separately under the
+ * registration owner string.
+ */
+// ENCAP EXEMPT: pure value aggregate
+struct PayloadRange
+{
+    PayloadTypeId min;
+    PayloadTypeId max;
+};
 
 } // namespace vigine::payload
