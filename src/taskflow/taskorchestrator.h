@@ -114,9 +114,8 @@ class TaskOrchestrator final : public vigine::core::graph::AbstractGraph
      * first registered target — every other mode (FanOut, Chain) is
      * configured at registration time but the runnable-attached
      * callable surface only walks one target per
-     * @ref AbstractTaskFlow::runCurrentTask call, matching the legacy
-     * @c vigine::TaskFlow shape that fires exactly one transition per
-     * task completion.
+     * @ref AbstractTaskFlow::runCurrentTask call: exactly one
+     * transition fires per task completion.
      */
     [[nodiscard]] TaskId nextTaskFor(TaskId source, ResultCode code) const noexcept;
 

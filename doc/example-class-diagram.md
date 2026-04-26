@@ -4,12 +4,6 @@
 classDiagram
 direction TB
 
-class InitState
-class WorkState
-class ErrorState
-class CloseState
-class AbstractState
-
 class InitWindowTask
 class RunWindowTask
 class SetupTextEditTask
@@ -35,11 +29,6 @@ class ISignalPayload
 class ISignalEmitter
 class ISubscriber
 class IMessageBus
-
-InitState --|> AbstractState
-WorkState --|> AbstractState
-ErrorState --|> AbstractState
-CloseState --|> AbstractState
 
 InitWindowTask --|> AbstractTask
 RunWindowTask --|> AbstractTask

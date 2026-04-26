@@ -99,20 +99,17 @@ The per-tick wiring inside `TaskFlow::runCurrentTask`:
    invalid-sentinel `StateId{}` rather than the live FSM state — the
    `IStateMachine::current()` lookup that will seed the bound state
    inside `runCurrentTask` is flagged as a follow-up on
-   [`src/impl/taskflow/taskflow.cpp`](../../src/impl/taskflow/taskflow.cpp).
+   [`src/api/taskflow/abstracttaskflow.cpp`](../../src/api/taskflow/abstracttaskflow.cpp).
    The engine's per-tick `taskFlowFor(current())` lookup already
    produces the per-state TaskFlow scoping described above, so a state
    transition between ticks switches WHICH flow is pumped without
-   relying on the in-token state-id field. On the legacy
-   `vigine::Context` aggregator, the factory ignores the argument and
-   returns `nullptr` unconditionally; on the modern
-   `vigine::context::Context` aggregator, the factory tolerates the
+   relying on the in-token state-id field. The
+   `vigine::context::Context` aggregator factory tolerates the
    sentinel and threads it into the concrete `EngineToken`.
-2. It calls `_currTask->setApi(token.get())` to publish that pointer
-   to the task. When the legacy path returned `nullptr`, the task
-   simply observes a null `api()`.
-3. It invokes `_currTask->run()` synchronously while the binding is
-   live.
+2. It calls the runnable's `setApi(token.get())` to publish that
+   pointer to the task.
+3. It invokes the runnable's `run()` synchronously while the binding
+   is live.
 4. An RAII `ApiBindingGuard` clears the binding (`setApi(nullptr)`)
    when the scope exits — even if `run()` throws.
 5. The `unique_ptr<IEngineToken>` releases the token after the guard
@@ -121,7 +118,7 @@ The per-tick wiring inside `TaskFlow::runCurrentTask`:
 The order matters. `setApi(nullptr)` must run **before** the `unique_ptr`
 releases the token, otherwise a stray callback on the task could
 observe a dangling `IEngineToken*` through `api()`. The guard pattern
-in `TaskFlow::runCurrentTask` is the canonical reference:
+in `AbstractTaskFlow::runCurrentTask` is the canonical reference:
 
 ```cpp
 // src/impl/taskflow/taskflow.cpp (post-#324)
@@ -227,16 +224,12 @@ Two distinct cases:
    references. The task should observe the typed `Expired` and return
    an error `Result` from `run()` so the flow does not advance.
 
-When the engine boots a modern `vigine::context::Context`, the token
-bound to your task is non-null and live for the duration of `run()`,
-so null checks on `api()` and `isAlive()` checks are not required for
+When the engine boots a `vigine::context::Context`, the token bound
+to your task is non-null and live for the duration of `run()`, so
+null checks on `api()` and `isAlive()` checks are not required for
 the first access inside `run()`. They become required as soon as the
 task posts work that may run on a different thread or after a future
-state hop. On the legacy `vigine::Context` path
-(`vigine::Context::makeEngineToken` returns `nullptr`; the path is
-deprecated and scheduled for removal in #282), the binding may be
-null — code that runs through that path should null-check `api()`
-defensively, even on the very first access inside `run()`.
+state hop.
 
 ### Best-practice example
 

@@ -30,24 +30,24 @@ If a task description does not include the project folder layout, use this secti
 
 ### Core engine classes
 
-- `Engine` owns `StateMachine`, `Context`, and `EntityManager`.
-- `Context` creates and stores service and system instances and gives access to `EntityManager`.
-- `StateMachine` stores `AbstractState` instances and transitions between them by `Result::Code`.
-- `AbstractState` owns one `TaskFlow` and drives `enter()` / `exit()` lifecycle hooks.
-- `TaskFlow` stores `AbstractTask` instances, routes them by `Result::Code`, and connects tasks by subscribing the receiver on an `ISignalEmitter` for a given `PayloadTypeId`.
-- `Result` is the shared execution result type for states, tasks, and transitions.
-- `EntityManager` owns engine entities.
+- `vigine::engine::IEngine` is the engine front door; `createEngine` returns an owning `unique_ptr<IEngine>` that wraps an `IContext` aggregator.
+- `IContext` aggregates `IStateMachine`, `ITaskFlow`, `IECS`, the system message bus, and the thread manager.
+- `IStateMachine` owns the state topology (state ids + transitions keyed by `Result::Code`) and a per-state `ITaskFlow` registry.
+- `ITaskFlow` stores task ids and runnable handles (`ITask`), routes them by `Result::Code`, and connects tasks via `ISignalEmitter` for a given `PayloadTypeId`.
+- `Result` is the shared execution result type for tasks and transitions.
+- `EntityManager` is the legacy entity owner used by examples that still walk the `Entity *` surface.
 - `Entity` is the base runtime entity type.
-- `AbstractService` and `AbstractSystem` carry their `Entity *` binding directly (composition); `AbstractTask` and `AbstractService` carry their `Context *` directly. The previous `ContextHolder` and `EntityBindingHost` mixins have been deleted.
+- `AbstractTask` carries the bound `IEngineToken` pointer; concrete tasks reach engine subsystems through the token returned by `api()`.
+- `vigine::service::AbstractService` is the modern Level-1 service base; `vigine::ecs::AbstractSystem` is the modern system base that carries its `Entity *` binding by composition.
 
 ### Inheritance overview
 
-- `AbstractTask` (holds `Context *` by composition)
-- `AbstractService` (holds `Context *` and `Entity *` by composition)
-- `AbstractSystem : ISystem` (holds `Entity *` by composition)
-- `PlatformService : AbstractService`
-- `GraphicsService : AbstractService`
-- `DatabaseService : AbstractService`
+- `AbstractTask : ITask` (holds the bound `IEngineToken *` by composition)
+- `vigine::service::AbstractService : IService`
+- `vigine::ecs::AbstractSystem : ISystem` (holds `Entity *` by composition)
+- `PlatformService : vigine::service::AbstractService`
+- `GraphicsService : vigine::service::AbstractService`
+- `DatabaseService : vigine::service::AbstractService`
 - `WindowSystem : AbstractSystem`
 - `WinAPIComponent : WindowComponent` (Windows-only native window implementation)
 - `CocoaWindowComponent : WindowComponent` (macOS native window implementation backed by `NSWindow` + `CAMetalLayer`)
@@ -83,7 +83,7 @@ If a task description does not include the project folder layout, use this secti
 
 - `ISignalPayload` is the base payload interface carried by signal messages; each payload declares its `PayloadTypeId`.
 - `ISignalEmitter` is the facade that posts payloads onto the underlying `IMessageBus` and exposes `subscribeSignal` for handlers.
-- `TaskFlow::signal(from, to, PayloadTypeId, ThreadAffinity)` connects two tasks by subscribing the receiver (as `ISubscriber`) for a payload id, with an optional thread-affinity for the delivery hop.
+- `ITaskFlow` connects two tasks by subscribing the receiver (as `ISubscriber`) for a payload id, with an optional thread-affinity for the delivery hop.
 - `IWindowEventHandlerComponent` defines the window input and lifecycle callback interface.
 - `AbstractComponent` and `AbstractEntity` are base ECS abstractions kept for component/entity specializations.
 - Window Vulkan example init flow includes `SetupTextTask` and `SetupTextEditTask` to render voxelized text and set up an in-world text editor.

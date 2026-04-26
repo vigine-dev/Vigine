@@ -1,7 +1,5 @@
 #include <vigine/api/taskflow/abstracttask.h>
 
-#include "vigine/context.h"
-
 namespace vigine
 {
 
@@ -18,15 +16,5 @@ engine::IEngineToken *AbstractTask::api() noexcept
 {
     return _api;
 }
-
-void AbstractTask::setContext(Context &context)
-{
-    _context = &context;
-    contextChanged();
-}
-
-Context *AbstractTask::context() const { return _context; }
-
-void AbstractTask::contextChanged() {}
 
 } // namespace vigine

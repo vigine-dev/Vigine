@@ -15,7 +15,6 @@
 
 namespace vigine
 {
-class Engine;
 class Entity;
 
 using EntityUPtr = std::unique_ptr<Entity>;
@@ -26,8 +25,7 @@ using EntityUPtr = std::unique_ptr<Entity>;
  * @ref createEntity allocates a new Entity, stamps it with a fresh
  * monotonic @ref IEntity::Id, and keeps it alive until
  * @ref removeEntity releases it. Optional string aliases registered
- * via @ref addAlias allow lookup by @ref getEntityByAlias. Instances
- * are constructed by @ref Engine.
+ * via @ref addAlias allow lookup by @ref getEntityByAlias.
  *
  * Closes the legacy entity manager chain: derives from
  * @ref AbstractEntityManager, which in turn implements the pure
@@ -39,10 +37,10 @@ class EntityManager final : public AbstractEntityManager
     /**
      * @brief Constructs an empty entity manager.
      *
-     * Public because consumers of the modern @ref vigine::engine::IEngine
-     * front door build their own @ref EntityManager alongside the
-     * engine -- the modern @ref vigine::IContext aggregator carries
-     * the @ref vigine::ecs::IECS wrapper instead, and no legacy
+     * Consumers of the @ref vigine::engine::IEngine front door build
+     * their own @ref EntityManager alongside the engine -- the
+     * @ref vigine::IContext aggregator carries the
+     * @ref vigine::ecs::IECS wrapper instead, and no legacy
      * entity-manager handle is exposed through it. Examples and
      * downstream embedders construct one directly here, hand it to
      * each task that still walks the legacy @c Entity* surface, and

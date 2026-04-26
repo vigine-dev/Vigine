@@ -11,9 +11,8 @@ project(example-projects)
 # (Win32 today; @c example/window/CMakeLists.txt early-returns on
 # non-Windows hosts, keeping a Linux / macOS configure clean).
 #
-# The PostgreSQL example still consumes the legacy
-# @c vigine::Context::service(id, name, Property) factory and stays
-# gated OFF until its own consumer migration ships through #329.
+# The PostgreSQL example stays gated OFF until its own consumer
+# migration ships through #329.
 option(BUILD_EXAMPLE_POSTGRESQL "Build combined PostgreSQL example project (requires #329 consumer migration)" OFF)
 option(BUILD_EXAMPLE_WINDOW "Build example-window project" ON)
 

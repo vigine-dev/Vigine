@@ -3,7 +3,7 @@
 /**
  * @file abstracttask.h
  * @brief Stateful base class for a single unit of work run inside a
- *        TaskFlow.
+ *        task flow.
  */
 
 #include "vigine/api/taskflow/itask.h"
@@ -17,8 +17,6 @@ class IEngineToken;
 namespace vigine
 {
 
-class Context;
-
 /**
  * @brief Stateful @ref ITask base.
  *
@@ -26,23 +24,13 @@ class Context;
  * @ref vigine::engine::IEngineToken contract documented in
  * @c architecture.md § R-StateScope: it stores the non-owning token
  * pointer bound by the engine via @ref setApi and exposes it through
- * @ref api. Concrete tasks override @ref run; they reach engine
- * subsystems through @ref api or through the legacy @ref context
- * accessor while the umbrella branch is still mid-migration to a
- * token-only world.
+ * @ref api. Concrete tasks override @ref run and reach engine
+ * subsystems exclusively through the bound token returned by
+ * @ref api.
  *
- * Composition, not inheritance:
- *   - The base inherits from @ref ITask only. The previous
- *     @c ContextHolder mixin has been deleted (issue #283); the
- *     @c Context* pointer is now held as a private member and
- *     surfaced through @ref setContext / @ref context /
- *     @ref contextChanged for tasks that have not yet been migrated
- *     off direct context access.
- *
- * Strict encapsulation: the @c _api token pointer and the
- * @c _context pointer are both @c private. The @ref setApi and
- * @ref api overrides are marked @c final so concrete tasks cannot
- * bypass the binding contract.
+ * Strict encapsulation: the @c _api token pointer is @c private. The
+ * @ref setApi and @ref api overrides are marked @c final so concrete
+ * tasks cannot bypass the binding contract.
  */
 class AbstractTask : public ITask
 {
@@ -53,26 +41,10 @@ class AbstractTask : public ITask
 
     [[nodiscard]] engine::IEngineToken *api() noexcept override final;
 
-    void setContext(Context &context);
-
   protected:
     AbstractTask();
 
-    Context *context() const;
-    virtual void contextChanged();
-
   private:
-    /**
-     * @brief Non-owning context pointer bound externally via
-     *        @ref setContext.
-     *
-     * Held by composition; the previous @c ContextHolder mixin has
-     * been deleted (issue #283). Concrete tasks that have not yet
-     * been migrated off direct context access reach the context via
-     * @ref context.
-     */
-    Context *_context{nullptr};
-
     /**
      * @brief Non-owning engine token bound by the task flow before
      *        every @ref run invocation.

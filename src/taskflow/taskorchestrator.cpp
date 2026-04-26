@@ -266,8 +266,7 @@ TaskId TaskOrchestrator::nextTaskFor(TaskId source, ResultCode code) const noexc
     // Walk the outgoing transition edges of @p source and pick the first
     // edge that carries the matching @ref ResultCode. The graph stores
     // edges in registration order; FirstMatch resolution maps to the
-    // first hit, which matches the legacy @c vigine::TaskFlow shape and
-    // the back-compat path documented on @ref RouteMode::FirstMatch.
+    // first hit, per the path documented on @ref RouteMode::FirstMatch.
     const auto edges
         = query().outEdgesOfKind(srcNode, vigine::taskflow::edge_kind::Transition);
     for (const auto eid : edges)

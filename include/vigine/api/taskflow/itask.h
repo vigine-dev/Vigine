@@ -8,11 +8,8 @@
  * @ref ITask is the task-side half of the @ref vigine::engine::IEngineToken
  * contract documented in @c architecture.md § R-StateScope. The task
  * flow hands every concrete task a state-scoped @ref IEngineToken via
- * @ref setApi before invoking @ref run; tasks SHOULD prefer the bound
- * token for engine access. Legacy @c context()-based access remains
- * available during the v0.1.0 migration window for tasks still derived
- * from the @ref vigine::ContextHolder mixin; future versions will
- * remove the legacy path and require the bound token exclusively.
+ * @ref setApi before invoking @ref run; tasks reach engine subsystems
+ * exclusively through the bound token returned by @ref api.
  *
  * Lifecycle:
  *   - @ref setApi binds a non-owning @ref vigine::engine::IEngineToken
@@ -27,7 +24,7 @@
  *   - @ref run is the canonical task-facing entry point. The task
  *     flow calls it once per scheduled tick. The return @ref Result
  *     drives the result-code-keyed transitions registered on the
- *     enclosing @ref vigine::TaskFlow.
+ *     enclosing @ref vigine::taskflow::ITaskFlow.
  *
  * Self-destruct contract (architecture.md § R-StateScope, mechanism
  * step 5): a task whose bound state has been torn down out from under

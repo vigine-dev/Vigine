@@ -95,10 +95,7 @@ Result AbstractTaskFlow::onResult(
 // looks the runnable for @ref _current up, executes it through the
 // R-StateScope binding shape (setApi -> run -> setApi(nullptr) under an
 // RAII guard), and advances @c _current through the transition edge
-// matching the runnable's reported outcome. The shape mirrors the
-// legacy @c vigine::TaskFlow::runCurrentTask path the engine drives
-// every pump tick today, so callers migrating off the legacy front
-// door observe identical lifecycle and routing semantics.
+// matching the runnable's reported outcome.
 // ---------------------------------------------------------------------------
 
 namespace
@@ -119,10 +116,9 @@ namespace
         default:
             // Every non-Success outcome maps to Error so callers wiring
             // an explicit error route through @c onResult observe the
-            // failure path; the legacy @c TaskFlow::runCurrentTask
-            // implements the same first-match resolution against
-            // @c Result::Code, so behaviour stays identical for tasks
-            // that only distinguish Success vs. Error.
+            // failure path. Tasks that only distinguish Success vs.
+            // Error see the closed two-outcome shape the orchestrator
+            // stores on transition edges.
             return ResultCode::Error;
     }
 }
@@ -170,32 +166,26 @@ void AbstractTaskFlow::runCurrentTask()
     {
         // Cursor sits on a slot with no runnable attached. Clear the
         // cursor so @ref hasTasksToRun reports false on the next probe
-        // and the engine pump falls through to the FSM drain alone --
-        // the same shape the legacy @c TaskFlow::runCurrentTask takes
-        // when it observes a null @c _currTask.
+        // and the engine pump falls through to the FSM drain alone.
         _current = TaskId{};
         return;
     }
 
     vigine::ITask *runnable = it->second.get();
 
-    // Execute the runnable. Concrete tasks today derive from
+    // Execute the runnable. Concrete tasks derive from
     // @ref vigine::AbstractTask which makes @c setApi / @c api final
     // and stores the bound token; the engine wires the token in this
     // call site through @c setApi before @c run and clears it through
     // an RAII guard so a throwing @c run still leaves the task with a
     // null binding.
     //
-    // The legacy @c vigine::TaskFlow path mints the engine token from
-    // the bound @c Context inside @c runCurrentTask. The modern wrapper
-    // does NOT yet thread an aggregator into the flow (UD-3 keeps the
-    // wrapper substrate-only); the engine-token binding is therefore
-    // skipped here and set up by the engine when it migrates the
-    // per-state flow registry to the modern surface in a follow-up.
-    // Tasks that today use @c api() observe a null token (they
-    // already branch on null per the @c IEngineToken contract); tasks
-    // that use the legacy @c context() accessor keep working through
-    // their existing @c setContext binding the caller wires manually.
+    // The wrapper does NOT yet thread an aggregator into the flow (UD-3
+    // keeps the wrapper substrate-only); the engine-token binding is
+    // therefore skipped here and set up by the engine when it migrates
+    // the per-state flow registry in a follow-up. Tasks that today use
+    // @c api() observe a null token and branch on null per the
+    // @c IEngineToken contract.
     struct ApiBindingGuard
     {
         vigine::ITask *task;
