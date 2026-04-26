@@ -225,6 +225,14 @@ Result AbstractEngine::run()
             vigine::taskflow::ITaskFlow *boundFlow    = fsm.taskFlowFor(currentState);
             if (boundFlow != nullptr && boundFlow->hasTasksToRun())
             {
+                // Wire the engine context into the bound flow so
+                // runCurrentTask can mint a per-tick IEngineToken via
+                // IContext::makeEngineToken and bind it on the task
+                // through setApi. The assignment is idempotent, so it
+                // is safe to repeat each tick; the flow stores a
+                // non-owning back-pointer.
+                boundFlow->setContext(_context.get());
+
                 // runCurrentTask handles the per-task setApi /
                 // setApi(nullptr) lifecycle on its own through its
                 // RAII guard; the engine just tells it to advance

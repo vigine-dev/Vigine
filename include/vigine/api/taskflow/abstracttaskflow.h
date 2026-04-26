@@ -11,6 +11,7 @@
 
 namespace vigine
 {
+class IContext;
 class ITask;
 } // namespace vigine
 
@@ -114,6 +115,7 @@ class AbstractTaskFlow : public ITaskFlow
                                        std::unique_ptr<vigine::ITask> task) override;
     void                 runCurrentTask() override;
     [[nodiscard]] bool   hasTasksToRun() const noexcept override;
+    void                 setContext(vigine::IContext *context) noexcept override;
 
     // ------ ITaskFlow: flow control ------
 
@@ -228,6 +230,19 @@ class AbstractTaskFlow : public ITaskFlow
      */
     std::unordered_map<TaskId, std::unique_ptr<vigine::ITask>, TaskIdHasher>
         _runnables;
+
+    /**
+     * @brief Non-owning back-pointer to the @ref vigine::IContext used to
+     *        mint per-tick @ref vigine::engine::IEngineToken handles in
+     *        @ref runCurrentTask.
+     *
+     * Installed by the @ref vigine::engine::AbstractEngine pump via
+     * @ref setContext before each tick of the bound flow. @c nullptr until
+     * the first @ref setContext call lands; in that case @ref runCurrentTask
+     * falls back to the no-token shape (the api() pointer the task observes
+     * is @c nullptr).
+     */
+    vigine::IContext *_context{nullptr};
 };
 
 } // namespace vigine::taskflow

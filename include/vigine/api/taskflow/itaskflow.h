@@ -9,6 +9,7 @@
 
 namespace vigine
 {
+class IContext;
 class ITask;
 
 /**
@@ -254,6 +255,22 @@ class ITaskFlow
      * through to the FSM drain + main-thread pump alone.
      */
     [[nodiscard]] virtual bool hasTasksToRun() const noexcept = 0;
+
+    /**
+     * @brief Installs the @ref vigine::IContext used by @ref runCurrentTask
+     *        to mint the per-tick @ref vigine::engine::IEngineToken.
+     *
+     * The flow stores the context as a non-owning back-pointer so the
+     * R-StateScope binding shape (mint -> setApi -> run -> setApi(nullptr))
+     * inside @ref runCurrentTask reaches the engine-token factory. The
+     * @ref vigine::engine::AbstractEngine pump installs this back-pointer
+     * once per tick on the bound flow before driving it; the assignment
+     * is idempotent and a @c nullptr argument detaches the binding so a
+     * subsequent @ref runCurrentTask call falls back to the no-token
+     * shape, which is the path tests take when they drive the flow
+     * directly without going through the engine pump.
+     */
+    virtual void setContext(vigine::IContext *context) noexcept = 0;
 
     // ------ Flow control ------
 
