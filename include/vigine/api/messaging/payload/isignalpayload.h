@@ -18,11 +18,22 @@ namespace vigine::messaging
  * bus infrastructure keeps routing by the underlying
  * @ref vigine::payload::PayloadTypeId returned by @ref typeId.
  *
- * Concrete signal payloads derive from this class, provide a unique
- * @ref vigine::payload::PayloadTypeId, and store their fields as @c const
- * members set at construction time. Immutability is required by the
- * messaging contract: the bus may deliver the same payload pointer to
- * multiple subscribers without copying.
+ * Concrete signal payloads derive from this class, provide a unique,
+ * registered @ref vigine::payload::PayloadTypeId, and store their fields
+ * as @c const members set at construction time. Immutability is required
+ * by the messaging contract: the bus may deliver the same payload
+ * pointer to multiple subscribers without copying.
+ *
+ * Registration requirement: the engine does NOT auto-register
+ * user-defined payload types. Each application is responsible for
+ * obtaining its @ref vigine::payload::PayloadTypeId from
+ * @ref vigine::payload::IPayloadRegistry — typically through
+ * @c allocateId / @c allocateRange on the registry exposed via
+ * @c IContext::payloadRegistry — before any @c TaskFlow::signal
+ * subscription or @c ISignalEmitter::emit call that references it.
+ * An unregistered id is rejected at emit time and never matches a
+ * subscription at dispatch time. Engine-bundled payload types arrive
+ * pre-registered; only application-defined subclasses need this glue.
  *
  * Naming: @c ISignalPayload follows INV-10 — @c I prefix for a pure-virtual
  * interface with no state.
