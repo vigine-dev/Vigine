@@ -226,14 +226,22 @@ Result AbstractEngine::run()
             if (boundFlow != nullptr && boundFlow->hasTasksToRun())
             {
                 /*
-                 * Wire the engine context into the bound flow so
-                 * runCurrentTask can mint a per-tick IEngineToken via
-                 * IContext::makeEngineToken and bind it on the task
-                 * through setApi. The assignment is idempotent, so it
-                 * is safe to repeat each tick; the flow stores a
-                 * non-owning back-pointer.
+                 * Wire the engine context into the bound flow so it
+                 * can mint per-state IEngineTokens via
+                 * IContext::makeEngineToken. The assignment is
+                 * idempotent; the flow stores a non-owning back-pointer.
                  */
                 boundFlow->setContext(_context.get());
+
+                /*
+                 * Drive the per-state token lifecycle: tell the flow
+                 * which FSM state is currently active. The flow keeps
+                 * the same token across ticks for as long as the state
+                 * is active and only mints a fresh one (firing
+                 * expiration callbacks on the prior token's subscribers)
+                 * when the state genuinely changes between ticks.
+                 */
+                boundFlow->setActiveState(currentState);
 
                 /*
                  * runCurrentTask handles the per-task setApi /
