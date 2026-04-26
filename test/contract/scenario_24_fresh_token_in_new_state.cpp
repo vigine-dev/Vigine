@@ -108,27 +108,64 @@ struct EngineFixtureLite
     ProbeTask                               *probeB{nullptr};
 };
 
+// RAII guard that always shuts the engine down and joins the driver
+// thread on scope exit. Tests that start a driver std::thread and then
+// run ASSERT_* statements would otherwise let a still-joinable
+// std::thread destructor call std::terminate() on an early ASSERT_*
+// failure return. The guard makes the cleanup path failure-safe: even
+// if an ASSERT_* trips between engine->run() launch and the explicit
+// driver.join(), the destructor stops the engine and joins the thread.
+struct DriverGuard
+{
+    vigine::engine::IEngine *engine{nullptr};
+    std::thread             *driver{nullptr};
+
+    ~DriverGuard()
+    {
+        if (engine != nullptr)
+        {
+            engine->shutdown();
+        }
+        if (driver != nullptr && driver->joinable())
+        {
+            driver->join();
+        }
+    }
+};
+
 // Build the engine, register two states, and wire a probe TaskFlow to
 // each. Returns the bundle ready for run(); the FSM is unbound, so
-// every mutator above is safe from the test thread.
+// every mutator above is safe from the test thread. Each probe pointer
+// is published into the fixture only after the matching TaskFlow has
+// been successfully moved into the FSM -- a registration failure
+// leaves the corresponding probeA/probeB null so callers can ASSERT_NE
+// on them before any dereference (the TaskFlow that owned the probe
+// is moved into the FSM, so a soft EXPECT_* failure used to leave the
+// raw pointer dangling).
 [[nodiscard]] EngineFixtureLite buildEngineWithFlowsOnBothStates()
 {
     EngineFixtureLite fx;
     fx.engine = vigine::engine::createEngine(vigine::engine::EngineConfig{});
-    EXPECT_NE(fx.engine, nullptr) << "createEngine must hand back a live engine";
-    if (!fx.engine)
+    if (fx.engine == nullptr)
     {
+        ADD_FAILURE() << "createEngine must hand back a live engine";
         return fx;
     }
 
     auto &fsm = fx.engine->context().stateMachine();
     fx.stateA = fsm.addState();
     fx.stateB = fsm.addState();
-    EXPECT_TRUE(fx.stateA.valid());
-    EXPECT_TRUE(fx.stateB.valid());
+    if (!fx.stateA.valid() || !fx.stateB.valid())
+    {
+        ADD_FAILURE() << "addState must yield valid state ids for both StateA and StateB";
+        return fx;
+    }
 
-    const auto si = fsm.setInitial(fx.stateA);
-    EXPECT_TRUE(si.isSuccess());
+    if (!fsm.setInitial(fx.stateA).isSuccess())
+    {
+        ADD_FAILURE() << "setInitial(StateA) must succeed before run()";
+        return fx;
+    }
 
     // Wire a probe flow on each state so a transition between them
     // does not turn into a "no flow registered for current state"
@@ -137,22 +174,38 @@ struct EngineFixtureLite
     {
         auto flow        = std::make_unique<vigine::TaskFlow>();
         auto probeOwned  = std::make_unique<ProbeTask>();
-        fx.probeA        = probeOwned.get();
+        auto *probeRaw   = probeOwned.get();
         auto *registered = flow->addTask(std::move(probeOwned));
-        EXPECT_NE(registered, nullptr);
+        if (registered == nullptr)
+        {
+            ADD_FAILURE() << "TaskFlow::addTask must register the StateA probe task";
+            return fx;
+        }
         flow->changeCurrentTaskTo(registered);
-        const auto reg = fsm.addStateTaskFlow(fx.stateA, std::move(flow));
-        EXPECT_TRUE(reg.isSuccess());
+        if (!fsm.addStateTaskFlow(fx.stateA, std::move(flow)).isSuccess())
+        {
+            ADD_FAILURE() << "addStateTaskFlow(StateA) must succeed";
+            return fx;
+        }
+        fx.probeA = probeRaw;
     }
     {
         auto flow        = std::make_unique<vigine::TaskFlow>();
         auto probeOwned  = std::make_unique<ProbeTask>();
-        fx.probeB        = probeOwned.get();
+        auto *probeRaw   = probeOwned.get();
         auto *registered = flow->addTask(std::move(probeOwned));
-        EXPECT_NE(registered, nullptr);
+        if (registered == nullptr)
+        {
+            ADD_FAILURE() << "TaskFlow::addTask must register the StateB probe task";
+            return fx;
+        }
         flow->changeCurrentTaskTo(registered);
-        const auto reg = fsm.addStateTaskFlow(fx.stateB, std::move(flow));
-        EXPECT_TRUE(reg.isSuccess());
+        if (!fsm.addStateTaskFlow(fx.stateB, std::move(flow)).isSuccess())
+        {
+            ADD_FAILURE() << "addStateTaskFlow(StateB) must succeed";
+            return fx;
+        }
+        fx.probeB = probeRaw;
     }
 
     return fx;
@@ -188,6 +241,8 @@ TEST(EngineFsmFreshToken, FreshTokenMintedAfterTransitionIsBoundToNewState)
 {
     auto fx = buildEngineWithFlowsOnBothStates();
     ASSERT_NE(fx.engine, nullptr);
+    ASSERT_NE(fx.probeA, nullptr);
+    ASSERT_NE(fx.probeB, nullptr);
 
     auto &context = fx.engine->context();
     auto &fsm     = context.stateMachine();
@@ -206,6 +261,7 @@ TEST(EngineFsmFreshToken, FreshTokenMintedAfterTransitionIsBoundToNewState)
             const auto r = fx.engine->run();
             EXPECT_TRUE(r.isSuccess());
         });
+    DriverGuard guard{fx.engine.get(), &driver};
 
     // Wait for the engine to pump the StateA flow at least once -- this
     // confirms the FSM-drive path is alive before the test asks for a
@@ -263,6 +319,8 @@ TEST(EngineFsmFreshToken, FreshTokenMintedAfterTransitionIsBoundToNewState)
 
     fx.engine->shutdown();
     driver.join();
+    guard.engine = nullptr;
+    guard.driver = nullptr;
     EXPECT_FALSE(fx.engine->isRunning());
 }
 
@@ -279,6 +337,8 @@ TEST(EngineFsmFreshToken, StateBTokenSurvivesUntilAnotherTransitionLeavesStateB)
 {
     auto fx = buildEngineWithFlowsOnBothStates();
     ASSERT_NE(fx.engine, nullptr);
+    ASSERT_NE(fx.probeA, nullptr);
+    ASSERT_NE(fx.probeB, nullptr);
 
     auto &context = fx.engine->context();
     auto &fsm     = context.stateMachine();
@@ -289,6 +349,7 @@ TEST(EngineFsmFreshToken, StateBTokenSurvivesUntilAnotherTransitionLeavesStateB)
             const auto r = fx.engine->run();
             EXPECT_TRUE(r.isSuccess());
         });
+    DriverGuard guard{fx.engine.get(), &driver};
 
     // Wait for the engine to pump StateA once, then transition to
     // StateB and wait for the StateB flow to start firing.
@@ -348,6 +409,8 @@ TEST(EngineFsmFreshToken, StateBTokenSurvivesUntilAnotherTransitionLeavesStateB)
 
     fx.engine->shutdown();
     driver.join();
+    guard.engine = nullptr;
+    guard.driver = nullptr;
     EXPECT_FALSE(fx.engine->isRunning());
 }
 

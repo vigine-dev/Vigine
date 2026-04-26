@@ -124,44 +124,97 @@ struct EngineFixtureLite
     ProbeTask                               *probe{nullptr};
 };
 
+// RAII guard that always shuts the engine down and joins the driver
+// thread on scope exit. Tests that start a driver std::thread and then
+// run ASSERT_* statements would otherwise let a still-joinable
+// std::thread destructor call std::terminate() on an early ASSERT_*
+// failure return. The guard makes the cleanup path failure-safe: even
+// if an ASSERT_* trips between engine->run() launch and the explicit
+// driver.join(), the destructor stops the engine and joins the thread.
+struct DriverGuard
+{
+    vigine::engine::IEngine *engine{nullptr};
+    std::thread             *driver{nullptr};
+
+    ~DriverGuard()
+    {
+        if (engine != nullptr)
+        {
+            engine->shutdown();
+        }
+        if (driver != nullptr && driver->joinable())
+        {
+            driver->join();
+        }
+    }
+};
+
+// Build the engine and wire a probe TaskFlow on StateA. Returns a
+// fixture with @c probe == nullptr if any setup step fails so callers
+// can ASSERT_NE on it before dereferencing -- the previous EXPECT_*
+// soft-failure path could let a failing test reach the live engine
+// path with a dangling probe pointer (the TaskFlow that owned the
+// probe is moved into the FSM, so a registration failure leaves
+// fx.probe pointing into a destroyed task).
 [[nodiscard]] EngineFixtureLite buildEngineWithTwoStates()
 {
     EngineFixtureLite fx;
     fx.engine = vigine::engine::createEngine(vigine::engine::EngineConfig{});
-    EXPECT_NE(fx.engine, nullptr) << "createEngine must hand back a live engine";
-    if (!fx.engine)
+    if (fx.engine == nullptr)
     {
+        ADD_FAILURE() << "createEngine must hand back a live engine";
         return fx;
     }
 
     auto &fsm = fx.engine->context().stateMachine();
     fx.stateA = fsm.addState();
     fx.stateB = fsm.addState();
-    EXPECT_TRUE(fx.stateA.valid());
-    EXPECT_TRUE(fx.stateB.valid());
+    if (!fx.stateA.valid() || !fx.stateB.valid())
+    {
+        ADD_FAILURE() << "addState must yield valid state ids for both StateA and StateB";
+        return fx;
+    }
 
     // Drive the FSM to StateA so a token bound to StateA observes
     // itself live and the later transition to StateB is non-noop. The
     // FSM is unbound here (engine has not entered run() yet), so this
     // mutator is safe from the test thread.
-    const auto si = fsm.setInitial(fx.stateA);
-    EXPECT_TRUE(si.isSuccess());
+    if (!fsm.setInitial(fx.stateA).isSuccess())
+    {
+        ADD_FAILURE() << "setInitial(StateA) must succeed before run()";
+        return fx;
+    }
 
     // Register a probe TaskFlow on StateA so the engine has something
     // to pump while it spins. The probe records every run() invocation
     // so the test can wait for the first pump tick before asking for
-    // the transition.
-    auto flow             = std::make_unique<vigine::TaskFlow>();
-    auto probeOwned       = std::make_unique<ProbeTask>();
-    fx.probe              = probeOwned.get();
-    auto *registered      = flow->addTask(std::move(probeOwned));
-    EXPECT_NE(registered, nullptr);
+    // the transition. The probe pointer is only published into the
+    // fixture after the TaskFlow has been successfully moved into the
+    // FSM -- if any step before that fails, fx.probe stays null and
+    // the caller's ASSERT_NE bails before any dereference.
+    auto flow        = std::make_unique<vigine::TaskFlow>();
+    auto probeOwned  = std::make_unique<ProbeTask>();
+    auto *probeRaw   = probeOwned.get();
+    auto *registered = flow->addTask(std::move(probeOwned));
+    if (registered == nullptr)
+    {
+        ADD_FAILURE() << "TaskFlow::addTask must register the probe task";
+        return fx;
+    }
     flow->changeCurrentTaskTo(registered);
 
-    const auto reg = fsm.addStateTaskFlow(fx.stateA, std::move(flow));
-    EXPECT_TRUE(reg.isSuccess());
-    EXPECT_NE(fsm.taskFlowFor(fx.stateA), nullptr);
+    if (!fsm.addStateTaskFlow(fx.stateA, std::move(flow)).isSuccess())
+    {
+        ADD_FAILURE() << "addStateTaskFlow(StateA) must succeed";
+        return fx;
+    }
+    if (fsm.taskFlowFor(fx.stateA) == nullptr)
+    {
+        ADD_FAILURE() << "taskFlowFor(StateA) must report the registered flow";
+        return fx;
+    }
 
+    fx.probe = probeRaw;
     return fx;
 }
 
@@ -200,6 +253,9 @@ TEST(EngineFsmTokenLifecycle, EnginePumpsBoundTaskFlowAndTokenExpiresOnTransitio
 {
     auto fx = buildEngineWithTwoStates();
     ASSERT_NE(fx.engine, nullptr);
+    ASSERT_NE(fx.probe, nullptr)
+        << "buildEngineWithTwoStates must publish the probe pointer "
+           "only after the TaskFlow has been moved into the FSM";
 
     auto &context = fx.engine->context();
     auto &fsm     = context.stateMachine();
@@ -231,12 +287,16 @@ TEST(EngineFsmTokenLifecycle, EnginePumpsBoundTaskFlowAndTokenExpiresOnTransitio
     // Drive the engine on a helper thread. The engine's run() binds the
     // FSM controller to this thread, so transitions from now on must
     // funnel through requestTransition + the controller-thread drain.
+    // The DriverGuard makes the cleanup path failure-safe: any ASSERT_*
+    // tripping below this point would otherwise leave the joinable
+    // driver std::thread to call std::terminate() in its destructor.
     std::thread driver(
         [&]()
         {
             const auto r = fx.engine->run();
             EXPECT_TRUE(r.isSuccess());
         });
+    DriverGuard guard{fx.engine.get(), &driver};
 
     // Wait until the engine has pumped the StateA-bound flow at least
     // once. This proves the FSM-drive plumbing is alive and the token
@@ -279,11 +339,14 @@ TEST(EngineFsmTokenLifecycle, EnginePumpsBoundTaskFlowAndTokenExpiresOnTransitio
         << "the alive-state gate must fire before the registry lookup so "
            "callers cannot observe a NotFound on an expired token";
 
-    // Tear the engine down cleanly so the helper thread joins and the
-    // token destructor (which cancels the invalidation listener) runs
-    // before the FSM is destroyed.
+    // Drop the guard explicitly before the post-shutdown isRunning()
+    // assertion so the engine has already stopped pumping when we read
+    // it. A scope-exit destructor would still cover the early-return
+    // path on any failure above.
     fx.engine->shutdown();
     driver.join();
+    guard.engine = nullptr;
+    guard.driver = nullptr;
     EXPECT_FALSE(fx.engine->isRunning());
 }
 
@@ -307,6 +370,7 @@ TEST(EngineFsmTokenLifecycle, InfrastructureAccessorsStayValidAcrossEngineDriven
 {
     auto fx = buildEngineWithTwoStates();
     ASSERT_NE(fx.engine, nullptr);
+    ASSERT_NE(fx.probe, nullptr);
 
     auto &context = fx.engine->context();
     auto &fsm     = context.stateMachine();
@@ -335,6 +399,7 @@ TEST(EngineFsmTokenLifecycle, InfrastructureAccessorsStayValidAcrossEngineDriven
             const auto r = fx.engine->run();
             EXPECT_TRUE(r.isSuccess());
         });
+    DriverGuard guard{fx.engine.get(), &driver};
 
     ASSERT_TRUE(waitUntil(
         [&]() { return fx.probe->runCount() > 0u; },
@@ -370,6 +435,8 @@ TEST(EngineFsmTokenLifecycle, InfrastructureAccessorsStayValidAcrossEngineDriven
 
     fx.engine->shutdown();
     driver.join();
+    guard.engine = nullptr;
+    guard.driver = nullptr;
 }
 
 // -- Case 3 ------------------------------------------------------------------
@@ -386,6 +453,7 @@ TEST(EngineFsmTokenLifecycle, SubscribeExpirationFiresOnceFromEngineDrivenTransi
 {
     auto fx = buildEngineWithTwoStates();
     ASSERT_NE(fx.engine, nullptr);
+    ASSERT_NE(fx.probe, nullptr);
 
     auto &context = fx.engine->context();
     auto &fsm     = context.stateMachine();
@@ -407,6 +475,7 @@ TEST(EngineFsmTokenLifecycle, SubscribeExpirationFiresOnceFromEngineDrivenTransi
             const auto r = fx.engine->run();
             EXPECT_TRUE(r.isSuccess());
         });
+    DriverGuard guard{fx.engine.get(), &driver};
 
     ASSERT_TRUE(waitUntil(
         [&]() { return fx.probe->runCount() > 0u; },
@@ -428,6 +497,8 @@ TEST(EngineFsmTokenLifecycle, SubscribeExpirationFiresOnceFromEngineDrivenTransi
 
     fx.engine->shutdown();
     driver.join();
+    guard.engine = nullptr;
+    guard.driver = nullptr;
 
     // After shutdown the engine has stopped pumping; the fire count
     // must remain at one (no second firing latches against the
