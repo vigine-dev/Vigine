@@ -280,7 +280,7 @@ class IContext
      * @c "vigine.core").
      *
      * The engine does NOT auto-register application-defined payload
-     * types: every custom @ref payload::ISignalPayload subclass an
+     * types: every custom @ref messaging::ISignalPayload subclass an
      * application emits or subscribes to must obtain its
      * @ref payload::PayloadTypeId on the returned reference (via
      * @c registerRange, @c allocateRange, or @c allocateId) before any

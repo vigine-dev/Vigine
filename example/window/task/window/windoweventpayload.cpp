@@ -2,7 +2,6 @@
 
 #include <vigine/api/messaging/payload/ipayloadregistry.h>
 
-#include <string>
 #include <string_view>
 #include <unordered_map>
 
@@ -16,17 +15,28 @@ namespace
  * application startup (called from @c main before any @c signal()
  * subscription that depends on the ids); read-only during the engine
  * pump, so no synchronisation is needed.
+ *
+ * Key type is @c std::string_view so the lookup on the hot path
+ * (every @c typeId() call from @c SignalMessage construction) does
+ * not allocate. Safe because every inserted view comes from a
+ * payload class's @c typeName(), which returns a @c string_view over
+ * a string literal — the literal has static storage duration, so the
+ * view outlives the map.
  */
-std::unordered_map<std::string, vigine::payload::PayloadTypeId> payloadIdsByTypeName;
+std::unordered_map<std::string_view, vigine::payload::PayloadTypeId> payloadIdsByTypeName;
 
 /**
  * @brief Returns the id stored for @p typeName, or the invalid
  *        sentinel when @p typeName has not been registered.
+ *
+ * Allocation-free on the hot path: the map is keyed by
+ * @c std::string_view, so @c find(@p typeName) compares views
+ * directly without materialising a temporary @c std::string.
  */
 [[nodiscard]] vigine::payload::PayloadTypeId
     lookup(std::string_view typeName) noexcept
 {
-    auto it = payloadIdsByTypeName.find(std::string{typeName});
+    auto it = payloadIdsByTypeName.find(typeName);
     return it != payloadIdsByTypeName.end()
                ? it->second
                : vigine::payload::PayloadTypeId{};
@@ -98,7 +108,7 @@ void registerAll(vigine::payload::IPayloadRegistry &registry)
 {
     auto allocateInto = [&](std::string_view name) {
         if (auto id = registry.allocateId(name))
-            payloadIdsByTypeName[std::string{name}] = *id;
+            payloadIdsByTypeName[name] = *id;
     };
     allocateInto(MouseButtonDownPayload::typeName());
     allocateInto(KeyDownPayload::typeName());
