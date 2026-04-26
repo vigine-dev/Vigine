@@ -5,6 +5,9 @@
 
 #include "taskorchestrator.h"
 #include "vigine/result.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
 #include "vigine/api/taskflow/itask.h"
 #include "vigine/api/taskflow/resultcode.h"
@@ -173,19 +176,33 @@ void AbstractTaskFlow::runCurrentTask()
 
     vigine::ITask *runnable = it->second.get();
 
-    // Execute the runnable. Concrete tasks derive from
-    // @ref vigine::AbstractTask which makes @c setApi / @c api final
-    // and stores the bound token; the engine wires the token in this
-    // call site through @c setApi before @c run and clears it through
-    // an RAII guard so a throwing @c run still leaves the task with a
-    // null binding.
-    //
-    // The wrapper does NOT yet thread an aggregator into the flow (UD-3
-    // keeps the wrapper substrate-only); the engine-token binding is
-    // therefore skipped here and set up by the engine when it migrates
-    // the per-state flow registry in a follow-up. Tasks that today use
-    // @c api() observe a null token and branch on null per the
-    // @c IEngineToken contract.
+    /*
+     * Execute the runnable through the R-StateScope binding shape.
+     * Concrete tasks derive from @ref vigine::AbstractTask which makes
+     * @c setApi / @c api final and stores the bound token; the flow
+     * binds the long-lived per-state token onto the runnable through
+     * @c setApi before @c run and clears the binding back to nullptr
+     * through an RAII guard so a throwing @c run still leaves the task
+     * with a null api() once the call returns.
+     *
+     * Per-state token lifetime. The token bound on every tick is the
+     * one stored in @ref _activeToken — minted in @ref setActiveState
+     * when the engine pump tells the flow which FSM state it is in.
+     * The token persists across ticks for as long as the state is
+     * active, so a task that subscribes to expiration in one tick can
+     * legally retain its @ref vigine::engine::IEngineToken::ExpirationToken
+     * across subsequent ticks. The token is destroyed only when the
+     * active state changes (the next @ref setActiveState call drops
+     * the old token, firing every subscriber's callback) or when the
+     * flow itself is destroyed.
+     *
+     * No-context / no-state fallback. When @ref setContext has never
+     * been called or @ref setActiveState has not been driven, the
+     * @ref _activeToken stays null. @ref runCurrentTask then binds
+     * @c nullptr onto the runnable and tasks observe api() == nullptr
+     * inside @c run(). Tests that drive the flow directly without the
+     * engine pump rely on this shape.
+     */
     struct ApiBindingGuard
     {
         vigine::ITask *task;
@@ -205,10 +222,15 @@ void AbstractTaskFlow::runCurrentTask()
 
     Result outcome;
     {
-        runnable->setApi(nullptr);
+        runnable->setApi(_activeToken.get());
         [[maybe_unused]] ApiBindingGuard guard(runnable);
         outcome = runnable->run();
     }
+    /*
+     * On scope exit ApiBindingGuard fires setApi(nullptr); the
+     * per-state @ref _activeToken stays alive for subsequent ticks
+     * until the next @ref setActiveState call drops it.
+     */
 
     // Resolve the next task through the orchestrator's transition map.
     // Maps the runnable's @ref Result::Code to the closed
@@ -220,6 +242,46 @@ void AbstractTaskFlow::runCurrentTask()
     const ResultCode code = mapResultCode(outcome.code());
     const TaskId     next = _orchestrator->nextTaskFor(_current, code);
     _current              = next;
+}
+
+void AbstractTaskFlow::setContext(vigine::IContext *context) noexcept
+{
+    /*
+     * Plain raw-pointer assignment. The flow stores a non-owning back-
+     * pointer to the IContext that mints per-state engine tokens; the
+     * engine pump installs the pointer before each tick through
+     * AbstractEngine::run. A nullptr argument detaches the binding so
+     * subsequent setActiveState calls fall back to the no-token shape —
+     * useful for tests that drive the flow directly bypassing the
+     * engine pump and that want to observe api() == nullptr inside run().
+     */
+    _context = context;
+}
+
+void AbstractTaskFlow::setActiveState(vigine::statemachine::StateId state) noexcept
+{
+    /*
+     * Idempotent on a same-state call: the engine pump invokes this
+     * every tick, so most calls are no-ops. When the state genuinely
+     * changes, drop the existing per-state token first — its destructor
+     * fires the engine-token expiration callbacks for every task that
+     * subscribed during the prior state, satisfying the R-StateScope
+     * "old state's token expires precisely on transition out" contract.
+     * Then mint a fresh token bound to the new state when a context is
+     * wired; without one we leave _activeToken null and tasks observe
+     * api() == nullptr until the engine pump installs a context.
+     */
+    if (_activeState == state)
+    {
+        return;
+    }
+
+    _activeState = state;
+    _activeToken.reset();
+    if (_context != nullptr)
+    {
+        _activeToken = _context->makeEngineToken(state);
+    }
 }
 
 bool AbstractTaskFlow::hasTasksToRun() const noexcept

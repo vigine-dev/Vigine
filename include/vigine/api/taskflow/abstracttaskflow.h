@@ -4,6 +4,8 @@
 #include <unordered_map>
 
 #include "vigine/result.h"
+#include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
@@ -11,6 +13,7 @@
 
 namespace vigine
 {
+class IContext;
 class ITask;
 } // namespace vigine
 
@@ -114,6 +117,8 @@ class AbstractTaskFlow : public ITaskFlow
                                        std::unique_ptr<vigine::ITask> task) override;
     void                 runCurrentTask() override;
     [[nodiscard]] bool   hasTasksToRun() const noexcept override;
+    void                 setContext(vigine::IContext *context) noexcept override;
+    void                 setActiveState(vigine::statemachine::StateId state) noexcept override;
 
     // ------ ITaskFlow: flow control ------
 
@@ -228,6 +233,50 @@ class AbstractTaskFlow : public ITaskFlow
      */
     std::unordered_map<TaskId, std::unique_ptr<vigine::ITask>, TaskIdHasher>
         _runnables;
+
+    /**
+     * @brief Non-owning back-pointer to the @ref vigine::IContext used to
+     *        mint per-state @ref vigine::engine::IEngineToken handles
+     *        through @ref setActiveState.
+     *
+     * Installed by the @ref vigine::engine::AbstractEngine pump via
+     * @ref setContext before each tick of the bound flow. @c nullptr until
+     * the first @ref setContext call lands; in that case @ref runCurrentTask
+     * falls back to the no-token shape (the api() pointer the task observes
+     * is @c nullptr).
+     */
+    vigine::IContext *_context{nullptr};
+
+    /**
+     * @brief The FSM state currently bound to @ref _activeToken.
+     *
+     * Updated through @ref setActiveState. Default-constructed
+     * @ref vigine::statemachine::StateId{} until the engine pump calls
+     * @ref setActiveState with a real state. Used to detect state changes
+     * so the flow can drop the old token (firing expiration callbacks
+     * for any subscriber) and mint a fresh one on transition.
+     */
+    vigine::statemachine::StateId _activeState{};
+
+    /**
+     * @brief Per-state engine token bound to @ref _activeState.
+     *
+     * Minted lazily by @ref setActiveState when the active state changes
+     * and a context has been wired through @ref setContext. Lives for the
+     * full duration of the state's binding to the flow; destruction (on
+     * state change or flow teardown) fires the
+     * @ref vigine::engine::IEngineToken::subscribeExpiration callbacks
+     * for every task that subscribed during the state's lifetime, which
+     * is the R-StateScope mechanism by which a long-running task observes
+     * "FSM has transitioned out of my state".
+     *
+     * @ref runCurrentTask reads the raw pointer through @c _activeToken.get()
+     * and binds it on the runnable through @ref vigine::ITask::setApi
+     * for the duration of @c run(); the binding is cleared back to
+     * @c nullptr by an RAII guard so a throwing @c run still leaves the
+     * task with a null api() pointer once the call returns.
+     */
+    std::unique_ptr<vigine::engine::IEngineToken> _activeToken;
 };
 
 } // namespace vigine::taskflow

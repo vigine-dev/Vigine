@@ -225,13 +225,33 @@ Result AbstractEngine::run()
             vigine::taskflow::ITaskFlow *boundFlow    = fsm.taskFlowFor(currentState);
             if (boundFlow != nullptr && boundFlow->hasTasksToRun())
             {
-                // runCurrentTask handles the per-task setApi /
-                // setApi(nullptr) lifecycle on its own through its
-                // RAII guard; the engine just tells it to advance
-                // once. Any FSM transition requested by the task
-                // during run() lands on the FSM's request queue and
-                // is drained on the very next call below, so the
-                // next tick observes the new state.
+                /*
+                 * Wire the engine context into the bound flow so it
+                 * can mint per-state IEngineTokens via
+                 * IContext::makeEngineToken. The assignment is
+                 * idempotent; the flow stores a non-owning back-pointer.
+                 */
+                boundFlow->setContext(_context.get());
+
+                /*
+                 * Drive the per-state token lifecycle: tell the flow
+                 * which FSM state is currently active. The flow keeps
+                 * the same token across ticks for as long as the state
+                 * is active and only mints a fresh one (firing
+                 * expiration callbacks on the prior token's subscribers)
+                 * when the state genuinely changes between ticks.
+                 */
+                boundFlow->setActiveState(currentState);
+
+                /*
+                 * runCurrentTask handles the per-task setApi /
+                 * setApi(nullptr) lifecycle on its own through its
+                 * RAII guard; the engine just tells it to advance
+                 * once. Any FSM transition requested by the task
+                 * during run() lands on the FSM's request queue and
+                 * is drained on the very next call below, so the
+                 * next tick observes the new state.
+                 */
                 boundFlow->runCurrentTask();
             }
         }

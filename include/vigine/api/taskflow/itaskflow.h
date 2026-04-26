@@ -3,12 +3,14 @@
 #include <memory>
 
 #include "vigine/result.h"
+#include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
 
 namespace vigine
 {
+class IContext;
 class ITask;
 
 /**
@@ -254,6 +256,48 @@ class ITaskFlow
      * through to the FSM drain + main-thread pump alone.
      */
     [[nodiscard]] virtual bool hasTasksToRun() const noexcept = 0;
+
+    /**
+     * @brief Installs the @ref vigine::IContext used by @ref runCurrentTask
+     *        to mint the per-tick @ref vigine::engine::IEngineToken.
+     *
+     * The flow stores the context as a non-owning back-pointer so the
+     * R-StateScope binding shape (mint -> setApi -> run -> setApi(nullptr))
+     * inside @ref runCurrentTask reaches the engine-token factory. The
+     * @ref vigine::engine::AbstractEngine pump installs this back-pointer
+     * once per tick on the bound flow before driving it; the assignment
+     * is idempotent and a @c nullptr argument detaches the binding so a
+     * subsequent @ref runCurrentTask call falls back to the no-token
+     * shape, which is the path tests take when they drive the flow
+     * directly without going through the engine pump.
+     */
+    virtual void setContext(vigine::IContext *context) noexcept = 0;
+
+    /**
+     * @brief Tells the flow which FSM state it is currently bound to.
+     *
+     * The flow uses @p state to mint a per-state @ref vigine::engine::IEngineToken
+     * via @ref vigine::IContext::makeEngineToken. The token is the one
+     * @ref runCurrentTask binds onto each runnable through @ref vigine::ITask::setApi.
+     *
+     * Calling @ref setActiveState with a state that differs from the
+     * previously stored one drops the existing token (which fires the
+     * @ref vigine::engine::IEngineToken::subscribeExpiration callbacks
+     * for every task that subscribed during the prior state) and mints
+     * a fresh one bound to the new state. This is the R-StateScope
+     * lifetime contract: token lives for the full duration of the
+     * state's binding to the flow, expiration fires precisely on
+     * state-out transition.
+     *
+     * Calling @ref setActiveState with the same state as before is a
+     * no-op so the engine pump can call it idempotently every tick.
+     *
+     * Threading: callers serialise this against @ref runCurrentTask on
+     * the same flow externally. Today's call site is the engine
+     * controller thread, which is also the thread that drives
+     * @ref runCurrentTask, so the contract is naturally satisfied.
+     */
+    virtual void setActiveState(vigine::statemachine::StateId state) noexcept = 0;
 
     // ------ Flow control ------
 
