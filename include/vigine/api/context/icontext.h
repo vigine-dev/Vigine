@@ -277,11 +277,17 @@ class IContext
      * The aggregator builds a default @ref payload::IPayloadRegistry
      * during construction (engine-bundled ranges Control / System /
      * SystemExt / Reserved auto-registered under owner
-     * @c "vigine.core"). Application code registers its own user-range
-     * ids by calling @c registerRange on the returned reference; the
-     * default signal emitter validates every @ref ISignalEmitter::emit
-     * payload against this registry before posting it on the bus, so
-     * an unregistered id surfaces as an error result instead of a
+     * @c "vigine.core").
+     *
+     * The engine does NOT auto-register application-defined payload
+     * types: every custom @ref messaging::ISignalPayload subclass an
+     * application emits or subscribes to must obtain its
+     * @ref payload::PayloadTypeId on the returned reference (via
+     * @c registerRange, @c allocateRange, or @c allocateId) before any
+     * @c TaskFlow::signal subscription or @c ISignalEmitter::emit call
+     * that references it. The default signal emitter validates every
+     * payload against this registry before posting it on the bus, so an
+     * unregistered id surfaces as an error result instead of a
      * silently-dropped message.
      *
      * The registry is owned by the context for its full lifetime and

@@ -26,6 +26,19 @@ namespace vigine::payload
  * half (`[0, 0xFFFF]`) and the user half (`[0x10000, ...]`) is rejected
  * with @ref Result::Code::OutOfRange.
  *
+ * User responsibility: the engine does NOT auto-register
+ * application-defined payload types. Every concrete
+ * @ref vigine::messaging::ISignalPayload subclass that an application
+ * emits or subscribes to must obtain its @ref PayloadTypeId here first
+ * (typically through @ref allocateId or @ref allocateRange) before any
+ * @c TaskFlow::signal subscription or @c ISignalEmitter::emit call that
+ * references it. An unregistered id is rejected by the default signal
+ * emitter at emit time and never matches a subscription at dispatch
+ * time, so a missing registration surfaces as an explicit error rather
+ * than silent dropping. Engine-bundled payload types arrive
+ * pre-registered under owner @c "vigine.core"; only user types need
+ * application-side registration.
+ *
  * Thread-safety: implementations must be safe to call from any thread.
  * Mutating entry points take an exclusive lock on an internal
  * reader-writer mutex; read-only entry points take a shared lock so

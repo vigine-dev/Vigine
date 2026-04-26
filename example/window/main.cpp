@@ -87,11 +87,12 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow()
     static_cast<void>(taskFlow->route(setupTextEditId, runWindowId));
 
     using vigine::core::threading::ThreadAffinity;
+    using example::payloads::idOf;
     static_cast<void>(taskFlow->signal(runWindowId, processInputId,
-                                       MouseButtonDownPayload::staticTypeId(),
+                                       idOf(MouseButtonDownPayload::typeName()),
                                        ThreadAffinity::Pool));
     static_cast<void>(taskFlow->signal(runWindowId, processInputId,
-                                       KeyDownPayload::staticTypeId(),
+                                       idOf(KeyDownPayload::typeName()),
                                        ThreadAffinity::Pool));
 
     static_cast<void>(taskFlow->setRoot(initWindowId));
@@ -148,19 +149,24 @@ int main()
         return 1;
     }
 
-    // Each window-event payload class registers itself with the
-    // engine's payload registry: the call allocates a fresh user-range
-    // id under a class-scoped owner string and stores it on a private
-    // static member. After the call, MouseButtonDownPayload::staticTypeId()
-    // and KeyDownPayload::staticTypeId() return the allocated ids; every
-    // payload instance reads the same id through its typeId() override.
-    // Engine-bundled ranges (Control / System / SystemExt / Reserved)
-    // are auto-registered by the context's default payload registry
-    // under owner "vigine.core"; the broker walks the user range
-    // ([0x10000 .. 0xFFFFFFFF]) and returns the first free slot, so
-    // the example never picks numeric ids itself.
-    MouseButtonDownPayload::registerWith(context.payloadRegistry());
-    KeyDownPayload::registerWith(context.payloadRegistry());
+    // Allocate user-range PayloadTypeIds for every window-event
+    // payload class declared in windoweventpayload.h. The
+    // namespace-scoped registerAll() walks each class's typeName()
+    // string, asks the broker for a fresh id, and stores the
+    // (typeName -> id) pair in a TU-local lookup map. The map then
+    // backs both the virtual typeId() override on each payload
+    // instance AND the example::payloads::idOf(typeName) lookup that
+    // signal()-subscription / dispatch comparison call sites use.
+    //
+    // The engine does NOT auto-register user-defined payload types —
+    // each application that emits or subscribes to its own
+    // ISignalPayload subclasses is responsible for allocating ids
+    // through IPayloadRegistry::allocateId / allocateRange before
+    // any signal() subscription that depends on the resulting
+    // PayloadTypeId. This call MUST therefore run before
+    // createInitTaskFlow() because that flow's signal() helper
+    // resolves ids through idOf at flow-build time.
+    example::payloads::registerAll(context.payloadRegistry());
 
     // FSM states: Init -> Work -> Close, Error as the failure off-ramp.
     // Reuse the FSM's auto-provisioned default state as InitState so
