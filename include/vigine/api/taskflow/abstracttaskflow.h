@@ -79,7 +79,7 @@ class TaskOrchestrator;
  *
  * Routing (UD-3):
  *   - The default @ref RouteMode for transitions registered through
- *     the short overload of @ref onResult is @ref RouteMode::FirstMatch,
+ *     the short overload of @ref route is @ref RouteMode::FirstMatch,
  *     matching the back-compat behaviour of the legacy task flow.
  *     Callers opt into @ref RouteMode::FanOut or @ref RouteMode::Chain
  *     per transition through the explicit-mode overload.
@@ -114,8 +114,8 @@ class AbstractTaskFlow : public ITaskFlow
 
     // ------ ITaskFlow: transitions ------
 
-    Result onResult(TaskId source, ResultCode code, TaskId next) override;
-    Result onResult(
+    Result route(TaskId source, ResultCode code, TaskId next) override;
+    Result route(
         TaskId    source,
         ResultCode code,
         TaskId    next,

@@ -86,7 +86,7 @@ namespace vigine::taskflow
  * Routing model (UD-3):
  *   - Sync transitions fire when a completed task reports a
  *     @ref ResultCode. The flow looks up the list of next tasks
- *     registered via @ref onResult against the @c (source, resultCode)
+ *     registered via @ref route against the @c (source, resultCode)
  *     pair and advances according to the transition's @ref RouteMode.
  *   - @ref RouteMode::FirstMatch is the default. Callers pass
  *     @ref RouteMode::FanOut to register a transition that lets every
@@ -144,7 +144,7 @@ class ITaskFlow
      * @brief Registers a transition: when @p source completes with
      *        @p code the flow advances to @p next.
      *
-     * Shorthand for @ref onResult with @ref RouteMode::FirstMatch —
+     * Shorthand for @ref route with @ref RouteMode::FirstMatch —
      * the UD-3 default. Multiple calls with the same
      * @c (source, code) pair stack up in registration order; the
      * default @c FirstMatch mode routes to the first registered
@@ -157,7 +157,7 @@ class ITaskFlow
      * a zero-length transition — callers that need a loop wire it
      * through an explicit intermediate task).
      */
-    virtual Result onResult(TaskId source, ResultCode code, TaskId next) = 0;
+    virtual Result route(TaskId source, ResultCode code, TaskId next) = 0;
 
     /**
      * @brief Registers a transition with an explicit routing mode.
@@ -176,7 +176,7 @@ class ITaskFlow
      * id, or when the re-registration conflicts with the already-
      * stored @ref RouteMode for that pair.
      */
-    virtual Result onResult(
+    virtual Result route(
         TaskId    source,
         ResultCode code,
         TaskId    next,
@@ -244,7 +244,7 @@ class ITaskFlow
      *      @ref hasTasksToRun reports false on the next probe.
      *   2. Invoke the runnable's @c run(). The returned @ref Result is
      *      mapped to the closest @ref ResultCode (Success / Error) and
-     *      the orchestrator looks up the @c onResult transition for
+     *      the orchestrator looks up the @c route transition for
      *      the @c (current, code) pair.
      *   3. When a matching transition exists the cursor advances to
      *      the next task. When no transition is registered the cursor

@@ -78,14 +78,14 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> createInitTaskFlow()
     const TaskId runWindowId     = taskFlow->addTask(std::make_unique<RunWindowTask>());
     const TaskId processInputId  = taskFlow->addTask(std::make_unique<ProcessInputEventTask>());
 
-    static_cast<void>(taskFlow->onResult(initWindowId, ResultCode::Success, initVulkanId));
-    static_cast<void>(taskFlow->onResult(initVulkanId, ResultCode::Success, setupHelperId));
-    static_cast<void>(taskFlow->onResult(setupHelperId, ResultCode::Success, setupCubeId));
-    static_cast<void>(taskFlow->onResult(setupCubeId, ResultCode::Success, setupTextId));
-    static_cast<void>(taskFlow->onResult(setupTextId, ResultCode::Success, loadTexturesId));
-    static_cast<void>(taskFlow->onResult(loadTexturesId, ResultCode::Success, setupPlanesId));
-    static_cast<void>(taskFlow->onResult(setupPlanesId, ResultCode::Success, setupTextEditId));
-    static_cast<void>(taskFlow->onResult(setupTextEditId, ResultCode::Success, runWindowId));
+    static_cast<void>(taskFlow->route(initWindowId, ResultCode::Success, initVulkanId));
+    static_cast<void>(taskFlow->route(initVulkanId, ResultCode::Success, setupHelperId));
+    static_cast<void>(taskFlow->route(setupHelperId, ResultCode::Success, setupCubeId));
+    static_cast<void>(taskFlow->route(setupCubeId, ResultCode::Success, setupTextId));
+    static_cast<void>(taskFlow->route(setupTextId, ResultCode::Success, loadTexturesId));
+    static_cast<void>(taskFlow->route(loadTexturesId, ResultCode::Success, setupPlanesId));
+    static_cast<void>(taskFlow->route(setupPlanesId, ResultCode::Success, setupTextEditId));
+    static_cast<void>(taskFlow->route(setupTextEditId, ResultCode::Success, runWindowId));
 
     using vigine::core::threading::ThreadAffinity;
     static_cast<void>(taskFlow->signal(runWindowId, processInputId,

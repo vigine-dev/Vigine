@@ -82,12 +82,12 @@ bool AbstractTaskFlow::hasTask(TaskId task) const noexcept
 // enforces the "one @ref RouteMode per pair" invariant.
 // ---------------------------------------------------------------------------
 
-Result AbstractTaskFlow::onResult(TaskId source, ResultCode code, TaskId next)
+Result AbstractTaskFlow::route(TaskId source, ResultCode code, TaskId next)
 {
-    return onResult(source, code, next, RouteMode::FirstMatch);
+    return route(source, code, next, RouteMode::FirstMatch);
 }
 
-Result AbstractTaskFlow::onResult(
+Result AbstractTaskFlow::route(
     TaskId    source,
     ResultCode code,
     TaskId    next,
@@ -122,7 +122,7 @@ namespace
             return ResultCode::Success;
         default:
             // Every non-Success outcome maps to Error so callers wiring
-            // an explicit error route through @c onResult observe the
+            // an explicit error route through @c route observe the
             // failure path. Tasks that only distinguish Success vs.
             // Error see the closed two-outcome shape the orchestrator
             // stores on transition edges.
