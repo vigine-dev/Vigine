@@ -176,42 +176,44 @@ void AbstractTaskFlow::runCurrentTask()
 
     vigine::ITask *runnable = it->second.get();
 
-    // Execute the runnable through the R-StateScope binding shape.
-    // Concrete tasks derive from @ref vigine::AbstractTask which makes
-    // @c setApi / @c api final and stores the bound token; the flow
-    // wires the per-tick token in this call site through @c setApi
-    // before @c run and clears it through an RAII guard so a throwing
-    // @c run still leaves the task with a null binding.
-    //
-    // Token-lifetime ordering: the owning @c std::unique_ptr<IEngineToken>
-    // is declared OUTSIDE the inner block so that:
-    //   1. ApiBindingGuard destructs first on scope exit and runs
-    //      setApi(nullptr) — clearing the raw pointer the task may
-    //      have read through api().
-    //   2. The owning unique_ptr destructs second (after the guard),
-    //      destroying the token. The R-StateScope contract requires the
-    //      task's bound api() pointer be cleared BEFORE the underlying
-    //      token is freed; otherwise a stray callback could observe a
-    //      dangling IEngineToken* through api().
-    //
-    // No-context fallback: when @ref setContext has not been called (or
-    // was cleared with @c nullptr), the flow keeps the legacy null-
-    // binding shape so tests that drive the flow directly bypassing the
-    // engine pump observe api() == nullptr inside run() and branch
-    // accordingly.
-    //
-    // Per-tick state-id binding: the token is minted with a sentinel
-    // StateId{} rather than IStateMachine::current(). The aggregator
-    // tolerates the sentinel and threads it into the concrete token;
-    // gated accessors resolve normally while the bound state matches
-    // the sentinel and short-circuit to Code::Expired on transition
-    // away. Threading the FSM's live current state into the per-tick
-    // mint is a follow-up that lands once IStateMachine exposes its
-    // current state into the per-tick path. Per-state TaskFlow scoping
-    // itself is already in effect through the engine's
-    // taskFlowFor(current()) lookup, so a state transition between
-    // ticks switches WHICH flow is pumped without relying on the
-    // in-token state-id field.
+    /*
+     * Execute the runnable through the R-StateScope binding shape.
+     * Concrete tasks derive from @ref vigine::AbstractTask which makes
+     * @c setApi / @c api final and stores the bound token; the flow
+     * wires the per-tick token in this call site through @c setApi
+     * before @c run and clears it through an RAII guard so a throwing
+     * @c run still leaves the task with a null binding.
+     *
+     * Token-lifetime ordering: the owning @c std::unique_ptr<IEngineToken>
+     * is declared OUTSIDE the inner block so that:
+     *   1. ApiBindingGuard destructs first on scope exit and runs
+     *      setApi(nullptr) — clearing the raw pointer the task may
+     *      have read through api().
+     *   2. The owning unique_ptr destructs second (after the guard),
+     *      destroying the token. The R-StateScope contract requires the
+     *      task's bound api() pointer be cleared BEFORE the underlying
+     *      token is freed; otherwise a stray callback could observe a
+     *      dangling IEngineToken* through api().
+     *
+     * No-context fallback: when @ref setContext has not been called (or
+     * was cleared with @c nullptr), the flow keeps the legacy null-
+     * binding shape so tests that drive the flow directly bypassing the
+     * engine pump observe api() == nullptr inside run() and branch
+     * accordingly.
+     *
+     * Per-tick state-id binding: the token is minted with a sentinel
+     * StateId{} rather than IStateMachine::current(). The aggregator
+     * tolerates the sentinel and threads it into the concrete token;
+     * gated accessors resolve normally while the bound state matches
+     * the sentinel and short-circuit to Code::Expired on transition
+     * away. Threading the FSM's live current state into the per-tick
+     * mint is a follow-up that lands once IStateMachine exposes its
+     * current state into the per-tick path. Per-state TaskFlow scoping
+     * itself is already in effect through the engine's
+     * taskFlowFor(current()) lookup, so a state transition between
+     * ticks switches WHICH flow is pumped without relying on the
+     * in-token state-id field.
+     */
     struct ApiBindingGuard
     {
         vigine::ITask *task;
@@ -259,13 +261,15 @@ void AbstractTaskFlow::runCurrentTask()
 
 void AbstractTaskFlow::setContext(vigine::IContext *context) noexcept
 {
-    // Plain raw-pointer assignment. The flow stores a non-owning back-
-    // pointer to the IContext that mints per-tick engine tokens; the
-    // engine pump installs the pointer before each tick through
-    // AbstractEngine::run. A nullptr argument detaches the binding so
-    // subsequent runCurrentTask calls fall back to the no-token shape —
-    // useful for tests that drive the flow directly bypassing the
-    // engine pump and that want to observe api() == nullptr inside run().
+    /*
+     * Plain raw-pointer assignment. The flow stores a non-owning back-
+     * pointer to the IContext that mints per-tick engine tokens; the
+     * engine pump installs the pointer before each tick through
+     * AbstractEngine::run. A nullptr argument detaches the binding so
+     * subsequent runCurrentTask calls fall back to the no-token shape —
+     * useful for tests that drive the flow directly bypassing the
+     * engine pump and that want to observe api() == nullptr inside run().
+     */
     _context = context;
 }
 
