@@ -104,6 +104,15 @@ vigine::Result SetupTextEditTask::run()
     if (!state)
         return vigine::Result(vigine::Result::Code::Error, "TextEditState is null");
 
+    // Bind the interaction component against the MainWindow entity so
+    // every per-event method on TextEditorSystem (routeMouseButtonDown,
+    // routeKeyDown, routeWindowResized, ...) has a live record to read
+    // and write through. The component carries every piece of UI
+    // state @c RunWindowTask used to keep on its own object — focus,
+    // object drag, mouse-ray helper, modifier keys, debounced resize.
+    if (auto *mainWindow = entityManager->getEntityByAlias("MainWindow"))
+        editorService->bindInteractionEntity(mainWindow);
+
     const auto fontPath = resolveFontPath();
     if (fontPath.empty())
         return vigine::Result(vigine::Result::Code::Error,
