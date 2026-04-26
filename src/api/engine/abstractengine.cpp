@@ -222,8 +222,8 @@ Result AbstractEngine::run()
         if (fsmDrainSafe)
         {
             const statemachine::StateId currentState = fsm.current();
-            vigine::TaskFlow *bound = fsm.taskFlowFor(currentState);
-            if (bound != nullptr && bound->hasTasksToRun())
+            vigine::TaskFlow *boundFlow = fsm.taskFlowFor(currentState);
+            if (boundFlow != nullptr && boundFlow->hasTasksToRun())
             {
                 // runCurrentTask handles the per-task setApi /
                 // makeEngineToken / setApi(nullptr) lifecycle on its
@@ -233,7 +233,7 @@ Result AbstractEngine::run()
                 // FSM's request queue and is drained on the very
                 // next call below, so the next tick observes the
                 // new state.
-                bound->runCurrentTask();
+                boundFlow->runCurrentTask();
             }
         }
 

@@ -8,6 +8,30 @@ task receives a token through `ITask::setApi`, how it reaches the
 gated and non-gated accessors through `ITask::api()`, and how it must
 behave when the FSM transitions out of the bound state.
 
+> **Two realities to keep separate.** The R-StateScope contract on the
+> token itself (gated accessors, expiration callbacks, alive flag) is
+> already pinned down by the contract suite (scenario_21 /
+> scenario_22) and the engine-token smoke test. The wiring that mints
+> tokens and hands them to tasks lands in two stages:
+> - **Current wiring (post-#334).** The per-tick token bound by
+>   `TaskFlow::runCurrentTask` carries the sentinel-default
+>   `vigine::statemachine::StateId{}` (rather than
+>   `IStateMachine::current()`), and the owning
+>   `unique_ptr<IEngineToken>` is destroyed at the end of the per-task
+>   scope, so the pointer reachable through `api()` does NOT outlive
+>   the single `run()` call.
+> - **Intended (post-#343 ITaskFlow redesign).** The per-tick mint
+>   will carry `IStateMachine::current()` and the token will outlive
+>   `run()`, so a worker thread that captured the pointer observes a
+>   real mid-flight expiration on the next FSM transition.
+>
+> A task that needs FSM-bound expiration semantics today must mint a
+> separate token through `IContext::makeEngineToken(stateId)` and own
+> the `unique_ptr` itself (typically as a task member). The
+> "Long-running task" example near the bottom of this page shows that
+> shape; the rest of the page describes the per-tick token reachable
+> through `api()`.
+
 ## `ITask::api()` subsection
 
 ### Surface (post-#324)
@@ -45,9 +69,16 @@ that touches it.
 
 ### Binding a token via `setApi(IEngineToken*)`
 
-Tasks **never** construct or destroy a token. The engine owns the
-token's lifetime through the state machine; the task flow is the only
-caller of `ITask::setApi`. The full path goes through three layers:
+Tasks **never** call `setApi` themselves; the task flow is the only
+caller. Ownership of the per-tick token's `unique_ptr<IEngineToken>`
+sits on `TaskFlow::runCurrentTask`'s stack frame: the flow asks
+`IContext` to mint a token, parks the unique_ptr on its own stack,
+publishes a raw pointer to the task through `setApi`, runs the task,
+clears the binding, and lets the unique_ptr fall out of scope at end
+of scope. The state machine only contributes the invalidation-listener
+registration the concrete `EngineToken` performs in its constructor;
+it does not own the token's `unique_ptr`. The full path goes through
+three layers:
 
 - The engine's main pump
   ([`AbstractEngine::run`](../../src/api/engine/abstractengine.cpp))
@@ -277,11 +308,14 @@ The lifecycle the engine drives around this task is exactly:
    `IStateMachine::taskFlowFor(...)`. When the FSM rests in a state
    that has a flow registered (and there is a current task to run),
    the engine calls `TaskFlow::runCurrentTask` to advance it by one.
-2. The task flow mints a token (today: with sentinel `StateId{}`
-   threaded through; the lookup that swaps in `current()` inside
-   `runCurrentTask` is the open follow-up flagged on
-   [`src/impl/taskflow/taskflow.cpp`](../../src/impl/taskflow/taskflow.cpp))
-   and calls `setApi(token.get())`.
+2. The task flow mints a token through
+   `IContext::makeEngineToken(StateId{})`. The argument is the
+   sentinel-default `StateId{}` rather than `IStateMachine::current()`
+   in the current wiring; the lookup that will swap in `current()`
+   inside `runCurrentTask` is the open follow-up flagged on
+   [`src/impl/taskflow/taskflow.cpp`](../../src/impl/taskflow/taskflow.cpp)
+   and lands with #343. The task flow then calls
+   `setApi(token.get())`.
 3. The task flow calls `run()`. Inside, `api()` returns the bound
    token; gated accessors resolve normally.
 4. `run()` returns. The `ApiBindingGuard` in
@@ -298,17 +332,14 @@ The lifecycle the engine drives around this task is exactly:
 So the **TaskFlow** lifecycle is per-state: which flow runs depends
 on the FSM's active state, and the engine swap is automatic on
 transition. The **per-tick token** lifecycle inside `runCurrentTask`
-is still bound to a single `run()` call. Code that captures the token
-pointer and hands it to a worker thread therefore sees the token
-either:
-
-- destroyed at the end of `run()` (worker observes a dangling pointer
-  unless it captured by `shared_ptr` to its own state); or
-- still live across a tick boundary if the worker holds a strong
-  reference and the bound state has not yet transitioned. Once the
-  controller thread drains a transition out of the bound state, every
-  still-live token (including the one captured by the worker) flips
-  to expired and gated accessors short-circuit to `Expired`.
+is bound to a single `run()` call: the unique_ptr lives on the flow's
+stack frame and is destroyed before `runCurrentTask` returns. The
+task only ever observed an `IEngineToken*` raw pointer through
+`api()`; that pointer is dangling the moment `run()` exits. Code that
+captures the per-tick `api()` pointer and hands it to a worker thread
+therefore sees the token destroyed at the end of `run()`, and any
+worker-side dereference of the captured pointer after that point is
+undefined behaviour.
 
 Deferred work the task posted from inside `run()` must do one of
 three things:
@@ -316,47 +347,77 @@ three things:
 - **Finish before `run()` returns.** If the work is short enough to
   complete synchronously, the per-tick token is still alive
   throughout.
-- **Capture data, not the token.** Snapshot whatever the deferred
-  work needs (an entity id, a service handle that owns its own
-  lifetime, a message payload, a `shared_ptr` to a buffer the task
-  manages) into the closure and let the closure reach back through
-  some non-token mechanism — for example, a long-lived
+- **Capture data, not the per-tick token.** Snapshot whatever the
+  deferred work needs (an entity id, a service handle that owns its
+  own lifetime, a message payload, a `shared_ptr` to a buffer the
+  task manages) into the closure and let the closure reach back
+  through some non-token mechanism — for example, a long-lived
   `IThreadManager` reference held elsewhere, or a posted signal that
   will be delivered through a fresh subscriber on the next tick.
-- **Re-acquire the token on a future tick.** The next time the
-  state-bound flow runs this task, the flow mints a new token and
-  calls `setApi` again. Code that wants to resume work across ticks
-  reads `api()` fresh on each entry into `run()` rather than holding
-  the previous pointer.
+- **Re-acquire the per-tick token on a future tick.** The next time
+  the state-bound flow runs this task, the flow mints a new token
+  and calls `setApi` again. Code that wants to resume work across
+  ticks reads `api()` fresh on each entry into `run()` rather than
+  holding the previous pointer.
+- **Mint a separate FSM-bound token through `IContext`.** When the
+  worker thread genuinely needs a token whose lifetime outlives
+  `run()`, the task mints its own
+  `IContext::makeEngineToken(stateId)` and parks the
+  `unique_ptr<IEngineToken>` on a task member. That token observes
+  the full per-state lifecycle described in
+  [`engine-token.md`](engine-token.md#tokens-minted-directly-through-icontextmakeenginetoken-per-state-fsm-driven):
+  the FSM listener fires every registered expiration callback when
+  the controller thread transitions out of the supplied `stateId`,
+  and gated accessors short-circuit to `Result::Code::Expired` from
+  that point on.
 
 `subscribeExpiration` on the bound token (see
 [`engine-token.md` § Self-destruct contract](engine-token.md#self-destruct-contract))
-is most useful for tokens that **outlive** the `run()` body — a
-long-running task whose worker thread captures the token (or its
-expiration subscription handle) by `shared_ptr` and watches for the
-FSM to walk away from the bound state. Once the controller thread
-drains the transition, the callback fires synchronously on that
-thread, the alive flag flips, and gated accessors on the worker side
-return `Expired`. The contract scenarios at
+is only meaningful for tokens whose `unique_ptr` outlives the `run()`
+body — i.e. the FSM-bound token a task minted itself through
+`IContext::makeEngineToken` and parked on a member field. Calling
+`subscribeExpiration` on the per-tick token reachable through `api()`
+is a programming error: the per-tick `unique_ptr` is destroyed at the
+end of the per-task scope, so the subscription would fire (or be torn
+down) at that destruction point rather than on a real FSM transition.
+The contract scenarios at
 [`test/contract/scenario_22_token_expiration_callback.cpp`](../../test/contract/scenario_22_token_expiration_callback.cpp)
 pin down the exactly-once / controller-thread / before-flip
-guarantees this code relies on. Inside the legacy in-`run()`-only
-shape (no worker capture), the per-tick token still expires as part
-of the destruction at end of `run()`, so a same-tick subscription
-will fire (or be torn down) immediately.
+guarantees the FSM-bound subscription path relies on; the token under
+test there is constructed directly via the `EngineToken` constructor
+on a real registered state, mirroring the
+`IContext::makeEngineToken(stateId)` minting path.
 
-### Long-running task: state-bound work that observes Stale mid-flight
+### Long-running task: state-bound work that observes `Expired` mid-flight
 
 The example below adds a task that yields long-running work to the
-thread pool and treats `Expired` on a gated accessor as the cue to
-return cooperatively. The same pattern shows up in both the docs'
-canonical render-cleanup example
-([`engine-token.md` § Code example B](engine-token.md#code-example))
-and the contract suite's stale-token scenario
+thread pool and treats `Result::Code::Expired` on a gated accessor as
+the cue to return cooperatively. The same pattern shows up in both
+the docs' canonical render-cleanup example
+([`engine-token.md` § Code example B](engine-token.md#b-long-running-render-task-that-releases-gpu-resources-on-transition))
+and the contract suite's expiration-after-transition scenario
 ([scenario 21](../../test/contract/scenario_21_stale_engine_token.cpp)).
 
+The shape below splits the token surface into two halves so the worker
+thread observes a real FSM-driven expiration even though the per-tick
+token reachable through `api()` does not outlive `run()` in the
+current wiring:
+
+- The **per-tick token** (`api()` inside `run()`) is used for the
+  ungated `threadManager()` reach and to schedule the worker. It is
+  not captured by the worker.
+- The **FSM-bound token** (`_fsmToken` on the task instance) is
+  minted through `IContext::makeEngineToken(stateId)` once and parked
+  on a task member. The worker captures a raw pointer to it and
+  observes `Result::Code::Expired` once the FSM transitions out of
+  `stateId`. The expiration subscription is also registered against
+  this token, so the cancellation callback fires synchronously on the
+  controller thread when the transition is drained.
+
 ```cpp
+#include "vigine/api/context/icontext.h"
 #include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
 #include "vigine/result.h"
 
@@ -368,84 +429,126 @@ namespace myproject {
 class StreamFramesTask final : public vigine::AbstractTask
 {
   public:
-    StreamFramesTask(vigine::service::ServiceId decoderId)
-        : _decoderId(decoderId) {}
+    StreamFramesTask(vigine::statemachine::StateId boundState,
+                     vigine::service::ServiceId    decoderId)
+        : _boundState(boundState), _decoderId(decoderId) {}
 
     [[nodiscard]] vigine::Result run() override
     {
-        auto *token = api();
-        if (token == nullptr)
+        // Per-tick token: only valid for the body of run(), the
+        // owning unique_ptr inside TaskFlow::runCurrentTask destroys
+        // it the moment we return.
+        auto *perTickToken = api();
+        if (perTickToken == nullptr)
             return vigine::Result(vigine::Result::Code::Error,
-                                  "no engine token bound");
+                                  "no per-tick engine token bound");
 
-        // Resolve the decoder once per tick. Even with the per-tick
-        // token shape, every entry into run() sees a fresh,
-        // state-bound token; we re-resolve because the registry slot
-        // could have been recycled between ticks.
-        auto outcome = token->service(_decoderId);
+        // Resolve the decoder once per tick. Re-resolve on every
+        // entry because the registry slot could have been recycled
+        // between ticks (the per-tick token's bound-state field is
+        // the sentinel today, so the gate cannot tell us anything
+        // beyond "live"; the registry-side check is what would fire
+        // on a recycle).
+        auto outcome = perTickToken->service(_decoderId);
         if (!outcome.ok()) {
             using Code = decltype(outcome)::Code;
-            // FSM-bound task: Expired means the engine is about to
-            // pump a different state's flow. Bail out cooperatively
-            // so the engine can swap us off the schedule.
             return vigine::Result(vigine::Result::Code::Error,
                                   outcome.code() == Code::Expired
-                                      ? "stream task observed Expired"
+                                      ? "decoder reached on expired token"
                                       : "decoder unavailable");
         }
         vigine::service::IService &decoder = outcome.value();
         (void)decoder;
 
-        // Yield a frame's worth of work to the thread pool. The
-        // closure captures a shared_ptr to the task's frame buffer
-        // and a non-owning pointer to the token; the cancel flag is
-        // the cooperative-exit signal flipped by the expiration
-        // callback below.
-        auto buffer = std::make_shared<FrameBuffer>();
-        auto cancel = std::make_shared<std::atomic<bool>>(false);
+        // First-tick wiring: mint an FSM-bound token through
+        // IContext::makeEngineToken(_boundState) and park it on a
+        // task member so the worker thread can observe Expired on
+        // the FSM transition out of _boundState. The unique_ptr lives
+        // on the task instance, NOT on this run() stack frame.
+        if (_fsmToken == nullptr) {
+            _fsmToken = makeFsmBoundToken(_boundState);
+            if (_fsmToken == nullptr)
+                return vigine::Result(vigine::Result::Code::Error,
+                                      "FSM-bound token unavailable");
 
-        auto sub = token->subscribeExpiration(
-            [cancel]() { cancel->store(true, std::memory_order_release); });
-        // Persist the subscription on the task so it outlives run(),
-        // otherwise the RAII handle dropping here would detach the
-        // callback before the worker even started.
-        _expiration = std::move(sub);
+            _buffer = std::make_shared<FrameBuffer>();
+            _cancel = std::make_shared<std::atomic<bool>>(false);
 
-        auto &tm = token->threadManager();
-        // Pseudo-code: see ITask::run() docstring on co-operative
-        // exit and engine-token.md § Code example B for the full
-        // shape of the worker-side gated read.
-        // (void)tm.schedule(makeRunnable([token, buffer, cancel]() {
-        //     while (!cancel->load(std::memory_order_acquire)) {
-        //         auto frame = token->ecs(); // Expired on transition
-        //         if (!frame.ok()) break;
-        //         buffer->push(frame.value());
-        //     }
-        // }), vigine::core::threading::ThreadAffinity::Pool);
-        (void)tm;
+            // Subscribe to expiration on the FSM-bound token. The
+            // returned RAII subscription handle MUST be stored on a
+            // member that outlives run(); dropping it here would
+            // detach the callback before the worker even started.
+            // The handle's destructor blocks on any in-flight
+            // callback dispatch, so member-lifetime ownership keeps
+            // the listener alive for the life of the task.
+            _expiration = _fsmToken->subscribeExpiration(
+                [cancel = _cancel]() {
+                    cancel->store(true, std::memory_order_release);
+                });
+
+            // Schedule the worker on the engine thread pool. The
+            // closure captures the FSM-bound token by raw pointer
+            // (the unique_ptr stays alive on _fsmToken) plus the
+            // shared cancel flag and frame buffer. The worker
+            // observes Result::Code::Expired on the gated read once
+            // the FSM transitions out of _boundState.
+            auto &tm = perTickToken->threadManager();
+            // Pseudo-code: see ITask::run() docstring on cooperative
+            // exit and engine-token.md § Code example B for the full
+            // worker-side gated-read shape.
+            // (void)tm.schedule(makeRunnable(
+            //     [token = _fsmToken.get(),
+            //      buffer = _buffer,
+            //      cancel = _cancel]() {
+            //         while (!cancel->load(std::memory_order_acquire)) {
+            //             auto frame = token->ecs();
+            //             if (!frame.ok()) break;  // Expired on transition
+            //             buffer->push(frame.value());
+            //         }
+            // }), vigine::core::threading::ThreadAffinity::Pool);
+            (void)tm;
+        }
 
         return vigine::Result(vigine::Result::Code::Success);
     }
 
   private:
+    // Stand-in for "task asks IContext for an FSM-bound token". The
+    // real wiring varies by application — see engine-token.md §
+    // Code example B for the same factory note.
+    static std::unique_ptr<vigine::engine::IEngineToken>
+        makeFsmBoundToken(vigine::statemachine::StateId);
+
     struct FrameBuffer {
         void push(vigine::ecs::IECS &) {}
     };
 
+    vigine::statemachine::StateId                          _boundState;
     vigine::service::ServiceId                             _decoderId;
+    std::unique_ptr<vigine::engine::IEngineToken>          _fsmToken;
+    std::shared_ptr<FrameBuffer>                           _buffer;
+    std::shared_ptr<std::atomic<bool>>                     _cancel;
     std::unique_ptr<vigine::messaging::ISubscriptionToken> _expiration;
 };
 
 } // namespace myproject
 ```
 
-The state-bound semantics in three lines: while the FSM rests in the
-state this task's TaskFlow is bound to, the engine pumps `run()` once
-per tick; the worker thread keeps making progress across ticks; the
-moment the FSM transitions away, the controller thread fires the
-expiration callback, the cancel flag flips, the worker observes
-`Expired` on its next gated read, and the engine starts pumping the
-new state's TaskFlow on the very next tick.
+The state-bound semantics in three lines: while the FSM rests in
+`_boundState`, the engine pumps `run()` once per tick (per-tick
+token comes and goes); the worker thread keeps making progress
+across ticks against the FSM-bound token parked on the task instance;
+the moment the FSM transitions away, the controller thread fires the
+expiration callback registered on the FSM-bound token, the cancel
+flag flips, the worker observes `Result::Code::Expired` on its next
+gated read, and the engine starts pumping the new state's TaskFlow
+on the very next tick.
+
+Once the #343 ITaskFlow redesign threads `IStateMachine::current()`
+into the per-tick mint and lets the per-tick token outlive `run()`,
+the per-tick / FSM-bound split above collapses back into a single
+token reached through `api()`. Until then, the split is the
+contract-safe shape.
 
 ## Cross-references
 
