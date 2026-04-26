@@ -11,28 +11,35 @@
  * @brief Application-side payloads that carry Win32 window input events
  *        from the window task to an @ref ISignalPayload subscriber.
  *
- * The identifiers below sit in the user half of the @c PayloadTypeId
- * space (@c [0x10000 .. 0xFFFFFFFF]). They are picked from the first
- * block inside the window-example sub-range so that future example
- * payloads can extend contiguously without colliding with other user
- * code that also registers into the user half.
+ * The identifiers used to be hardcoded constants; they are now allocated
+ * at runtime by the engine's payload-registry broker through
+ * @c IPayloadRegistry::allocateId so the example never picks user-range
+ * numbers itself. The two extern variables below get filled in by
+ * @c main.cpp before @c engine->run() — every payload instance reads
+ * its @c typeId() through the variable so emit / subscribe paths see the
+ * registry-allocated id consistently.
  */
 
+namespace example::payloads
+{
 /**
  * @brief Payload identifier for @ref MouseButtonDownPayload.
  *
- * User-range value; registered by the application's payload registry
- * before the bus accepts publishes or subscribes that carry it.
+ * Default-initialised to the invalid sentinel; @c main.cpp overwrites
+ * it with the result of
+ * @c context.payloadRegistry().allocateId("example-window.mouse.button.down")
+ * before the engine pump starts.
  */
-inline constexpr vigine::payload::PayloadTypeId kMouseButtonDownPayloadTypeId{0x20101u};
+extern vigine::payload::PayloadTypeId mouseButtonDown;
 
 /**
  * @brief Payload identifier for @ref KeyDownPayload.
  *
- * User-range value; registered by the application's payload registry
- * before the bus accepts publishes or subscribes that carry it.
+ * Same lifecycle as @ref mouseButtonDown — broker-allocated by
+ * @c main.cpp under owner @c "example-window.key.down".
  */
-inline constexpr vigine::payload::PayloadTypeId kKeyDownPayloadTypeId{0x20102u};
+extern vigine::payload::PayloadTypeId keyDown;
+} // namespace example::payloads
 
 /**
  * @brief Immutable payload describing a mouse-button-down event.
@@ -54,7 +61,7 @@ class MouseButtonDownPayload final : public vigine::messaging::ISignalPayload
 
     [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override
     {
-        return kMouseButtonDownPayloadTypeId;
+        return example::payloads::mouseButtonDown;
     }
 
     [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
@@ -91,7 +98,7 @@ class KeyDownPayload final : public vigine::messaging::ISignalPayload
 
     [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override
     {
-        return kKeyDownPayloadTypeId;
+        return example::payloads::keyDown;
     }
 
     [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>

@@ -195,4 +195,111 @@ const AbstractPayloadRegistry::RangeEntry *
     return nullptr;
 }
 
+std::optional<std::uint32_t>
+    AbstractPayloadRegistry::findFirstFreeBlockLocked(std::uint32_t count) const noexcept
+{
+    if (count == 0u)
+        return std::nullopt;
+
+    // Snapshot the user-half entries sorted by min; engine-half entries
+    // cannot overlap with a user-range allocation so they are ignored
+    // for the gap scan.
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> sorted;
+    sorted.reserve(_ranges.size());
+    for (const RangeEntry &entry : _ranges)
+    {
+        if (entry.min >= kUserBegin)
+            sorted.emplace_back(entry.min, entry.max);
+    }
+    std::sort(sorted.begin(), sorted.end());
+
+    std::uint32_t cursor = kUserBegin;
+    for (const auto &[mn, mx] : sorted)
+    {
+        if (mn > cursor)
+        {
+            const std::uint32_t gap = mn - cursor;
+            if (gap >= count)
+                return cursor;
+        }
+        // Advance past this range. When mx already covers the very
+        // top of the user half, no further gap exists; bail early to
+        // avoid the mx+1 overflow in the cursor update below.
+        if (mx == 0xFFFFFFFFu)
+            return std::nullopt;
+        cursor = (std::max)(cursor, mx + 1u);
+    }
+
+    // Final gap [cursor .. 0xFFFFFFFF] inclusive — width is computed
+    // in 64-bit so the +1 cannot overflow when cursor == 0.
+    const std::uint64_t finalWidth =
+        static_cast<std::uint64_t>(0xFFFFFFFFu) - cursor + 1u;
+    if (finalWidth >= count)
+        return cursor;
+    return std::nullopt;
+}
+
+std::optional<PayloadRange>
+    AbstractPayloadRegistry::allocateRange(std::uint32_t   count,
+                                           std::string_view owner)
+{
+    // Up-front argument validation. Both checks mirror the contract
+    // documented on @ref IPayloadRegistry::allocateRange so callers can
+    // branch on a null optional without having to query the underlying
+    // @ref Result.
+    if (count == 0u)
+        return std::nullopt;
+    if (owner.empty())
+        return std::nullopt;
+
+    std::unique_lock<std::shared_mutex> lock(_mutex);
+    const auto baseOpt = findFirstFreeBlockLocked(count);
+    if (!baseOpt)
+        return std::nullopt;
+
+    const std::uint32_t minId = *baseOpt;
+    const std::uint32_t maxId = minId + count - 1u;
+
+    if (!registerRangeLocked(minId, maxId, owner).isSuccess())
+    {
+        // findFirstFreeBlockLocked guarantees no overlap, the count
+        // check above guarantees min <= max, and owner is non-empty —
+        // so the registration cannot fail under a valid invariant.
+        // Return nullopt as a defensive fallback so callers see one
+        // unified failure surface even if a future code path drifts
+        // the invariant.
+        return std::nullopt;
+    }
+
+    return PayloadRange{PayloadTypeId{minId}, PayloadTypeId{maxId}};
+}
+
+std::optional<PayloadTypeId>
+    AbstractPayloadRegistry::allocateId(std::string_view owner)
+{
+    const auto rangeOpt = allocateRange(1u, owner);
+    if (!rangeOpt)
+        return std::nullopt;
+    return rangeOpt->min;
+}
+
+std::vector<std::pair<std::string, PayloadRange>>
+    AbstractPayloadRegistry::labelsOf(std::string_view ownerPrefix) const
+{
+    std::shared_lock<std::shared_mutex> lock(_mutex);
+    std::vector<std::pair<std::string, PayloadRange>> out;
+    out.reserve(_ranges.size());
+    for (const RangeEntry &entry : _ranges)
+    {
+        if (ownerPrefix.empty() ||
+            std::string_view{entry.owner}.starts_with(ownerPrefix))
+        {
+            out.emplace_back(
+                entry.owner,
+                PayloadRange{PayloadTypeId{entry.min}, PayloadTypeId{entry.max}});
+        }
+    }
+    return out;
+}
+
 } // namespace vigine::payload

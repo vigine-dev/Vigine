@@ -23,7 +23,7 @@ set(EXAMPLE_WINDOW_HANDLER_SOURCES
 set(EXAMPLE_WINDOW_TASK_SOURCES
     task/window/initwindowtask.h task/window/initwindowtask.cpp
     task/window/runwindowtask.h task/window/runwindowtask.cpp
-    task/window/windoweventpayload.h
+    task/window/windoweventpayload.h task/window/windoweventpayload.cpp
     task/window/processinputeventtask.h task/window/processinputeventtask.cpp
     task/vulkan/initvulkantask.h task/vulkan/initvulkantask.cpp
     task/vulkan/setupcubetask.h task/vulkan/setupcubetask.cpp

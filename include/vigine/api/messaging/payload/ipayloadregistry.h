@@ -4,7 +4,10 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
+#include "vigine/api/messaging/payload/payloadrange.h"
 #include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
@@ -91,6 +94,59 @@ class IPayloadRegistry
      */
     [[nodiscard]] virtual Result
         unregister(std::string_view owner) = 0;
+
+    /**
+     * @brief Atomically allocates the first free contiguous block of
+     *        @p count user-range identifiers and registers it under
+     *        @p owner.
+     *
+     * The registry walks the user range (`[0x10000 .. 0xFFFFFFFF]`)
+     * looking for the lowest gap of size at least @p count, registers
+     * the resulting `[min, min + count - 1]` slice as if
+     * @ref registerRange had been called, and returns a
+     * @ref PayloadRange describing it. Returns @c std::nullopt when
+     * no gap of the requested size exists or when @p count is zero.
+     *
+     * Callers receive an owned, validated id range; @ref resolve then
+     * returns @p owner for any id inside it. The owner string itself
+     * doubles as the semantic label — there is no separate
+     * label-to-id reverse-lookup API.
+     *
+     * Thread-safety: the find-and-register step takes the registry's
+     * exclusive lock so concurrent callers always see disjoint ranges.
+     */
+    [[nodiscard]] virtual std::optional<PayloadRange>
+        allocateRange(std::uint32_t   count,
+                      std::string_view owner) = 0;
+
+    /**
+     * @brief Convenience shorthand for @ref allocateRange with
+     *        `count == 1`.
+     *
+     * Returns the single allocated id or @c std::nullopt when the
+     * user range is full. Equivalent to
+     * `allocateRange(1, owner).transform([](auto r) { return r.min; })`.
+     */
+    [[nodiscard]] virtual std::optional<PayloadTypeId>
+        allocateId(std::string_view owner) = 0;
+
+    /**
+     * @brief Diagnostic dump: lists every `(owner, range)` pair whose
+     *        owner string starts with @p ownerPrefix.
+     *
+     * An empty prefix lists every registered range — including the
+     * engine-bundled ones under owner @c "vigine.core". A non-empty
+     * prefix scopes the dump to one application or namespace
+     * (typically the same string passed to @ref allocateId /
+     * @ref allocateRange / @ref registerRange).
+     *
+     * The returned vector is unsorted; callers that need a specific
+     * order sort it themselves. Thread-safe under the registry's
+     * shared lock so concurrent diagnostic dumps do not block each
+     * other.
+     */
+    [[nodiscard]] virtual std::vector<std::pair<std::string, PayloadRange>>
+        labelsOf(std::string_view ownerPrefix = std::string_view{}) const = 0;
 
     IPayloadRegistry(const IPayloadRegistry &)            = delete;
     IPayloadRegistry &operator=(const IPayloadRegistry &) = delete;

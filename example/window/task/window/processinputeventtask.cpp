@@ -41,7 +41,7 @@ vigine::messaging::DispatchResult
 {
     const vigine::payload::PayloadTypeId id = message.payloadTypeId();
 
-    if (id == kMouseButtonDownPayloadTypeId)
+    if (id == example::payloads::mouseButtonDown)
     {
         if (const auto *payload =
                 dynamic_cast<const MouseButtonDownPayload *>(message.payload()))
@@ -52,7 +52,7 @@ vigine::messaging::DispatchResult
         return vigine::messaging::DispatchResult::Pass;
     }
 
-    if (id == kKeyDownPayloadTypeId)
+    if (id == example::payloads::keyDown)
     {
         if (const auto *payload =
                 dynamic_cast<const KeyDownPayload *>(message.payload()))
