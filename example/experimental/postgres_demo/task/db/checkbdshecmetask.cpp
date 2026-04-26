@@ -1,26 +1,18 @@
 #include "checkbdshecmetask.h"
 
-#include "vigine/impl/ecs/entity.h"
-#include "vigine/impl/ecs/entitymanager.h"
-#include <vigine/context.h>
-#include <vigine/property.h>
+#include <vigine/experimental/ecs/postgresql/impl/column.h>
+#include <vigine/experimental/ecs/postgresql/impl/databaseconfiguration.h>
+#include <vigine/experimental/ecs/postgresql/impl/table.h>
+#include <vigine/result.h>
 #include <vigine/service/databaseservice.h>
 
 #include <print>
 
 CheckBDShecmeTask::CheckBDShecmeTask() {}
 
-void CheckBDShecmeTask::contextChanged()
+void CheckBDShecmeTask::setDatabaseService(vigine::DatabaseService *service)
 {
-    if (!context())
-    {
-        _dbService = nullptr;
-
-        return;
-    }
-
-    _dbService = dynamic_cast<vigine::DatabaseService *>(
-        context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
+    _dbService = service;
 }
 
 vigine::Result CheckBDShecmeTask::run()
@@ -28,8 +20,6 @@ vigine::Result CheckBDShecmeTask::run()
     if (!_dbService)
         return vigine::Result(vigine::Result::Code::Error,
                               "CheckBDShecmeTask::run: database service is not bound");
-
-    vigine::Result result;
 
     using namespace vigine::experimental::ecs::postgresql;
 
@@ -39,51 +29,41 @@ vigine::Result CheckBDShecmeTask::run()
 
     Column idColumn, nameColumn, emailColumn;
     idColumn.setName("id");
-    idColumn.setType(vigine::experimental::ecs::postgresql::DataType::Integer);
+    idColumn.setType(DataType::Integer);
     idColumn.setPrimary(true);
 
     nameColumn.setName("name");
-    nameColumn.setType(vigine::experimental::ecs::postgresql::DataType::Text);
+    nameColumn.setType(DataType::Text);
 
     emailColumn.setName("email");
-    emailColumn.setType(vigine::experimental::ecs::postgresql::DataType::Text);
+    emailColumn.setType(DataType::Text);
 
     table.addColumn(idColumn);
     table.addColumn(nameColumn);
     table.addColumn(emailColumn);
 
-    auto *entityManager = context()->entityManager();
-    auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
+    if (auto *dbConfig = _dbService->databaseConfiguration())
+        dbConfig->setTables({table});
 
-    if (!entity)
+    auto checkResult = _dbService->checkDatabaseScheme();
+    if (!checkResult)
         return vigine::Result(vigine::Result::Code::Error,
-                              "CheckBDShecmeTask::run: entity 'PostgresBDLocal' not found");
+                              "CheckBDShecmeTask::run: checkDatabaseScheme returned a null result");
 
-    // Post-#330: legacy @c bindEntity / @c unbindEntity removed; see
-    // @c RemoveSomeDataTask for the migration note.
+    vigine::Result result = *checkResult;
+    if (!result.isSuccess())
     {
-        if (auto *dbConfig = _dbService->databaseConfiguration())
-            dbConfig->setTables({table});
+        std::println("Needed tables don't exist. Let's create them. Error message: {}",
+                     result.message());
 
-        auto checkResultUPtr = _dbService->checkDatabaseScheme();
-        if (!checkResultUPtr)
+        auto createResult = _dbService->createDatabaseScheme();
+        if (!createResult)
             return vigine::Result(vigine::Result::Code::Error,
-                                  "CheckBDShecmeTask::run: checkDatabaseScheme returned a null result");
+                                  "CheckBDShecmeTask::run: createDatabaseScheme returned a null result");
 
-        result = *checkResultUPtr;
-        if (!result.isSuccess())
-        {
-            std::println("Needed tables don't exist. Let's create them. Error message: {}",
-                         result.message());
-            auto createResultUPtr = _dbService->createDatabaseScheme();
-            if (!createResultUPtr)
-                return vigine::Result(vigine::Result::Code::Error,
-                                      "CheckBDShecmeTask::run: createDatabaseScheme returned a null result");
-
-            result = *createResultUPtr;
-            if (result.isSuccess())
-                std::println("Needed Table was created");
-        }
+        result = *createResult;
+        if (result.isSuccess())
+            std::println("Needed Table was created");
     }
 
     return result;

@@ -15,17 +15,14 @@ set(EXAMPLE_POSTGRESQL_DB_BOOTSTRAP_SOURCES
     task/db/initbdtask.h task/db/initbdtask.cpp
     task/db/checkbdshecmetask.h task/db/checkbdshecmetask.cpp)
 
-set(EXAMPLE_POSTGRESQL_STATE_SOURCES
-    state/initstate.h state/initstate.cpp
-    state/workstate.h state/workstate.cpp
-    state/errorstate.h state/errorstate.cpp
-    state/closestate.h state/closestate.cpp)
+set(EXAMPLE_POSTGRESQL_TRANSITION_SOURCES
+    task/transitiontask.h task/transitiontask.cpp)
 
 add_executable(${PROJECT_POSTGRESQL_NAME}
     main.cpp
     ${EXAMPLE_POSTGRESQL_DATA_TASK_SOURCES}
     ${EXAMPLE_POSTGRESQL_DB_BOOTSTRAP_SOURCES}
-    ${EXAMPLE_POSTGRESQL_STATE_SOURCES})
+    ${EXAMPLE_POSTGRESQL_TRANSITION_SOURCES})
 
 target_link_libraries(${PROJECT_POSTGRESQL_NAME}
     PRIVATE

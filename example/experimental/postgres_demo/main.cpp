@@ -1,92 +1,279 @@
-#include <vigine/impl/statemachine/statemachine.h>
-#include <vigine/impl/taskflow/taskflow.h>
-#include <vigine/vigine.h>
+// ---------------------------------------------------------------------------
+// example-postgresql
+//
+// Drives the experimental Postgres demo through the modern engine
+// (`vigine::engine::createEngine`) and the per-state TaskFlow registry
+// added in #334. Every state owns one TaskFlow registered through
+// `IStateMachine::addStateTaskFlow`; the engine looks the bound flow up
+// each tick and pumps `runCurrentTask` until the flow signals
+// completion. State transitions are driven by tasks that call
+// `IStateMachine::requestTransition` on the FSM the engine owns.
+//
+// What the demo proves
+// --------------------
+//   * Modern engine wiring: `vigine::engine::createEngine` + the
+//     IStateMachine + TaskFlow registry are enough to reproduce the
+//     legacy Init -> Work -> Close (with Error fallback) loop.
+//   * Modern service container: `DatabaseService` (post #330) is
+//     registered through `IContext::registerService` and the underlying
+//     `PostgreSQLSystem` is attached via `setPostgresSystem` so the
+//     CRUD entry points have a live driver to delegate to.
+//   * Experimental gate: every database-facing call is compiled in only
+//     when `VIGINE_POSTGRESQL` is defined. The default build
+//     (`VIGINE_ENABLE_EXPERIMENTAL=OFF`) skips the demo entirely; this
+//     translation unit therefore compiles in a configuration that has
+//     `VIGINE_POSTGRESQL` set as well.
+// ---------------------------------------------------------------------------
 
-#include "state/closestate.h"
-#include "state/errorstate.h"
-#include "state/initstate.h"
-#include "state/workstate.h"
 #include "task/data/addsomedatatask.h"
 #include "task/data/readsomedatatask.h"
 #include "task/data/removesomedatatask.h"
 #include "task/db/checkbdshecmetask.h"
 #include "task/db/initbdtask.h"
+#include "task/transitiontask.h"
 
-#include <cassert>
+#include <vigine/api/context/icontext.h>
+#include <vigine/api/engine/factory.h>
+#include <vigine/api/engine/iengine.h>
+#include <vigine/api/statemachine/istatemachine.h>
+#include <vigine/api/statemachine/stateid.h>
+#include <vigine/impl/taskflow/taskflow.h>
+#include <vigine/result.h>
+#include <vigine/service/databaseservice.h>
+
+#if VIGINE_POSTGRESQL
+#include <vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h>
+#endif
+
+#include <iostream>
 #include <memory>
+#include <utility>
 
-
-using namespace vigine;
-
-std::unique_ptr<TaskFlow> createInitTaskFlow()
+namespace
 {
-    auto taskFlow           = std::make_unique<TaskFlow>();
 
-    auto *initDBTask        = taskFlow->addTask(std::make_unique<InitBDTask>());
-    auto *checkBDShecmeTask = taskFlow->addTask(std::make_unique<CheckBDShecmeTask>());
+// All per-state task flows are built on the same shape: a linear chain
+// of domain tasks, ending in one or more transition tasks that hand
+// control back to the FSM through `requestTransition`. The success
+// route always advances to the next phase; the error route diverts to
+// the error state (or, in the close phase, asks the engine to shut
+// down).
 
-    static_cast<void>(taskFlow->route(initDBTask, checkBDShecmeTask));
-    taskFlow->changeCurrentTaskTo(initDBTask);
+std::unique_ptr<vigine::TaskFlow> buildInitFlow(
+    vigine::DatabaseService                *dbService,
+    vigine::statemachine::IStateMachine    *stateMachine,
+    vigine::statemachine::StateId           workState,
+    vigine::statemachine::StateId           errorState)
+{
+    auto flow = std::make_unique<vigine::TaskFlow>();
 
-    return taskFlow;
+    auto initBd        = std::make_unique<InitBDTask>();
+    initBd->setDatabaseService(dbService);
+    auto checkSchema   = std::make_unique<CheckBDShecmeTask>();
+    checkSchema->setDatabaseService(dbService);
+    auto toWork        = std::make_unique<TransitionTask>(stateMachine, workState);
+    auto toError       = std::make_unique<TransitionTask>(stateMachine, errorState);
+
+    auto *initBdRaw     = flow->addTask(std::move(initBd));
+    auto *checkSchemaRaw = flow->addTask(std::move(checkSchema));
+    auto *toWorkRaw      = flow->addTask(std::move(toWork));
+    auto *toErrorRaw     = flow->addTask(std::move(toError));
+
+    static_cast<void>(flow->route(initBdRaw,     checkSchemaRaw, vigine::Result::Code::Success));
+    static_cast<void>(flow->route(initBdRaw,     toErrorRaw,     vigine::Result::Code::Error));
+    static_cast<void>(flow->route(checkSchemaRaw, toWorkRaw,     vigine::Result::Code::Success));
+    static_cast<void>(flow->route(checkSchemaRaw, toErrorRaw,    vigine::Result::Code::Error));
+
+    flow->changeCurrentTaskTo(initBdRaw);
+    return flow;
 }
 
-std::unique_ptr<TaskFlow> createWorkTaskFlow()
+std::unique_ptr<vigine::TaskFlow> buildWorkFlow(
+    vigine::DatabaseService                *dbService,
+    vigine::statemachine::IStateMachine    *stateMachine,
+    vigine::statemachine::StateId           closeState,
+    vigine::statemachine::StateId           errorState)
 {
-    auto taskFlow            = std::make_unique<TaskFlow>();
+    auto flow = std::make_unique<vigine::TaskFlow>();
 
-    auto *addSomeDataTask    = taskFlow->addTask(std::make_unique<AddSomeDataTask>());
-    auto *readSomeDataTask   = taskFlow->addTask(std::make_unique<ReadSomeDataTask>());
-    auto *removeSomeDataTask = taskFlow->addTask(std::make_unique<RemoveSomeDataTask>());
+    auto addData    = std::make_unique<AddSomeDataTask>();
+    addData->setDatabaseService(dbService);
+    auto readData   = std::make_unique<ReadSomeDataTask>();
+    readData->setDatabaseService(dbService);
+    auto removeData = std::make_unique<RemoveSomeDataTask>();
+    removeData->setDatabaseService(dbService);
+    auto toClose    = std::make_unique<TransitionTask>(stateMachine, closeState);
+    auto toError    = std::make_unique<TransitionTask>(stateMachine, errorState);
 
-    static_cast<void>(taskFlow->route(addSomeDataTask, readSomeDataTask));
-    static_cast<void>(taskFlow->route(readSomeDataTask, removeSomeDataTask));
-    taskFlow->changeCurrentTaskTo(addSomeDataTask);
+    auto *addRaw     = flow->addTask(std::move(addData));
+    auto *readRaw    = flow->addTask(std::move(readData));
+    auto *removeRaw  = flow->addTask(std::move(removeData));
+    auto *closeRaw   = flow->addTask(std::move(toClose));
+    auto *errorRaw   = flow->addTask(std::move(toError));
 
-    return taskFlow;
+    static_cast<void>(flow->route(addRaw,    readRaw,   vigine::Result::Code::Success));
+    static_cast<void>(flow->route(addRaw,    errorRaw,  vigine::Result::Code::Error));
+    static_cast<void>(flow->route(readRaw,   removeRaw, vigine::Result::Code::Success));
+    static_cast<void>(flow->route(readRaw,   errorRaw,  vigine::Result::Code::Error));
+    static_cast<void>(flow->route(removeRaw, closeRaw,  vigine::Result::Code::Success));
+    static_cast<void>(flow->route(removeRaw, errorRaw,  vigine::Result::Code::Error));
+
+    flow->changeCurrentTaskTo(addRaw);
+    return flow;
 }
 
-std::unique_ptr<TaskFlow> createErrorTaskFlow() { return std::make_unique<TaskFlow>(); }
+std::unique_ptr<vigine::TaskFlow> buildErrorFlow(
+    vigine::statemachine::IStateMachine *stateMachine,
+    vigine::statemachine::StateId        closeState)
+{
+    auto flow = std::make_unique<vigine::TaskFlow>();
 
-std::unique_ptr<TaskFlow> createCloseTaskFlow() { return std::make_unique<TaskFlow>(); }
+    // Error phase prints the reached-error notice and falls through to
+    // close so the engine can shut down cleanly. No domain work runs
+    // in this state.
+    auto toClose       = std::make_unique<TransitionTask>(stateMachine, closeState);
+    auto *toCloseRaw   = flow->addTask(std::move(toClose));
+    flow->changeCurrentTaskTo(toCloseRaw);
+    return flow;
+}
+
+std::unique_ptr<vigine::TaskFlow> buildCloseFlow(vigine::engine::IEngine *engine)
+{
+    auto flow = std::make_unique<vigine::TaskFlow>();
+
+    // Close phase asks the engine to stop the main loop. The
+    // ShutdownTask returns Success, the flow has no further routes
+    // out of it, and Engine::run() exits on the next pump tick.
+    auto shutdown      = std::make_unique<ShutdownTask>(engine);
+    auto *shutdownRaw  = flow->addTask(std::move(shutdown));
+    flow->changeCurrentTaskTo(shutdownRaw);
+    return flow;
+}
+
+} // namespace
 
 int main()
 {
-    Engine engine;
-    // Engine::state() now returns IStateMachine&; the concrete
-    // StateMachine is still the only implementation shipped with the
-    // engine, so downcast back to it for the rich state-machine API.
-    // Later leaves move the addState/addTransition surface onto the
-    // interface itself; the cast is temporary scaffolding.
-    StateMachine *stMachine = dynamic_cast<StateMachine *>(&engine.state());
-    assert(stMachine != nullptr &&
-           "Engine::state() must be a concrete StateMachine until the "
-           "rich API lifts onto IStateMachine");
+    // ---- Engine ----------------------------------------------------------
+    auto engine = vigine::engine::createEngine();
+    if (!engine)
+    {
+        std::cerr << "createEngine returned null\n";
+        return 1;
+    }
 
-    auto initState          = std::make_unique<InitState>();
-    auto workState          = std::make_unique<WorkState>();
-    auto errorState         = std::make_unique<ErrorState>();
-    auto closeState         = std::make_unique<CloseState>();
+    auto &context      = engine->context();
+    auto &stateMachine = context.stateMachine();
 
-    auto initPtr            = stMachine->addState(std::move(initState));
-    auto workPtr            = stMachine->addState(std::move(workState));
-    auto errorPtr           = stMachine->addState(std::move(errorState));
-    auto closePtr           = stMachine->addState(std::move(closeState));
+    // ---- Database service -----------------------------------------------
+    //
+    // The service is constructed with its instance name (the legacy
+    // registry used the Name to distinguish multiple service instances;
+    // the modern container stamps a generational ServiceId on
+    // registerService). We keep the shared_ptr around because we still
+    // need a non-owning DatabaseService* to hand into each task and to
+    // attach the postgres system after registration.
+    auto dbService = std::make_shared<vigine::DatabaseService>(vigine::Name("TestDB"));
 
-    initPtr->setTaskFlow(createInitTaskFlow());
-    workPtr->setTaskFlow(createWorkTaskFlow());
-    errorPtr->setTaskFlow(createErrorTaskFlow());
-    closePtr->setTaskFlow(createCloseTaskFlow());
+    if (const auto regResult = context.registerService(dbService);
+        regResult.isError())
+    {
+        std::cerr << "registerService failed: " << regResult.message() << '\n';
+        return 1;
+    }
 
-    static_cast<void>(stMachine->addTransition(initPtr, workPtr, Result::Code::Success));
-    static_cast<void>(stMachine->addTransition(initPtr, errorPtr, Result::Code::Error));
-    static_cast<void>(stMachine->addTransition(workPtr, closePtr, Result::Code::Success));
-    static_cast<void>(stMachine->addTransition(workPtr, errorPtr, Result::Code::Error));
-    static_cast<void>(stMachine->addTransition(errorPtr, workPtr, Result::Code::Success));
-    static_cast<void>(stMachine->addTransition(errorPtr, closePtr, Result::Code::Error));
+#if VIGINE_POSTGRESQL
+    // The PostgreSQLSystem is the substrate the service delegates to.
+    // It is built standalone and attached through `setPostgresSystem`;
+    // entity binding is performed locally because the modern IECS
+    // surface does not yet expose a system-locator and the legacy
+    // entity-bind path is not part of the modern token contract.
+    auto pgSystem = std::make_unique<vigine::experimental::ecs::postgresql::PostgreSQLSystem>(
+        vigine::SystemName{"postgres-system"});
+    dbService->setPostgresSystem(pgSystem.get());
+#endif
 
-    stMachine->changeStateTo(initPtr);
-    engine.run();
+    // ---- States + per-state TaskFlows -----------------------------------
+    //
+    // The auto-provisioned default state from AbstractStateMachine is
+    // left unused; we register explicit Init / Work / Error / Close
+    // states and pin the FSM to Init via `setInitial`. The TaskFlows
+    // are wired with explicit success / error routes so the legacy
+    // result-code-keyed transitions (previously encoded on the legacy
+    // StateMachine through `addTransition`) survive in the modern
+    // shape: each task's Result drives the in-flow advance, and the
+    // terminal TransitionTask asks the FSM to switch to the next
+    // state once the chain reaches its end.
+    const auto initStateId  = stateMachine.addState();
+    const auto workStateId  = stateMachine.addState();
+    const auto errorStateId = stateMachine.addState();
+    const auto closeStateId = stateMachine.addState();
 
-    return 0;
+    if (!initStateId.valid() || !workStateId.valid() ||
+        !errorStateId.valid() || !closeStateId.valid())
+    {
+        std::cerr << "addState returned an invalid id\n";
+        return 1;
+    }
+
+    if (const auto initResult = stateMachine.setInitial(initStateId);
+        initResult.isError())
+    {
+        std::cerr << "setInitial failed: " << initResult.message() << '\n';
+        return 1;
+    }
+
+    {
+        auto flow = buildInitFlow(dbService.get(), &stateMachine,
+                                  workStateId, errorStateId);
+        if (const auto bind = stateMachine.addStateTaskFlow(initStateId, std::move(flow));
+            bind.isError())
+        {
+            std::cerr << "addStateTaskFlow(init) failed: " << bind.message() << '\n';
+            return 1;
+        }
+    }
+
+    {
+        auto flow = buildWorkFlow(dbService.get(), &stateMachine,
+                                  closeStateId, errorStateId);
+        if (const auto bind = stateMachine.addStateTaskFlow(workStateId, std::move(flow));
+            bind.isError())
+        {
+            std::cerr << "addStateTaskFlow(work) failed: " << bind.message() << '\n';
+            return 1;
+        }
+    }
+
+    {
+        auto flow = buildErrorFlow(&stateMachine, closeStateId);
+        if (const auto bind = stateMachine.addStateTaskFlow(errorStateId, std::move(flow));
+            bind.isError())
+        {
+            std::cerr << "addStateTaskFlow(error) failed: " << bind.message() << '\n';
+            return 1;
+        }
+    }
+
+    {
+        auto flow = buildCloseFlow(engine.get());
+        if (const auto bind = stateMachine.addStateTaskFlow(closeStateId, std::move(flow));
+            bind.isError())
+        {
+            std::cerr << "addStateTaskFlow(close) failed: " << bind.message() << '\n';
+            return 1;
+        }
+    }
+
+    // ---- Run -------------------------------------------------------------
+    const auto runResult = engine->run();
+
+#if VIGINE_POSTGRESQL
+    // Detach the postgres system from the service before the system
+    // goes out of scope. Without this the service would observe a
+    // dangling pointer on any post-shutdown CRUD call.
+    dbService->setPostgresSystem(nullptr);
+#endif
+
+    return runResult.isSuccess() ? 0 : 1;
 }
