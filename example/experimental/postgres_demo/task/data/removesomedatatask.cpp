@@ -23,21 +23,30 @@ void RemoveSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Validate entity/_dbService and provide an error-return
-// path from clearTable/queryRequest; otherwise database failures here
-// go unnoticed.
 vigine::Result RemoveSomeDataTask::run()
 {
     std::println("-- RemoveSomeDataTask::run()");
 
+    if (!_dbService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "RemoveSomeDataTask::run: database service is not bound");
+
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
 
-    _dbService->bindEntity(entity);
-    {
-        _dbService->clearTable("Test");
-    }
-    _dbService->unbindEntity();
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "RemoveSomeDataTask::run: entity 'PostgresBDLocal' not found");
 
-    return vigine::Result();
+    // Post-#330: @c DatabaseService derives from the modern
+    // @c vigine::service::AbstractService, which does not carry the
+    // legacy @c bindEntity / @c unbindEntity surface. The postgres
+    // system is now wired through @c DatabaseService::setPostgresSystem
+    // by the engine bootstrapper; this demo's full wiring migration is
+    // tracked as a follow-up. The previous calls were no-ops on the
+    // modern base anyway because @c DatabaseService never overrode the
+    // entity-bind hooks.
+    auto clearResult = _dbService->clearTable("Test");
+
+    return clearResult;
 }

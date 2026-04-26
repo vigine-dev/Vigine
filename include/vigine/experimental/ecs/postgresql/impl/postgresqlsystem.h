@@ -60,7 +60,24 @@ class PostgreSQLSystem : public AbstractSystem
     [[nodiscard]] PostgreSQLResultUPtr checkTablesScheme() const;
 
     void createTable(const std::string &tableName, const std::vector<std::string> tableColumns);
-    void queryRequest(const std::string &query);
+
+    /**
+     * @brief Executes the supplied SQL string against the bound entity
+     *        component and surfaces the outcome as a @c vigine::Result.
+     *
+     * Pre-#333 the API was @c void with a silent log-and-return when
+     * no entity was bound; callers (notably @c DatabaseService) had no
+     * way to distinguish "ran cleanly" from "skipped because nothing
+     * was bound" or "the driver reported an error". The signature now
+     * returns:
+     *   - @c Result::Code::Error with the unbound-state message when
+     *     no entity is bound;
+     *   - the underlying driver result on a successful exec (errors
+     *     surface through the driver's own @c isError payload, which
+     *     this method forwards as-is);
+     *   - @c Result::Code::Success otherwise.
+     */
+    [[nodiscard]] vigine::Result queryRequest(const std::string &query);
 
   protected:
     virtual void entityBound();

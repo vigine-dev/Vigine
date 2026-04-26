@@ -26,11 +26,19 @@ void InitBDTask::contextChanged()
 
 vigine::Result InitBDTask::run()
 {
+    if (!_dbService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "InitBDTask::run: database service is not bound");
+
     auto *entityManager       = context()->entityManager();
     vigine::Entity *ent       = entityManager->createEntity();
     vigine::Entity *entSignal = entityManager->createEntity();
 
-    _dbService->bindEntity(ent);
+    // Post-#330: legacy @c bindEntity / @c unbindEntity removed; see
+    // @c RemoveSomeDataTask for the migration note. The
+    // @c databaseConfiguration / @c connectToDb calls below now run
+    // against the postgres system the engine bootstrapper attaches via
+    // @c DatabaseService::setPostgresSystem.
     {
         auto connectionDataUPtr = std::make_unique<vigine::experimental::ecs::postgresql::ConnectionData>();
         connectionDataUPtr->setHost("localhost");
@@ -39,12 +47,13 @@ vigine::Result InitBDTask::run()
         connectionDataUPtr->setDbUserName(vigine::Name("postgres"));
         connectionDataUPtr->setPassword(vigine::Password("postgres"));
 
-        _dbService->databaseConfiguration()->setConnectionData(std::move(connectionDataUPtr));
+        if (auto *dbConfig = _dbService->databaseConfiguration())
+            dbConfig->setConnectionData(std::move(connectionDataUPtr));
+
         auto connectResult = _dbService->connectToDb();
         if (connectResult && connectResult->isError())
             std::println("DB connection failed: {}", connectResult->message());
     }
-    _dbService->unbindEntity();
 
     entityManager->addAlias(ent, "PostgresBDLocal");
     entityManager->addAlias(entSignal, "KeyRleaseEvent");

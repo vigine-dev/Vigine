@@ -21,7 +21,7 @@ void vigine::experimental::ecs::postgresql::PostgreSQLTypeConverter::setTypeRela
                                                                   BDExternalType bdExtType)
 {
     auto type = pgExternalToVigineDataType(bdExtType);
-    if (type == DataType::NotRcognized)
+    if (type == DataType::NotRecognized)
         return;
 
     _typesContainer.emplace_back(internalType, type);
@@ -42,7 +42,7 @@ vigine::experimental::ecs::postgresql::PostgreSQLTypeConverter::pgExternalToVigi
 #undef VIGINE_POSTGRESQL_DATA_X
 
     // convert from string to DataType
-    return DataType::NotRcognized;
+    return DataType::NotRecognized;
 }
 
 std::optional<vigine::experimental::ecs::postgresql::DataType>

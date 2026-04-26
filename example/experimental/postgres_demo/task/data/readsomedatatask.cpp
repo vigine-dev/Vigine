@@ -23,20 +23,29 @@ void ReadSomeDataTask::contextChanged()
         context()->service("Database", vigine::Name("TestDB"), vigine::Property::Exist));
 }
 
-// COPILOT_TODO: Validate entity/_dbService and return an error while
-// DatabaseService::readData() stays unfinished; the current path masks
-// incomplete code as success.
+// COPILOT_TODO: @c DatabaseService::readData() still returns an empty
+// vector unconditionally; the loop below masks that as success. Real
+// row-fetch wiring is a separate follow-up.
 vigine::Result ReadSomeDataTask::run()
 {
     std::println("-- ReadSomeDataTask::run()");
 
+    if (!_dbService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "ReadSomeDataTask::run: database service is not bound");
+
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
 
-    _dbService->bindEntity(entity);
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "ReadSomeDataTask::run: entity 'PostgresBDLocal' not found");
+
+    // Post-#330: legacy @c bindEntity / @c unbindEntity removed; see
+    // @c RemoveSomeDataTask for the migration note.
     {
         std::vector<std::vector<std::string>> result = _dbService->readData("Test");
-        for (int i = 0; i < result.size(); ++i)
+        for (std::size_t i = 0; i < result.size(); ++i)
         {
             auto item          = result[i];
             std::string rowStr = "Row (" + std::to_string(i + 1) + ") data: ";
@@ -46,7 +55,6 @@ vigine::Result ReadSomeDataTask::run()
             std::println("{}", rowStr);
         }
     }
-    _dbService->unbindEntity();
 
     return vigine::Result();
 }

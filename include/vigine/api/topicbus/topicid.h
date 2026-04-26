@@ -48,11 +48,19 @@ struct TopicId
 } // namespace vigine::topicbus
 
 // TEMPLATE EXEMPTION: std::hash specialization required for hash-map key support; sanctioned per architecture.md § R-NoTemplates.
+// Wrapped in `namespace std { ... }` (rather than the `template <>
+// struct std::hash<...>` global-scope form) for portability — the
+// global form is accepted by some compilers but the namespace-qualified
+// form is the form mandated by the standard for user specialisations
+// inside std.
+namespace std
+{
 template <>
-struct std::hash<vigine::topicbus::TopicId>
+struct hash<vigine::topicbus::TopicId>
 {
     [[nodiscard]] std::size_t operator()(vigine::topicbus::TopicId id) const noexcept
     {
         return std::hash<std::uint32_t>{}(id.value);
     }
 };
+} // namespace std

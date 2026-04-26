@@ -82,11 +82,18 @@ vigine::experimental::ecs::postgresql::PostgreSQLResultUPtr vigine::experimental
     return std::make_unique<PostgreSQLResult>();
 }
 
-// COPILOT_TODO: Перевіряти _boundEntityComponent перед доступом до dbConfiguration()/exec(), інакше
-// перевірка схеми падає ще до повернення Result::Error.
 vigine::experimental::ecs::postgresql::PostgreSQLResultUPtr
 vigine::experimental::ecs::postgresql::PostgreSQLSystem::checkTablesScheme() const
 {
+    // Defensive null-check: previously this routine dereferenced
+    // _boundEntityComponent directly and crashed when the system had
+    // no entity bound yet (Copilot finding A9). Surface the error as
+    // a Result so the call chain through DatabaseService::checkDatabaseScheme
+    // returns cleanly.
+    if (!_boundEntityComponent)
+        return std::make_unique<PostgreSQLResult>(Result::Code::Error,
+                                                  "PostgreSQL entity component is not bound");
+
     const auto &tables = _boundEntityComponent->dbConfiguration()->tables();
 
     bool hasError{false};
@@ -236,21 +243,33 @@ void vigine::experimental::ecs::postgresql::PostgreSQLSystem::createTable(const 
         std::println("PostgreSQL createTable failed: {}", result->message());
 }
 
-// COPILOT_TODO: Додати guard на _boundEntityComponent і нормальний шлях повернення помилки;
-// void-API тут маскує критичні збої виконання запиту.
-void vigine::experimental::ecs::postgresql::PostgreSQLSystem::queryRequest(const std::string &query)
+// Post-#333: signature returns @c vigine::Result so callers can react
+// to the unbound-state and driver-error paths instead of treating a
+// silent no-op as success.
+vigine::Result
+vigine::experimental::ecs::postgresql::PostgreSQLSystem::queryRequest(const std::string &query)
 {
     if (!_boundEntityComponent)
     {
         std::println("PostgreSQL query skipped: entity component is not bound");
-        return;
+        return vigine::Result(vigine::Result::Code::Error,
+                              "PostgreSQLSystem::queryRequest: no entity component is bound");
     }
 
     _boundEntityComponent->setQuery(query);
     auto result = _boundEntityComponent->exec();
 
+    if (!result)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "PostgreSQLSystem::queryRequest: driver returned a null result");
+
     if (result->isError())
+    {
         std::println("PostgreSQL query failed: {}", result->message());
+        return vigine::Result(vigine::Result::Code::Error, result->message());
+    }
+
+    return vigine::Result();
 }
 
 void vigine::experimental::ecs::postgresql::PostgreSQLSystem::entityBound()

@@ -25,6 +25,10 @@ void CheckBDShecmeTask::contextChanged()
 
 vigine::Result CheckBDShecmeTask::run()
 {
+    if (!_dbService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "CheckBDShecmeTask::run: database service is not bound");
+
     vigine::Result result;
 
     using namespace vigine::experimental::ecs::postgresql;
@@ -51,20 +55,36 @@ vigine::Result CheckBDShecmeTask::run()
     auto *entityManager = context()->entityManager();
     auto *entity        = entityManager->getEntityByAlias("PostgresBDLocal");
 
-    _dbService->bindEntity(entity);
+    if (!entity)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "CheckBDShecmeTask::run: entity 'PostgresBDLocal' not found");
+
+    // Post-#330: legacy @c bindEntity / @c unbindEntity removed; see
+    // @c RemoveSomeDataTask for the migration note.
     {
-        _dbService->databaseConfiguration()->setTables({table});
-        result = *_dbService->checkDatabaseScheme();
+        if (auto *dbConfig = _dbService->databaseConfiguration())
+            dbConfig->setTables({table});
+
+        auto checkResultUPtr = _dbService->checkDatabaseScheme();
+        if (!checkResultUPtr)
+            return vigine::Result(vigine::Result::Code::Error,
+                                  "CheckBDShecmeTask::run: checkDatabaseScheme returned a null result");
+
+        result = *checkResultUPtr;
         if (!result.isSuccess())
         {
             std::println("Needed tables don't exist. Let's create them. Error message: {}",
                          result.message());
-            result = *_dbService->createDatabaseScheme();
+            auto createResultUPtr = _dbService->createDatabaseScheme();
+            if (!createResultUPtr)
+                return vigine::Result(vigine::Result::Code::Error,
+                                      "CheckBDShecmeTask::run: createDatabaseScheme returned a null result");
+
+            result = *createResultUPtr;
             if (result.isSuccess())
                 std::println("Needed Table was created");
         }
     }
-    _dbService->unbindEntity();
 
     return result;
 }

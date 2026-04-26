@@ -77,7 +77,7 @@ void vigine::experimental::ecs::postgresql::PostgreSQLResult::buildResultData(co
                 auto colTypeOID = data.column_type(i);
                 auto columnName = data.column_name(i);
 
-                switch (_converter->toColumnType(colTypeOID).value_or(DataType::NotRcognized))
+                switch (_converter->toColumnType(colTypeOID).value_or(DataType::NotRecognized))
                 {
                 case DataType::Boolean:
                     row->set(columnName, Data(rowData[i].as<bool>(), DataType::Boolean));
