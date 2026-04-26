@@ -150,39 +150,101 @@ Contract:
   detaches the callback. The token holds the subscription as RAII; no
   manual `cancel()` is required for the common case.
 
-## Lifecycle and FSM hook
+## Lifecycle: per-state, FSM-driven (post-#334)
 
-The state machine drives the token's lifecycle through an
-invalidation-listener registry on `AbstractStateMachine`. The flow
-below shows what happens on a non-noop transition.
+The token's lifecycle is bound to the FSM state under which the engine
+issued it, NOT to a single `run()` call on the task that holds it. The
+engine's main pump (`vigine::engine::Engine::run`, see
+[`src/api/engine/abstractengine.cpp`](../../src/api/engine/abstractengine.cpp))
+walks the following per-tick shape:
+
+1. Read `IStateMachine::current()` — call it *S*.
+2. Look up `IStateMachine::taskFlowFor(S)`. A `nullptr` result means no
+   work is registered for the active state and the tick falls through
+   to the FSM drain + main-thread pump alone.
+3. When a flow is bound, advance it by exactly one task via
+   `TaskFlow::runCurrentTask`. That call mints an engine token, binds
+   it on the task with `setApi`, runs `ITask::run` synchronously, then
+   clears the binding and drops the token (RAII via `ApiBindingGuard`).
+4. Drain queued FSM transitions on the controller thread
+   (`processQueuedTransitions`). A `requestTransition(T)` call posted
+   from inside the just-finished task lands here and updates the FSM
+   to *T*.
+5. Pump the thread manager's main-thread queue.
+6. Sleep until the next pump tick or a `shutdown()` notify.
+
+Two consequences for the token narrative:
+
+- **Per-state TaskFlow scoping.** The flow that runs at tick *N+1* is
+  the flow bound to whatever state the FSM transitioned to during tick
+  *N*. A single FSM session therefore drives a *sequence* of TaskFlows,
+  one per active state, and the engine token a task observes inside
+  `run()` is mint-fresh for that tick rather than being shared across
+  states.
+- **Expiration is now a real mid-flight event.** A long-running task
+  that hands its token (or a `subscribeExpiration` handle) to a worker
+  thread or an external owner can outlive the FSM transition that
+  invalidates the bound state. When the controller thread later applies
+  a queued `requestTransition` in step 4, the listener fires
+  synchronously on the controller thread and every still-live token
+  bound to the vacated state flips to expired. Callbacks registered
+  against those tokens run *before* the alive flag flips, so cleanup
+  code may still drain a service handle or post a final bus message
+  while the token remains gated-live.
+
+> Honest current state of the state-id binding: at this leaf the token
+> minted inside `TaskFlow::runCurrentTask` still carries the
+> sentinel-default `vigine::statemachine::StateId{}` rather than
+> `IStateMachine::current()`. The lookup that seeds the bound state on
+> the per-tick mint is flagged as a follow-up on
+> [`src/impl/taskflow/taskflow.cpp`](../../src/impl/taskflow/taskflow.cpp)
+> and the engine docstring at
+> [`src/api/engine/abstractengine.cpp`](../../src/api/engine/abstractengine.cpp).
+> Tokens minted directly through `IContext::makeEngineToken(stateId)`
+> (the canonical path used by the contract suite — see scenario_21 /
+> scenario_22) bind to the supplied `StateId` and observe the full
+> per-state lifecycle described in this section. New code should mint
+> through that surface; the legacy sentinel path stays in place only
+> for tasks still on the `ContextHolder` mixin.
+
+The state machine drives invalidation through an
+invalidation-listener registry on `AbstractStateMachine`. The diagram
+below shows what happens for a token bound to state *A* over an FSM
+session that transitions *A → B* mid-way through a long task:
 
 ```mermaid
 sequenceDiagram
+    participant Engine as engine::Engine::run loop
+    participant FSM as IStateMachine
+    participant Flow as TaskFlow (bound to A)
     participant Task
-    participant Context as IContext
-    participant Token as EngineToken
-    participant ASM as AbstractStateMachine
+    participant Token as EngineToken (bound A)
 
-    Note over Task: state A is active
-    Task->>Context: makeEngineToken(stateA)
-    Context-->>Task: unique_ptr<IEngineToken>
-    Task->>Token: subscribeExpiration(cb)
-    Token->>ASM: addInvalidationListener
-    ASM-->>Token: subscription handle (RAII)
+    Note over FSM: current() == A
+    Engine->>FSM: taskFlowFor(A)
+    FSM-->>Engine: Flow_A
+    Engine->>Flow: runCurrentTask()
+    Flow->>Token: makeEngineToken(A)
+    Flow->>Task: setApi(token)
+    Flow->>Task: run()
+    Task->>Token: subscribeExpiration(onTransition)
+    Note over Task: task captures token<br/>schedules deferred work,<br/>returns Success
+    Flow->>Task: setApi(nullptr)
 
-    Note over Task,ASM: ... task runs, accessors live ...
+    Note over Engine,Token: token outlives run() because<br/>worker thread captured it.
 
-    Task->>ASM: transition(stateB)
-    ASM->>ASM: capture oldState = stateA
-    ASM->>Token: fireInvalidationListeners(stateA)
-    Note over Token: matches boundState
-    Token->>Task: cb() runs here, on controller thread (alive flag still true)
+    Task-->>FSM: requestTransition(B) (from worker)
+    Engine->>FSM: processQueuedTransitions()
+    FSM->>FSM: capture oldState = A
+    FSM->>Token: fireInvalidationListeners(A)
+    Note over Token: boundState == A — match
+    Token->>Task: onTransition() runs on controller thread<br/>(alive flag still true,<br/>gated accessors still resolve)
     Token->>Token: markExpired() (alive flag → false)
-    ASM->>ASM: _current.store(stateB)
+    FSM->>FSM: _current.store(B)
 
-    Note over Task,ASM: ... post-transition ...
+    Note over Engine,Token: next tick: taskFlowFor(B)<br/>drives Flow_B with a fresh token bound to B.
 
-    Task->>Token: token.service(id)
+    Task->>Token: token.service(id) (from worker)
     Token-->>Task: Result::failure(Expired)
     Task->>Token: token.threadManager()
     Token-->>Task: live reference (ungated)
@@ -221,6 +283,8 @@ flipped to the new state.
 
 ## Code example
 
+### A: minimal state-scoped work
+
 A task that wants both a service handle and a clean-up hook on
 state-exit looks like this. The example mirrors the engine-token smoke
 suite (`test/engine_token/smoke_test.cpp`) which is the canonical
@@ -238,9 +302,10 @@ void runStateScopedWork(vigine::IContext &ctx,
                         vigine::statemachine::StateId boundState,
                         vigine::service::ServiceId    workerId)
 {
-    // 1. Mint a token bound to the current state. The state machine
-    //    hands one of these out automatically on a real onEnter; the
-    //    explicit factory call here is the unit-test-style shape.
+    // 1. Mint a token bound to the current state. The engine pumps
+    //    the state-bound TaskFlow each tick (see
+    //    AbstractEngine::run); the explicit factory call here is
+    //    the unit-test-style shape.
     auto token = ctx.makeEngineToken(boundState);
     if (!token) {
         return; // legacy stub context cannot mint a live token.
@@ -290,6 +355,128 @@ The two failure modes a task **must** handle:
   empty or the token was already expired at registration time. The
   smoke suite's scenario 3 exercises the latter.
 
+### B: long-running render task that releases GPU resources on transition
+
+The example below sketches a render task wired into a `WorkState`
+TaskFlow. The task posts a long-running render job to the thread pool
+from inside `run()`, captures its engine token, and uses
+`subscribeExpiration` to cancel the in-flight GPU work and free the
+GPU resources the moment the FSM transitions to a `CloseState`. Wiring
+the flow into the FSM goes through
+[`IStateMachine::addStateTaskFlow`](../../include/vigine/api/statemachine/istatemachine.h);
+the engine then drives `Flow_Work` per tick while the FSM rests in
+`workState`, and switches to `Flow_Close` automatically once a
+`requestTransition(closeState)` is drained on the controller thread.
+
+```cpp
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/factory.h"
+#include "vigine/api/engine/iengine.h"
+#include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/taskflow/abstracttask.h"
+#include "vigine/result.h"
+
+#include <atomic>
+#include <memory>
+
+namespace myproject {
+
+class RenderFrameTask final : public vigine::AbstractTask
+{
+  public:
+    RenderFrameTask() = default;
+
+    [[nodiscard]] vigine::Result run() override
+    {
+        // The engine binds the token before each run() invocation
+        // (see TaskFlow::runCurrentTask). For a long render, capture
+        // the token pointer up front so the deferred worker can reach
+        // through the gated accessors and observe Expired the moment
+        // the FSM transitions to CloseState.
+        auto *token = api();
+        if (token == nullptr)
+            return vigine::Result(vigine::Result::Code::Error,
+                                  "render task missing engine token");
+
+        // Allocate the GPU buffers we'll need across tick boundaries.
+        // Real code would resolve the GPU service via token->service().
+        _gpuBuffers = std::make_shared<GpuBuffers>();
+
+        // Subscribe to bound-state expiration so we get a
+        // controller-thread callback the moment the FSM transitions
+        // out of WorkState (typically CloseState). The callback runs
+        // BEFORE the alive flag flips, so we still have a gated-live
+        // token to drain through.
+        _expiration = token->subscribeExpiration([buffers = _gpuBuffers,
+                                                  &cancelled = _cancelled]() {
+            // 1. Mark in-flight render work cancelled so the worker
+            //    thread bails out at its next polling point.
+            cancelled.store(true, std::memory_order_release);
+            // 2. Release the GPU resources held by the buffers shared
+            //    pointer. The worker thread observes the cancel flag
+            //    and drops its own copy; this branch handles the case
+            //    where CloseState has been reached before the worker
+            //    even started.
+            buffers->release();
+        });
+
+        // Schedule the render on the engine's thread pool. The
+        // closure captures the token + buffers by value (shared_ptr)
+        // so they outlive run(). Ungated accessors stay live even
+        // after expiration; the gated render-resource lookups branch
+        // on Expired and exit cooperatively.
+        auto &tm = token->threadManager();
+        // (void)tm.schedule(makeRunnable([token, buffers = _gpuBuffers,
+        //                                 &cancelled = _cancelled]() {
+        //     while (!cancelled.load(std::memory_order_acquire)) {
+        //         auto frame = token->ecs(); // gated: Expired on transition
+        //         if (!frame.ok()) break;    // FSM walked into CloseState
+        //         renderTo(buffers, frame.value());
+        //     }
+        // }), vigine::core::threading::ThreadAffinity::Pool);
+        (void)tm;
+
+        return vigine::Result(vigine::Result::Code::Success);
+    }
+
+  private:
+    struct GpuBuffers {
+        void release() { /* free textures, command lists, etc. */ }
+    };
+
+    std::shared_ptr<GpuBuffers>                            _gpuBuffers;
+    std::atomic<bool>                                      _cancelled{false};
+    std::unique_ptr<vigine::messaging::ISubscriptionToken> _expiration;
+};
+
+} // namespace myproject
+```
+
+What the engine does with this task once it is wired into a state-bound
+flow (`IStateMachine::addStateTaskFlow(workState, std::move(flow))`):
+
+1. While `current() == workState`, every tick mints a fresh token
+   bound to the work state, binds it on the task, calls `run()`, drops
+   the binding, and lets the per-tick token expire at end of tick.
+   `subscribeExpiration` callbacks registered against THAT per-tick
+   token fire on the next FSM transition out of `workState`.
+2. The task captured its long-running buffers + cancellation flag in
+   `_gpuBuffers` / `_cancelled`, both members of the task instance,
+   not of any single token. So the deferred worker thread keeps making
+   progress across multiple ticks even though each tick's token comes
+   and goes.
+3. Once the controller thread drains a `requestTransition(closeState)`
+   request, the listener registry fires every callback on every still
+   -live token bound to `workState` — including the one this task
+   registered. The lambda flips `_cancelled` and releases the GPU
+   buffers; the worker observes the flag and exits cooperatively.
+4. The next engine tick reads `current() == closeState` and drives the
+   flow registered for `closeState` instead. `Flow_Work` is no longer
+   pumped — the FSM-driven engine swap is what takes the render task
+   off the schedule.
+
 ## Cross-references
 
 - Pure interface, gating-policy contract:
@@ -308,6 +495,19 @@ The two failure modes a task **must** handle:
 - FSM-side invalidation registry and listener firing path:
   [`AbstractStateMachine::addInvalidationListener` / `fireInvalidationListeners`](../../include/vigine/api/statemachine/abstractstatemachine.h)
   (#287).
+- Per-state TaskFlow registry on the FSM:
+  [`IStateMachine::addStateTaskFlow` / `taskFlowFor`](../../include/vigine/api/statemachine/istatemachine.h)
+  (#334).
+- Engine-side per-tick pump that walks `taskFlowFor(current())` each
+  tick and binds a token before `runCurrentTask`:
+  [`src/api/engine/abstractengine.cpp`](../../src/api/engine/abstractengine.cpp)
+  (#334).
+- Task-side companion doc covering `ITask::api()` and the
+  setApi/run/setApi(nullptr) lifecycle:
+  [`doc/ecs/system.md`](system.md).
+- Contract scenarios for stale token + expiration callback semantics:
+  [`test/contract/scenario_21_stale_engine_token.cpp`](../../test/contract/scenario_21_stale_engine_token.cpp),
+  [`test/contract/scenario_22_token_expiration_callback.cpp`](../../test/contract/scenario_22_token_expiration_callback.cpp).
 - Bus-level signal payload (header only; emission wiring follows):
   [`StateInvalidatedPayload`](../../include/vigine/api/messaging/payload/stateinvalidatedpayload.h).
 - Reference smoke suite for the contract:
