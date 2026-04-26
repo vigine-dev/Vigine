@@ -36,6 +36,19 @@ using EntityUPtr = std::unique_ptr<Entity>;
 class EntityManager final : public AbstractEntityManager
 {
   public:
+    /**
+     * @brief Constructs an empty entity manager.
+     *
+     * Public because consumers of the modern @ref vigine::engine::IEngine
+     * front door build their own @ref EntityManager alongside the
+     * engine -- the modern @ref vigine::IContext aggregator carries
+     * the @ref vigine::ecs::IECS wrapper instead, and no legacy
+     * entity-manager handle is exposed through it. Examples and
+     * downstream embedders construct one directly here, hand it to
+     * each task that still walks the legacy @c Entity* surface, and
+     * let it die alongside the surrounding scope.
+     */
+    EntityManager();
     ~EntityManager() override;
     Entity *createEntity();
     void removeEntity(Entity *entity);
@@ -43,7 +56,6 @@ class EntityManager final : public AbstractEntityManager
     Entity *getEntityByAlias(const std::string &alias) const;
 
   private:
-    EntityManager();
     std::vector<EntityUPtr> _entities;
     std::map<std::string, Entity *> _entityAliases;
     /**
@@ -54,7 +66,5 @@ class EntityManager final : public AbstractEntityManager
      * entity reports until it is registered.
      */
     IEntity::Id _nextId{1};
-
-    friend class Engine;
 };
 } // namespace vigine

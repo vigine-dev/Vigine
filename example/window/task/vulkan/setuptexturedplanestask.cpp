@@ -1,45 +1,49 @@
 #include "setuptexturedplanestask.h"
 
-#include <vigine/context.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/meshcomponent.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/shadercomponent.h>
 #include <vigine/impl/ecs/graphics/texturecomponent.h>
 #include <vigine/impl/ecs/graphics/transformcomponent.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <cmath>
 #include <iostream>
 
-void SetupTexturedPlanesTask::contextChanged()
+void SetupTexturedPlanesTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
-
-    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
+    _entityManager = entityManager;
 }
+
+void SetupTexturedPlanesTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
+}
+
 vigine::Result SetupTexturedPlanesTask::run()
 {
     std::cout << "Setting up textured planes..." << std::endl;
 
-    if (!_graphicsService)
-    {
-        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
-    auto *entityManager = context()->entityManager();
+    auto *token = api();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto graphicsResult = token->service(_graphicsServiceId);
+    if (!graphicsResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     struct PlaneConfig
     {
@@ -50,14 +54,14 @@ vigine::Result SetupTexturedPlanesTask::run()
 
     // Discover all loaded texture entities (TextureEntity_0, TextureEntity_1, ...)
     size_t textureCount = 0;
-    while (entityManager->getEntityByAlias("TextureEntity_" + std::to_string(textureCount)))
+    while (_entityManager->getEntityByAlias("TextureEntity_" + std::to_string(textureCount)))
         ++textureCount;
 
     std::cout << "Found " << textureCount << " texture entities" << std::endl;
 
     if (textureCount == 0)
     {
-        std::cerr << "No texture entities found — skipping plane setup." << std::endl;
+        std::cerr << "No texture entities found - skipping plane setup." << std::endl;
         return vigine::Result();
     }
 
@@ -88,7 +92,7 @@ vigine::Result SetupTexturedPlanesTask::run()
     for (const auto &config : planes)
     {
         // Find texture entity
-        auto *textureEntity = entityManager->getEntityByAlias(config.textureEntityName);
+        auto *textureEntity = _entityManager->getEntityByAlias(config.textureEntityName);
         if (!textureEntity)
         {
             std::cerr << "Texture entity not found: " << config.textureEntityName << std::endl;
@@ -96,20 +100,20 @@ vigine::Result SetupTexturedPlanesTask::run()
         }
 
         // Create plane entity
-        auto *planeEntity = entityManager->createEntity();
+        auto *planeEntity = _entityManager->createEntity();
         if (!planeEntity)
         {
             std::cerr << "Failed to create plane entity: " << config.entityName << std::endl;
             continue;
         }
 
-        entityManager->addAlias(planeEntity, config.entityName);
-        _graphicsService->bindEntity(planeEntity);
+        _entityManager->addAlias(planeEntity, config.entityName);
+        renderSystem->bindEntity(planeEntity);
 
-        auto *renderComponent = _graphicsService->renderComponent();
+        auto *renderComponent = graphicsService->renderComponent();
         if (!renderComponent)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             std::cerr << "Render component is unavailable for " << config.entityName << std::endl;
             continue;
         }
@@ -127,8 +131,8 @@ vigine::Result SetupTexturedPlanesTask::run()
         renderComponent->setShader(shader);
 
         // Link texture to render component; read dimensions for aspect-correct scale.
-        _graphicsService->bindEntity(textureEntity);
-        auto *textureComponent = _graphicsService->textureComponent();
+        renderSystem->bindEntity(textureEntity);
+        auto *textureComponent = graphicsService->textureComponent();
         glm::vec2 planeScale{2.0f, 2.0f};
         if (textureComponent && textureComponent->hasGpuTexture())
         {
@@ -150,10 +154,10 @@ vigine::Result SetupTexturedPlanesTask::run()
         {
             std::cerr << "Texture not ready for " << config.entityName << std::endl;
         }
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         // Set back to plane entity
-        _graphicsService->bindEntity(planeEntity);
+        renderSystem->bindEntity(planeEntity);
 
         // Set transform
         vigine::ecs::graphics::TransformComponent transform;
@@ -163,7 +167,7 @@ vigine::Result SetupTexturedPlanesTask::run()
 
         renderComponent->setTransform(transform);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         std::cout << "Created textured plane: " << config.entityName << " at position ("
                   << config.position.x << ", " << config.position.y << ", " << config.position.z

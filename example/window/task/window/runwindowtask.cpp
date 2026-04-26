@@ -1,5 +1,8 @@
 #include "runwindowtask.h"
 
+#include <vigine/api/engine/iengine.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/messaging/isubscriptiontoken.h>
 #include "vigine/impl/ecs/entity.h"
 #include "vigine/impl/ecs/entitymanager.h"
 #include "vigine/impl/ecs/graphics/meshcomponent.h"
@@ -7,8 +10,6 @@
 #include "vigine/impl/ecs/graphics/rendersystem.h"
 #include "vigine/impl/ecs/graphics/shadercomponent.h"
 #include "vigine/impl/ecs/graphics/transformcomponent.h"
-#include <vigine/context.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 #include <vigine/impl/ecs/platform/platformservice.h>
 
@@ -85,173 +86,247 @@ std::wstring wideFromUtf8(const std::string &utf8)
 
 RunWindowTask::RunWindowTask() {}
 
-void RunWindowTask::contextChanged()
+void RunWindowTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _platformService = nullptr;
-        _graphicsService = nullptr;
-        _renderSystem    = nullptr;
-        return;
-    }
+    _entityManager = entityManager;
+}
 
-    _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
-        context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
+void RunWindowTask::setPlatformServiceId(vigine::service::ServiceId id) noexcept
+{
+    _platformServiceId = id;
+}
+
+void RunWindowTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
+}
+
+void RunWindowTask::setEngine(vigine::engine::IEngine *engine) noexcept
+{
+    _engine = engine;
+}
+
+bool RunWindowTask::resolveServices()
+{
+    auto *token = api();
+    if (!token)
+        return false;
+
     if (!_platformService)
     {
-        _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
-            context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
+        const auto platformResult = token->service(_platformServiceId);
+        if (!platformResult.ok())
+            return false;
+        _platformService =
+            dynamic_cast<vigine::ecs::platform::PlatformService *>(&platformResult.value());
+        if (!_platformService)
+            return false;
     }
 
-    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
     if (!_graphicsService)
     {
-        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
+        const auto graphicsResult = token->service(_graphicsServiceId);
+        if (!graphicsResult.ok())
+            return false;
+        _graphicsService =
+            dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+        if (!_graphicsService)
+            return false;
     }
-    if (_graphicsService)
+
+    if (!_renderSystem && _graphicsService)
         _renderSystem = _graphicsService->renderSystem();
 
     if (_textEditorSystem)
-        _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
+        _textEditorSystem->bind(_entityManager, _graphicsService, _renderSystem);
+
+    return true;
 }
 
 // COPILOT_TODO: Guarantee unbindEntity() on every early exit via an
-// RAII/scope guard; otherwise PlatformService can stay bound to the
-// entity after an error return path.
+// RAII/scope guard; otherwise the underlying RenderSystem/WindowSystem
+// can stay bound to the entity after an error return path.
 vigine::Result RunWindowTask::run()
 {
-    if ((!_platformService || !_graphicsService) && context())
-        contextChanged();
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
-    if (!_platformService)
-        return vigine::Result(vigine::Result::Code::Error, "Platform service is unavailable");
+    if (!resolveServices())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Platform/Graphics service is unavailable");
 
-    auto *entityManager = context()->entityManager();
-    auto *entity        = entityManager->getEntityByAlias("MainWindow");
+    // Subscribe a one-shot expiration callback the FIRST time the task
+    // runs. Subsequent ticks (the legacy task flow only schedules this
+    // task once per state entry, but defending against re-entry keeps
+    // the lifetime invariant clean) keep the existing subscription. The
+    // callback flips _shutdownRequested and asks the platform service
+    // to close the active windows so the blocking showWindow call
+    // unwinds and run() returns.
+    if (!_expirationSubscription)
+    {
+        if (auto *token = api())
+        {
+            _expirationSubscription = token->subscribeExpiration(
+                [this]() { _shutdownRequested.store(true, std::memory_order_release); });
+        }
+    }
+
+    auto *entity = _entityManager->getEntityByAlias("MainWindow");
     if (!entity)
         return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
+    _mainWindowEntity = entity;
 
     static_cast<void>(ensureMouseRayEntity());
     static_cast<void>(ensureMouseClickSphereEntity());
 
-    _platformService->bindEntity(entity);
+    auto windows = _platformService->windowComponents(entity);
+    if (windows.empty())
+        return vigine::Result(vigine::Result::Code::Error, "Window component is unavailable");
+
+    for (std::size_t windowIndex = 0; windowIndex < windows.size(); ++windowIndex)
     {
-        auto windows = _platformService->windowComponents();
-        if (windows.empty())
-            return vigine::Result(vigine::Result::Code::Error, "Window component is unavailable");
+        auto *window = windows[windowIndex];
+        if (!window)
+            return vigine::Result(vigine::Result::Code::Error,
+                                  "Window component is unavailable");
 
-        for (std::size_t windowIndex = 0; windowIndex < windows.size(); ++windowIndex)
+        auto eventHandlers = _platformService->windowEventHandlers(entity, window);
+        if (eventHandlers.empty())
+            return vigine::Result(vigine::Result::Code::Error,
+                                  "Window event handler is unavailable");
+
+        for (auto *eventHandler : eventHandlers)
         {
-            auto *window = windows[windowIndex];
-            if (!window)
+            auto *windowEventHandler = dynamic_cast<WindowEventHandler *>(eventHandler);
+            if (!windowEventHandler)
                 return vigine::Result(vigine::Result::Code::Error,
-                                      "Window component is unavailable");
+                                      "Window event handler has unsupported type");
 
-            auto eventHandlers = _platformService->windowEventHandlers(window);
-            if (eventHandlers.empty())
-                return vigine::Result(vigine::Result::Code::Error,
-                                      "Window event handler is unavailable");
-
-            for (auto *eventHandler : eventHandlers)
-            {
-                auto *windowEventHandler = dynamic_cast<WindowEventHandler *>(eventHandler);
-                if (!windowEventHandler)
-                    return vigine::Result(vigine::Result::Code::Error,
-                                          "Window event handler has unsupported type");
-
-                windowEventHandler->setMouseButtonDownCallback(
-                    [this](vigine::ecs::platform::MouseButton button, int x, int y) {
-                        std::cout << "[RunWindowTask::execute::lambda] button="
-                                  << static_cast<int>(button) << ", x=" << x << ", y=" << y
-                                  << std::endl;
-                        onMouseButtonDown(button, x, y);
-                    });
-                windowEventHandler->setMouseButtonUpCallback(
-                    [this](vigine::ecs::platform::MouseButton button, int x, int y) {
-                        onMouseButtonUp(button, x, y);
-                    });
-                windowEventHandler->setMouseMoveCallback(
-                    [this](int x, int y) { onMouseMove(x, y); });
-                windowEventHandler->setMouseWheelCallback(
-                    [this](int delta, int x, int y) { onMouseWheel(delta, x, y); });
-                windowEventHandler->setKeyDownCallback(
-                    [this](const vigine::ecs::platform::KeyEvent &event) {
-                        if (!event.isRepeat)
-                            std::cout
-                                << "[RunWindowTask::execute::lambda] keyCode=" << event.keyCode
-                                << ", scanCode=" << event.scanCode
-                                << ", modifiers=" << event.modifiers
-                                << ", repeatCount=" << event.repeatCount
-                                << ", isRepeat=" << event.isRepeat << std::endl;
-                        onKeyDown(event);
-                    });
-                windowEventHandler->setKeyUpCallback(
-                    [this](const vigine::ecs::platform::KeyEvent &event) { onKeyUp(event); });
-                windowEventHandler->setCharCallback(
-                    [this](const vigine::ecs::platform::TextEvent &event) { onChar(event); });
-                windowEventHandler->setWindowResizedCallback([this, window](int width, int height) {
-                    onWindowResized(window, width, height);
+            windowEventHandler->setMouseButtonDownCallback(
+                [this](vigine::ecs::platform::MouseButton button, int x, int y) {
+                    std::cout << "[RunWindowTask::run::lambda] button="
+                              << static_cast<int>(button) << ", x=" << x << ", y=" << y
+                              << std::endl;
+                    onMouseButtonDown(button, x, y);
                 });
+            windowEventHandler->setMouseButtonUpCallback(
+                [this](vigine::ecs::platform::MouseButton button, int x, int y) {
+                    onMouseButtonUp(button, x, y);
+                });
+            windowEventHandler->setMouseMoveCallback(
+                [this](int x, int y) { onMouseMove(x, y); });
+            windowEventHandler->setMouseWheelCallback(
+                [this](int delta, int x, int y) { onMouseWheel(delta, x, y); });
+            windowEventHandler->setKeyDownCallback(
+                [this](const vigine::ecs::platform::KeyEvent &event) {
+                    if (!event.isRepeat)
+                        std::cout
+                            << "[RunWindowTask::run::lambda] keyCode=" << event.keyCode
+                            << ", scanCode=" << event.scanCode
+                            << ", modifiers=" << event.modifiers
+                            << ", repeatCount=" << event.repeatCount
+                            << ", isRepeat=" << event.isRepeat << std::endl;
+                    onKeyDown(event);
+                });
+            windowEventHandler->setKeyUpCallback(
+                [this](const vigine::ecs::platform::KeyEvent &event) { onKeyUp(event); });
+            windowEventHandler->setCharCallback(
+                [this](const vigine::ecs::platform::TextEvent &event) { onChar(event); });
+            windowEventHandler->setWindowResizedCallback([this, window](int width, int height) {
+                onWindowResized(window, width, height);
+            });
+        }
+
+        std::cout << "[RunWindowTask] Showing window " << (windowIndex + 1) << std::endl;
+        window->setFrameCallback([this, window]() {
+            // Token expired (FSM transitioned away from the bound state
+            // while the frame callback was running) -- skip the render
+            // tick and post a WM_CLOSE so the platform message loop in
+            // @c WinAPIComponent::show observes a quit and unwinds. The
+            // check is lock-free and bounds the latency between the
+            // FSM transition and the window-close to one frame.
+            if (_shutdownRequested.load(std::memory_order_acquire))
+            {
+#ifdef _WIN32
+                if (auto *winApiWindow =
+                        dynamic_cast<vigine::ecs::platform::WinAPIComponent *>(window))
+                {
+                    if (auto *handle = static_cast<HWND>(winApiWindow->nativeHandle()))
+                        PostMessageW(handle, WM_CLOSE, 0, 0);
+                }
+#else
+                static_cast<void>(window);
+#endif
+                return;
             }
 
-            std::cout << "[RunWindowTask] Showing window " << (windowIndex + 1) << std::endl;
-            window->setFrameCallback([this, window]() {
-                bool resizedThisTick = false;
+            bool resizedThisTick = false;
 
-                if (_resizePending && _renderSystem)
+            if (_resizePending && _renderSystem)
+            {
+                const auto now    = std::chrono::steady_clock::now();
+                const bool paused = now - _lastResizeEvent >= std::chrono::milliseconds(80);
+                if (paused)
                 {
-                    const auto now    = std::chrono::steady_clock::now();
-                    const bool paused = now - _lastResizeEvent >= std::chrono::milliseconds(80);
-                    if (paused)
+                    if (_pendingResizeWidth != _appliedResizeWidth ||
+                        _pendingResizeHeight != _appliedResizeHeight)
                     {
-                        if (_pendingResizeWidth != _appliedResizeWidth ||
-                            _pendingResizeHeight != _appliedResizeHeight)
+                        const bool resized =
+                            _renderSystem->resize(_pendingResizeWidth, _pendingResizeHeight);
+                        if (!resized)
                         {
-                            const bool resized =
-                                _renderSystem->resize(_pendingResizeWidth, _pendingResizeHeight);
-                            if (!resized)
-                            {
-                                std::cerr << "[RunWindowTask] Failed to recreate swapchain on "
-                                             "resize: "
-                                          << _pendingResizeWidth << "x" << _pendingResizeHeight
-                                          << std::endl;
-                            } else
-                            {
-                                _appliedResizeWidth  = _pendingResizeWidth;
-                                _appliedResizeHeight = _pendingResizeHeight;
-                                _lastResizeApply     = now;
-                                resizedThisTick      = true;
-                            }
+                            std::cerr << "[RunWindowTask] Failed to recreate swapchain on "
+                                         "resize: "
+                                      << _pendingResizeWidth << "x" << _pendingResizeHeight
+                                      << std::endl;
+                        } else
+                        {
+                            _appliedResizeWidth  = _pendingResizeWidth;
+                            _appliedResizeHeight = _pendingResizeHeight;
+                            _lastResizeApply     = now;
+                            resizedThisTick      = true;
                         }
-
-                        _resizePending = false;
                     }
+
+                    _resizePending = false;
                 }
+            }
 
-                if (_textEditorSystem)
-                    _textEditorSystem->onFrame();
+            if (_textEditorSystem)
+                _textEditorSystem->onFrame();
 
-                if (_renderSystem && !resizedThisTick)
-                {
-                    _renderSystem->update();
+            if (_renderSystem && !resizedThisTick)
+            {
+                _renderSystem->update();
 #ifdef _WIN32
-                    if (auto *winApiWindow =
-                            dynamic_cast<vigine::ecs::platform::WinAPIComponent *>(window))
-                        winApiWindow->setRenderedVertexCount(
-                            _renderSystem->lastRenderedVertexCount());
+                if (auto *winApiWindow =
+                        dynamic_cast<vigine::ecs::platform::WinAPIComponent *>(window))
+                    winApiWindow->setRenderedVertexCount(
+                        _renderSystem->lastRenderedVertexCount());
 #endif
-                }
-            });
-            auto showResult = _platformService->showWindow(window);
-            if (showResult.isError())
-                return showResult;
-            std::cout << "[RunWindowTask] Window " << (windowIndex + 1) << " closed, continuing"
-                      << std::endl;
-        }
+            }
+        });
+        auto showResult = _platformService->showWindow(window);
+        if (showResult.isError())
+            return showResult;
+        std::cout << "[RunWindowTask] Window " << (windowIndex + 1) << " closed, continuing"
+                  << std::endl;
     }
-    _platformService->unbindEntity();
+
+    // Drop the expiration subscription explicitly so a late FSM
+    // invalidation that arrives between this point and dtor cannot
+    // dereference the cached service pointers below. The dtor would
+    // do this anyway, but ordering keeps the contract obvious.
+    _expirationSubscription.reset();
+
+    // The platform showWindow loop returned, which means every window
+    // closed (typically via WM_CLOSE or the user dismissing the OS
+    // window). Ask the engine to stop the main pump so @c IEngine::run
+    // returns to @c main and the process exits cleanly. The shutdown
+    // is idempotent so a duplicate call from a future re-run path is
+    // safe; @c shutdown is also TSAN-clean from any thread.
+    if (_engine)
+        _engine->shutdown();
 
     return vigine::Result();
 }
@@ -402,17 +477,17 @@ void RunWindowTask::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
         {
             if (_hasMouseRaySample)
                 updateMouseRayVisualization(_lastMouseRayX, _lastMouseRayY);
-        } else if (ensureMouseRayEntity() && _graphicsService)
+        } else if (ensureMouseRayEntity() && _renderSystem)
         {
-            _graphicsService->bindEntity(_mouseRayEntity);
-            if (auto *rc = _graphicsService->renderComponent())
+            _renderSystem->bindEntity(_mouseRayEntity);
+            if (auto *rc = _renderSystem->boundRenderComponent())
             {
                 auto transform = rc->getTransform();
                 transform.setPosition({0.0f, -100.0f, 0.0f});
                 transform.setScale({0.01f, 0.01f, 0.01f});
                 rc->setTransform(transform);
             }
-            _graphicsService->unbindEntity();
+            _renderSystem->unbindEntity();
         }
     }
 
@@ -524,7 +599,7 @@ void RunWindowTask::setTextEditorSystem(std::shared_ptr<TextEditorSystem> editor
 {
     _textEditorSystem = std::move(editorSystem);
     if (_textEditorSystem)
-        _textEditorSystem->bind(context(), _graphicsService, _renderSystem);
+        _textEditorSystem->bind(_entityManager, _graphicsService, _renderSystem);
 }
 
 void RunWindowTask::setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept
@@ -620,16 +695,16 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
     if (_objectDragActive)
         endObjectDrag();
 
-    if (_focusedEntity && _graphicsService && _hasFocusedOriginalScale)
+    if (_focusedEntity && _renderSystem && _hasFocusedOriginalScale)
     {
-        _graphicsService->bindEntity(_focusedEntity);
-        if (auto *rc = _graphicsService->renderComponent())
+        _renderSystem->bindEntity(_focusedEntity);
+        if (auto *rc = _renderSystem->boundRenderComponent())
         {
             auto transform = rc->getTransform();
             transform.setScale(_focusedOriginalScale);
             rc->setTransform(transform);
         }
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
     }
 
     _focusedEntity           = entity;
@@ -642,10 +717,10 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
     if (_textEditorSystem)
         _textEditorSystem->setFocused(_focusedEntity != nullptr && isEditor);
 
-    if (_focusedEntity && _graphicsService && !isEditor)
+    if (_focusedEntity && _renderSystem && !isEditor)
     {
-        _graphicsService->bindEntity(_focusedEntity);
-        if (auto *rc = _graphicsService->renderComponent())
+        _renderSystem->bindEntity(_focusedEntity);
+        if (auto *rc = _renderSystem->boundRenderComponent())
         {
             auto transform        = rc->getTransform();
             _focusedOriginalScale = transform.getScale();
@@ -653,25 +728,25 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
             rc->setTransform(transform);
             _hasFocusedOriginalScale = true;
         }
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
     }
 }
 
 bool RunWindowTask::beginObjectDrag(vigine::Entity *entity, int x, int y)
 {
-    if (!entity || !_graphicsService || !_renderSystem)
+    if (!entity || !_renderSystem)
         return false;
 
-    _graphicsService->bindEntity(entity);
-    auto *rc = _graphicsService->renderComponent();
+    _renderSystem->bindEntity(entity);
+    auto *rc = _renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
         return false;
     }
 
     const auto transform = rc->getTransform();
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 
     glm::vec3 rayOrigin(0.0f);
     glm::vec3 rayDirection(0.0f);
@@ -698,7 +773,7 @@ bool RunWindowTask::beginObjectDrag(vigine::Entity *entity, int x, int y)
 
 void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
 {
-    if (!_objectDragActive || !_dragEntity || !_graphicsService || !_renderSystem)
+    if (!_objectDragActive || !_dragEntity || !_renderSystem)
         return;
 
     glm::vec3 rayOrigin(0.0f);
@@ -714,11 +789,11 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
     const glm::vec3 hit     = rayOrigin + rayDirection * _dragDistanceFromCamera;
     const glm::vec3 newPos  = hit + _dragGrabOffset;
 
-    _graphicsService->bindEntity(_dragEntity);
-    auto *dragRc = _graphicsService->renderComponent();
+    _renderSystem->bindEntity(_dragEntity);
+    auto *dragRc = _renderSystem->boundRenderComponent();
     if (!dragRc)
     {
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
         return;
     }
 
@@ -743,52 +818,48 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
     if (_dragEditorGroup)
         dragRc->translateGlyphVertices(delta);
 
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 
-    if (_dragEditorGroup && context())
+    if (_dragEditorGroup && _entityManager)
     {
-        auto *em = context()->entityManager();
-        if (em)
+        const char *editorAliases[] = {
+            "TextEditBgEntity",
+            "TextEditEntity",
+            "TextEditScrollbarTrackEntity",
+            "TextEditScrollbarThumbEntity",
+            "TextEditFocusTopEntity",
+            "TextEditFocusBottomEntity",
+            "TextEditFocusLeftEntity",
+            "TextEditFocusRightEntity",
+        };
+
+        for (const char *alias : editorAliases)
         {
-            const char *editorAliases[] = {
-                "TextEditBgEntity",
-                "TextEditEntity",
-                "TextEditScrollbarTrackEntity",
-                "TextEditScrollbarThumbEntity",
-                "TextEditFocusTopEntity",
-                "TextEditFocusBottomEntity",
-                "TextEditFocusLeftEntity",
-                "TextEditFocusRightEntity",
-            };
+            auto *e = _entityManager->getEntityByAlias(alias);
+            if (!e || e == _dragEntity)
+                continue;
 
-            for (const char *alias : editorAliases)
+            _renderSystem->bindEntity(e);
+            if (auto *rc = _renderSystem->boundRenderComponent())
             {
-                auto *e = em->getEntityByAlias(alias);
-                if (!e || e == _dragEntity)
-                    continue;
+                auto tr = rc->getTransform();
+                tr.setPosition(tr.getPosition() + delta);
+                rc->setTransform(tr);
 
-                _graphicsService->bindEntity(e);
-                if (auto *rc = _graphicsService->renderComponent())
-                {
-                    auto tr = rc->getTransform();
-                    tr.setPosition(tr.getPosition() + delta);
-                    rc->setTransform(tr);
-
-                    if (std::strcmp(alias, "TextEditEntity") == 0)
-                        rc->translateGlyphVertices(delta);
-                }
-                _graphicsService->unbindEntity();
+                if (std::strcmp(alias, "TextEditEntity") == 0)
+                    rc->translateGlyphVertices(delta);
             }
-
-            if (_textEditorSystem)
-            {
-                _textEditorSystem->offsetEditorFrame(delta.x, delta.y, delta.z);
-                _textEditorSystem->refreshEditorLayout();
-            }
-            // Mark glyph dirty once per drag frame to upload translated vertices to GPU.
-            if (_renderSystem)
-                _renderSystem->markGlyphDirty();
+            _renderSystem->unbindEntity();
         }
+
+        if (_textEditorSystem)
+        {
+            _textEditorSystem->offsetEditorFrame(delta.x, delta.y, delta.z);
+            _textEditorSystem->refreshEditorLayout();
+        }
+        // Mark glyph dirty once per drag frame to upload translated vertices to GPU.
+        if (_renderSystem)
+            _renderSystem->markGlyphDirty();
     }
 }
 
@@ -806,28 +877,24 @@ bool RunWindowTask::ensureMouseRayEntity()
     if (_mouseRayEntity)
         return true;
 
-    if (!context() || !_graphicsService)
+    if (!_entityManager || !_renderSystem)
         return false;
 
-    auto *entityManager = context()->entityManager();
-    if (!entityManager)
-        return false;
-
-    _mouseRayEntity = entityManager->getEntityByAlias("MouseRayEntity");
+    _mouseRayEntity = _entityManager->getEntityByAlias("MouseRayEntity");
     if (!_mouseRayEntity)
     {
-        _mouseRayEntity = entityManager->createEntity();
+        _mouseRayEntity = _entityManager->createEntity();
         if (!_mouseRayEntity)
             return false;
 
-        entityManager->addAlias(_mouseRayEntity, "MouseRayEntity");
+        _entityManager->addAlias(_mouseRayEntity, "MouseRayEntity");
     }
 
-    _graphicsService->bindEntity(_mouseRayEntity);
-    auto *rc = _graphicsService->renderComponent();
+    _renderSystem->bindEntity(_mouseRayEntity);
+    auto *rc = _renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
         return false;
     }
 
@@ -845,7 +912,7 @@ bool RunWindowTask::ensureMouseRayEntity()
     transform.setScale({0.01f, 0.01f, 0.01f});
     rc->setTransform(transform);
 
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
     return true;
 }
 
@@ -854,28 +921,24 @@ bool RunWindowTask::ensureMouseClickSphereEntity()
     if (_mouseClickSphereEntity)
         return true;
 
-    if (!context() || !_graphicsService)
+    if (!_entityManager || !_renderSystem)
         return false;
 
-    auto *entityManager = context()->entityManager();
-    if (!entityManager)
-        return false;
-
-    _mouseClickSphereEntity = entityManager->getEntityByAlias("MouseClickSphereEntity");
+    _mouseClickSphereEntity = _entityManager->getEntityByAlias("MouseClickSphereEntity");
     if (!_mouseClickSphereEntity)
     {
-        _mouseClickSphereEntity = entityManager->createEntity();
+        _mouseClickSphereEntity = _entityManager->createEntity();
         if (!_mouseClickSphereEntity)
             return false;
 
-        entityManager->addAlias(_mouseClickSphereEntity, "MouseClickSphereEntity");
+        _entityManager->addAlias(_mouseClickSphereEntity, "MouseClickSphereEntity");
     }
 
-    _graphicsService->bindEntity(_mouseClickSphereEntity);
-    auto *rc = _graphicsService->renderComponent();
+    _renderSystem->bindEntity(_mouseClickSphereEntity);
+    auto *rc = _renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
         return false;
     }
 
@@ -893,13 +956,13 @@ bool RunWindowTask::ensureMouseClickSphereEntity()
     transform.setScale({0.06f, 0.06f, 0.06f});
     rc->setTransform(transform);
 
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
     return true;
 }
 
 void RunWindowTask::updateMouseRayVisualization(int x, int y)
 {
-    if (!_renderSystem || !_graphicsService)
+    if (!_renderSystem)
         return;
 
     if (!ensureMouseRayEntity())
@@ -923,8 +986,8 @@ void RunWindowTask::updateMouseRayVisualization(int x, int y)
     const glm::quat orientation   = glm::rotation(glm::vec3(0.0f, 0.0f, 1.0f), rayDirection);
     const glm::vec3 rotationEuler = glm::eulerAngles(orientation);
 
-    _graphicsService->bindEntity(_mouseRayEntity);
-    if (auto *rc = _graphicsService->renderComponent())
+    _renderSystem->bindEntity(_mouseRayEntity);
+    if (auto *rc = _renderSystem->boundRenderComponent())
     {
         auto transform = rc->getTransform();
         if (_mouseRayVisible)
@@ -939,12 +1002,12 @@ void RunWindowTask::updateMouseRayVisualization(int x, int y)
         }
         rc->setTransform(transform);
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 }
 
 void RunWindowTask::updateMouseClickSphereVisualization(int x, int y)
 {
-    if (!_renderSystem || !_graphicsService)
+    if (!_renderSystem)
         return;
 
     if (!ensureMouseClickSphereEntity())
@@ -958,13 +1021,13 @@ void RunWindowTask::updateMouseClickSphereVisualization(int x, int y)
     constexpr float kStartOffset = 0.03f;
     const glm::vec3 sphereCenter = clickRayOrigin + clickRayDirection * kStartOffset;
 
-    _graphicsService->bindEntity(_mouseClickSphereEntity);
-    if (auto *rc = _graphicsService->renderComponent())
+    _renderSystem->bindEntity(_mouseClickSphereEntity);
+    if (auto *rc = _renderSystem->boundRenderComponent())
     {
         auto transform = rc->getTransform();
         transform.setPosition(sphereCenter);
         transform.setScale({0.05f, 0.05f, 0.05f});
         rc->setTransform(transform);
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 }

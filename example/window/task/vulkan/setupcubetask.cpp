@@ -1,59 +1,63 @@
 #include "setupcubetask.h"
 
-#include <vigine/context.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/meshcomponent.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/shadercomponent.h>
 #include <vigine/impl/ecs/graphics/transformcomponent.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <iostream>
 
-SetupCubeTask::SetupCubeTask() {}
+SetupCubeTask::SetupCubeTask() = default;
 
-void SetupCubeTask::contextChanged()
+void SetupCubeTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
+    _entityManager = entityManager;
+}
 
-    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
+void SetupCubeTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
 }
 
 vigine::Result SetupCubeTask::run()
 {
     std::cout << "Setting up cube geometry..." << std::endl;
 
-    if (!_graphicsService)
-    {
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
+
+    auto *token = api();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto graphicsResult = token->service(_graphicsServiceId);
+    if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
 
-    auto *entityManager = context()->entityManager();
-    auto *cubeEntity    = entityManager->createEntity();
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Graphics service is unavailable");
 
+    auto *renderSystem = graphicsService->renderSystem();
+
+    auto *cubeEntity = _entityManager->createEntity();
     if (!cubeEntity)
         return vigine::Result(vigine::Result::Code::Error, "Failed to create cube entity");
 
-    entityManager->addAlias(cubeEntity, "CubeEntity");
+    _entityManager->addAlias(cubeEntity, "CubeEntity");
 
-    _graphicsService->bindEntity(cubeEntity);
+    renderSystem->bindEntity(cubeEntity);
 
-    auto *renderComponent = _graphicsService->renderComponent();
+    auto *renderComponent = graphicsService->renderComponent();
     if (!renderComponent)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for CubeEntity");
     }
@@ -76,7 +80,7 @@ vigine::Result SetupCubeTask::run()
     transform.setScale({1.0f, 1.0f, 1.0f});
     renderComponent->setTransform(transform);
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     std::cout << "Cube created with " << cubeMesh.getVertexCount() << " vertices and "
               << cubeMesh.getIndexCount() << " indices" << std::endl;
