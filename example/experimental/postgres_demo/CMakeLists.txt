@@ -32,7 +32,6 @@ target_link_libraries(${PROJECT_POSTGRESQL_NAME}
 target_include_directories(${PROJECT_POSTGRESQL_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_SOURCE_DIR}/include
 )
 
 # Apply the central warning / strict-mode compile flags so the
