@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/experimental/ecs/postgresql/impl/databaseconfiguration.h"
 #include "vigine/experimental/ecs/postgresql/impl/postgresqlresult.h"
 #include "vigine/experimental/ecs/postgresql/impl/postgresqltypeconverter.h"

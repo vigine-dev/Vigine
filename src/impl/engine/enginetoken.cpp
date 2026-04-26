@@ -89,7 +89,7 @@ class NullSignalEmitter final : public vigine::messaging::ISignalEmitter
 // Registration goes through @ref AbstractStateMachine::addInvalidationListener
 // which is the FSM-level hook this leaf adds. The down-cast is safe at the
 // engine wiring level: the engine builds its state machine through
-// @ref createStateMachine which returns a @c DefaultStateMachine derived from
+// @ref createStateMachine which returns a @c StateMachine derived from
 // @c AbstractStateMachine. A future leaf that swaps that factory for an
 // alternative concrete state machine must keep the @c AbstractStateMachine
 // base in the type chain so the listener registration path stays valid;

@@ -42,7 +42,7 @@
 #include <vigine/api/taskflow/resultcode.h>
 #include <vigine/api/taskflow/taskid.h>
 #include <vigine/result.h>
-#include <vigine/service/databaseservice.h>
+#include <vigine/impl/service/databaseservice.h>
 
 #if VIGINE_POSTGRESQL
 #include <vigine/experimental/ecs/postgresql/impl/postgresqlsystem.h>

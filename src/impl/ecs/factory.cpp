@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "ecs/defaultecs.h"
+#include "ecs.h"
 
 namespace vigine::ecs
 {
@@ -13,7 +13,7 @@ std::unique_ptr<IECS> createECS()
     // AbstractECS. The internal entity world is allocated eagerly by
     // the base class constructor, so the returned ECS is immediately
     // ready to accept entities and components.
-    return std::make_unique<DefaultECS>();
+    return std::make_unique<ECS>();
 }
 
 } // namespace vigine::ecs

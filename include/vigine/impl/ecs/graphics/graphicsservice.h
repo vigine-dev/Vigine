@@ -9,7 +9,7 @@
 
 #include "vigine/api/service/abstractservice.h"
 #include "vigine/api/service/serviceid.h"
-#include "vigine/base/name.h"
+#include "vigine/api/base/name.h"
 #include "vigine/result.h"
 
 #include <cstdint>

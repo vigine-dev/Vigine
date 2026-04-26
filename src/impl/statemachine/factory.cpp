@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "statemachine/defaultstatemachine.h"
+#include "statemachine.h"
 
 namespace vigine::statemachine
 {
@@ -14,7 +14,7 @@ std::unique_ptr<IStateMachine> createStateMachine()
     // eagerly by the base class constructor, which also auto-provisions
     // the default state per UD-3, so the returned machine is immediately
     // ready to answer @ref IStateMachine::current with a valid id.
-    return std::make_unique<DefaultStateMachine>();
+    return std::make_unique<StateMachine>();
 }
 
 } // namespace vigine::statemachine

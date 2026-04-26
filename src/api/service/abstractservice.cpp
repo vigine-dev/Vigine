@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "service/serviceregistry.h"
+#include "impl/service/serviceregistry.h"
 
 namespace vigine::service
 {

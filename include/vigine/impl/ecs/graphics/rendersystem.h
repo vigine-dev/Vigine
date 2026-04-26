@@ -5,7 +5,7 @@
  * @brief ECS system that owns the graphics backend and drives per-frame rendering.
  */
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/api/ecs/abstractsystem.h"
 #include "vigine/impl/ecs/graphics/camera.h"
 #include "vigine/impl/ecs/graphics/pipelinecache.h"

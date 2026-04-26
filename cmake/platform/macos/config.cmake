@@ -21,7 +21,7 @@ endfunction()
 #   - ECS graphics (Vulkan surface factory source) -- Metal-backed factory
 #     lives at src/impl/ecs/graphics/platform/metalsurfacefactory.cpp
 #   - Event scheduler (OS-signal source) -- macOS signal source (.mm)
-#     lives at src/eventscheduler/iossignalsource_macos.{h,mm}
+#     lives at src/impl/eventscheduler/iossignalsource_macos.{h,mm}
 function(vigine_platform_collect_sources
         headers_ecs_platform_var
         sources_ecs_platform_var
@@ -44,8 +44,8 @@ function(vigine_platform_collect_sources
     )
 
     list(APPEND _sources_eventscheduler
-        "${SRC_DIR}/eventscheduler/iossignalsource_macos.h"
-        "${SRC_DIR}/eventscheduler/iossignalsource_macos.mm"
+        "${SRC_DIR}/impl/eventscheduler/iossignalsource_macos.h"
+        "${SRC_DIR}/impl/eventscheduler/iossignalsource_macos.mm"
     )
 
     set(${headers_ecs_platform_var} "${_headers_ecs_platform}" PARENT_SCOPE)

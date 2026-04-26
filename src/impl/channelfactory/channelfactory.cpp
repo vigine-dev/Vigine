@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "channelfactory/defaultchannel.h"
+#include "channel.h"
 #include "vigine/api/channelfactory/channelkind.h"
 #include "vigine/api/channelfactory/factory.h"
 #include "vigine/api/channelfactory/ichannel.h"
@@ -48,7 +48,7 @@ struct FactoryRegistry
 
 // -----------------------------------------------------------------
 // ChannelGuard — IChannel wrapper that:
-//   1. Delegates every IChannel call to the underlying DefaultChannel.
+//   1. Delegates every IChannel call to the underlying Channel.
 //   2. Unregisters from the FactoryRegistry on destruction (safe even
 //      after the factory is gone, via weak_ptr).
 // -----------------------------------------------------------------
@@ -56,7 +56,7 @@ struct FactoryRegistry
 class ChannelGuard final : public IChannel
 {
   public:
-    ChannelGuard(std::unique_ptr<DefaultChannel>    inner,
+    ChannelGuard(std::unique_ptr<Channel>    inner,
                  std::shared_ptr<FactoryRegistry>   registry)
         : _inner(std::move(inner))
         , _registry(std::move(registry))
@@ -109,7 +109,7 @@ class ChannelGuard final : public IChannel
     ChannelGuard &operator=(ChannelGuard &&)      = delete;
 
   private:
-    std::unique_ptr<DefaultChannel>    _inner;
+    std::unique_ptr<Channel>    _inner;
     std::weak_ptr<FactoryRegistry>     _registry;
 };
 
@@ -176,7 +176,7 @@ ChannelFactory::create(ChannelKind                    kind,
         return nullptr;
     }
 
-    auto inner = std::make_unique<DefaultChannel>(kind, capacity, expectedTypeId);
+    auto inner = std::make_unique<Channel>(kind, capacity, expectedTypeId);
     auto guard = std::make_unique<ChannelGuard>(std::move(inner), _impl->registry);
 
     _impl->registry->registerChannel(guard.get());

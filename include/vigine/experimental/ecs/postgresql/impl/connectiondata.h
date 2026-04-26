@@ -7,8 +7,8 @@
  *        user name, password) handed to the @c PostgreSQLSystem.
  */
 
-#include "vigine/base/name.h"
-#include "vigine/base/password.h"
+#include "vigine/api/base/name.h"
+#include "vigine/api/base/password.h"
 
 #include <memory>
 #include <string>
