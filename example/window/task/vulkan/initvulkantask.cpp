@@ -1,94 +1,74 @@
 #include "initvulkantask.h"
 
-#include <vigine/context.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendersystem.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 #include <vigine/impl/ecs/platform/platformservice.h>
 
 #include <iostream>
 
-InitVulkanTask::InitVulkanTask() {}
+InitVulkanTask::InitVulkanTask() = default;
 
-void InitVulkanTask::contextChanged()
+void InitVulkanTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _renderSystem    = nullptr;
-        _platformService = nullptr;
-        return;
-    }
+    _entityManager = entityManager;
+}
 
-    auto *graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-    if (!graphicsService)
-    {
-        graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
+void InitVulkanTask::setPlatformServiceId(vigine::service::ServiceId id) noexcept
+{
+    _platformServiceId = id;
+}
 
-    _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
-        context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::Exist));
-    if (!_platformService)
-    {
-        _platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
-            context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
-    }
-
-    if (!graphicsService)
-    {
-        std::cerr << "Graphics service not available" << std::endl;
-        return;
-    }
-
-    _renderSystem = graphicsService->renderSystem();
-    if (!_renderSystem)
-    {
-        std::cerr << "Render system not available" << std::endl;
-        return;
-    }
-
-    std::cout << "RenderSystem initialized successfully" << std::endl;
+void InitVulkanTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
 }
 
 vigine::Result InitVulkanTask::run()
 {
     std::cout << "Initializing Vulkan API..." << std::endl;
 
-    if (!_renderSystem || !_platformService)
-    {
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
+
+    auto *token = api();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto platformResult = token->service(_platformServiceId);
+    auto graphicsResult = token->service(_graphicsServiceId);
+    if (!platformResult.ok() || !graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error,
                               "Render or Platform service not available");
-    }
 
-    auto *entity = context()->entityManager()->getEntityByAlias("MainWindow");
+    auto *platformService =
+        dynamic_cast<vigine::ecs::platform::PlatformService *>(&platformResult.value());
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!platformService || !graphicsService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Platform/Graphics service has unexpected type");
+
+    auto *renderSystem = graphicsService->renderSystem();
+    if (!renderSystem)
+        return vigine::Result(vigine::Result::Code::Error, "Render system not available");
+
+    auto *entity = _entityManager->getEntityByAlias("MainWindow");
     if (!entity)
-    {
         return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
-    }
 
-    _platformService->bindEntity(entity);
-    auto windows = _platformService->windowComponents();
+    auto windows = platformService->windowComponents(entity);
     if (windows.empty())
-    {
-        _platformService->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error, "No window components available");
-    }
 
-    void *nativeWindowHandle = _platformService->nativeWindowHandle(windows.front());
-    _platformService->unbindEntity();
-
+    void *nativeWindowHandle = platformService->nativeWindowHandle(windows.front());
     if (!nativeWindowHandle)
-    {
         return vigine::Result(vigine::Result::Code::Error, "Native window handle is unavailable");
-    }
 
-    if (!_renderSystem->initialize(nativeWindowHandle, 940, 660))
-    {
+    if (!renderSystem->initialize(nativeWindowHandle, 940, 660))
         return vigine::Result(vigine::Result::Code::Error,
                               "Failed to initialize render system");
-    }
 
     std::cout << "Vulkan API initialized successfully" << std::endl;
     return vigine::Result();

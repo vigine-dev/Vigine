@@ -14,7 +14,7 @@
 
 namespace vigine
 {
-class Context;
+class EntityManager;
 class Entity;
 namespace ecs
 {
@@ -31,7 +31,18 @@ class TextEditorSystem
   public:
     explicit TextEditorSystem(std::shared_ptr<TextEditState> state);
 
-    void bind(vigine::Context *context, vigine::ecs::graphics::GraphicsService *graphicsService,
+    /**
+     * @brief Wires the editor system to the entity manager and the
+     *        graphics service / render system pair.
+     *
+     * The system used to take a legacy @c vigine::Context* and route
+     * every entity-manager lookup through it. Post-#299 the example
+     * holds the entity manager directly because the modern engine
+     * front door does not surface a legacy @c Context. The signature
+     * therefore takes the entity manager as its own parameter.
+     */
+    void bind(vigine::EntityManager *entityManager,
+              vigine::ecs::graphics::GraphicsService *graphicsService,
               vigine::ecs::graphics::RenderSystem *renderSystem);
 
     void setLayout(std::size_t maxColumns, float panelWidth, float panelHeight);
@@ -69,7 +80,7 @@ class TextEditorSystem
 
   private:
     std::shared_ptr<TextEditState> _state;
-    vigine::Context *_context{nullptr};
+    vigine::EntityManager *_entityManager{nullptr};
     vigine::ecs::graphics::GraphicsService *_graphicsService{nullptr};
     vigine::ecs::graphics::RenderSystem *_renderSystem{nullptr};
 

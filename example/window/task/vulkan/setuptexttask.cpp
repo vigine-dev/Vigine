@@ -1,12 +1,12 @@
 #include "setuptexttask.h"
 
-#include <vigine/context.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/shadercomponent.h>
 #include <vigine/impl/ecs/graphics/textcomponent.h>
 #include <vigine/impl/ecs/graphics/transformcomponent.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <filesystem>
@@ -36,55 +36,55 @@ std::string resolveFontPath()
 
 } // namespace
 
-SetupTextTask::SetupTextTask() {}
+SetupTextTask::SetupTextTask() = default;
 
-void SetupTextTask::contextChanged()
+void SetupTextTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
+    _entityManager = entityManager;
+}
 
-    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
+void SetupTextTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
 }
 
 vigine::Result SetupTextTask::run()
 {
-    if (!_graphicsService)
-    {
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
+
+    auto *token = api();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto graphicsResult = token->service(_graphicsServiceId);
+    if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     const auto fontPath = resolveFontPath();
     if (fontPath.empty())
-    {
         return vigine::Result(vigine::Result::Code::Error,
                               "Font file not found (assets/fonts/segoeui.ttf)");
-    }
 
-    auto *entityManager = context()->entityManager();
-    auto *textEntity    = entityManager->createEntity();
+    auto *textEntity = _entityManager->createEntity();
     if (!textEntity)
-    {
         return vigine::Result(vigine::Result::Code::Error, "Failed to create text entity");
-    }
 
-    entityManager->addAlias(textEntity, "TextEntity");
+    _entityManager->addAlias(textEntity, "TextEntity");
 
-    _graphicsService->bindEntity(textEntity);
+    renderSystem->bindEntity(textEntity);
 
-    auto *renderComponent = _graphicsService->renderComponent();
+    auto *renderComponent = graphicsService->renderComponent();
     if (!renderComponent)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for TextEntity");
     }
@@ -130,12 +130,12 @@ vigine::Result SetupTextTask::run()
 
     if (!renderComponent->setText(text))
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Failed to build voxel text via FreeType");
     }
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     return vigine::Result();
 }

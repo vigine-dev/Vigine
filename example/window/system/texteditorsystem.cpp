@@ -1,6 +1,5 @@
 #include "texteditorsystem.h"
 
-#include <vigine/context.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
 #include <vigine/impl/ecs/graphics/rendersystem.h>
@@ -26,11 +25,11 @@ TextEditorSystem::TextEditorSystem(std::shared_ptr<TextEditState> state) : _stat
 {
 }
 
-void TextEditorSystem::bind(vigine::Context *context,
+void TextEditorSystem::bind(vigine::EntityManager *entityManager,
                             vigine::ecs::graphics::GraphicsService *graphicsService,
                             vigine::ecs::graphics::RenderSystem *renderSystem)
 {
-    _context         = context;
+    _entityManager   = entityManager;
     _graphicsService = graphicsService;
     _renderSystem    = renderSystem;
 }
@@ -77,10 +76,10 @@ void TextEditorSystem::onFrame()
         }
     }
 
-    if (!_state->dirty || !_graphicsService || !_context)
+    if (!_state->dirty || !_graphicsService || !_entityManager)
         return;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return;
 
@@ -90,7 +89,7 @@ void TextEditorSystem::onFrame()
 
     float contentHeight = 0.0f;
 
-    _graphicsService->bindEntity(textEditEntity);
+    _renderSystem->bindEntity(textEditEntity);
     if (auto *rc = _graphicsService->renderComponent())
     {
         if (_state->textChanged)
@@ -125,7 +124,7 @@ void TextEditorSystem::onFrame()
             rc->updateCursorVisible(_state->showCursor);
         }
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 
     // Keep editor board height fixed. Only update text scroll/clipping for large content.
     if (contentHeight > 0.0f)
@@ -152,7 +151,7 @@ void TextEditorSystem::onFrame()
 
 void TextEditorSystem::onMouseWheel(int delta)
 {
-    if (!_graphicsService || !_context || delta == 0)
+    if (!_graphicsService || !_entityManager || delta == 0)
         return;
 
     // 3 visible lines per scroll notch (Windows WHEEL_DELTA = 120).
@@ -184,7 +183,7 @@ void TextEditorSystem::setFocused(bool focused)
 
 bool TextEditorSystem::onMouseButtonDown(int x, int y, const vigine::Entity *pickedEntity)
 {
-    if (!_context || !_renderSystem || !isScrollbarEntity(pickedEntity))
+    if (!_entityManager || !_renderSystem || !isScrollbarEntity(pickedEntity))
         return false;
 
     const float maxScroll = (std::max)(0.0f, _contentHeight - _panelHeight);
@@ -331,10 +330,10 @@ void TextEditorSystem::onChar(const vigine::ecs::platform::TextEvent &event, uin
 
 bool TextEditorSystem::isEditorEntity(const vigine::Entity *entity) const
 {
-    if (!entity || !_context)
+    if (!entity || !_entityManager)
         return false;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return false;
 
@@ -375,7 +374,7 @@ const std::string &TextEditorSystem::text() const
 
 void TextEditorSystem::applyScrollOffset(float newOffset)
 {
-    if (!_graphicsService || !_context)
+    if (!_graphicsService || !_entityManager)
         return;
 
     const float maxScroll = (std::max)(0.0f, _contentHeight - _panelHeight);
@@ -384,7 +383,7 @@ void TextEditorSystem::applyScrollOffset(float newOffset)
     if (std::abs(delta) < 1e-6f)
         return;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return;
 
@@ -394,22 +393,22 @@ void TextEditorSystem::applyScrollOffset(float newOffset)
 
     _scrollOffsetY = clamped;
 
-    _graphicsService->bindEntity(textEntity);
+    _renderSystem->bindEntity(textEntity);
     if (auto *rc = _graphicsService->renderComponent())
     {
         rc->scrollVertical(delta);
         if (_renderSystem)
             _renderSystem->markGlyphDirty();
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 }
 
 void TextEditorSystem::updateScrollbarVisuals()
 {
-    if (!_graphicsService || !_context)
+    if (!_graphicsService || !_entityManager)
         return;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return;
 
@@ -423,7 +422,7 @@ void TextEditorSystem::updateScrollbarVisuals()
     const float trackCenterY = _panelTopY - _panelHeight * 0.5f;
     const float trackCenterX = panelRight - kScrollbarInsetX - kScrollbarWidth * 0.5f;
 
-    _graphicsService->bindEntity(trackEntity);
+    _renderSystem->bindEntity(trackEntity);
     if (auto *trackRc = _graphicsService->renderComponent())
     {
         auto t = trackRc->getTransform();
@@ -431,7 +430,7 @@ void TextEditorSystem::updateScrollbarVisuals()
         t.setScale({kScrollbarWidth, trackHeight, 0.01f});
         trackRc->setTransform(t);
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 
     const float fullContent  = (std::max)(_contentHeight, _panelHeight);
     const float visibleRatio = _panelHeight / fullContent;
@@ -447,7 +446,7 @@ void TextEditorSystem::updateScrollbarVisuals()
     const float norm        = (maxScroll > 0.0f) ? (_scrollOffsetY / maxScroll) : 0.0f;
     _scrollbarThumbCenterY  = maxCenterY - norm * (std::max)(0.0f, maxCenterY - minCenterY);
 
-    _graphicsService->bindEntity(thumbEntity);
+    _renderSystem->bindEntity(thumbEntity);
     if (auto *thumbRc = _graphicsService->renderComponent())
     {
         auto t = thumbRc->getTransform();
@@ -456,7 +455,7 @@ void TextEditorSystem::updateScrollbarVisuals()
         t.setScale({kScrollbarWidth * 0.82f, _scrollbarThumbHeight, 0.012f});
         thumbRc->setTransform(t);
     }
-    _graphicsService->unbindEntity();
+    _renderSystem->unbindEntity();
 }
 
 bool TextEditorSystem::screenYToWorldY(int x, int y, float &worldY) const
@@ -483,10 +482,10 @@ bool TextEditorSystem::screenYToWorldY(int x, int y, float &worldY) const
 
 bool TextEditorSystem::isScrollbarEntity(const vigine::Entity *entity) const
 {
-    if (!entity || !_context)
+    if (!entity || !_entityManager)
         return false;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return false;
 
@@ -496,10 +495,10 @@ bool TextEditorSystem::isScrollbarEntity(const vigine::Entity *entity) const
 
 void TextEditorSystem::updateFocusFrameVisual(bool visible)
 {
-    if (!_graphicsService || !_context)
+    if (!_graphicsService || !_entityManager)
         return;
 
-    auto *em = _context->entityManager();
+    auto *em = _entityManager;
     if (!em)
         return;
 
@@ -525,7 +524,7 @@ void TextEditorSystem::updateFocusFrameVisual(bool visible)
     const float vHeight      = frameTop - frameBottom;
 
     auto place = [&](vigine::Entity *e, const glm::vec3 &pos, const glm::vec3 &scale) {
-        _graphicsService->bindEntity(e);
+        _renderSystem->bindEntity(e);
         if (auto *rc = _graphicsService->renderComponent())
         {
             auto t = rc->getTransform();
@@ -540,7 +539,7 @@ void TextEditorSystem::updateFocusFrameVisual(bool visible)
             }
             rc->setTransform(t);
         }
-        _graphicsService->unbindEntity();
+        _renderSystem->unbindEntity();
     };
 
     // Encode frame side id in scale.z for shader-side perimeter animation mapping.

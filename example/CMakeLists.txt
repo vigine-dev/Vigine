@@ -5,20 +5,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project(example-projects)
 
-# Post-#330 default: the legacy task-based examples (postgres_demo,
-# window) consume `vigine::Context::service(ServiceId, Name, Property)`
-# plus the legacy `setContext` / `bindEntity` / `getBoundEntity` mixin
-# on each service. The three concrete services (Database, Graphics,
-# Platform) migrated to the modern wrapper recipe in #330; the
-# matching consumer-side migration ships through #299 (window) and
-# #329 (postgres_demo). Until those leaves land, the examples below
-# do not compile against this branch — they are gated OFF by default
-# so the engine library, the contract / smoke tests, and the v0.1.0
-# readiness demos (parallel_fsm, threaded_bus, fanout_fsm) still
-# configure cleanly. Flip the matching option ON only when running
-# in a tree that has the #299 / #329 consumer migrations applied.
+# The window example migrated to the modern
+# @c vigine::engine::IEngine front door + the modern service
+# container, so it defaults ON on platforms its skip-guard accepts
+# (Win32 today; @c example/window/CMakeLists.txt early-returns on
+# non-Windows hosts, keeping a Linux / macOS configure clean).
+#
+# The PostgreSQL example still consumes the legacy
+# @c vigine::Context::service(id, name, Property) factory and stays
+# gated OFF until its own consumer migration ships through #329.
 option(BUILD_EXAMPLE_POSTGRESQL "Build combined PostgreSQL example project (requires #329 consumer migration)" OFF)
-option(BUILD_EXAMPLE_WINDOW "Build example-window project (requires #299 consumer migration)" OFF)
+option(BUILD_EXAMPLE_WINDOW "Build example-window project" ON)
 
 # Postgres demo lives under example/experimental and is gated by the
 # experimental umbrella so the default build never tries to link

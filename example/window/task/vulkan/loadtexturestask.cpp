@@ -1,11 +1,10 @@
 #include "imageloader.h"
 #include "loadtexturestask.h"
 
-#include <vigine/context.h>
+#include <vigine/api/engine/iengine_token.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/texturecomponent.h>
-#include <vigine/property.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <algorithm>
@@ -13,32 +12,35 @@
 #include <filesystem>
 #include <iostream>
 
-void LoadTexturesTask::contextChanged()
+void LoadTexturesTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
 {
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
+    _entityManager = entityManager;
+}
 
-    _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
+void LoadTexturesTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
+{
+    _graphicsServiceId = id;
 }
 
 vigine::Result LoadTexturesTask::run()
 {
-    if (!_graphicsService)
-    {
-        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+    if (!_entityManager)
+        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
-    auto *entityManager = context()->entityManager();
+    auto *token = api();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto graphicsResult = token->service(_graphicsServiceId);
+    if (!graphicsResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     // Try several candidate cwd-relative paths so the example works whether
     // it is launched from the engine root, the exe directory (the build
@@ -63,10 +65,8 @@ vigine::Result LoadTexturesTask::run()
         }
     }
     if (imgDir.empty())
-    {
         return vigine::Result(vigine::Result::Code::Error,
                               "Image directory not found: resource/img");
-    }
 
     std::cout << "Loading textures from " << imgDir.string() << "..." << std::endl;
 
@@ -88,9 +88,7 @@ vigine::Result LoadTexturesTask::run()
     std::sort(imagePaths.begin(), imagePaths.end());
 
     if (imagePaths.empty())
-    {
         return vigine::Result(vigine::Result::Code::Error, "No image files found in resource/img");
-    }
 
     size_t loadedIndex = 0;
     for (size_t i = 0; i < imagePaths.size(); ++i)
@@ -114,7 +112,7 @@ vigine::Result LoadTexturesTask::run()
         }
 
         // Create entity for this texture
-        auto *textureEntity = entityManager->createEntity();
+        auto *textureEntity = _entityManager->createEntity();
         if (!textureEntity)
         {
             std::cerr << "Failed to create entity for texture: " << imagePath << std::endl;
@@ -123,22 +121,18 @@ vigine::Result LoadTexturesTask::run()
 
         // Use sequential index based on successful loads so entity names are always 0,1,2...
         std::string entityName = "TextureEntity_" + std::to_string(loadedIndex++);
-        entityManager->addAlias(textureEntity, entityName);
+        _entityManager->addAlias(textureEntity, entityName);
 
         // Create texture component for this entity
-        auto *renderSystem = _graphicsService->renderSystem();
-        if (renderSystem)
-        {
-            renderSystem->createTextureComponent(textureEntity);
-        }
+        renderSystem->createTextureComponent(textureEntity);
 
-        _graphicsService->bindEntity(textureEntity);
+        renderSystem->bindEntity(textureEntity);
 
         // Get texture component (RenderSystem should manage this via GraphicsService)
-        auto *textureComponent = _graphicsService->textureComponent();
+        auto *textureComponent = graphicsService->textureComponent();
         if (!textureComponent)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             std::cerr << "Texture component is unavailable for " << entityName << std::endl;
             continue;
         }
@@ -154,7 +148,7 @@ vigine::Result LoadTexturesTask::run()
         textureComponent->setWrapMode(vigine::ecs::graphics::TextureWrapMode::Repeat,
                                       vigine::ecs::graphics::TextureWrapMode::Repeat);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         // Upload texture to GPU
         renderSystem->uploadTextureToGpu(textureEntity);

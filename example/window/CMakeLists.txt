@@ -38,11 +38,12 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
 set(EXAMPLE_WINDOW_SYSTEM_SOURCES
     system/texteditorsystem.h system/texteditorsystem.cpp)
 
-set(EXAMPLE_WINDOW_STATE_SOURCES
-    state/initstate.h state/initstate.cpp
-    state/workstate.h state/workstate.cpp
-    state/errorstate.h state/errorstate.cpp
-    state/closestate.h state/closestate.cpp)
+# The legacy AbstractState-derived classes were retired when the
+# example migrated to the modern FSM-drive surface. State identity is
+# now a value handle (vigine::statemachine::StateId) allocated through
+# IStateMachine; main.cpp registers a TaskFlow per state via
+# addStateTaskFlow without any per-state class scaffolding.
+set(EXAMPLE_WINDOW_STATE_SOURCES "")
 
 set(EXAMPLE_WINDOW_SHADER_DIR ${CMAKE_CURRENT_LIST_DIR}/shader)
 set(EXAMPLE_WINDOW_SHADER_OUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)

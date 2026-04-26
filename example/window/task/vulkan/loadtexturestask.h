@@ -1,16 +1,11 @@
 #pragma once
 
 #include <vigine/api/taskflow/abstracttask.h>
-
-#include <map>
-#include <string>
-
-
-struct ImageData;
+#include <vigine/api/service/serviceid.h>
 
 namespace vigine
 {
-class Context;
+class EntityManager;
 
 namespace ecs
 {
@@ -20,14 +15,18 @@ class GraphicsService;
 }
 } // namespace ecs
 } // namespace vigine
-class LoadTexturesTask : public vigine::AbstractTask
+
+class LoadTexturesTask final : public vigine::AbstractTask
 {
   public:
     LoadTexturesTask() = default;
 
     [[nodiscard]] vigine::Result run() override;
-    void contextChanged() override;
+
+    void setEntityManager(vigine::EntityManager *entityManager) noexcept;
+    void setGraphicsServiceId(vigine::service::ServiceId id) noexcept;
 
   private:
-    vigine::ecs::graphics::GraphicsService *_graphicsService = nullptr;
+    vigine::EntityManager *_entityManager{nullptr};
+    vigine::service::ServiceId _graphicsServiceId{};
 };
