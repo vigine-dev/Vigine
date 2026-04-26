@@ -38,6 +38,10 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
 set(EXAMPLE_WINDOW_SYSTEM_SOURCES
     system/texteditorsystem.h system/texteditorsystem.cpp)
 
+set(EXAMPLE_WINDOW_SERVICE_SOURCES
+    services/wellknown.h
+    services/texteditorservice.h services/texteditorservice.cpp)
+
 # The legacy AbstractState-derived classes were retired when the
 # example migrated to the modern FSM-drive surface. State identity is
 # now a value handle (vigine::statemachine::StateId) allocated through
@@ -270,6 +274,7 @@ add_executable(${PROJECT_WINDOW_NAME}
     ${EXAMPLE_WINDOW_HANDLER_SOURCES}
     ${EXAMPLE_WINDOW_TASK_SOURCES}
     ${EXAMPLE_WINDOW_SYSTEM_SOURCES}
+    ${EXAMPLE_WINDOW_SERVICE_SOURCES}
     ${EXAMPLE_WINDOW_STATE_SOURCES})
 
 add_dependencies(${PROJECT_WINDOW_NAME} example_window_shaders)

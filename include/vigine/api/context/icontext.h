@@ -8,6 +8,11 @@
 #include "vigine/api/service/serviceid.h"
 #include "vigine/api/statemachine/stateid.h"
 
+namespace vigine
+{
+class IEntityManager;
+} // namespace vigine
+
 namespace vigine::ecs
 {
 class IECS;
@@ -15,12 +20,14 @@ class IECS;
 
 namespace vigine::engine
 {
+class IEngine;
 class IEngineToken;
 } // namespace vigine::engine
 
 namespace vigine::messaging
 {
 class IMessageBus;
+class ISignalEmitter;
 } // namespace vigine::messaging
 
 namespace vigine::service
@@ -198,6 +205,67 @@ class IContext
      */
     [[nodiscard]] virtual core::threading::IThreadManager &threadManager() = 0;
 
+    // ------ Engine environment (default-built; replaceable via setter) ------
+
+    /**
+     * @brief Returns the engine-wide entity manager.
+     *
+     * The aggregator builds a default @ref IEntityManager during
+     * construction so every task observes a live manager through
+     * @c apiToken()->entityManager() without anyone wiring it up
+     * explicitly. Applications that need a different concrete
+     * implementation replace the slot through @ref setEntityManager;
+     * the prior owner is destroyed via the unique_ptr slot's RAII
+     * chain. The reference is valid for the context's lifetime
+     * regardless of how many overrides have happened.
+     */
+    [[nodiscard]] virtual IEntityManager &entityManager() = 0;
+
+    /**
+     * @brief Replaces the default entity manager with @p entityManager.
+     *
+     * The prior owner (whatever the constructor or a previous
+     * @ref setEntityManager call left in the slot) is destroyed in
+     * place by the unique_ptr's RAII chain. Passing a null pointer is
+     * implementation-defined; the default concrete asserts on null in
+     * Debug and treats null as a no-op in Release so the "the
+     * accessor never returns a null reference" contract holds.
+     */
+    virtual void
+        setEntityManager(std::unique_ptr<IEntityManager> entityManager) = 0;
+
+    /**
+     * @brief Returns the engine-wide signal-emitter facade.
+     *
+     * The aggregator builds a default @ref messaging::ISignalEmitter
+     * during construction so every task observes a live emitter
+     * through @c apiToken()->signalEmitter() without anyone wiring it
+     * up explicitly. Applications that need a different concrete
+     * implementation replace the slot through @ref setSignalEmitter;
+     * the prior owner is destroyed via the unique_ptr slot's RAII
+     * chain. The reference is valid for the context's lifetime.
+     */
+    [[nodiscard]] virtual messaging::ISignalEmitter &signalEmitter() = 0;
+
+    /**
+     * @brief Replaces the default signal emitter with @p signalEmitter.
+     *
+     * Same RAII-replacement contract as @ref setEntityManager.
+     */
+    virtual void
+        setSignalEmitter(std::unique_ptr<messaging::ISignalEmitter> signalEmitter) = 0;
+
+    /**
+     * @brief Returns the engine that owns this context.
+     *
+     * The reference is the back-pointer the engine wires in through
+     * its constructor body so tasks reaching the engine surface
+     * through @c apiToken()->engine() see the same object that
+     * created the context. The reference is valid for the engine's
+     * entire lifetime.
+     */
+    [[nodiscard]] virtual engine::IEngine &engine() = 0;
+
     // ------ Service registry ------
 
     /**
@@ -214,18 +282,59 @@ class IContext
         service(service::ServiceId id) const = 0;
 
     /**
-     * @brief Registers @p service on the context.
+     * @brief Registers @p service on the context with a fresh
+     *        auto-allocated id.
      *
-     * The context stamps the service with a fresh @ref service::ServiceId
-     * and stores it in its registry. Callers obtain the stamped id
-     * through @c service->id() after the call returns success. Returns
-     * @ref Result::Code::TopologyFrozen when the context has been
-     * frozen; returns @ref Result::Code::Error when @p service is
-     * @c nullptr. The service is held by @c std::shared_ptr inside the
-     * registry; callers may keep or drop their own handle.
+     * The context stamps the service with a generational
+     * @ref service::ServiceId and stores it in its registry. Callers
+     * obtain the stamped id through @c service->id() after the call
+     * returns success. Returns @ref Result::Code::TopologyFrozen when
+     * the context has been frozen; returns @ref Result::Code::Error
+     * when @p service is @c nullptr. The service is held by
+     * @c std::shared_ptr inside the registry; callers may keep or
+     * drop their own handle.
      */
     [[nodiscard]] virtual Result
         registerService(std::shared_ptr<service::IService> service) = 0;
+
+    /**
+     * @brief Registers @p service under the caller-provided
+     *        @p knownId, replacing any existing slot occupant.
+     *
+     * Used for the well-known id pattern (see
+     * @c include/vigine/api/service/wellknown.h): the caller declares
+     * a stable @ref service::ServiceId constant, registers a service
+     * implementation under that id, and every task resolves the
+     * service through the same constant via @c apiToken()->service.
+     * Both engine-scope (@c platformService, @c graphicsService) and
+     * application-scope ids use this overload; the engine reserves
+     * @c index in [1..15] for its own well-known slots, leaving
+     * @c index >= 16 free for application-scope ids.
+     *
+     * @param service A non-null @c std::shared_ptr to the service.
+     *        Must derive from @ref service::AbstractService so the
+     *        registry can stamp the @p knownId on the service via
+     *        @ref service::AbstractService::setId.
+     * @param knownId The caller-provided id. Must satisfy
+     *        @ref service::ServiceId::valid (non-zero generation).
+     * @return @ref Result::Code::Success on registration success.
+     *         @ref Result::Code::TopologyFrozen when the context has
+     *         been frozen. @ref Result::Code::Error when @p service is
+     *         null, when @p knownId is the invalid sentinel, or when
+     *         @p service is not derived from
+     *         @ref service::AbstractService (no setId path).
+     *
+     * Replacement semantics: if the slot keyed by @p knownId.index
+     * already holds a service (engine-built default or a prior
+     * caller-side registration), that occupant is destroyed via its
+     * @c shared_ptr count dropping to zero (assuming the caller did
+     * not keep an external handle). Callers that intend to reuse the
+     * prior occupant should hold their own @c shared_ptr before
+     * calling this overload.
+     */
+    [[nodiscard]] virtual Result
+        registerService(std::shared_ptr<service::IService> service,
+                        service::ServiceId                 knownId) = 0;
 
     // ------ Engine-token factory ------
 

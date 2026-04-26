@@ -8,6 +8,7 @@
 
 #include "vigine/api/context/contextconfig.h"
 #include "vigine/api/context/icontext.h"
+#include "vigine/api/ecs/ientitymanager.h"
 #include "vigine/api/engine/iengine_token.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
@@ -15,11 +16,17 @@
 #include "vigine/api/messaging/busconfig.h"
 #include "vigine/api/messaging/busid.h"
 #include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/isignalemitter.h"
 #include "vigine/result.h"
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/core/threading/ithreadmanager.h"
+
+namespace vigine::engine
+{
+class IEngine;
+} // namespace vigine::engine
 
 namespace vigine::context
 {
@@ -103,6 +110,28 @@ class AbstractContext : public IContext
 
     [[nodiscard]] core::threading::IThreadManager &threadManager() override;
 
+    // ------ IContext: engine environment ------
+
+    [[nodiscard]] IEntityManager &entityManager() override;
+    void setEntityManager(std::unique_ptr<IEntityManager> entityManager) override;
+
+    [[nodiscard]] messaging::ISignalEmitter &signalEmitter() override;
+    void setSignalEmitter(std::unique_ptr<messaging::ISignalEmitter> signalEmitter) override;
+
+    [[nodiscard]] engine::IEngine &engine() override;
+
+    /**
+     * @brief Engine-internal hook the @ref vigine::engine::AbstractEngine
+     *        constructor calls to wire its self-pointer into the
+     *        context's @ref engine accessor.
+     *
+     * Public on the abstract base so the concrete @c Context closer
+     * inherits the symbol; never lifted onto @ref IContext because
+     * applications must not be able to swap the engine back-pointer
+     * mid-life.
+     */
+    void setEngineBackRef(engine::IEngine *engine) noexcept;
+
     // ------ IContext: service registry ------
 
     [[nodiscard]] std::shared_ptr<service::IService>
@@ -110,6 +139,10 @@ class AbstractContext : public IContext
 
     [[nodiscard]] Result
         registerService(std::shared_ptr<service::IService> service) override;
+
+    [[nodiscard]] Result
+        registerService(std::shared_ptr<service::IService> service,
+                        service::ServiceId                 knownId) override;
 
     // ------ IContext: engine-token factory ------
 
@@ -257,6 +290,40 @@ class AbstractContext : public IContext
      * @brief Level-1 wrapper: task flow.
      */
     std::unique_ptr<taskflow::ITaskFlow> _taskFlow;
+
+    // ------ Engine environment (default-built; replaceable via setter) ------
+
+    /**
+     * @brief Default-built entity manager.
+     *
+     * Constructed in the @ref AbstractContext ctor as a concrete
+     * @c EntityManager and replaceable via @ref setEntityManager. The
+     * pointer is non-null for the context's lifetime (the constructor
+     * fills it; setters either replace the held value or assert in
+     * Debug if a null is supplied).
+     */
+    std::unique_ptr<IEntityManager> _entityManager;
+
+    /**
+     * @brief Default-built signal emitter facade.
+     *
+     * Constructed in the @ref AbstractContext ctor as a concrete
+     * @c SignalEmitter bound to the engine-owned thread manager and
+     * the shared-pool bus config. Replaceable via
+     * @ref setSignalEmitter; same null-handling contract as
+     * @ref _entityManager.
+     */
+    std::unique_ptr<messaging::ISignalEmitter> _signalEmitter;
+
+    /**
+     * @brief Back-pointer to the engine that owns this context.
+     *
+     * The pointer is wired in by @ref engine::AbstractEngine's
+     * constructor body via @ref setEngineBackRef shortly after this
+     * context is built; @ref engine() dereferences it. Non-owning;
+     * the engine outlives the context so no dangling read occurs.
+     */
+    engine::IEngine *_engine{nullptr};
 
     // ------ Registries (mutable state guarded by _registryMutex) ------
 

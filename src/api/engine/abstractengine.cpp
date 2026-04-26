@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <thread>
 
+#include "vigine/api/context/abstractcontext.h"
 #include "vigine/api/context/factory.h"
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/statemachine/istatemachine.h"
@@ -23,6 +24,19 @@ AbstractEngine::AbstractEngine(const EngineConfig &config)
     : _context{context::createContext(config.context)}
     , _runMode{config.runMode}
 {
+    // Wire the engine back-pointer into the context so tasks reaching
+    // @c apiToken()->engine() observe the same engine that built the
+    // context. The factory always returns an @ref AbstractContext-
+    // derived object (the @c Context closer below); a future leaf that
+    // swaps the factory for a non-AbstractContext implementation must
+    // expose its own back-ref hook. The dynamic_cast guards the cast in
+    // Debug builds; Release skips the check and trusts the factory
+    // contract.
+    if (auto *abstractContext =
+            dynamic_cast<context::AbstractContext *>(_context.get()))
+    {
+        abstractContext->setEngineBackRef(this);
+    }
 }
 
 // The destructor mirrors the ctor order in reverse: lifecycle state
@@ -80,7 +94,7 @@ IContext &AbstractEngine::context()
     return *_context;
 }
 
-Result AbstractEngine::run()
+vigine::Result AbstractEngine::run()
 {
     // Single-shot guard: the first call through flips _runEntered
     // from false to true. Subsequent calls see the flag set and
@@ -92,8 +106,8 @@ Result AbstractEngine::run()
     if (!_runEntered.compare_exchange_strong(
             expected, true, std::memory_order_acq_rel, std::memory_order_acquire))
     {
-        return Result{
-            Result::Code::Error,
+        return vigine::Result{
+            vigine::Result::Code::Error,
             "AbstractEngine::run: lifecycle is single-shot; build a new engine"};
     }
 
@@ -308,7 +322,7 @@ Result AbstractEngine::run()
     tm.runMainThreadPump();
 
     _running.store(false, std::memory_order_release);
-    return Result{};
+    return vigine::Result{};
 }
 
 void AbstractEngine::shutdown() noexcept

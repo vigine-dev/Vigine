@@ -1,8 +1,12 @@
 #include "runwindowtask.h"
 
+#include <vigine/api/context/icontext.h>
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/messaging/isignalemitter.h>
 #include <vigine/api/messaging/isubscriptiontoken.h>
+#include <vigine/api/service/wellknown.h>
 #include "vigine/impl/ecs/entity.h"
 #include "vigine/impl/ecs/entitymanager.h"
 #include "vigine/impl/ecs/graphics/meshcomponent.h"
@@ -14,6 +18,9 @@
 #include <vigine/impl/ecs/platform/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
+#include "../../services/texteditorservice.h"
+#include "../../services/wellknown.h"
+#include "../../system/texteditorsystem.h"
 #include "impl/ecs/platform/windowcomponent.h"
 #include "windoweventpayload.h"
 
@@ -86,61 +93,51 @@ std::wstring wideFromUtf8(const std::string &utf8)
 
 RunWindowTask::RunWindowTask() {}
 
-void RunWindowTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
+RunWindowTask::Deps RunWindowTask::resolveDeps() const
 {
-    _entityManager = entityManager;
-}
+    Deps deps;
 
-void RunWindowTask::setPlatformServiceId(vigine::service::ServiceId id) noexcept
-{
-    _platformServiceId = id;
-}
-
-void RunWindowTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
-
-void RunWindowTask::setEngine(vigine::engine::IEngine *engine) noexcept
-{
-    _engine = engine;
-}
-
-bool RunWindowTask::resolveServices()
-{
-    auto *token = apiToken();
+    auto *token = const_cast<RunWindowTask *>(this)->apiToken();
     if (!token)
-        return false;
+        return deps;
 
-    if (!_platformService)
+    auto entityManagerResult = token->entityManager();
+    if (entityManagerResult.ok())
+        deps.entityManager =
+            dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+
+    auto platformResult = token->service(vigine::service::wellknown::platformService);
+    if (platformResult.ok())
+        deps.platformService = dynamic_cast<vigine::ecs::platform::PlatformService *>(
+            &platformResult.value());
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
+    if (graphicsResult.ok())
     {
-        const auto platformResult = token->service(_platformServiceId);
-        if (!platformResult.ok())
-            return false;
-        _platformService =
-            dynamic_cast<vigine::ecs::platform::PlatformService *>(&platformResult.value());
-        if (!_platformService)
-            return false;
+        deps.graphicsService = dynamic_cast<vigine::ecs::graphics::GraphicsService *>(
+            &graphicsResult.value());
+        if (deps.graphicsService)
+            deps.renderSystem = deps.graphicsService->renderSystem();
     }
 
-    if (!_graphicsService)
+    deps.signalEmitter = &token->signalEmitter();
+    deps.engine        = &token->engine();
+
+    auto editorSvcResult = token->service(example::services::wellknown::textEditor);
+    if (editorSvcResult.ok())
     {
-        const auto graphicsResult = token->service(_graphicsServiceId);
-        if (!graphicsResult.ok())
-            return false;
-        _graphicsService =
-            dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
-        if (!_graphicsService)
-            return false;
+        if (auto *editorService =
+                dynamic_cast<TextEditorService *>(&editorSvcResult.value()))
+        {
+            // ensureWired is idempotent — first call binds the
+            // underlying TextEditorSystem to the entity manager and
+            // graphics service, every subsequent call is a no-op.
+            editorService->ensureWired(deps.engine->context());
+            deps.textEditorSystem = editorService->system();
+        }
     }
 
-    if (!_renderSystem && _graphicsService)
-        _renderSystem = _graphicsService->renderSystem();
-
-    if (_textEditorSystem)
-        _textEditorSystem->bind(_entityManager, _graphicsService, _renderSystem);
-
-    return true;
+    return deps;
 }
 
 // COPILOT_TODO: Guarantee unbindEntity() on every early exit via an
@@ -148,20 +145,16 @@ bool RunWindowTask::resolveServices()
 // can stay bound to the entity after an error return path.
 vigine::Result RunWindowTask::run()
 {
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
-
-    if (!resolveServices())
+    auto deps = resolveDeps();
+    if (!deps.entityManager || !deps.platformService || !deps.graphicsService ||
+        !deps.renderSystem || !deps.engine)
         return vigine::Result(vigine::Result::Code::Error,
-                              "Platform/Graphics service is unavailable");
+                              "RunWindowTask: failed to resolve engine dependencies");
 
     // Subscribe a one-shot expiration callback the FIRST time the task
-    // runs. Subsequent ticks (the legacy task flow only schedules this
-    // task once per state entry, but defending against re-entry keeps
-    // the lifetime invariant clean) keep the existing subscription. The
-    // callback flips _shutdownRequested and asks the platform service
-    // to close the active windows so the blocking showWindow call
-    // unwinds and run() returns.
+    // runs. The callback flips _shutdownRequested and asks the platform
+    // service to close the active windows so the blocking showWindow
+    // call unwinds and run() returns.
     if (!_expirationSubscription)
     {
         if (auto *token = apiToken())
@@ -171,15 +164,15 @@ vigine::Result RunWindowTask::run()
         }
     }
 
-    auto *entity = _entityManager->getEntityByAlias("MainWindow");
+    auto *entity = deps.entityManager->getEntityByAlias("MainWindow");
     if (!entity)
         return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
     _mainWindowEntity = entity;
 
-    static_cast<void>(ensureMouseRayEntity());
-    static_cast<void>(ensureMouseClickSphereEntity());
+    static_cast<void>(ensureMouseRayEntity(deps));
+    static_cast<void>(ensureMouseClickSphereEntity(deps));
 
-    auto windows = _platformService->windowComponents(entity);
+    auto windows = deps.platformService->windowComponents(entity);
     if (windows.empty())
         return vigine::Result(vigine::Result::Code::Error, "Window component is unavailable");
 
@@ -190,7 +183,7 @@ vigine::Result RunWindowTask::run()
             return vigine::Result(vigine::Result::Code::Error,
                                   "Window component is unavailable");
 
-        auto eventHandlers = _platformService->windowEventHandlers(entity, window);
+        auto eventHandlers = deps.platformService->windowEventHandlers(entity, window);
         if (eventHandlers.empty())
             return vigine::Result(vigine::Result::Code::Error,
                                   "Window event handler is unavailable");
@@ -239,12 +232,10 @@ vigine::Result RunWindowTask::run()
 
         std::cout << "[RunWindowTask] Showing window " << (windowIndex + 1) << std::endl;
         window->setFrameCallback([this, window]() {
-            // Token expired (FSM transitioned away from the bound state
-            // while the frame callback was running) -- skip the render
-            // tick and post a WM_CLOSE so the platform message loop in
-            // @c WinAPIComponent::show observes a quit and unwinds. The
-            // check is lock-free and bounds the latency between the
-            // FSM transition and the window-close to one frame.
+            // Token expired -- post a WM_CLOSE so the platform message
+            // loop in @c WinAPIComponent::show observes a quit and
+            // unwinds. Lock-free check; bounds the FSM-transition →
+            // window-close latency to one frame.
             if (_shutdownRequested.load(std::memory_order_acquire))
             {
 #ifdef _WIN32
@@ -260,9 +251,14 @@ vigine::Result RunWindowTask::run()
                 return;
             }
 
+            // Per-frame deps resolution. Same engine-default services
+            // resolve every tick; the lookup is cheap (registry hash +
+            // dynamic_cast) and keeps the "no caches" rule visible.
+            auto frameDeps = resolveDeps();
+
             bool resizedThisTick = false;
 
-            if (_resizePending && _renderSystem)
+            if (_resizePending && frameDeps.renderSystem)
             {
                 const auto now    = std::chrono::steady_clock::now();
                 const bool paused = now - _lastResizeEvent >= std::chrono::milliseconds(80);
@@ -271,8 +267,8 @@ vigine::Result RunWindowTask::run()
                     if (_pendingResizeWidth != _appliedResizeWidth ||
                         _pendingResizeHeight != _appliedResizeHeight)
                     {
-                        const bool resized =
-                            _renderSystem->resize(_pendingResizeWidth, _pendingResizeHeight);
+                        const bool resized = frameDeps.renderSystem->resize(
+                            _pendingResizeWidth, _pendingResizeHeight);
                         if (!resized)
                         {
                             std::cerr << "[RunWindowTask] Failed to recreate swapchain on "
@@ -292,21 +288,21 @@ vigine::Result RunWindowTask::run()
                 }
             }
 
-            if (_textEditorSystem)
-                _textEditorSystem->onFrame();
+            if (frameDeps.textEditorSystem)
+                frameDeps.textEditorSystem->onFrame();
 
-            if (_renderSystem && !resizedThisTick)
+            if (frameDeps.renderSystem && !resizedThisTick)
             {
-                _renderSystem->update();
+                frameDeps.renderSystem->update();
 #ifdef _WIN32
                 if (auto *winApiWindow =
                         dynamic_cast<vigine::ecs::platform::WinAPIComponent *>(window))
                     winApiWindow->setRenderedVertexCount(
-                        _renderSystem->lastRenderedVertexCount());
+                        frameDeps.renderSystem->lastRenderedVertexCount());
 #endif
             }
         });
-        auto showResult = _platformService->showWindow(window);
+        auto showResult = deps.platformService->showWindow(window);
         if (showResult.isError())
             return showResult;
         std::cout << "[RunWindowTask] Window " << (windowIndex + 1) << " closed, continuing"
@@ -319,76 +315,74 @@ vigine::Result RunWindowTask::run()
     // do this anyway, but ordering keeps the contract obvious.
     _expirationSubscription.reset();
 
-    // The platform showWindow loop returned, which means every window
-    // closed (typically via WM_CLOSE or the user dismissing the OS
-    // window). Ask the engine to stop the main pump so @c IEngine::run
-    // returns to @c main and the process exits cleanly. The shutdown
-    // is idempotent so a duplicate call from a future re-run path is
-    // safe; @c shutdown is also TSAN-clean from any thread.
-    if (_engine)
-        _engine->shutdown();
+    // Ask the engine to stop the main pump so @c IEngine::run returns
+    // to @c main and the process exits cleanly.
+    deps.engine->shutdown();
 
     return vigine::Result();
 }
 
 void RunWindowTask::onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y)
 {
+    auto deps = resolveDeps();
+
     if (button == vigine::ecs::platform::MouseButton::Left)
     {
-        vigine::Entity *picked =
-            _renderSystem ? _renderSystem->pickFirstIntersectedEntity(x, y) : nullptr;
+        vigine::Entity *picked = deps.renderSystem
+                                     ? deps.renderSystem->pickFirstIntersectedEntity(x, y)
+                                     : nullptr;
 
         _lastMouseRayX     = x;
         _lastMouseRayY     = y;
         _hasMouseRaySample = true;
 
         const bool pickedTextEditor =
-            _textEditorSystem && _textEditorSystem->isEditorEntity(picked);
+            deps.textEditorSystem && deps.textEditorSystem->isEditorEntity(picked);
 
         // Freeze click marker first, then build ray from the same click point.
-        updateMouseClickSphereVisualization(x, y);
-        updateMouseRayVisualization(x, y);
+        updateMouseClickSphereVisualization(deps, x, y);
+        updateMouseRayVisualization(deps, x, y);
 
         bool consumedByScrollbar = false;
-        if (pickedTextEditor && _textEditorSystem)
-            consumedByScrollbar = _textEditorSystem->onMouseButtonDown(x, y, picked);
+        if (pickedTextEditor && deps.textEditorSystem)
+            consumedByScrollbar = deps.textEditorSystem->onMouseButtonDown(x, y, picked);
 
-        if (pickedTextEditor && _textEditorSystem && !consumedByScrollbar)
-            _textEditorSystem->onEditorClick(x, y);
+        if (pickedTextEditor && deps.textEditorSystem && !consumedByScrollbar)
+            deps.textEditorSystem->onEditorClick(x, y);
 
         // In Ctrl camera-unlock mode keep current focus unchanged.
         if (!_ctrlHeld)
         {
             // Restore normal behavior: clicked entity receives focus, including text
             // editor.
-            setFocusedEntity(picked);
+            setFocusedEntity(deps, picked);
 
             if (_focusedEntity)
             {
                 _movementKeyMask = 0;
-                if (_renderSystem)
+                if (deps.renderSystem)
                 {
-                    _renderSystem->setMoveForwardActive(false);
-                    _renderSystem->setMoveBackwardActive(false);
-                    _renderSystem->setMoveLeftActive(false);
-                    _renderSystem->setMoveRightActive(false);
-                    _renderSystem->setMoveUpActive(false);
-                    _renderSystem->setMoveDownActive(false);
-                    _renderSystem->setSprintActive(false);
+                    deps.renderSystem->setMoveForwardActive(false);
+                    deps.renderSystem->setMoveBackwardActive(false);
+                    deps.renderSystem->setMoveLeftActive(false);
+                    deps.renderSystem->setMoveRightActive(false);
+                    deps.renderSystem->setMoveUpActive(false);
+                    deps.renderSystem->setMoveDownActive(false);
+                    deps.renderSystem->setSprintActive(false);
                 }
             }
         }
     }
 
-    if (_renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
+    if (deps.renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
         (!_focusedEntity || _ctrlHeld || _objectDragActive))
-        _renderSystem->beginCameraDrag(x, y);
+        deps.renderSystem->beginCameraDrag(x, y);
 
     std::cout << "[RunWindowTask::onMouseButtonDown] button=" << static_cast<int>(button)
               << ", x=" << x << ", y=" << y << std::endl;
-    if (_signalEmitter)
+    if (deps.signalEmitter)
     {
-        static_cast<void>(_signalEmitter->emit(
+        static_cast<void>(deps.signalEmitter->emit(
             std::make_unique<MouseButtonDownPayload>(button, x, y)));
     }
 }
@@ -398,12 +392,14 @@ void RunWindowTask::onMouseButtonUp(vigine::ecs::platform::MouseButton button, i
     static_cast<void>(x);
     static_cast<void>(y);
 
-    if (button == vigine::ecs::platform::MouseButton::Left && _textEditorSystem)
-        _textEditorSystem->onMouseButtonUp();
+    auto deps = resolveDeps();
 
-    if (_renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
+    if (button == vigine::ecs::platform::MouseButton::Left && deps.textEditorSystem)
+        deps.textEditorSystem->onMouseButtonUp();
+
+    if (deps.renderSystem && button == vigine::ecs::platform::MouseButton::Right &&
         (!_focusedEntity || _ctrlHeld || _objectDragActive))
-        _renderSystem->endCameraDrag();
+        deps.renderSystem->endCameraDrag();
 }
 
 void RunWindowTask::onMouseMove(int x, int y)
@@ -412,18 +408,22 @@ void RunWindowTask::onMouseMove(int x, int y)
     _lastMouseRayY     = y;
     _hasMouseRaySample = true;
 
+    auto deps = resolveDeps();
+
     if (_objectDragActive)
-        updateObjectDrag(x, y);
+        updateObjectDrag(deps, x, y);
 
-    if (_textEditorSystem)
-        _textEditorSystem->onMouseMove(x, y);
+    if (deps.textEditorSystem)
+        deps.textEditorSystem->onMouseMove(x, y);
 
-    if (_renderSystem && (!_focusedEntity || _ctrlHeld || _objectDragActive))
-        _renderSystem->updateCameraDrag(x, y);
+    if (deps.renderSystem && (!_focusedEntity || _ctrlHeld || _objectDragActive))
+        deps.renderSystem->updateCameraDrag(x, y);
 }
 
 void RunWindowTask::onMouseWheel(int delta, int x, int y)
 {
+    auto deps = resolveDeps();
+
     // In object-drag mode: wheel adjusts object distance from camera.
     if (_objectDragActive)
     {
@@ -433,23 +433,25 @@ void RunWindowTask::onMouseWheel(int delta, int x, int y)
         const float factor      = std::pow(0.90f, -wheelSteps);
         _dragDistanceFromCamera = (std::max)(0.15f, _dragDistanceFromCamera * factor);
         // Allow Z movement so the object actually moves in depth, not just XY.
-        updateObjectDrag(x, y, /*suppressZDelta=*/false);
+        updateObjectDrag(deps, x, y, /*suppressZDelta=*/false);
         return;
     }
 
     // When text editor is focused (and Ctrl not held): scroll text, not camera.
-    if (_focusedEntity && !_ctrlHeld && _textEditorSystem)
+    if (_focusedEntity && !_ctrlHeld && deps.textEditorSystem)
     {
-        _textEditorSystem->onMouseWheel(delta);
+        deps.textEditorSystem->onMouseWheel(delta);
         return;
     }
 
-    if (_renderSystem && (!_focusedEntity || _ctrlHeld))
-        _renderSystem->zoomCamera(delta);
+    if (deps.renderSystem && (!_focusedEntity || _ctrlHeld))
+        deps.renderSystem->zoomCamera(delta);
 }
 
 void RunWindowTask::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
 {
+    auto deps = resolveDeps();
+
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
         _ctrlHeld = true;
@@ -464,7 +466,7 @@ void RunWindowTask::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
         {
             const int mx = _hasMouseRaySample ? _lastMouseRayX : 0;
             const int my = _hasMouseRaySample ? _lastMouseRayY : 0;
-            static_cast<void>(beginObjectDrag(_focusedEntity, mx, my));
+            static_cast<void>(beginObjectDrag(deps, _focusedEntity, mx, my));
         }
         return;
     }
@@ -476,64 +478,68 @@ void RunWindowTask::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
         if (_mouseRayVisible)
         {
             if (_hasMouseRaySample)
-                updateMouseRayVisualization(_lastMouseRayX, _lastMouseRayY);
-        } else if (ensureMouseRayEntity() && _renderSystem)
+                updateMouseRayVisualization(deps, _lastMouseRayX, _lastMouseRayY);
+        } else if (ensureMouseRayEntity(deps) && deps.renderSystem)
         {
-            _renderSystem->bindEntity(_mouseRayEntity);
-            if (auto *rc = _renderSystem->boundRenderComponent())
+            deps.renderSystem->bindEntity(_mouseRayEntity);
+            if (auto *rc = deps.renderSystem->boundRenderComponent())
             {
                 auto transform = rc->getTransform();
                 transform.setPosition({0.0f, -100.0f, 0.0f});
                 transform.setScale({0.01f, 0.01f, 0.01f});
                 rc->setTransform(transform);
             }
-            _renderSystem->unbindEntity();
+            deps.renderSystem->unbindEntity();
         }
     }
 
     if (event.keyCode == kKeyBillboardToggle && !event.isRepeat)
     {
-        if (_renderSystem)
-            _renderSystem->toggleBillboard();
+        if (deps.renderSystem)
+            deps.renderSystem->toggleBillboard();
     }
 
     if (!_focusedEntity || _ctrlHeld || _objectDragActive)
-        updateCameraMovementKey(event.keyCode, true);
+        updateCameraMovementKey(deps.renderSystem, event.keyCode, true);
 
     if (event.keyCode == kKeyEscape)
     {
-        setFocusedEntity(nullptr);
+        setFocusedEntity(deps, nullptr);
         return;
     }
 
-    if (handleClipboardShortcut(event))
+    if (handleClipboardShortcut(deps.textEditorSystem, event))
         return;
 
-    if (_textEditorSystem && isFocusedTextEditor())
-        _textEditorSystem->onKeyDown(event.keyCode);
+    if (deps.textEditorSystem && isFocusedTextEditor(deps.textEditorSystem))
+        deps.textEditorSystem->onKeyDown(event.keyCode);
 
     if (!event.isRepeat)
         std::cout << "[RunWindowTask::onKeyDown] keyCode=" << event.keyCode
                   << ", scanCode=" << event.scanCode << std::endl;
-    if (_signalEmitter)
+    if (deps.signalEmitter)
     {
-        static_cast<void>(_signalEmitter->emit(std::make_unique<KeyDownPayload>(event)));
+        static_cast<void>(deps.signalEmitter->emit(std::make_unique<KeyDownPayload>(event)));
     }
 }
 
 void RunWindowTask::onKeyUp(const vigine::ecs::platform::KeyEvent &event)
 {
+    auto deps = resolveDeps();
+
     if (event.keyCode == kKeyControl || event.keyCode == kKeyLeftControl ||
         event.keyCode == kKeyRightControl)
         _ctrlHeld = false;
 
     if (!_focusedEntity || _ctrlHeld || _objectDragActive)
-        updateCameraMovementKey(event.keyCode, false);
+        updateCameraMovementKey(deps.renderSystem, event.keyCode, false);
 }
 
-void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
+void RunWindowTask::updateCameraMovementKey(vigine::ecs::graphics::RenderSystem *renderSystem,
+                                            unsigned int                          keyCode,
+                                            bool                                  pressed)
 {
-    if (!_renderSystem)
+    if (!renderSystem)
         return;
 
     auto setMoveMaskBit = [this, pressed](uint8_t bit) {
@@ -546,33 +552,33 @@ void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
     switch (keyCode)
     {
     case kKeyW:
-        _renderSystem->setMoveForwardActive(pressed);
+        renderSystem->setMoveForwardActive(pressed);
         setMoveMaskBit(MoveKeyW);
         break;
     case kKeyS:
-        _renderSystem->setMoveBackwardActive(pressed);
+        renderSystem->setMoveBackwardActive(pressed);
         setMoveMaskBit(MoveKeyS);
         break;
     case kKeyA:
-        _renderSystem->setMoveLeftActive(pressed);
+        renderSystem->setMoveLeftActive(pressed);
         setMoveMaskBit(MoveKeyA);
         break;
     case kKeyD:
-        _renderSystem->setMoveRightActive(pressed);
+        renderSystem->setMoveRightActive(pressed);
         setMoveMaskBit(MoveKeyD);
         break;
     case kKeyQ:
-        _renderSystem->setMoveDownActive(pressed);
+        renderSystem->setMoveDownActive(pressed);
         setMoveMaskBit(MoveKeyQ);
         break;
     case kKeyE:
-        _renderSystem->setMoveUpActive(pressed);
+        renderSystem->setMoveUpActive(pressed);
         setMoveMaskBit(MoveKeyE);
         break;
     case kKeyShift:
     case kKeyLeftShift:
     case kKeyRightShift:
-        _renderSystem->setSprintActive(pressed);
+        renderSystem->setSprintActive(pressed);
         break;
     default:
         break;
@@ -582,7 +588,7 @@ void RunWindowTask::updateCameraMovementKey(unsigned int keyCode, bool pressed)
 void RunWindowTask::onWindowResized(vigine::ecs::platform::WindowComponent *window, int width,
                                     int height)
 {
-    if (!_renderSystem || !_platformService || !window)
+    if (!window)
         return;
 
     if (width <= 0 || height <= 0)
@@ -595,27 +601,18 @@ void RunWindowTask::onWindowResized(vigine::ecs::platform::WindowComponent *wind
     _lastResizeEvent     = std::chrono::steady_clock::now();
 }
 
-void RunWindowTask::setTextEditorSystem(std::shared_ptr<TextEditorSystem> editorSystem)
-{
-    _textEditorSystem = std::move(editorSystem);
-    if (_textEditorSystem)
-        _textEditorSystem->bind(_entityManager, _graphicsService, _renderSystem);
-}
-
-void RunWindowTask::setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept
-{
-    _signalEmitter = emitter;
-}
-
 void RunWindowTask::onChar(const vigine::ecs::platform::TextEvent &event)
 {
-    if (_textEditorSystem && isFocusedTextEditor())
-        _textEditorSystem->onChar(event, _movementKeyMask);
+    auto deps = resolveDeps();
+    if (deps.textEditorSystem && isFocusedTextEditor(deps.textEditorSystem))
+        deps.textEditorSystem->onChar(event, _movementKeyMask);
 }
 
-bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEvent &event)
+bool RunWindowTask::handleClipboardShortcut(
+    const std::shared_ptr<TextEditorSystem> &textEditorSystem,
+    const vigine::ecs::platform::KeyEvent   &event)
 {
-    if (!_textEditorSystem || !isFocusedTextEditor())
+    if (!textEditorSystem || !isFocusedTextEditor(textEditorSystem))
         return false;
 
     const bool ctrlPressed = (event.modifiers & vigine::ecs::platform::KeyModifierControl) != 0;
@@ -625,7 +622,7 @@ bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEven
     if (event.keyCode == 'C' || event.keyCode == 'X')
     {
 #ifdef _WIN32
-        const std::wstring wide = wideFromUtf8(_textEditorSystem->text());
+        const std::wstring wide = wideFromUtf8(textEditorSystem->text());
         if (!wide.empty() && OpenClipboard(nullptr))
         {
             static_cast<void>(EmptyClipboard());
@@ -648,8 +645,8 @@ bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEven
         }
 #endif
 
-        if (event.keyCode == 'X' && _textEditorSystem)
-            _textEditorSystem->clearText();
+        if (event.keyCode == 'X')
+            textEditorSystem->clearText();
         return true;
     }
 
@@ -664,8 +661,7 @@ bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEven
                 auto *wide = static_cast<const wchar_t *>(GlobalLock(data));
                 if (wide)
                 {
-                    if (_textEditorSystem)
-                        _textEditorSystem->insertUtf8(utf8FromWide(wide));
+                    textEditorSystem->insertUtf8(utf8FromWide(wide));
                     GlobalUnlock(data);
                 }
             }
@@ -678,15 +674,16 @@ bool RunWindowTask::handleClipboardShortcut(const vigine::ecs::platform::KeyEven
     return false;
 }
 
-bool RunWindowTask::isFocusedTextEditor() const
+bool RunWindowTask::isFocusedTextEditor(
+    const std::shared_ptr<TextEditorSystem> &textEditorSystem) const
 {
-    if (!_focusedEntity || !_textEditorSystem)
+    if (!_focusedEntity || !textEditorSystem)
         return false;
 
-    return _textEditorSystem->isEditorEntity(_focusedEntity);
+    return textEditorSystem->isEditorEntity(_focusedEntity);
 }
 
-void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
+void RunWindowTask::setFocusedEntity(const Deps &deps, vigine::Entity *entity)
 {
     if (entity == _focusedEntity)
         return;
@@ -695,16 +692,16 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
     if (_objectDragActive)
         endObjectDrag();
 
-    if (_focusedEntity && _renderSystem && _hasFocusedOriginalScale)
+    if (_focusedEntity && deps.renderSystem && _hasFocusedOriginalScale)
     {
-        _renderSystem->bindEntity(_focusedEntity);
-        if (auto *rc = _renderSystem->boundRenderComponent())
+        deps.renderSystem->bindEntity(_focusedEntity);
+        if (auto *rc = deps.renderSystem->boundRenderComponent())
         {
             auto transform = rc->getTransform();
             transform.setScale(_focusedOriginalScale);
             rc->setTransform(transform);
         }
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
     }
 
     _focusedEntity           = entity;
@@ -712,15 +709,15 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
 
     // Editor entities receive focus for input but should not get the scale-up
     // visual effect.
-    const bool isEditor = _textEditorSystem && _textEditorSystem->isEditorEntity(entity);
+    const bool isEditor = deps.textEditorSystem && deps.textEditorSystem->isEditorEntity(entity);
 
-    if (_textEditorSystem)
-        _textEditorSystem->setFocused(_focusedEntity != nullptr && isEditor);
+    if (deps.textEditorSystem)
+        deps.textEditorSystem->setFocused(_focusedEntity != nullptr && isEditor);
 
-    if (_focusedEntity && _renderSystem && !isEditor)
+    if (_focusedEntity && deps.renderSystem && !isEditor)
     {
-        _renderSystem->bindEntity(_focusedEntity);
-        if (auto *rc = _renderSystem->boundRenderComponent())
+        deps.renderSystem->bindEntity(_focusedEntity);
+        if (auto *rc = deps.renderSystem->boundRenderComponent())
         {
             auto transform        = rc->getTransform();
             _focusedOriginalScale = transform.getScale();
@@ -728,29 +725,29 @@ void RunWindowTask::setFocusedEntity(vigine::Entity *entity)
             rc->setTransform(transform);
             _hasFocusedOriginalScale = true;
         }
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
     }
 }
 
-bool RunWindowTask::beginObjectDrag(vigine::Entity *entity, int x, int y)
+bool RunWindowTask::beginObjectDrag(const Deps &deps, vigine::Entity *entity, int x, int y)
 {
-    if (!entity || !_renderSystem)
+    if (!entity || !deps.renderSystem)
         return false;
 
-    _renderSystem->bindEntity(entity);
-    auto *rc = _renderSystem->boundRenderComponent();
+    deps.renderSystem->bindEntity(entity);
+    auto *rc = deps.renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
         return false;
     }
 
     const auto transform = rc->getTransform();
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
 
     glm::vec3 rayOrigin(0.0f);
     glm::vec3 rayDirection(0.0f);
-    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
+    if (!deps.renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
         return false;
 
     const float dirLen = glm::length(rayDirection);
@@ -765,20 +762,20 @@ bool RunWindowTask::beginObjectDrag(vigine::Entity *entity, int x, int y)
     const glm::vec3 hit = rayOrigin + rayDirection * _dragDistanceFromCamera;
 
     _objectDragActive   = true;
-    _dragEditorGroup    = (_textEditorSystem && _textEditorSystem->isEditorEntity(entity));
+    _dragEditorGroup    = (deps.textEditorSystem && deps.textEditorSystem->isEditorEntity(entity));
     _dragEntity         = entity;
     _dragGrabOffset     = transform.getPosition() - hit;
     return true;
 }
 
-void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
+void RunWindowTask::updateObjectDrag(const Deps &deps, int x, int y, bool suppressZDelta)
 {
-    if (!_objectDragActive || !_dragEntity || !_renderSystem)
+    if (!_objectDragActive || !_dragEntity || !deps.renderSystem)
         return;
 
     glm::vec3 rayOrigin(0.0f);
     glm::vec3 rayDirection(0.0f);
-    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
+    if (!deps.renderSystem->screenPointToRayFromNearPlane(x, y, rayOrigin, rayDirection))
         return;
 
     const float dirLen = glm::length(rayDirection);
@@ -789,11 +786,11 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
     const glm::vec3 hit     = rayOrigin + rayDirection * _dragDistanceFromCamera;
     const glm::vec3 newPos  = hit + _dragGrabOffset;
 
-    _renderSystem->bindEntity(_dragEntity);
-    auto *dragRc = _renderSystem->boundRenderComponent();
+    deps.renderSystem->bindEntity(_dragEntity);
+    auto *dragRc = deps.renderSystem->boundRenderComponent();
     if (!dragRc)
     {
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
         return;
     }
 
@@ -818,9 +815,9 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
     if (_dragEditorGroup)
         dragRc->translateGlyphVertices(delta);
 
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
 
-    if (_dragEditorGroup && _entityManager)
+    if (_dragEditorGroup && deps.entityManager)
     {
         const char *editorAliases[] = {
             "TextEditBgEntity",
@@ -835,12 +832,12 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
 
         for (const char *alias : editorAliases)
         {
-            auto *e = _entityManager->getEntityByAlias(alias);
+            auto *e = deps.entityManager->getEntityByAlias(alias);
             if (!e || e == _dragEntity)
                 continue;
 
-            _renderSystem->bindEntity(e);
-            if (auto *rc = _renderSystem->boundRenderComponent())
+            deps.renderSystem->bindEntity(e);
+            if (auto *rc = deps.renderSystem->boundRenderComponent())
             {
                 auto tr = rc->getTransform();
                 tr.setPosition(tr.getPosition() + delta);
@@ -849,17 +846,16 @@ void RunWindowTask::updateObjectDrag(int x, int y, bool suppressZDelta)
                 if (std::strcmp(alias, "TextEditEntity") == 0)
                     rc->translateGlyphVertices(delta);
             }
-            _renderSystem->unbindEntity();
+            deps.renderSystem->unbindEntity();
         }
 
-        if (_textEditorSystem)
+        if (deps.textEditorSystem)
         {
-            _textEditorSystem->offsetEditorFrame(delta.x, delta.y, delta.z);
-            _textEditorSystem->refreshEditorLayout();
+            deps.textEditorSystem->offsetEditorFrame(delta.x, delta.y, delta.z);
+            deps.textEditorSystem->refreshEditorLayout();
         }
         // Mark glyph dirty once per drag frame to upload translated vertices to GPU.
-        if (_renderSystem)
-            _renderSystem->markGlyphDirty();
+        deps.renderSystem->markGlyphDirty();
     }
 }
 
@@ -872,30 +868,31 @@ void RunWindowTask::endObjectDrag()
     _dragGrabOffset         = {0.0f, 0.0f, 0.0f};
 }
 
-bool RunWindowTask::ensureMouseRayEntity()
+bool RunWindowTask::ensureMouseRayEntity(const Deps &deps)
 {
     if (_mouseRayEntity)
         return true;
 
-    if (!_entityManager || !_renderSystem)
+    if (!deps.entityManager || !deps.renderSystem)
         return false;
 
-    _mouseRayEntity = _entityManager->getEntityByAlias("MouseRayEntity");
+    auto *existing = deps.entityManager->getEntityByAlias("MouseRayEntity");
+    _mouseRayEntity = existing ? static_cast<vigine::Entity *>(existing) : nullptr;
     if (!_mouseRayEntity)
     {
-        _mouseRayEntity = _entityManager->createEntity();
+        _mouseRayEntity = deps.entityManager->createEntity();
         if (!_mouseRayEntity)
             return false;
 
-        _entityManager->addAlias(_mouseRayEntity, "MouseRayEntity");
+        deps.entityManager->addAlias(_mouseRayEntity, "MouseRayEntity");
     }
 
-    _renderSystem->createComponents(_mouseRayEntity);
-    _renderSystem->bindEntity(_mouseRayEntity);
-    auto *rc = _renderSystem->boundRenderComponent();
+    deps.renderSystem->createComponents(_mouseRayEntity);
+    deps.renderSystem->bindEntity(_mouseRayEntity);
+    auto *rc = deps.renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
         return false;
     }
 
@@ -913,34 +910,35 @@ bool RunWindowTask::ensureMouseRayEntity()
     transform.setScale({0.01f, 0.01f, 0.01f});
     rc->setTransform(transform);
 
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
     return true;
 }
 
-bool RunWindowTask::ensureMouseClickSphereEntity()
+bool RunWindowTask::ensureMouseClickSphereEntity(const Deps &deps)
 {
     if (_mouseClickSphereEntity)
         return true;
 
-    if (!_entityManager || !_renderSystem)
+    if (!deps.entityManager || !deps.renderSystem)
         return false;
 
-    _mouseClickSphereEntity = _entityManager->getEntityByAlias("MouseClickSphereEntity");
+    auto *existing = deps.entityManager->getEntityByAlias("MouseClickSphereEntity");
+    _mouseClickSphereEntity = existing ? static_cast<vigine::Entity *>(existing) : nullptr;
     if (!_mouseClickSphereEntity)
     {
-        _mouseClickSphereEntity = _entityManager->createEntity();
+        _mouseClickSphereEntity = deps.entityManager->createEntity();
         if (!_mouseClickSphereEntity)
             return false;
 
-        _entityManager->addAlias(_mouseClickSphereEntity, "MouseClickSphereEntity");
+        deps.entityManager->addAlias(_mouseClickSphereEntity, "MouseClickSphereEntity");
     }
 
-    _renderSystem->createComponents(_mouseClickSphereEntity);
-    _renderSystem->bindEntity(_mouseClickSphereEntity);
-    auto *rc = _renderSystem->boundRenderComponent();
+    deps.renderSystem->createComponents(_mouseClickSphereEntity);
+    deps.renderSystem->bindEntity(_mouseClickSphereEntity);
+    auto *rc = deps.renderSystem->boundRenderComponent();
     if (!rc)
     {
-        _renderSystem->unbindEntity();
+        deps.renderSystem->unbindEntity();
         return false;
     }
 
@@ -958,21 +956,21 @@ bool RunWindowTask::ensureMouseClickSphereEntity()
     transform.setScale({0.06f, 0.06f, 0.06f});
     rc->setTransform(transform);
 
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
     return true;
 }
 
-void RunWindowTask::updateMouseRayVisualization(int x, int y)
+void RunWindowTask::updateMouseRayVisualization(const Deps &deps, int x, int y)
 {
-    if (!_renderSystem)
+    if (!deps.renderSystem)
         return;
 
-    if (!ensureMouseRayEntity())
+    if (!ensureMouseRayEntity(deps))
         return;
 
     glm::vec3 clickRayOrigin(0.0f);
     glm::vec3 clickRayDirection(0.0f);
-    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, clickRayOrigin, clickRayDirection))
+    if (!deps.renderSystem->screenPointToRayFromNearPlane(x, y, clickRayOrigin, clickRayDirection))
         return;
 
     const glm::vec3 rayDirection  = glm::normalize(clickRayDirection);
@@ -988,8 +986,8 @@ void RunWindowTask::updateMouseRayVisualization(int x, int y)
     const glm::quat orientation   = glm::rotation(glm::vec3(0.0f, 0.0f, 1.0f), rayDirection);
     const glm::vec3 rotationEuler = glm::eulerAngles(orientation);
 
-    _renderSystem->bindEntity(_mouseRayEntity);
-    if (auto *rc = _renderSystem->boundRenderComponent())
+    deps.renderSystem->bindEntity(_mouseRayEntity);
+    if (auto *rc = deps.renderSystem->boundRenderComponent())
     {
         auto transform = rc->getTransform();
         if (_mouseRayVisible)
@@ -1004,32 +1002,32 @@ void RunWindowTask::updateMouseRayVisualization(int x, int y)
         }
         rc->setTransform(transform);
     }
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
 }
 
-void RunWindowTask::updateMouseClickSphereVisualization(int x, int y)
+void RunWindowTask::updateMouseClickSphereVisualization(const Deps &deps, int x, int y)
 {
-    if (!_renderSystem)
+    if (!deps.renderSystem)
         return;
 
-    if (!ensureMouseClickSphereEntity())
+    if (!ensureMouseClickSphereEntity(deps))
         return;
 
     glm::vec3 clickRayOrigin(0.0f);
     glm::vec3 clickRayDirection(0.0f);
-    if (!_renderSystem->screenPointToRayFromNearPlane(x, y, clickRayOrigin, clickRayDirection))
+    if (!deps.renderSystem->screenPointToRayFromNearPlane(x, y, clickRayOrigin, clickRayDirection))
         return;
 
     constexpr float kStartOffset = 0.03f;
     const glm::vec3 sphereCenter = clickRayOrigin + clickRayDirection * kStartOffset;
 
-    _renderSystem->bindEntity(_mouseClickSphereEntity);
-    if (auto *rc = _renderSystem->boundRenderComponent())
+    deps.renderSystem->bindEntity(_mouseClickSphereEntity);
+    if (auto *rc = deps.renderSystem->boundRenderComponent())
     {
         auto transform = rc->getTransform();
         transform.setPosition(sphereCenter);
         transform.setScale({0.05f, 0.05f, 0.05f});
         rc->setTransform(transform);
     }
-    _renderSystem->unbindEntity();
+    deps.renderSystem->unbindEntity();
 }

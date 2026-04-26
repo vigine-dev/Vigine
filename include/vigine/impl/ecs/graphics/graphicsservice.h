@@ -37,32 +37,43 @@ class TextureComponent;
  * per-entity render data for other services / systems to consume.
  *
  * Wrapper base: the service derives from
- * @ref vigine::service::AbstractService. The render system itself is
- * wired in through @ref setRenderSystem because @ref vigine::IContext
- * does not yet expose a system locator — adding one is tracked as a
- * separate architect decision.
+ * @ref vigine::service::AbstractService. Ownership of the underlying
+ * @c RenderSystem is taken at construction time through a
+ * @c std::unique_ptr — there is no post-construction setter. The
+ * service tears the system down through its private member when the
+ * service itself is destroyed.
  */
 class GraphicsService : public vigine::service::AbstractService
 {
   public:
-    explicit GraphicsService(const Name &name);
-    ~GraphicsService() override = default;
+    /**
+     * @brief Constructs the service taking ownership of @p renderSystem.
+     *
+     * The @ref AbstractContext default registration creates the service
+     * with a default @c RenderSystem internally; applications that
+     * need a different concrete render system pass a custom
+     * @c std::unique_ptr<RenderSystem> here and register the resulting
+     * service through @c IContext::registerService(svc, knownId) which
+     * replaces the default at the slot.
+     */
+    GraphicsService(const Name &name, std::unique_ptr<RenderSystem> renderSystem);
+    ~GraphicsService() override;
 
     /**
      * @brief Returns the instance name supplied at construction.
      */
     [[nodiscard]] const Name &name() const noexcept;
 
-    [[nodiscard]] RenderSystem *renderSystem() const noexcept { return _renderSystem; }
-
     /**
-     * @brief Attaches the @c RenderSystem this service exposes.
+     * @brief Returns the owned @c RenderSystem.
      *
-     * Called by the engine bootstrapper after the render system has
-     * been constructed and registered on the ECS substrate. Passing
-     * @c nullptr detaches.
+     * The pointer is valid for the service's lifetime; the service
+     * owns the system through a @c std::unique_ptr and the accessor
+     * never returns @c nullptr because the constructor refuses a null
+     * argument (asserts in Debug, treats null as a constructor
+     * pre-condition violation in Release).
      */
-    void setRenderSystem(RenderSystem *system) noexcept;
+    [[nodiscard]] RenderSystem *renderSystem() const noexcept;
 
     [[nodiscard]] bool initializeRender(void *nativeWindowHandle, std::uint32_t width, std::uint32_t height);
 
@@ -74,15 +85,11 @@ class GraphicsService : public vigine::service::AbstractService
      * the @ref RenderSystem level (driven by ECS @c entityBound
      * callbacks). This accessor is a thin pass-through to
      * @c RenderSystem::boundRenderComponent and therefore returns
-     * @c nullptr in three observable cases:
-     *   1. The render system has not been attached yet
-     *      (see @ref setRenderSystem).
-     *   2. The render system has no bound entity.
-     *   3. The bound entity has no @c RenderComponent registered.
-     *
-     * Callers MUST null-check the return value; the accessor is
-     * intentionally tolerant of unbound state because example code
-     * inspects bindings opportunistically during input handling.
+     * @c nullptr when the render system has no bound entity or the
+     * bound entity has no @c RenderComponent registered. Callers
+     * MUST null-check the return value; the accessor is intentionally
+     * tolerant of unbound state because example code inspects bindings
+     * opportunistically during input handling.
      */
     [[nodiscard]] RenderComponent *renderComponent() const;
 
@@ -91,9 +98,8 @@ class GraphicsService : public vigine::service::AbstractService
      *        @ref RenderSystem's currently bound entity.
      *
      * Same null-state contract as @ref renderComponent: returns
-     * @c nullptr when the render system is unattached, has no bound
-     * entity, or the bound entity has no @c TextureComponent.
-     * Callers MUST null-check.
+     * @c nullptr when the render system has no bound entity or the
+     * bound entity has no @c TextureComponent. Callers MUST null-check.
      */
     [[nodiscard]] TextureComponent *textureComponent() const;
 
@@ -108,14 +114,16 @@ class GraphicsService : public vigine::service::AbstractService
     /**
      * @brief Modern teardown entry point.
      *
-     * Drops the render-system observer pointer and chains to
-     * @ref vigine::service::AbstractService::onShutdown.
+     * The owned @c RenderSystem is torn down alongside this service
+     * via the private @c unique_ptr; @ref onShutdown only chains to
+     * @ref vigine::service::AbstractService::onShutdown so the
+     * @ref isInitialised flag flips back to @c false.
      */
     [[nodiscard]] vigine::Result onShutdown(vigine::IContext &context) override;
 
   private:
-    Name _name;
-    RenderSystem *_renderSystem{nullptr};
+    Name                          _name;
+    std::unique_ptr<RenderSystem> _renderSystem;
 };
 
 using GraphicsServiceUPtr = std::unique_ptr<GraphicsService>;

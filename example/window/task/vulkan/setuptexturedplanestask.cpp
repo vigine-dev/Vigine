@@ -1,6 +1,8 @@
 #include "setuptexturedplanestask.h"
 
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/meshcomponent.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
@@ -13,28 +15,24 @@
 #include <cmath>
 #include <iostream>
 
-void SetupTexturedPlanesTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void SetupTexturedPlanesTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
-
 vigine::Result SetupTexturedPlanesTask::run()
 {
     std::cout << "Setting up textured planes..." << std::endl;
-
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
     auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto graphicsResult = token->service(_graphicsServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
     if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
 
@@ -54,7 +52,7 @@ vigine::Result SetupTexturedPlanesTask::run()
 
     // Discover all loaded texture entities (TextureEntity_0, TextureEntity_1, ...)
     size_t textureCount = 0;
-    while (_entityManager->getEntityByAlias("TextureEntity_" + std::to_string(textureCount)))
+    while (entityManager->getEntityByAlias("TextureEntity_" + std::to_string(textureCount)))
         ++textureCount;
 
     std::cout << "Found " << textureCount << " texture entities" << std::endl;
@@ -92,7 +90,7 @@ vigine::Result SetupTexturedPlanesTask::run()
     for (const auto &config : planes)
     {
         // Find texture entity
-        auto *textureEntity = _entityManager->getEntityByAlias(config.textureEntityName);
+        auto *textureEntity = entityManager->getEntityByAlias(config.textureEntityName);
         if (!textureEntity)
         {
             std::cerr << "Texture entity not found: " << config.textureEntityName << std::endl;
@@ -100,14 +98,14 @@ vigine::Result SetupTexturedPlanesTask::run()
         }
 
         // Create plane entity
-        auto *planeEntity = _entityManager->createEntity();
+        auto *planeEntity = entityManager->createEntity();
         if (!planeEntity)
         {
             std::cerr << "Failed to create plane entity: " << config.entityName << std::endl;
             continue;
         }
 
-        _entityManager->addAlias(planeEntity, config.entityName);
+        entityManager->addAlias(planeEntity, config.entityName);
         renderSystem->createComponents(planeEntity);
         renderSystem->bindEntity(planeEntity);
 

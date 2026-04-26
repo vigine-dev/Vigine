@@ -1,6 +1,8 @@
 #include "initvulkantask.h"
 
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
@@ -10,37 +12,28 @@
 
 InitVulkanTask::InitVulkanTask() = default;
 
-void InitVulkanTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void InitVulkanTask::setPlatformServiceId(vigine::service::ServiceId id) noexcept
-{
-    _platformServiceId = id;
-}
-
-void InitVulkanTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
-
 vigine::Result InitVulkanTask::run()
 {
     std::cout << "Initializing Vulkan API..." << std::endl;
-
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
     auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto platformResult = token->service(_platformServiceId);
-    auto graphicsResult = token->service(_graphicsServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto platformResult = token->service(vigine::service::wellknown::platformService);
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
     if (!platformResult.ok() || !graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error,
-                              "Render or Platform service not available");
+                              "Platform or Graphics service unavailable");
 
     auto *platformService =
         dynamic_cast<vigine::ecs::platform::PlatformService *>(&platformResult.value());
@@ -54,7 +47,7 @@ vigine::Result InitVulkanTask::run()
     if (!renderSystem)
         return vigine::Result(vigine::Result::Code::Error, "Render system not available");
 
-    auto *entity = _entityManager->getEntityByAlias("MainWindow");
+    auto *entity = entityManager->getEntityByAlias("MainWindow");
     if (!entity)
         return vigine::Result(vigine::Result::Code::Error, "MainWindow entity not found");
 

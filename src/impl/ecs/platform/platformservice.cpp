@@ -5,65 +5,67 @@
 
 #include "impl/ecs/platform/windowcomponent.h"
 
+#include <cassert>
+#include <utility>
+
 using namespace vigine::ecs::platform;
 
-PlatformService::PlatformService(const Name &name)
+PlatformService::PlatformService(const Name &name,
+                                 std::unique_ptr<WindowSystem> windowSystem)
     : vigine::service::AbstractService()
     , _name{name}
+    , _windowSystem{std::move(windowSystem)}
 {
+    // Construction pre-condition: the service owns a non-null
+    // window system for its entire lifetime so every accessor below
+    // can dereference @ref _windowSystem unconditionally. The default
+    // registration path in @ref AbstractContext supplies a default
+    // @c WindowSystem; applications that override the default through
+    // @c IContext::registerService also pass a non-null one (a null
+    // service is rejected by the registry's own validation).
+    assert(_windowSystem && "PlatformService: windowSystem must be non-null");
 }
 
 PlatformService::~PlatformService() = default;
 
 const vigine::Name &PlatformService::name() const noexcept { return _name; }
 
-void PlatformService::setWindowSystem(WindowSystem *system) noexcept
+WindowSystem *PlatformService::windowSystem() const noexcept
 {
-    _windowSystem = system;
+    return _windowSystem.get();
 }
 
 vigine::Result PlatformService::onInit(vigine::IContext &context)
 {
     // Modern lifecycle: chain to the wrapper base so the
-    // @c isInitialised flag flips to @c true. Window-system
-    // attachment is performed through @ref setWindowSystem because
-    // @ref vigine::IContext does not yet expose a system locator.
+    // @c isInitialised flag flips to @c true. The window system was
+    // wired in at construction time and is owned by this service for
+    // its entire lifetime; @ref onInit therefore has no per-call
+    // attachment work to do.
     return vigine::service::AbstractService::onInit(context);
 }
 
 vigine::Result PlatformService::onShutdown(vigine::IContext &context)
 {
-    // Drop the non-owning window-system handle before chaining up.
-    _windowSystem = nullptr;
+    // The owned @c WindowSystem is torn down alongside this service
+    // via the private @c unique_ptr; @ref onShutdown only flips the
+    // @c isInitialised flag back through the wrapper base.
     return vigine::service::AbstractService::onShutdown(context);
 }
 
 WindowComponent *PlatformService::createWindow()
 {
-    if (!_windowSystem)
-        return nullptr;
-
     return _windowSystem->createWindowComponent();
 }
 
 vigine::Result PlatformService::showWindow(WindowComponent *window)
 {
-    if (!_windowSystem)
-        return vigine::Result(vigine::Result::Code::Error, "Window system is unavailable");
-
     return _windowSystem->showWindow(window);
 }
 
 vigine::Result PlatformService::bindWindowEventHandler(vigine::Entity *entity, WindowComponent *window,
                                                        IWindowEventHandlerComponent *handler)
 {
-    // Surface the specific null arg so callers don't have to guess
-    // which of the three required handles came in null. The previous
-    // catch-all "No entity or window system" message swallowed the
-    // window argument entirely.
-    if (!_windowSystem)
-        return vigine::Result(vigine::Result::Code::Error,
-                              "PlatformService::bindWindowEventHandler: window system is unattached");
     if (!entity)
         return vigine::Result(vigine::Result::Code::Error,
                               "PlatformService::bindWindowEventHandler: entity is null");
@@ -88,7 +90,7 @@ void *PlatformService::nativeWindowHandle(WindowComponent *window) const
 
 std::vector<WindowComponent *> PlatformService::windowComponents(vigine::Entity *entity) const
 {
-    if (!_windowSystem || !entity)
+    if (!entity)
         return {};
 
     return _windowSystem->windowComponents(entity);
@@ -96,7 +98,7 @@ std::vector<WindowComponent *> PlatformService::windowComponents(vigine::Entity 
 
 std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers(vigine::Entity *entity) const
 {
-    if (!_windowSystem || !entity)
+    if (!entity)
         return {};
 
     return _windowSystem->windowEventHandlers(entity, nullptr);
@@ -105,7 +107,7 @@ std::vector<IWindowEventHandlerComponent *> PlatformService::windowEventHandlers
 std::vector<IWindowEventHandlerComponent *>
 PlatformService::windowEventHandlers(vigine::Entity *entity, WindowComponent *window) const
 {
-    if (!_windowSystem || !entity || !window)
+    if (!entity || !window)
         return {};
 
     return _windowSystem->windowEventHandlers(entity, window);

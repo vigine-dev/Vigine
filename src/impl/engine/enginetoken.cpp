@@ -10,6 +10,8 @@
 
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/ecs/iecs.h"
+#include "vigine/api/ecs/ientitymanager.h"
+#include "vigine/api/engine/iengine.h"
 #include "vigine/api/service/iservice.h"
 #include "vigine/api/service/serviceid.h"
 #include "vigine/core/threading/ithreadmanager.h"
@@ -223,12 +225,14 @@ Result<vigine::IEntityManager &> EngineToken::entityManager()
     {
         return R::failure(R::Code::Expired);
     }
-    // The entity manager is a forward-declared stub today
-    // (`include/vigine/api/ecs/ientitymanager.h`). The IContext
-    // aggregator does not yet hand one out; @ref ecs() exposes the
-    // wrapper instead. A follow-up leaf wires the entity manager
-    // through and flips this branch to @ref Result::Code::Ok.
-    return R::failure(R::Code::Unavailable);
+    // The IContext aggregator owns a default @ref IEntityManager
+    // through @ref AbstractContext::_entityManager (and any caller-
+    // side override installed via @ref IContext::setEntityManager).
+    // The slot is non-null for the context's lifetime, so the
+    // reference @ref IContext::entityManager hands back is always
+    // live; the alive-state gate above is the only failure path the
+    // accessor needs to honour.
+    return R::ok(_context.entityManager());
 }
 
 Result<vigine::IComponentManager &> EngineToken::components()
@@ -292,6 +296,17 @@ vigine::messaging::ISignalEmitter &EngineToken::signalEmitter() noexcept
 vigine::statemachine::IStateMachine &EngineToken::stateMachine() noexcept
 {
     return _stateMachine;
+}
+
+vigine::engine::IEngine &EngineToken::engine() noexcept
+{
+    // The engine outlives the context (the engine OWNS the context)
+    // and therefore the token, so the back-pointer wired in by the
+    // engine's constructor body is valid for the token's entire
+    // lifetime. Forwarding through the context keeps the
+    // single-source-of-truth invariant: every accessor that points at
+    // an engine-lifetime resource resolves it through @ref IContext.
+    return _context.engine();
 }
 
 // ---------------------------------------------------------------------------

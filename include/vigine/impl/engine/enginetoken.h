@@ -195,6 +195,8 @@ class EngineToken final : public AbstractEngineToken
     [[nodiscard]] vigine::statemachine::IStateMachine &
         stateMachine() noexcept override;
 
+    [[nodiscard]] vigine::engine::IEngine &engine() noexcept override;
+
     // ------ IEngineToken: expiration notification ------
 
     [[nodiscard]] std::unique_ptr<vigine::messaging::ISubscriptionToken>

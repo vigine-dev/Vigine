@@ -7,6 +7,7 @@
 
 #include "vigine/api/ecs/abstractentitymanager.h"
 #include "vigine/api/ecs/ientity.h"
+#include "vigine/impl/ecs/entity.h"
 
 #include <map>
 #include <memory>
@@ -15,8 +16,6 @@
 
 namespace vigine
 {
-class Entity;
-
 using EntityUPtr = std::unique_ptr<Entity>;
 
 /**
@@ -29,7 +28,11 @@ using EntityUPtr = std::unique_ptr<Entity>;
  *
  * Closes the legacy entity manager chain: derives from
  * @ref AbstractEntityManager, which in turn implements the pure
- * @ref IEntityManager contract.
+ * @ref IEntityManager contract. The interface signatures use
+ * @ref IEntity *; the concrete narrows the return types to
+ * @ref Entity * via covariant overrides so callers that already work
+ * against the legacy substrate continue to receive @c Entity * without
+ * an extra cast at the call site.
  */
 class EntityManager final : public AbstractEntityManager
 {
@@ -37,21 +40,23 @@ class EntityManager final : public AbstractEntityManager
     /**
      * @brief Constructs an empty entity manager.
      *
-     * Consumers of the @ref vigine::engine::IEngine front door build
-     * their own @ref EntityManager alongside the engine -- the
-     * @ref vigine::IContext aggregator carries the
-     * @ref vigine::ecs::IECS wrapper instead, and no legacy
-     * entity-manager handle is exposed through it. Examples and
-     * downstream embedders construct one directly here, hand it to
-     * each task that still walks the legacy @c Entity* surface, and
-     * let it die alongside the surrounding scope.
+     * The default-built manager is created by @ref AbstractContext
+     * during context construction so every task observes a live
+     * @ref IEntityManager through @c apiToken()->entityManager()
+     * without anyone wiring it up explicitly. Embedders that need a
+     * different concrete implementation register theirs through
+     * @c IContext::setEntityManager and the default is destroyed via
+     * the unique_ptr slot's RAII chain.
      */
     EntityManager();
     ~EntityManager() override;
-    Entity *createEntity();
-    void removeEntity(Entity *entity);
-    void addAlias(Entity *entity, const std::string &alias);
-    Entity *getEntityByAlias(const std::string &alias) const;
+
+    // ------ IEntityManager ------
+
+    [[nodiscard]] Entity *createEntity() override;
+    void                  removeEntity(IEntity *entity) override;
+    void addAlias(IEntity *entity, const std::string &alias) override;
+    [[nodiscard]] Entity *getEntityByAlias(const std::string &alias) const override;
 
   private:
     std::vector<EntityUPtr> _entities;

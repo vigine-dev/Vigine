@@ -1,22 +1,14 @@
 #include "initwindowtask.h"
 
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine_token.h>
-#include "vigine/impl/ecs/entitymanager.h"
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/platform/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
 
 InitWindowTask::InitWindowTask() = default;
-
-void InitWindowTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void InitWindowTask::setPlatformServiceId(vigine::service::ServiceId id) noexcept
-{
-    _platformServiceId = id;
-}
 
 void InitWindowTask::createEventHandlers()
 {
@@ -26,14 +18,20 @@ void InitWindowTask::createEventHandlers()
 
 vigine::Result InitWindowTask::run()
 {
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
-
     auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto platformResult = token->service(_platformServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto platformResult = token->service(vigine::service::wellknown::platformService);
     if (!platformResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Platform service is unavailable");
 
@@ -43,7 +41,7 @@ vigine::Result InitWindowTask::run()
         return vigine::Result(vigine::Result::Code::Error,
                               "Platform service has unexpected type");
 
-    auto *entity = _entityManager->createEntity();
+    auto *entity = entityManager->createEntity();
 
     createEventHandlers();
 
@@ -56,7 +54,7 @@ vigine::Result InitWindowTask::run()
     if (bindResult.isError())
         return bindResult;
 
-    _entityManager->addAlias(entity, "MainWindow");
+    entityManager->addAlias(entity, "MainWindow");
 
     return vigine::Result();
 }
