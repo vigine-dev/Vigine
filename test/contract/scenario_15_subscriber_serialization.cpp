@@ -88,10 +88,12 @@ class SerialisationSubscriber final : public vigine::messaging::ISubscriber
         }
         // A small spin keeps the entry window wide enough that a racing
         // dispatcher would actually observe the in-flight state, without
-        // adding a real sleep that would slow the test down.
-        for (volatile int i = 0; i < 32; ++i)
+        // adding a real sleep that would slow the test down. The atomic
+        // counter prevents the optimiser from collapsing the loop.
+        std::atomic<int> spin{0};
+        for (int i = 0; i < 32; ++i)
         {
-            (void)i;
+            spin.fetch_add(1, std::memory_order_relaxed);
         }
         _hits.fetch_add(1, std::memory_order_acq_rel);
         _inFlight.fetch_sub(1, std::memory_order_acq_rel);
