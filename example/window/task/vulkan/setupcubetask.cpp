@@ -1,6 +1,8 @@
 #include "setupcubetask.h"
 
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/meshcomponent.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
@@ -13,28 +15,24 @@
 
 SetupCubeTask::SetupCubeTask() = default;
 
-void SetupCubeTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void SetupCubeTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
-
 vigine::Result SetupCubeTask::run()
 {
     std::cout << "Setting up cube geometry..." << std::endl;
 
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
-
-    auto *token = api();
+    auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto graphicsResult = token->service(_graphicsServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
     if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
 
@@ -46,11 +44,11 @@ vigine::Result SetupCubeTask::run()
 
     auto *renderSystem = graphicsService->renderSystem();
 
-    auto *cubeEntity = _entityManager->createEntity();
+    auto *cubeEntity = entityManager->createEntity();
     if (!cubeEntity)
         return vigine::Result(vigine::Result::Code::Error, "Failed to create cube entity");
 
-    _entityManager->addAlias(cubeEntity, "CubeEntity");
+    entityManager->addAlias(cubeEntity, "CubeEntity");
 
     renderSystem->createComponents(cubeEntity);
     renderSystem->bindEntity(cubeEntity);

@@ -3,13 +3,23 @@
 #include <memory>
 #include <unordered_map>
 
+#include <vector>
+
 #include "vigine/result.h"
 #include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
+#include "vigine/core/threading/threadaffinity.h"
+
+namespace vigine::messaging
+{
+class ISignalEmitter;
+} // namespace vigine::messaging
 
 namespace vigine
 {
@@ -62,15 +72,16 @@ class TaskOrchestrator;
  *     the start (and current) task. A caller that never registers
  *     its own tasks still sees a valid @ref current id. A caller
  *     that registers its own tasks freely overrides the selection
- *     with @ref enqueue.
+ *     with @ref setRoot.
  *   - The default task id is stored as a private member so the
  *     concrete closer can expose it through an internal helper if it
  *     ever needs to (the public API does not surface it separately).
  *
  * Routing (UD-3):
  *   - The default @ref RouteMode for transitions registered through
- *     the short overload of @ref onResult is @ref RouteMode::FirstMatch,
- *     matching the back-compat behaviour of the legacy task flow.
+ *     @ref route is @ref RouteMode::FirstMatch (also the default for
+ *     the @c mode parameter), matching the back-compat behaviour of
+ *     the legacy task flow.
  *     Callers opt into @ref RouteMode::FanOut or @ref RouteMode::Chain
  *     per transition through the explicit-mode overload.
  *   - Per @c (source, ResultCode) pair the orchestrator stores a
@@ -104,25 +115,32 @@ class AbstractTaskFlow : public ITaskFlow
 
     // ------ ITaskFlow: transitions ------
 
-    Result onResult(TaskId source, ResultCode code, TaskId next) override;
-    Result onResult(
-        TaskId    source,
-        ResultCode code,
-        TaskId    next,
-        RouteMode mode) override;
+    Result route(TaskId     source,
+                 TaskId     next,
+                 ResultCode code = ResultCode::Success,
+                 RouteMode  mode = RouteMode::FirstMatch) override;
 
     // ------ ITaskFlow: runnable attachment ------
 
     Result               attachTaskRun(TaskId taskId,
                                        std::unique_ptr<vigine::ITask> task) override;
+    [[nodiscard]] TaskId addTask(std::unique_ptr<vigine::ITask> task) override;
     void                 runCurrentTask() override;
     [[nodiscard]] bool   hasTasksToRun() const noexcept override;
     void                 setContext(vigine::IContext *context) noexcept override;
     void                 setActiveState(vigine::statemachine::StateId state) noexcept override;
 
+    // ------ ITaskFlow: signal subscription ------
+
+    void   setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept override;
+    Result signal(TaskId                                  source,
+                  TaskId                                  target,
+                  vigine::payload::PayloadTypeId        payloadTypeId,
+                  vigine::core::threading::ThreadAffinity affinity) override;
+
     // ------ ITaskFlow: flow control ------
 
-    Result               enqueue(TaskId start) override;
+    Result               setRoot(TaskId root) override;
     [[nodiscard]] TaskId current() const noexcept override;
 
     AbstractTaskFlow(const AbstractTaskFlow &)            = delete;
@@ -154,7 +172,7 @@ class AbstractTaskFlow : public ITaskFlow
      * or expose the default task (e.g. for diagnostics) can reach it
      * without walking the orchestrator themselves. The public API
      * does not surface the default id separately because callers who
-     * register their own tasks use @ref enqueue instead.
+     * register their own tasks use @ref setRoot instead.
      */
     [[nodiscard]] TaskId defaultTask() const noexcept;
 
@@ -185,7 +203,7 @@ class AbstractTaskFlow : public ITaskFlow
      *
      * Initialised to @ref _defaultTask during construction so the
      * flow has a valid @ref current immediately. Updated by
-     * @ref enqueue.
+     * @ref setRoot.
      */
     TaskId _current{};
 
@@ -242,7 +260,7 @@ class AbstractTaskFlow : public ITaskFlow
      * Installed by the @ref vigine::engine::AbstractEngine pump via
      * @ref setContext before each tick of the bound flow. @c nullptr until
      * the first @ref setContext call lands; in that case @ref runCurrentTask
-     * falls back to the no-token shape (the api() pointer the task observes
+     * falls back to the no-token shape (the apiToken() pointer the task observes
      * is @c nullptr).
      */
     vigine::IContext *_context{nullptr};
@@ -271,12 +289,32 @@ class AbstractTaskFlow : public ITaskFlow
      * "FSM has transitioned out of my state".
      *
      * @ref runCurrentTask reads the raw pointer through @c _activeToken.get()
-     * and binds it on the runnable through @ref vigine::ITask::setApi
+     * and binds it on the runnable through @ref vigine::ITask::setApiToken
      * for the duration of @c run(); the binding is cleared back to
      * @c nullptr by an RAII guard so a throwing @c run still leaves the
-     * task with a null api() pointer once the call returns.
+     * task with a null apiToken() pointer once the call returns.
      */
     std::unique_ptr<vigine::engine::IEngineToken> _activeToken;
+
+    /**
+     * @brief Non-owning back-pointer to the signal emitter used by
+     *        @ref signal. Installed via @ref setSignalEmitter; @c nullptr
+     *        until the host wires it.
+     */
+    vigine::messaging::ISignalEmitter *_signalEmitter{nullptr};
+
+    /**
+     * @brief Holds every subscription token returned by @ref signal so
+     *        the flow itself controls the subscriptions' lifetime.
+     *
+     * Declared AFTER @ref _runnables on purpose: members destruct in
+     * reverse declaration order, so this vector unwinds first and
+     * cancels every subscription BEFORE @ref _runnables destroys the
+     * subscriber tasks. Without this ordering a subscription token's
+     * cancel path could dereference a freed @c ISubscriber.
+     */
+    std::vector<std::unique_ptr<vigine::messaging::ISubscriptionToken>>
+        _signalSubscriptions;
 };
 
 } // namespace vigine::taskflow

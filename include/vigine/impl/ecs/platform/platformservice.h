@@ -36,13 +36,14 @@ class WindowComponent;
  * @ref vigine::context::AbstractContext via @c registerService. The
  * service exposes a window-centric API (create, show, query native
  * handle, bind an @c IWindowEventHandlerComponent) built on top of
- * the ECS-side @c WindowSystem. Callers reach the service through
- * the service container after registration.
+ * the ECS-side @c WindowSystem.
  *
  * Wrapper base: the service derives from
- * @ref vigine::service::AbstractService. The window system is wired
- * in through @ref setWindowSystem because @ref vigine::IContext does
- * not yet expose a system locator.
+ * @ref vigine::service::AbstractService. Ownership of the underlying
+ * @c WindowSystem is taken at construction time through a
+ * @c std::unique_ptr — there is no post-construction setter. The
+ * service tears the system down through its private member when the
+ * service itself is destroyed.
  *
  * Entity binding: the service holds no per-entity state of its own.
  * Callers pass the target entity to the per-call methods that need
@@ -52,7 +53,17 @@ class WindowComponent;
 class PlatformService : public vigine::service::AbstractService
 {
   public:
-    explicit PlatformService(const Name &name);
+    /**
+     * @brief Constructs the service taking ownership of @p windowSystem.
+     *
+     * The @ref AbstractContext default registration creates the service
+     * with a default @c WindowSystem internally; applications that
+     * need a different concrete window system pass a custom
+     * @c std::unique_ptr<WindowSystem> here and register the resulting
+     * service through @c IContext::registerService(svc, knownId) which
+     * replaces the default at the slot.
+     */
+    PlatformService(const Name &name, std::unique_ptr<WindowSystem> windowSystem);
     ~PlatformService() override;
 
     /**
@@ -61,13 +72,15 @@ class PlatformService : public vigine::service::AbstractService
     [[nodiscard]] const Name &name() const noexcept;
 
     /**
-     * @brief Attaches the @c WindowSystem this service mediates.
+     * @brief Returns the owned @c WindowSystem.
      *
-     * Called by the engine bootstrapper after the window system has
-     * been constructed and registered on the ECS substrate. Passing
-     * @c nullptr detaches.
+     * The pointer is valid for the service's lifetime; the service
+     * owns the system through a @c std::unique_ptr and the accessor
+     * never returns @c nullptr because the constructor refuses a null
+     * argument (asserts in Debug, treats null as a constructor
+     * pre-condition violation in Release).
      */
-    void setWindowSystem(WindowSystem *system) noexcept;
+    [[nodiscard]] WindowSystem *windowSystem() const noexcept;
 
     [[nodiscard]] WindowComponent *createWindow();
     [[nodiscard]] vigine::Result showWindow(WindowComponent *window);
@@ -114,14 +127,16 @@ class PlatformService : public vigine::service::AbstractService
     /**
      * @brief Modern teardown entry point.
      *
-     * Drops the window-system observer pointer and chains to
-     * @ref vigine::service::AbstractService::onShutdown.
+     * The owned @c WindowSystem is torn down with the service itself
+     * via the private @c unique_ptr; @ref onShutdown only chains to
+     * @ref vigine::service::AbstractService::onShutdown so the
+     * @ref isInitialised flag flips back to @c false.
      */
     [[nodiscard]] vigine::Result onShutdown(vigine::IContext &context) override;
 
   private:
-    Name _name;
-    WindowSystem *_windowSystem{nullptr};
+    Name                          _name;
+    std::unique_ptr<WindowSystem> _windowSystem;
 };
 
 using PlatformServiceUPtr = std::unique_ptr<PlatformService>;

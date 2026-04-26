@@ -16,10 +16,10 @@ loop per pump tick
   Engine->>TF: hasTasksToRun()
   alt has runnable
     Engine->>Ctx: makeEngineToken(boundState)
-    Engine->>Task: setApi(token)
+    Engine->>Task: setApiToken(token)
     Engine->>Task: run()
     Task-->>Engine: Result
-    Engine->>Task: setApi(nullptr)
+    Engine->>Task: setApiToken(nullptr)
     Engine->>TF: advance cursor by Result::Code
   end
   Engine->>FSM: select next state by transition outcome

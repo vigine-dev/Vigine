@@ -73,9 +73,9 @@ class AbstractEngine : public IEngine
 
     // ------ IEngine ------
 
-    [[nodiscard]] IContext &context() override;
-    [[nodiscard]] Result    run() override;
-    void                    shutdown() noexcept override;
+    [[nodiscard]] IContext     &context() override;
+    [[nodiscard]] vigine::Result run() override;
+    void                        shutdown() noexcept override;
     [[nodiscard]] bool      isRunning() const noexcept override;
 
     AbstractEngine(const AbstractEngine &)            = delete;

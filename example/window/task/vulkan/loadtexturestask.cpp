@@ -1,7 +1,9 @@
 #include "imageloader.h"
 #include "loadtexturestask.h"
 
+#include <vigine/api/ecs/ientitymanager.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/rendersystem.h>
 #include <vigine/impl/ecs/graphics/texturecomponent.h>
@@ -12,26 +14,22 @@
 #include <filesystem>
 #include <iostream>
 
-void LoadTexturesTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void LoadTexturesTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
-
 vigine::Result LoadTexturesTask::run()
 {
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
-
-    auto *token = api();
+    auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto graphicsResult = token->service(_graphicsServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
     if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
 
@@ -112,7 +110,7 @@ vigine::Result LoadTexturesTask::run()
         }
 
         // Create entity for this texture
-        auto *textureEntity = _entityManager->createEntity();
+        auto *textureEntity = entityManager->createEntity();
         if (!textureEntity)
         {
             std::cerr << "Failed to create entity for texture: " << imagePath << std::endl;
@@ -121,7 +119,7 @@ vigine::Result LoadTexturesTask::run()
 
         // Use sequential index based on successful loads so entity names are always 0,1,2...
         std::string entityName = "TextureEntity_" + std::to_string(loadedIndex++);
-        _entityManager->addAlias(textureEntity, entityName);
+        entityManager->addAlias(textureEntity, entityName);
 
         // Create texture component for this entity
         renderSystem->createTextureComponent(textureEntity);

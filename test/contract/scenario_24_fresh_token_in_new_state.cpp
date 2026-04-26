@@ -188,9 +188,9 @@ struct DriverGuard
             ADD_FAILURE() << "ITaskFlow::attachTaskRun must bind the StateA probe runnable";
             return fx;
         }
-        if (!flow->enqueue(probeId).isSuccess())
+        if (!flow->setRoot(probeId).isSuccess())
         {
-            ADD_FAILURE() << "ITaskFlow::enqueue must position the cursor on the StateA probe";
+            ADD_FAILURE() << "ITaskFlow::setRoot must position the cursor on the StateA probe";
             return fx;
         }
         if (!fsm.addStateTaskFlow(fx.stateA, std::move(flow)).isSuccess())

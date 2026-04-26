@@ -37,7 +37,7 @@ If a task description does not include the project folder layout, use this secti
 - `Result` is the shared execution result type for tasks and transitions.
 - `EntityManager` is the legacy entity owner used by examples that still walk the `Entity *` surface.
 - `Entity` is the base runtime entity type.
-- `AbstractTask` carries the bound `IEngineToken` pointer; concrete tasks reach engine subsystems through the token returned by `api()`.
+- `AbstractTask` carries the bound `IEngineToken` pointer; concrete tasks reach engine subsystems through the token returned by `apiToken()`.
 - `vigine::service::AbstractService` is the modern Level-1 service base; `vigine::ecs::AbstractSystem` is the modern system base that carries its `Entity *` binding by composition.
 
 ### Inheritance overview
@@ -107,7 +107,7 @@ If a task description does not include the project folder layout, use this secti
   the `subscribeExpiration` self-destruct contract, and the FSM-side
   invalidation listener firing path on `AbstractStateMachine`.
 - [Task system reference](ecs/system.md) — task-side companion to
-  `engine-token.md`. Documents the `ITask::setApi` / `ITask::api()`
+  `engine-token.md`. Documents the `ITask::setApiToken` / `ITask::apiToken()`
   surface, the gated vs non-gated accessor split as seen from inside a
   task body, and the `ApiBindingGuard` RAII pattern the task flow
   drives around every `run()` call.

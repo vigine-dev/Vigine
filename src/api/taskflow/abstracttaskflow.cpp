@@ -7,6 +7,10 @@
 #include "vigine/result.h"
 #include "vigine/api/context/icontext.h"
 #include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/abstracttask.h"
 #include "vigine/api/taskflow/itask.h"
@@ -78,16 +82,7 @@ bool AbstractTaskFlow::hasTask(TaskId task) const noexcept
 // enforces the "one @ref RouteMode per pair" invariant.
 // ---------------------------------------------------------------------------
 
-Result AbstractTaskFlow::onResult(TaskId source, ResultCode code, TaskId next)
-{
-    return onResult(source, code, next, RouteMode::FirstMatch);
-}
-
-Result AbstractTaskFlow::onResult(
-    TaskId    source,
-    ResultCode code,
-    TaskId    next,
-    RouteMode mode)
+Result AbstractTaskFlow::route(TaskId source, TaskId next, ResultCode code, RouteMode mode)
 {
     return _orchestrator->addTransition(source, code, next, mode);
 }
@@ -96,7 +91,7 @@ Result AbstractTaskFlow::onResult(
 // ITaskFlow: runnable attachment. The runnable registry is a small
 // per-task map populated by @ref attachTaskRun; @ref runCurrentTask
 // looks the runnable for @ref _current up, executes it through the
-// R-StateScope binding shape (setApi -> run -> setApi(nullptr) under an
+// R-StateScope binding shape (setApiToken -> run -> setApiToken(nullptr) under an
 // RAII guard), and advances @c _current through the transition edge
 // matching the runnable's reported outcome.
 // ---------------------------------------------------------------------------
@@ -118,7 +113,7 @@ namespace
             return ResultCode::Success;
         default:
             // Every non-Success outcome maps to Error so callers wiring
-            // an explicit error route through @c onResult observe the
+            // an explicit error route through @c route observe the
             // failure path. Tasks that only distinguish Success vs.
             // Error see the closed two-outcome shape the orchestrator
             // stores on transition edges.
@@ -127,6 +122,31 @@ namespace
 }
 
 } // namespace
+
+TaskId AbstractTaskFlow::addTask(std::unique_ptr<vigine::ITask> task)
+{
+    /*
+     * Convenience overload: allocate a slot AND bind the runnable in
+     * a single call. Reject a null @p task before allocating so we do
+     * not leave an orphan task id behind on misuse. After the slot is
+     * reserved we delegate to attachTaskRun for the binding so the
+     * storage and error-handling stays in one place.
+     */
+    if (task == nullptr)
+    {
+        return TaskId{};
+    }
+    const TaskId taskId = addTask();
+    if (!taskId.valid())
+    {
+        return taskId;
+    }
+    if (!attachTaskRun(taskId, std::move(task)).isSuccess())
+    {
+        return TaskId{};
+    }
+    return taskId;
+}
 
 Result AbstractTaskFlow::attachTaskRun(TaskId taskId,
                                        std::unique_ptr<vigine::ITask> task)
@@ -179,11 +199,11 @@ void AbstractTaskFlow::runCurrentTask()
     /*
      * Execute the runnable through the R-StateScope binding shape.
      * Concrete tasks derive from @ref vigine::AbstractTask which makes
-     * @c setApi / @c api final and stores the bound token; the flow
+     * @c setApiToken / @c api final and stores the bound token; the flow
      * binds the long-lived per-state token onto the runnable through
-     * @c setApi before @c run and clears the binding back to nullptr
+     * @c setApiToken before @c run and clears the binding back to nullptr
      * through an RAII guard so a throwing @c run still leaves the task
-     * with a null api() once the call returns.
+     * with a null apiToken() once the call returns.
      *
      * Per-state token lifetime. The token bound on every tick is the
      * one stored in @ref _activeToken — minted in @ref setActiveState
@@ -199,7 +219,7 @@ void AbstractTaskFlow::runCurrentTask()
      * No-context / no-state fallback. When @ref setContext has never
      * been called or @ref setActiveState has not been driven, the
      * @ref _activeToken stays null. @ref runCurrentTask then binds
-     * @c nullptr onto the runnable and tasks observe api() == nullptr
+     * @c nullptr onto the runnable and tasks observe apiToken() == nullptr
      * inside @c run(). Tests that drive the flow directly without the
      * engine pump rely on this shape.
      */
@@ -211,7 +231,7 @@ void AbstractTaskFlow::runCurrentTask()
         {
             if (task != nullptr)
             {
-                task->setApi(nullptr);
+                task->setApiToken(nullptr);
             }
         }
         ApiBindingGuard(const ApiBindingGuard &)            = delete;
@@ -222,12 +242,12 @@ void AbstractTaskFlow::runCurrentTask()
 
     Result outcome;
     {
-        runnable->setApi(_activeToken.get());
+        runnable->setApiToken(_activeToken.get());
         [[maybe_unused]] ApiBindingGuard guard(runnable);
         outcome = runnable->run();
     }
     /*
-     * On scope exit ApiBindingGuard fires setApi(nullptr); the
+     * On scope exit ApiBindingGuard fires setApiToken(nullptr); the
      * per-state @ref _activeToken stays alive for subsequent ticks
      * until the next @ref setActiveState call drops it.
      */
@@ -253,9 +273,89 @@ void AbstractTaskFlow::setContext(vigine::IContext *context) noexcept
      * AbstractEngine::run. A nullptr argument detaches the binding so
      * subsequent setActiveState calls fall back to the no-token shape —
      * useful for tests that drive the flow directly bypassing the
-     * engine pump and that want to observe api() == nullptr inside run().
+     * engine pump and that want to observe apiToken() == nullptr inside run().
      */
     _context = context;
+}
+
+void AbstractTaskFlow::setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept
+{
+    /*
+     * Plain raw-pointer assignment. The flow stores a non-owning back-
+     * pointer to the signal emitter wired by the host (typically the
+     * application's main()). A nullptr argument detaches the binding so
+     * subsequent signal() calls report Result::Code::Error until a
+     * fresh emitter lands.
+     */
+    _signalEmitter = emitter;
+}
+
+Result AbstractTaskFlow::signal(TaskId                                  source,
+                                TaskId                                  target,
+                                vigine::payload::PayloadTypeId        payloadTypeId,
+                                vigine::core::threading::ThreadAffinity affinity)
+{
+    /*
+     * Flow-level signal subscription. The flow owns the subscription
+     * token returned by ISignalEmitter::subscribeSignal so callers do
+     * not have to maintain an external sink for the subscription's
+     * lifetime. Tokens unwind at flow destruction in the reverse-order
+     * pass over @ref _signalSubscriptions, which is declared AFTER
+     * @ref _runnables so subscriptions cancel BEFORE the underlying
+     * subscriber objects (the runnables themselves) are freed.
+     *
+     * The @p affinity parameter is kept for the documented per-
+     * subscription dispatch hint; today the actual delivery thread is
+     * fixed by the emitter's bus configuration. The signature reserves
+     * the slot for a future emitter overload that takes an explicit
+     * per-subscription override without breaking the public surface.
+     */
+    static_cast<void>(affinity);
+
+    if (_signalEmitter == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: no signal emitter wired (call setSignalEmitter first)");
+    }
+    if (!_orchestrator->hasTask(source))
+    {
+        return Result(Result::Code::Error,
+                      "signal: source task is not registered");
+    }
+    if (!_orchestrator->hasTask(target))
+    {
+        return Result(Result::Code::Error,
+                      "signal: target task is not registered");
+    }
+
+    auto it = _runnables.find(target);
+    if (it == _runnables.end() || it->second == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: target task has no runnable attached");
+    }
+
+    auto *subscriber =
+        dynamic_cast<vigine::messaging::ISubscriber *>(it->second.get());
+    if (subscriber == nullptr)
+    {
+        return Result(Result::Code::Error,
+                      "signal: target runnable does not implement ISubscriber");
+    }
+
+    vigine::messaging::MessageFilter filter{};
+    filter.kind   = vigine::messaging::MessageKind::Signal;
+    filter.typeId = payloadTypeId;
+
+    auto token = _signalEmitter->subscribeSignal(filter, subscriber);
+    if (!token)
+    {
+        return Result(Result::Code::Error,
+                      "signal: emitter subscribeSignal returned null");
+    }
+
+    _signalSubscriptions.push_back(std::move(token));
+    return Result();
 }
 
 void AbstractTaskFlow::setActiveState(vigine::statemachine::StateId state) noexcept
@@ -269,7 +369,7 @@ void AbstractTaskFlow::setActiveState(vigine::statemachine::StateId state) noexc
      * "old state's token expires precisely on transition out" contract.
      * Then mint a fresh token bound to the new state when a context is
      * wired; without one we leave _activeToken null and tasks observe
-     * api() == nullptr until the engine pump installs a context.
+     * apiToken() == nullptr until the engine pump installs a context.
      */
     if (_activeState == state)
     {
@@ -300,13 +400,13 @@ bool AbstractTaskFlow::hasTasksToRun() const noexcept
 // observe an @ref Result::Code::Error and no state change.
 // ---------------------------------------------------------------------------
 
-Result AbstractTaskFlow::enqueue(TaskId start)
+Result AbstractTaskFlow::setRoot(TaskId root)
 {
-    if (!_orchestrator->hasTask(start))
+    if (!_orchestrator->hasTask(root))
     {
-        return Result(Result::Code::Error, "start task not registered");
+        return Result(Result::Code::Error, "setRoot: root task is not registered");
     }
-    _current = start;
+    _current = root;
     return Result();
 }
 

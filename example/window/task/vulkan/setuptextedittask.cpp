@@ -1,6 +1,10 @@
 #include "setuptextedittask.h"
 
+#include <vigine/api/context/icontext.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine.h>
 #include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
 #include <vigine/impl/ecs/entitymanager.h>
 #include <vigine/impl/ecs/graphics/meshcomponent.h>
 #include <vigine/impl/ecs/graphics/rendercomponent.h>
@@ -9,6 +13,11 @@
 #include <vigine/impl/ecs/graphics/textcomponent.h>
 #include <vigine/impl/ecs/graphics/transformcomponent.h>
 #include <vigine/impl/ecs/graphics/graphicsservice.h>
+
+#include "../../services/texteditorservice.h"
+#include "../../services/wellknown.h"
+#include "../../system/texteditorsystem.h"
+#include "../../texteditstate.h"
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -46,32 +55,24 @@ std::string resolveFontPath()
 }
 } // namespace
 
-SetupTextEditTask::SetupTextEditTask(std::shared_ptr<TextEditState> state,
-                                     std::shared_ptr<TextEditorSystem> editorSystem)
-    : _state(std::move(state)), _editorSystem(std::move(editorSystem))
-{
-}
-
-void SetupTextEditTask::setEntityManager(vigine::EntityManager *entityManager) noexcept
-{
-    _entityManager = entityManager;
-}
-
-void SetupTextEditTask::setGraphicsServiceId(vigine::service::ServiceId id) noexcept
-{
-    _graphicsServiceId = id;
-}
+SetupTextEditTask::SetupTextEditTask() = default;
 
 vigine::Result SetupTextEditTask::run()
 {
-    if (!_entityManager)
-        return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
-
-    auto *token = api();
+    auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto graphicsResult = token->service(_graphicsServiceId);
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
     if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
 
@@ -82,11 +83,35 @@ vigine::Result SetupTextEditTask::run()
 
     auto *renderSystem = graphicsService->renderSystem();
 
-    if (_editorSystem)
-        _editorSystem->bind(_entityManager, graphicsService, renderSystem);
+    // Resolve the app-scope TextEditorService and ensure it is wired
+    // (binds the underlying TextEditorSystem to the entity manager and
+    // graphics service / render system on the first call; idempotent).
+    auto editorSvcResult =
+        token->service(example::services::wellknown::textEditor);
+    if (!editorSvcResult.ok())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Text editor service is unavailable");
+    auto *editorService =
+        dynamic_cast<TextEditorService *>(&editorSvcResult.value());
+    if (!editorService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Text editor service has unexpected type");
 
-    if (!_state)
+    editorService->ensureWired(token->engine().context());
+    auto state        = editorService->state();
+    auto editorSystem = editorService->textEditorSystem();
+
+    if (!state)
         return vigine::Result(vigine::Result::Code::Error, "TextEditState is null");
+
+    // Bind the interaction component against the MainWindow entity so
+    // every per-event method on TextEditorSystem (routeMouseButtonDown,
+    // routeKeyDown, routeWindowResized, ...) has a live record to read
+    // and write through. The component carries every piece of UI
+    // state @c RunWindowTask used to keep on its own object — focus,
+    // object drag, mouse-ray helper, modifier keys, debounced resize.
+    if (auto *mainWindow = entityManager->getEntityByAlias("MainWindow"))
+        editorService->bindInteractionEntity(mainWindow);
 
     const auto fontPath = resolveFontPath();
     if (fontPath.empty())
@@ -95,11 +120,11 @@ vigine::Result SetupTextEditTask::run()
 
     // --- Background panel ---
     {
-        auto *bgEntity = _entityManager->createEntity();
+        auto *bgEntity = entityManager->createEntity();
         if (!bgEntity)
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditBgEntity");
 
-        _entityManager->addAlias(bgEntity, "TextEditBgEntity");
+        entityManager->addAlias(bgEntity, "TextEditBgEntity");
         renderSystem->createComponents(bgEntity);
         renderSystem->bindEntity(bgEntity);
 
@@ -133,12 +158,12 @@ vigine::Result SetupTextEditTask::run()
 
     // --- Vertical scrollbar track + thumb ---
     {
-        auto *trackEntity = _entityManager->createEntity();
+        auto *trackEntity = entityManager->createEntity();
         if (!trackEntity)
             return vigine::Result(vigine::Result::Code::Error,
                                   "Failed to create TextEditScrollbarTrackEntity");
 
-        _entityManager->addAlias(trackEntity, "TextEditScrollbarTrackEntity");
+        entityManager->addAlias(trackEntity, "TextEditScrollbarTrackEntity");
         renderSystem->createComponents(trackEntity);
         renderSystem->bindEntity(trackEntity);
 
@@ -165,12 +190,12 @@ vigine::Result SetupTextEditTask::run()
         rc->setTransform(transform);
         renderSystem->unbindEntity();
 
-        auto *thumbEntity = _entityManager->createEntity();
+        auto *thumbEntity = entityManager->createEntity();
         if (!thumbEntity)
             return vigine::Result(vigine::Result::Code::Error,
                                   "Failed to create TextEditScrollbarThumbEntity");
 
-        _entityManager->addAlias(thumbEntity, "TextEditScrollbarThumbEntity");
+        entityManager->addAlias(thumbEntity, "TextEditScrollbarThumbEntity");
         renderSystem->createComponents(thumbEntity);
         renderSystem->bindEntity(thumbEntity);
 
@@ -200,11 +225,11 @@ vigine::Result SetupTextEditTask::run()
 
     // --- Editable text (bitmap-style with individual character planes) ---
     {
-        auto *textEntity = _entityManager->createEntity();
+        auto *textEntity = entityManager->createEntity();
         if (!textEntity)
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditEntity");
 
-        _entityManager->addAlias(textEntity, "TextEditEntity");
+        entityManager->addAlias(textEntity, "TextEditEntity");
         renderSystem->createComponents(textEntity);
         renderSystem->bindEntity(textEntity);
 
@@ -219,9 +244,9 @@ vigine::Result SetupTextEditTask::run()
         vigine::ecs::graphics::TextComponent text;
         text.setEnabled(true);
         text.setDrawBaseInstance(false);
-        text.setText(_state->text);
-        text.setCursorBytePos(_state->cursorPos);
-        text.setCursorVisible(_state->showCursor);
+        text.setText(state->text);
+        text.setCursorBytePos(state->cursorPos);
+        text.setCursorVisible(state->showCursor);
         text.setFontPath(fontPath);
         text.setPixelSize(28);
         text.setVoxelSize(0.0022f);
@@ -283,12 +308,12 @@ vigine::Result SetupTextEditTask::run()
 
         for (const auto &alias : aliases)
         {
-            auto *e = _entityManager->createEntity();
+            auto *e = entityManager->createEntity();
             if (!e)
                 return vigine::Result(vigine::Result::Code::Error,
                                       "Failed to create focus frame entity");
 
-            _entityManager->addAlias(e, alias);
+            entityManager->addAlias(e, alias);
             renderSystem->createComponents(e);
             renderSystem->bindEntity(e);
 
@@ -317,10 +342,10 @@ vigine::Result SetupTextEditTask::run()
         }
     }
 
-    if (_editorSystem)
+    if (editorSystem)
     {
-        _editorSystem->setLayout(40, kPanelWidth, kPanelHeight);
-        _editorSystem->setFocused(false);
+        editorSystem->setLayout(40, kPanelWidth, kPanelHeight);
+        editorSystem->setFocused(false);
     }
 
     return vigine::Result();

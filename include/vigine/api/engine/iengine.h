@@ -81,7 +81,7 @@ class IEngine
      * dedicate to pump work for the engine's lifetime; the canonical
      * caller is the OS main thread in a foreground engine.
      */
-    [[nodiscard]] virtual Result run() = 0;
+    [[nodiscard]] virtual vigine::Result run() = 0;
 
     /**
      * @brief Requests a clean stop of the main loop.

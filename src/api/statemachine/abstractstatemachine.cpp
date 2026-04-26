@@ -37,13 +37,30 @@ AbstractStateMachine::AbstractStateMachine()
 
 AbstractStateMachine::~AbstractStateMachine()
 {
-    // Debug-only lifetime invariant guard: no
-    // @ref InvalidationSubscriptionToken is allowed to outlive its
-    // owning @ref AbstractStateMachine. The token's @c cancel path
-    // dereferences the raw @c _owner back-pointer, so a token that
-    // survives its owner would dereference freed storage. Tracking
-    // the live-token count surfaces the misuse immediately under
-    // Debug; Release skips the check.
+    /*
+     * Drop the bound task flows before the live-token assertion below:
+     * each flow holds a per-state @ref vigine::engine::IEngineToken whose
+     * destructor releases an @ref InvalidationSubscriptionToken against
+     * this state machine. C++ runs the destructor body BEFORE member
+     * destruction, so without the explicit clear here the assertion
+     * would observe @c _liveInvalidationTokens > 0 and abort whenever
+     * any state-bound flow is still attached at shutdown — the typical
+     * shape after #355 lifted the engine token to a per-state lifetime.
+     */
+    {
+        std::scoped_lock lock{_stateTaskFlowsMutex};
+        _stateTaskFlows.clear();
+    }
+
+    /*
+     * Debug-only lifetime invariant guard: no
+     * @ref InvalidationSubscriptionToken is allowed to outlive its
+     * owning @ref AbstractStateMachine. The token's @c cancel path
+     * dereferences the raw @c _owner back-pointer, so a token that
+     * survives its owner would dereference freed storage. Tracking
+     * the live-token count surfaces the misuse immediately under
+     * Debug; Release skips the check.
+     */
     assert(_liveInvalidationTokens.load(std::memory_order_acquire) == 0u
            && "AbstractStateMachine: invalidation subscription token "
               "outlived its owning state machine");

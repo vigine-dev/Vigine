@@ -24,7 +24,7 @@ into the engine from inside a state hook.
 >   `TaskFlow::runCurrentTask` passes a sentinel-default
 >   `vigine::statemachine::StateId{}` and destroys the
 >   `unique_ptr<IEngineToken>` at the end of the per-task scope, so the
->   pointer the task observes through `api()` does **not** outlive the
+>   pointer the task observes through `apiToken()` does **not** outlive the
 >   single `run()` call and the bound-state field is the sentinel
 >   rather than `IStateMachine::current()`. Tokens minted directly
 >   through `IContext::makeEngineToken(stateId)` (the path the contract
@@ -220,7 +220,7 @@ walks the following per-tick shape:
 3. When a flow is bound, advance it by exactly one task via
    `TaskFlow::runCurrentTask`. That call mints an engine token through
    `IContext::makeEngineToken(StateId{})` (sentinel — see below),
-   binds it on the task with `setApi(token.get())`, runs `ITask::run`
+   binds it on the task with `setApiToken(token.get())`, runs `ITask::run`
    synchronously, clears the binding via the `ApiBindingGuard`
    destructor, and then destroys the owning `unique_ptr<IEngineToken>`
    at the end of the per-task scope.
@@ -242,14 +242,14 @@ today*:
   current state. The aggregator
   `vigine::context::Context::makeEngineToken` tolerates the sentinel
   and threads it into the concrete `EngineToken`. So a token observed
-  through `api()` inside `run()` today carries `boundState() ==
+  through `apiToken()` inside `run()` today carries `boundState() ==
   StateId{}` and matches no real FSM state when the listener walks the
   registry on a transition.
 - **The token does not outlive `run()`.** `runCurrentTask` keeps the
   `unique_ptr<IEngineToken>` on its own stack frame, calls
-  `setApi(nullptr)` through the RAII guard at end of scope, and then
+  `setApiToken(nullptr)` through the RAII guard at end of scope, and then
   the unique_ptr falls out of scope and destroys the token. The task
-  only ever observed a `IEngineToken*` through `ITask::api()`; that
+  only ever observed a `IEngineToken*` through `ITask::apiToken()`; that
   pointer is dangling the moment `runCurrentTask` returns. A worker
   thread that captured the pointer must therefore not dereference it
   after `run()` exits.
@@ -470,7 +470,7 @@ and against the post-#343 redesign:
   `IContext::makeEngineToken(workState)`) lives on the task member
   fields and outlives any single `run()` call. This half drives the
   FSM-bound expiration story and is what the worker thread captures.
-- The **per-tick token** the task receives through `api()` is used
+- The **per-tick token** the task receives through `apiToken()` is used
   inside `run()` only — to resolve services and reach the thread
   manager — and is never captured by the worker thread.
 
@@ -507,11 +507,11 @@ class RenderFrameTask final : public vigine::AbstractTask
     [[nodiscard]] vigine::Result run() override
     {
         // The TaskFlow::runCurrentTask wiring binds a per-tick token
-        // through setApi() before run() and clears the binding (and
+        // through setApiToken() before run() and clears the binding (and
         // destroys the unique_ptr<IEngineToken>) at end of run(). So
-        // the api() pointer is only valid for the body of run() and
+        // the apiToken() pointer is only valid for the body of run() and
         // must NOT be captured by a worker thread.
-        auto *perTickToken = api();
+        auto *perTickToken = apiToken();
         if (perTickToken == nullptr)
             return vigine::Result(vigine::Result::Code::Error,
                                   "render task missing per-tick engine token");
@@ -613,7 +613,7 @@ flow (`IStateMachine::addStateTaskFlow(workState, std::move(flow))`):
 
 1. While `current() == workState`, every tick mints a fresh per-tick
    token through `TaskFlow::runCurrentTask`, binds it on the task via
-   `setApi`, calls `run()`, clears the binding, and destroys the
+   `setApiToken`, calls `run()`, clears the binding, and destroys the
    per-tick `unique_ptr` at end of scope. `subscribeExpiration`
    callbacks registered against the per-tick token would fire at that
    destruction point and therefore are NOT used here for cross-tick
@@ -668,8 +668,8 @@ is the contract-safe shape.
   tick and binds a token before `runCurrentTask`:
   [`src/api/engine/abstractengine.cpp`](../../src/api/engine/abstractengine.cpp)
   (#334).
-- Task-side companion doc covering `ITask::api()` and the
-  setApi/run/setApi(nullptr) lifecycle:
+- Task-side companion doc covering `ITask::apiToken()` and the
+  setApiToken/run/setApiToken(nullptr) lifecycle:
   [`doc/ecs/system.md`](system.md).
 - Contract scenarios for stale token + expiration callback semantics:
   [`test/contract/scenario_21_stale_engine_token.cpp`](../../test/contract/scenario_21_stale_engine_token.cpp),

@@ -3,10 +3,17 @@
 #include <memory>
 
 #include "vigine/result.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/api/statemachine/stateid.h"
 #include "vigine/api/taskflow/resultcode.h"
 #include "vigine/api/taskflow/routemode.h"
 #include "vigine/api/taskflow/taskid.h"
+#include "vigine/core/threading/threadaffinity.h"
+
+namespace vigine::messaging
+{
+class ISignalEmitter;
+} // namespace vigine::messaging
 
 namespace vigine
 {
@@ -79,7 +86,7 @@ namespace vigine::taskflow
  * Routing model (UD-3):
  *   - Sync transitions fire when a completed task reports a
  *     @ref ResultCode. The flow looks up the list of next tasks
- *     registered via @ref onResult against the @c (source, resultCode)
+ *     registered via @ref route against the @c (source, resultCode)
  *     pair and advances according to the transition's @ref RouteMode.
  *   - @ref RouteMode::FirstMatch is the default. Callers pass
  *     @ref RouteMode::FanOut to register a transition that lets every
@@ -135,45 +142,33 @@ class ITaskFlow
 
     /**
      * @brief Registers a transition: when @p source completes with
-     *        @p code the flow advances to @p next.
+     *        @p code the flow advances to @p next under @p mode.
      *
-     * Shorthand for @ref onResult with @ref RouteMode::FirstMatch —
-     * the UD-3 default. Multiple calls with the same
-     * @c (source, code) pair stack up in registration order; the
-     * default @c FirstMatch mode routes to the first registered
-     * target and ignores the rest.
-     *
-     * Both @p source and @p next must have been registered via
-     * @ref addTask beforehand. Reports @ref Result::Code::Error when
-     * either id is stale or when the source id is the same as the
-     * next id (a task cannot transition directly to itself through
-     * a zero-length transition — callers that need a loop wire it
-     * through an explicit intermediate task).
-     */
-    virtual Result onResult(TaskId source, ResultCode code, TaskId next) = 0;
-
-    /**
-     * @brief Registers a transition with an explicit routing mode.
-     *
-     * Use this overload to opt into @ref RouteMode::FanOut (every
+     * @p code defaults to @ref ResultCode::Success and @p mode to
+     * @ref RouteMode::FirstMatch — the UD-3 defaults — so the common
+     * "Success leads to next" wiring reads as a two-argument call.
+     * Callers that need to opt into @ref RouteMode::FanOut (every
      * target registered against the pair runs independently) or
      * @ref RouteMode::Chain (registered targets run sequentially as
-     * a pipeline). Multiple registrations with the same
-     * @c (source, code) pair must agree on the @ref RouteMode; the
-     * wrapper reports @ref Result::Code::Error on a conflicting
-     * re-registration so the routing contract stays unambiguous.
+     * a pipeline) supply the @p mode argument explicitly. Multiple
+     * registrations with the same @c (source, code) pair must agree
+     * on the @ref RouteMode; the wrapper reports
+     * @ref Result::Code::Error on a conflicting re-registration so
+     * the routing contract stays unambiguous.
      *
      * Both @p source and @p next must have been registered via
      * @ref addTask beforehand. Reports @ref Result::Code::Error when
      * either id is stale, when the source id is the same as the next
-     * id, or when the re-registration conflicts with the already-
-     * stored @ref RouteMode for that pair.
+     * id (a task cannot transition directly to itself through a
+     * zero-length transition — callers that need a loop wire it
+     * through an explicit intermediate task), or when the
+     * re-registration conflicts with the already-stored
+     * @ref RouteMode for that pair.
      */
-    virtual Result onResult(
-        TaskId    source,
-        ResultCode code,
-        TaskId    next,
-        RouteMode mode) = 0;
+    virtual Result route(TaskId     source,
+                         TaskId     next,
+                         ResultCode code = ResultCode::Success,
+                         RouteMode  mode = RouteMode::FirstMatch) = 0;
 
     // ------ Runnable attachment ------
 
@@ -207,6 +202,24 @@ class ITaskFlow
     virtual Result attachTaskRun(TaskId taskId, std::unique_ptr<vigine::ITask> task) = 0;
 
     /**
+     * @brief Allocates a fresh task slot AND binds @p task to it in a
+     *        single call. Overload of @ref addTask for the canonical
+     *        case where the caller has the runnable in hand and wants
+     *        the slot allocated and bound atomically.
+     *
+     * The flow takes ownership of @p task. Returns the freshly minted
+     * @ref TaskId on success, or an invalid @ref TaskId on failure
+     * (null @p task).
+     *
+     * Use the no-argument @ref addTask overload + @ref attachTaskRun
+     * when the task handle must be referenced from another transition
+     * before its runnable is available (forward-reference pattern);
+     * use this overload for the common back-to-back create + attach
+     * idiom.
+     */
+    [[nodiscard]] virtual TaskId addTask(std::unique_ptr<vigine::ITask> task) = 0;
+
+    /**
      * @brief Executes the runnable bound to the current task slot and
      *        advances the cursor to whichever next task the registered
      *        transitions select.
@@ -219,7 +232,7 @@ class ITaskFlow
      *      @ref hasTasksToRun reports false on the next probe.
      *   2. Invoke the runnable's @c run(). The returned @ref Result is
      *      mapped to the closest @ref ResultCode (Success / Error) and
-     *      the orchestrator looks up the @c onResult transition for
+     *      the orchestrator looks up the @c route transition for
      *      the @c (current, code) pair.
      *   3. When a matching transition exists the cursor advances to
      *      the next task. When no transition is registered the cursor
@@ -228,7 +241,7 @@ class ITaskFlow
      *      alone.
      *
      * The engine wires a state-scoped @c IEngineToken into the
-     * runnable through @ref vigine::ITask::setApi before invoking
+     * runnable through @ref vigine::ITask::setApiToken before invoking
      * @c run and clears the binding through an RAII guard so a
      * throwing @c run still leaves the task with a null token; that
      * sequencing is required by the R-StateScope contract documented
@@ -262,7 +275,7 @@ class ITaskFlow
      *        to mint the per-tick @ref vigine::engine::IEngineToken.
      *
      * The flow stores the context as a non-owning back-pointer so the
-     * R-StateScope binding shape (mint -> setApi -> run -> setApi(nullptr))
+     * R-StateScope binding shape (mint -> setApiToken -> run -> setApiToken(nullptr))
      * inside @ref runCurrentTask reaches the engine-token factory. The
      * @ref vigine::engine::AbstractEngine pump installs this back-pointer
      * once per tick on the bound flow before driving it; the assignment
@@ -278,7 +291,7 @@ class ITaskFlow
      *
      * The flow uses @p state to mint a per-state @ref vigine::engine::IEngineToken
      * via @ref vigine::IContext::makeEngineToken. The token is the one
-     * @ref runCurrentTask binds onto each runnable through @ref vigine::ITask::setApi.
+     * @ref runCurrentTask binds onto each runnable through @ref vigine::ITask::setApiToken.
      *
      * Calling @ref setActiveState with a state that differs from the
      * previously stored one drops the existing token (which fires the
@@ -299,22 +312,75 @@ class ITaskFlow
      */
     virtual void setActiveState(vigine::statemachine::StateId state) noexcept = 0;
 
+    // ------ Signal subscription ------
+
+    /**
+     * @brief Wires a non-owning @ref vigine::messaging::ISignalEmitter into
+     *        the flow so @ref signal can subscribe target tasks against it.
+     *
+     * The flow stores the pointer; the caller retains ownership of the
+     * emitter and must keep it alive at least as long as the flow.
+     * Passing @c nullptr detaches the binding; subsequent @ref signal
+     * calls report @ref Result::Code::Error until a fresh emitter is
+     * wired in.
+     */
+    virtual void setSignalEmitter(vigine::messaging::ISignalEmitter *emitter) noexcept = 0;
+
+    /**
+     * @brief Subscribes @p target as an @c ISubscriber on the wired
+     *        signal emitter so it receives signals carrying
+     *        @p payloadTypeId. The @p source task identifies the
+     *        in-flow producer for documentation / future routing.
+     *
+     * Both @p source and @p target must have been registered through
+     * @ref addTask. @p target must additionally have a runnable
+     * attached via @ref attachTaskRun whose runtime type implements
+     * @ref vigine::messaging::ISubscriber so the flow can supply it as
+     * the subscriber to @c subscribeSignal. @p payloadTypeId selects
+     * which signal payload type the target is interested in;
+     * @c MessageKind is hard-wired to @c Signal.
+     *
+     * @p affinity expresses the caller's preference for the dispatch
+     * thread. The actual dispatch policy is fixed by the emitter's
+     * configuration (@ref vigine::messaging::sharedBusConfig and
+     * friends) — the parameter is recorded for future per-subscription
+     * overrides; today it serves as a documentation hint.
+     *
+     * The flow takes ownership of the returned subscription token and
+     * keeps it alive for as long as the flow itself, so the caller no
+     * longer needs an external sink for the subscription's lifetime.
+     * Subscriptions release in reverse-registration order at flow
+     * destruction so any state-bound emitter survives until each
+     * subscription has been cleanly cancelled.
+     *
+     * Reports @ref Result::Code::Error when the emitter is not wired,
+     * either task id is stale, the target has no runnable attached,
+     * the target's runnable does not implement
+     * @ref vigine::messaging::ISubscriber, or the emitter rejects the
+     * subscription request.
+     */
+    virtual Result signal(TaskId                            source,
+                          TaskId                            target,
+                          vigine::payload::PayloadTypeId  payloadTypeId,
+                          vigine::core::threading::ThreadAffinity affinity) = 0;
+
     // ------ Flow control ------
 
     /**
-     * @brief Marks @p start as the task the flow begins with.
+     * @brief Marks @p root as the task the flow begins with — the root
+     *        of the task graph traversal driven by @ref runCurrentTask.
      *
      * The referenced task must have been registered through
-     * @ref addTask. Reports @ref Result::Code::Error when @p start is
-     * stale; on success the next @ref current call returns @p start.
+     * @ref addTask. Reports @ref Result::Code::Error when @p root is
+     * stale; on success the next @ref current call returns @p root.
      *
-     * The flow auto-provisions a default start task in its
-     * constructor per UD-3, so callers that never register their own
-     * tasks still observe a valid @ref current id. Callers that
-     * register their own tasks freely override the selection with
-     * this call before they begin driving the flow.
+     * The flow auto-provisions a default root task in its constructor
+     * per UD-3, so callers that never register their own tasks still
+     * observe a valid @ref current id. Callers that register their
+     * own tasks freely override the selection with this call before
+     * they begin driving the flow.
      */
-    virtual Result enqueue(TaskId start) = 0;
+    virtual Result setRoot(TaskId root) = 0;
 
     /**
      * @brief Returns the task the flow currently considers active.

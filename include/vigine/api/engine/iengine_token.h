@@ -130,6 +130,7 @@ class ISystem;                 // to be defined under #197 (system wrapper leaf)
 
 namespace vigine::engine
 {
+class IEngine;
 
 /**
  * @brief Thin value wrapper carrying either a live reference of type
@@ -359,6 +360,18 @@ class IEngineToken
      */
     [[nodiscard]] virtual vigine::statemachine::IStateMachine &
         stateMachine() noexcept = 0;
+
+    /**
+     * @brief Returns the engine that owns the context behind this
+     *        token.
+     *
+     * Ungated infrastructure accessor: the engine outlives every
+     * state transition (it is the object that hands the context
+     * out), so the reference stays valid for the token's entire
+     * lifetime regardless of @ref isAlive. Tasks that need to call
+     * @c IEngine::shutdown reach the engine through this accessor.
+     */
+    [[nodiscard]] virtual vigine::engine::IEngine &engine() noexcept = 0;
 
     // ------ Expiration notification ------
 
