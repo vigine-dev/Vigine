@@ -108,6 +108,7 @@ vigine::Result SetupTexturedPlanesTask::run()
         }
 
         _entityManager->addAlias(planeEntity, config.entityName);
+        renderSystem->createComponents(planeEntity);
         renderSystem->bindEntity(planeEntity);
 
         auto *renderComponent = graphicsService->renderComponent();

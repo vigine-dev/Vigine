@@ -52,6 +52,7 @@ vigine::Result SetupCubeTask::run()
 
     _entityManager->addAlias(cubeEntity, "CubeEntity");
 
+    renderSystem->createComponents(cubeEntity);
     renderSystem->bindEntity(cubeEntity);
 
     auto *renderComponent = graphicsService->renderComponent();

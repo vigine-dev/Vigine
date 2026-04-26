@@ -890,6 +890,7 @@ bool RunWindowTask::ensureMouseRayEntity()
         _entityManager->addAlias(_mouseRayEntity, "MouseRayEntity");
     }
 
+    _renderSystem->createComponents(_mouseRayEntity);
     _renderSystem->bindEntity(_mouseRayEntity);
     auto *rc = _renderSystem->boundRenderComponent();
     if (!rc)
@@ -934,6 +935,7 @@ bool RunWindowTask::ensureMouseClickSphereEntity()
         _entityManager->addAlias(_mouseClickSphereEntity, "MouseClickSphereEntity");
     }
 
+    _renderSystem->createComponents(_mouseClickSphereEntity);
     _renderSystem->bindEntity(_mouseClickSphereEntity);
     auto *rc = _renderSystem->boundRenderComponent();
     if (!rc)
