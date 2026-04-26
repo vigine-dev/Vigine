@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "statemachine/statetopology.h"
+#include "statetopology.h"
 #include "vigine/api/taskflow/itaskflow.h"
 #include "vigine/result.h"
 #include "vigine/api/statemachine/routemode.h"

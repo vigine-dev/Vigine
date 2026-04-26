@@ -8,7 +8,7 @@
  *        chain of fluent calls that takes @c Data values directly.
  */
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/experimental/ecs/postgresql/impl/data.h"
 
 #include <deque>

@@ -9,8 +9,8 @@ If a task description does not include the project folder layout, use this secti
 ### Main folders
 
 - `include/vigine/` public engine API and core abstractions.
-- `include/vigine/base/` basic shared types and helpers.
-- `include/vigine/service/` public service interfaces and implementations exposed through `Context`.
+- `include/vigine/api/base/` basic shared types and helpers.
+- `include/vigine/impl/service/` public service interfaces and implementations exposed through `Context`.
 - `include/vigine/api/messaging/` public messaging API: `IMessageBus`, `ISubscriber`, `ISignalEmitter`, `MessageFilter`, the message-envelope contracts, and the abstract bases concrete buses extend.
 - `include/vigine/api/messaging/payload/` payload registry primitives (`PayloadTypeId`, `IPayloadRegistry`, `PayloadRange`) and concrete signal payloads (e.g. `StateInvalidatedPayload`).
 - `include/vigine/impl/messaging/` concrete final messaging types: `SystemMessageBus`, `SignalEmitter`, `ConnectionToken`.

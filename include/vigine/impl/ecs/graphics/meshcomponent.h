@@ -7,7 +7,7 @@
 
 #include "graphicshandles.h"
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 
 #include <glm/glm.hpp>
 #include <cassert>

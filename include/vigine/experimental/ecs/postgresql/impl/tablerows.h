@@ -6,7 +6,7 @@
  *        @c Table description with its concrete @c Row set.
  */
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/experimental/ecs/postgresql/impl/row.h"
 #include "vigine/experimental/ecs/postgresql/impl/table.h"
 

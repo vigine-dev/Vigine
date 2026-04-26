@@ -7,7 +7,7 @@
  *        to its concrete C++ representation.
  */
 
-#include "vigine/base/info.h"
+#include "vigine/api/base/info.h"
 #include "vigine/experimental/ecs/postgresql/impl/columntype.h"
 
 #include <optional>

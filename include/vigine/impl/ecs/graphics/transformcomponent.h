@@ -5,7 +5,7 @@
  * @brief Position / rotation / scale carrier with optional billboarding.
  */
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

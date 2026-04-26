@@ -7,7 +7,7 @@
  *        to engine-side @c DataType values.
  */
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/experimental/ecs/postgresql/impl/columntype.h"
 
 #include <memory>

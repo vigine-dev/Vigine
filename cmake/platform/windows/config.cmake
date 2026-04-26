@@ -43,7 +43,7 @@ endfunction()
 #   - ECS graphics (Vulkan surface factory source) -- WIN32_KHR factory
 #     lives at src/impl/ecs/graphics/platform/win32surfacefactory.cpp
 #   - Event scheduler (OS-signal source) -- Win32 signal source lives at
-#     src/eventscheduler/iossignalsource_win.{h,cpp}
+#     src/impl/eventscheduler/iossignalsource_win.{h,cpp}
 function(vigine_platform_collect_sources
         headers_ecs_platform_var
         sources_ecs_platform_var
@@ -66,8 +66,8 @@ function(vigine_platform_collect_sources
     )
 
     list(APPEND _sources_eventscheduler
-        "${SRC_DIR}/eventscheduler/iossignalsource_win.h"
-        "${SRC_DIR}/eventscheduler/iossignalsource_win.cpp"
+        "${SRC_DIR}/impl/eventscheduler/iossignalsource_win.h"
+        "${SRC_DIR}/impl/eventscheduler/iossignalsource_win.cpp"
     )
 
     set(${headers_ecs_platform_var} "${_headers_ecs_platform}" PARENT_SCOPE)

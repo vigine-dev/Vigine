@@ -7,7 +7,7 @@
 
 #include "graphicshandles.h"
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 
 #include <cstdint>
 #include <memory>

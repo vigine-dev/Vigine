@@ -8,8 +8,8 @@
  *        default-null).
  */
 
-#include "vigine/base/macros.h"
-#include "vigine/base/name.h"
+#include "vigine/api/base/macros.h"
+#include "vigine/api/base/name.h"
 #include "vigine/experimental/ecs/postgresql/impl/columntype.h"
 
 #include <string>

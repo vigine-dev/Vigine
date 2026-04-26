@@ -39,11 +39,11 @@ endfunction()
 # Append Linux-specific source paths onto the four caller-named lists.
 # Each Linux source file targets one of the four lists by subsystem:
 #   - ECS platform (window component header / source) -- XCB window
-#     backend lives at src/platform/linux/xcbwindowbackend.{h,cpp}
+#     backend lives at src/impl/platform/linux/xcbwindowbackend.{h,cpp}
 #   - ECS graphics (Vulkan surface factory source) -- XCB surface
-#     factory lives at src/platform/linux/vulkan_surface_xcb.cpp
+#     factory lives at src/impl/platform/linux/vulkan_surface_xcb.cpp
 #   - Event scheduler (OS-signal source) -- POSIX signal source lives
-#     at src/platform/linux/iossignalsource_posix.{h,cpp}
+#     at src/impl/platform/linux/iossignalsource_posix.{h,cpp}
 function(vigine_platform_collect_sources
         headers_ecs_platform_var
         sources_ecs_platform_var
@@ -55,19 +55,19 @@ function(vigine_platform_collect_sources
     set(_sources_eventscheduler "${${sources_eventscheduler_var}}")
 
     list(APPEND _headers_ecs_platform
-        "${SRC_DIR}/platform/linux/xcbwindowbackend.h"
+        "${SRC_DIR}/impl/platform/linux/xcbwindowbackend.h"
     )
     list(APPEND _sources_ecs_platform
-        "${SRC_DIR}/platform/linux/xcbwindowbackend.cpp"
+        "${SRC_DIR}/impl/platform/linux/xcbwindowbackend.cpp"
     )
 
     list(APPEND _sources_ecs_graphics
-        "${SRC_DIR}/platform/linux/vulkan_surface_xcb.cpp"
+        "${SRC_DIR}/impl/platform/linux/vulkan_surface_xcb.cpp"
     )
 
     list(APPEND _sources_eventscheduler
-        "${SRC_DIR}/platform/linux/iossignalsource_posix.h"
-        "${SRC_DIR}/platform/linux/iossignalsource_posix.cpp"
+        "${SRC_DIR}/impl/platform/linux/iossignalsource_posix.h"
+        "${SRC_DIR}/impl/platform/linux/iossignalsource_posix.cpp"
     )
 
     set(${headers_ecs_platform_var} "${_headers_ecs_platform}" PARENT_SCOPE)

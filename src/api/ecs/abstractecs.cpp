@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "ecs/entityworld.h"
+#include "entityworld.h"
 #include "vigine/api/ecs/ecstypes.h"
 #include "vigine/api/ecs/iecs.h"
 #include "vigine/result.h"

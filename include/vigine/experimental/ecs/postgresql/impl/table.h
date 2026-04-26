@@ -7,7 +7,7 @@
  *        used when the engine builds DDL or validates a live schema.
  */
 
-#include "vigine/base/name.h"
+#include "vigine/api/base/name.h"
 #include "vigine/experimental/ecs/postgresql/impl/column.h"
 
 #include <string>

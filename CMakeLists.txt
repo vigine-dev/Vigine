@@ -175,7 +175,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/api/ecs/ientity.h
     ${INCLUDE_DIR}/vigine/api/ecs/isystem.h
     ${INCLUDE_DIR}/vigine/impl/ecs/entitymanager.h
-    ${INCLUDE_DIR}/vigine/base/constant.h
+    ${INCLUDE_DIR}/vigine/api/base/constant.h
     ${INCLUDE_DIR}/vigine/core/graph/nodeid.h
     ${INCLUDE_DIR}/vigine/core/graph/edgeid.h
     ${INCLUDE_DIR}/vigine/core/graph/traverse_mode.h
@@ -207,7 +207,7 @@ set(HEADER
     ${INCLUDE_DIR}/vigine/api/context/icontext.h
     ${INCLUDE_DIR}/vigine/api/ecs/ientitymanager.h
     ${INCLUDE_DIR}/vigine/api/ecs/componentkind.h
-    ${INCLUDE_DIR}/vigine/fsm/kind.h
+    ${INCLUDE_DIR}/vigine/api/statemachine/kind.h
     ${INCLUDE_DIR}/vigine/api/taskflow/kind.h
 )
 
@@ -291,7 +291,7 @@ set(SOURCES_ECS_GRAPHICS
 
 # Add source files
 set(HEADER_SERVICE
-    ${INCLUDE_DIR}/vigine/service/databaseservice.h
+    ${INCLUDE_DIR}/vigine/impl/service/databaseservice.h
     # Level-1 service wrapper (R.4.1) — public surface.
     ${INCLUDE_DIR}/vigine/api/service/serviceid.h
     ${INCLUDE_DIR}/vigine/api/service/dependencykind.h
@@ -302,14 +302,14 @@ set(HEADER_SERVICE
 )
 
 set(SOURCES_SERVICE
-    ${SRC_DIR}/service/databaseservice.cpp
+    ${SRC_DIR}/impl/service/databaseservice.cpp
     # Level-1 service wrapper (R.4.1) — internal registry + base impl.
-    ${SRC_DIR}/service/serviceregistry.h
-    ${SRC_DIR}/service/serviceregistry.cpp
+    ${SRC_DIR}/impl/service/serviceregistry.h
+    ${SRC_DIR}/impl/service/serviceregistry.cpp
     ${SRC_DIR}/api/service/abstractservice.cpp
-    ${SRC_DIR}/service/defaultservice.h
-    ${SRC_DIR}/service/defaultservice.cpp
-    ${SRC_DIR}/service/factory.cpp
+    ${SRC_DIR}/impl/service/service.h
+    ${SRC_DIR}/impl/service/service.cpp
+    ${SRC_DIR}/impl/service/factory.cpp
 )
 
 # Level-1 ECS wrapper (R.4.2) -- public surface.
@@ -323,11 +323,11 @@ set(HEADER_ECS_CORE
 
 # Level-1 ECS wrapper (R.4.2) -- internal entity world + base impl.
 set(SOURCES_ECS_CORE
-    ${SRC_DIR}/ecs/entityworld.h
-    ${SRC_DIR}/ecs/entityworld.cpp
+    ${SRC_DIR}/api/ecs/entityworld.h
+    ${SRC_DIR}/api/ecs/entityworld.cpp
     ${SRC_DIR}/api/ecs/abstractecs.cpp
-    ${SRC_DIR}/ecs/defaultecs.h
-    ${SRC_DIR}/ecs/defaultecs.cpp
+    ${SRC_DIR}/impl/ecs/ecs.h
+    ${SRC_DIR}/impl/ecs/ecs.cpp
     ${SRC_DIR}/impl/ecs/factory.cpp
 )
 
@@ -341,11 +341,11 @@ set(HEADER_STATEMACHINE_CORE
 
 # Level-1 state machine wrapper (R.4.3) -- internal state topology + base impl.
 set(SOURCES_STATEMACHINE_CORE
-    ${SRC_DIR}/statemachine/statetopology.h
-    ${SRC_DIR}/statemachine/statetopology.cpp
+    ${SRC_DIR}/api/statemachine/statetopology.h
+    ${SRC_DIR}/api/statemachine/statetopology.cpp
     ${SRC_DIR}/api/statemachine/abstractstatemachine.cpp
-    ${SRC_DIR}/statemachine/defaultstatemachine.h
-    ${SRC_DIR}/statemachine/defaultstatemachine.cpp
+    ${SRC_DIR}/impl/statemachine/statemachine.h
+    ${SRC_DIR}/impl/statemachine/statemachine.cpp
     ${SRC_DIR}/impl/statemachine/factory.cpp
 )
 
@@ -361,11 +361,11 @@ set(HEADER_TASKFLOW_CORE
 
 # Level-1 task flow wrapper (R.4.4) -- internal orchestrator + base impl.
 set(SOURCES_TASKFLOW_CORE
-    ${SRC_DIR}/taskflow/taskorchestrator.h
-    ${SRC_DIR}/taskflow/taskorchestrator.cpp
+    ${SRC_DIR}/api/taskflow/taskorchestrator.h
+    ${SRC_DIR}/api/taskflow/taskorchestrator.cpp
     ${SRC_DIR}/api/taskflow/abstracttaskflow.cpp
-    ${SRC_DIR}/taskflow/defaulttaskflow.h
-    ${SRC_DIR}/taskflow/defaulttaskflow.cpp
+    ${SRC_DIR}/impl/taskflow/taskflow.h
+    ${SRC_DIR}/impl/taskflow/taskflow.cpp
     ${SRC_DIR}/impl/taskflow/factory.cpp
 )
 
@@ -381,7 +381,7 @@ set(HEADER_CONTEXT_AGGREGATOR
 set(SOURCES_CONTEXT_AGGREGATOR
     ${SRC_DIR}/api/context/abstractcontext.cpp
     ${SRC_DIR}/impl/context/context.cpp
-    ${SRC_DIR}/context/factory.cpp
+    ${SRC_DIR}/impl/context/factory.cpp
 )
 
 # Messaging pyramid (#277) -- public messaging surface (api/messaging/),
@@ -452,27 +452,27 @@ set(SOURCES_MESSAGING
 )
 
 # Event-scheduler facade -- public surface. The concrete
-# DefaultEventScheduler type is NOT in the public tree; callers reach
+# EventScheduler type is NOT in the public tree; callers reach
 # the scheduler exclusively through `createEventScheduler` from
 # factory.h, which returns a `std::unique_ptr<IEventScheduler>`.
 set(HEADER_EVENTSCHEDULER
-    ${INCLUDE_DIR}/vigine/eventscheduler/ossignal.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/eventconfig.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/ieventhandle.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/itimersource.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/iossignalsource.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/ieventscheduler.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/abstracteventscheduler.h
-    ${INCLUDE_DIR}/vigine/eventscheduler/factory.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/ossignal.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/eventconfig.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/ieventhandle.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/itimersource.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/iossignalsource.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/ieventscheduler.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/abstracteventscheduler.h
+    ${INCLUDE_DIR}/vigine/api/eventscheduler/factory.h
 )
 
 # Event-scheduler facade -- internal concrete + platform.
 set(SOURCES_EVENTSCHEDULER
-    ${SRC_DIR}/eventscheduler/abstracteventscheduler.cpp
-    ${SRC_DIR}/eventscheduler/defaulteventscheduler.h
-    ${SRC_DIR}/eventscheduler/defaulteventscheduler.cpp
-    ${SRC_DIR}/eventscheduler/itimersource_default.h
-    ${SRC_DIR}/eventscheduler/itimersource_default.cpp
+    ${SRC_DIR}/api/eventscheduler/abstracteventscheduler.cpp
+    ${SRC_DIR}/impl/eventscheduler/eventscheduler.h
+    ${SRC_DIR}/impl/eventscheduler/eventscheduler.cpp
+    ${SRC_DIR}/impl/eventscheduler/itimersource_default.h
+    ${SRC_DIR}/impl/eventscheduler/itimersource_default.cpp
 )
 
 # Platform-specific OS-signal source (iossignalsource_*.{h,cpp,mm}) is
@@ -493,7 +493,7 @@ set(HEADER_TOPICBUS
 set(SOURCES_TOPICBUS
     ${SRC_DIR}/api/topicbus/abstracttopicbus.cpp
     ${SRC_DIR}/impl/topicbus/topicbus.cpp
-    ${SRC_DIR}/topicbus/factory.cpp
+    ${SRC_DIR}/impl/topicbus/factory.cpp
 )
 
 # Channel factory facade (R.3.3.1.4 / plan_18) -- public surface.
@@ -510,9 +510,9 @@ set(HEADER_CHANNELFACTORY
 set(SOURCES_CHANNELFACTORY
     ${SRC_DIR}/api/channelfactory/abstractchannelfactory.cpp
     ${SRC_DIR}/impl/channelfactory/channelfactory.cpp
-    ${SRC_DIR}/channelfactory/defaultchannel.h
-    ${SRC_DIR}/channelfactory/defaultchannel.cpp
-    ${SRC_DIR}/channelfactory/factory.cpp
+    ${SRC_DIR}/impl/channelfactory/channel.h
+    ${SRC_DIR}/impl/channelfactory/channel.cpp
+    ${SRC_DIR}/impl/channelfactory/factory.cpp
 )
 
 # Request-bus facade (R.3.3.2.1 / plan_19) -- public surface.
@@ -529,7 +529,7 @@ set(HEADER_REQUESTBUS
 set(SOURCES_REQUESTBUS
     ${SRC_DIR}/api/requestbus/abstractrequestbus.cpp
     ${SRC_DIR}/impl/requestbus/requestbus.cpp
-    ${SRC_DIR}/requestbus/factory.cpp
+    ${SRC_DIR}/impl/requestbus/factory.cpp
 )
 
 # Reactive-stream facade -- public surface. The `factory.h` entry
@@ -551,7 +551,7 @@ set(HEADER_REACTIVESTREAM
 set(SOURCES_REACTIVESTREAM
     ${SRC_DIR}/api/reactivestream/abstractreactivestream.cpp
     ${SRC_DIR}/impl/reactivestream/reactivestream.cpp
-    ${SRC_DIR}/reactivestream/factory.cpp
+    ${SRC_DIR}/impl/reactivestream/factory.cpp
 )
 
 # Actor-host facade (R.3.3.2.3 / plan_21) -- public surface.
@@ -569,7 +569,7 @@ set(HEADER_ACTORHOST
 set(SOURCES_ACTORHOST
     ${SRC_DIR}/api/actorhost/abstractactorhost.cpp
     ${SRC_DIR}/impl/actorhost/actorhost.cpp
-    ${SRC_DIR}/actorhost/factory.cpp
+    ${SRC_DIR}/impl/actorhost/factory.cpp
 )
 
 # Pipeline-builder facade (R.3.3.2.4 / plan_22) -- public surface.
@@ -586,7 +586,7 @@ set(HEADER_PIPELINEBUILDER
 set(SOURCES_PIPELINEBUILDER
     ${SRC_DIR}/api/pipelinebuilder/abstractpipelinebuilder.cpp
     ${SRC_DIR}/impl/pipelinebuilder/pipelinebuilder.cpp
-    ${SRC_DIR}/pipelinebuilder/factory.cpp
+    ${SRC_DIR}/impl/pipelinebuilder/factory.cpp
 )
 
 # Engine runtime + lifecycle (R.5.1 / plan_23) -- public surface.
@@ -602,7 +602,7 @@ set(HEADER_ENGINE
 set(SOURCES_ENGINE
     ${SRC_DIR}/api/engine/abstractengine.cpp
     ${SRC_DIR}/impl/engine/engine.cpp
-    ${SRC_DIR}/engine/factory.cpp
+    ${SRC_DIR}/impl/engine/factory.cpp
 )
 
 # Engine-token scaffolding -- pure interface (#220) + thin abstract
@@ -751,10 +751,10 @@ add_library(${PROJECT_NAME}
     ${SOURCES_ECS_GRAPHICS}
     ${HEADER_ECS_PLATFORM}
     ${SOURCES_ECS_PLATFORM}
-    include/vigine/base/name.h src/base/name.cpp
-    include/vigine/base/password.h src/base/password.cpp
-    include/vigine/base/macros.h
-    include/vigine/base/info.h
+    include/vigine/api/base/name.h src/api/base/name.cpp
+    include/vigine/api/base/password.h src/api/base/password.cpp
+    include/vigine/api/base/macros.h
+    include/vigine/api/base/info.h
 )
 
 # Apply the warning / strict-mode compile options to the vigine target.

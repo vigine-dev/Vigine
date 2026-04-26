@@ -7,7 +7,7 @@
 
 #include "vigine/api/ecs/platform/iwindoweventhandler.h"
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/api/ecs/abstractsystem.h"
 #include "vigine/result.h"
 

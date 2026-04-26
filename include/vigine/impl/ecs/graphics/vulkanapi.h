@@ -14,7 +14,7 @@
 
 #include "vigine/api/ecs/graphics/igraphicsbackend.h"
 
-#include "vigine/base/macros.h"
+#include "vigine/api/base/macros.h"
 #include "vigine/impl/ecs/graphics/textcomponent.h"
 
 #include <cstddef>
