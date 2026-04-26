@@ -17,6 +17,7 @@
 #include "vigine/api/messaging/busid.h"
 #include "vigine/api/messaging/imessagebus.h"
 #include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/payload/ipayloadregistry.h"
 #include "vigine/result.h"
 #include "vigine/api/statemachine/istatemachine.h"
 #include "vigine/api/statemachine/stateid.h"
@@ -119,6 +120,8 @@ class AbstractContext : public IContext
     void setSignalEmitter(std::unique_ptr<messaging::ISignalEmitter> signalEmitter) override;
 
     [[nodiscard]] engine::IEngine &engine() override;
+
+    [[nodiscard]] payload::IPayloadRegistry &payloadRegistry() override;
 
     /**
      * @brief Engine-internal hook the @ref vigine::engine::AbstractEngine
@@ -305,13 +308,34 @@ class AbstractContext : public IContext
     std::unique_ptr<IEntityManager> _entityManager;
 
     /**
+     * @brief Default-built payload-id registry.
+     *
+     * Constructed in the @ref AbstractContext ctor with the engine-
+     * bundled Control / System / SystemExt / Reserved ranges already
+     * registered under owner @c "vigine.core" (the registry's own
+     * factory does this). Declared BEFORE @ref _signalEmitter so the
+     * emitter's constructor can capture a reference to it; reverse
+     * member-destruction order then keeps the registry alive past the
+     * emitter's destructor. Cannot be replaced after construction —
+     * the engine's internal validation pipeline holds a long-lived
+     * reference into it.
+     */
+    std::unique_ptr<payload::IPayloadRegistry> _payloadRegistry;
+
+    /**
      * @brief Default-built signal emitter facade.
      *
      * Constructed in the @ref AbstractContext ctor as a concrete
      * @c SignalEmitter bound to the engine-owned thread manager and
-     * the shared-pool bus config. Replaceable via
+     * the shared-pool bus config; takes a non-owning reference to
+     * @ref _payloadRegistry so every @c emit / @c emitTo validates
+     * the payload's @ref payload::PayloadTypeId against the engine-
+     * wide registry before posting on the bus. Replaceable via
      * @ref setSignalEmitter; same null-handling contract as
-     * @ref _entityManager.
+     * @ref _entityManager. A replacement emitter is responsible for
+     * its own validation policy — the default registry is still
+     * available via @ref payloadRegistry but the replacement will
+     * not auto-consult it unless the caller wires that themselves.
      */
     std::unique_ptr<messaging::ISignalEmitter> _signalEmitter;
 

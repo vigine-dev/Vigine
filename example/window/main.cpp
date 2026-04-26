@@ -23,7 +23,6 @@
 #include <vigine/api/engine/engineconfig.h>
 #include <vigine/api/engine/factory.h>
 #include <vigine/api/engine/iengine.h>
-#include <vigine/api/messaging/payload/factory.h>
 #include <vigine/api/messaging/payload/ipayloadregistry.h>
 #include <vigine/api/messaging/payload/payloadtypeid.h>
 #include <vigine/api/statemachine/istatemachine.h>
@@ -149,14 +148,20 @@ int main()
         return 1;
     }
 
-    // Payload registry for the user-range payload ids used by the
-    // window input pipeline. Engine-bundled ranges (Control, System,
-    // SystemExt, Reserved) are pre-registered by the factory.
-    auto payloadRegistry = vigine::payload::createPayloadRegistry();
-    static_cast<void>(payloadRegistry->registerRange(
+    // Register the user-range payload ids the window input pipeline
+    // will publish. Engine-bundled ranges (Control, System, SystemExt,
+    // Reserved) are auto-registered by the context's default
+    // payload registry under owner "vigine.core" — application code
+    // only adds the user-range ids it owns. Every signalEmitter->emit
+    // through the engine context now validates the payload's
+    // PayloadTypeId against this registry; an unregistered id
+    // surfaces as an error Result instead of a silently-dropped
+    // message on the bus.
+    auto &payloadRegistry = context.payloadRegistry();
+    static_cast<void>(payloadRegistry.registerRange(
         kMouseButtonDownPayloadTypeId, kMouseButtonDownPayloadTypeId,
         "example-window.mouse"));
-    static_cast<void>(payloadRegistry->registerRange(
+    static_cast<void>(payloadRegistry.registerRange(
         kKeyDownPayloadTypeId, kKeyDownPayloadTypeId,
         "example-window.key"));
 
