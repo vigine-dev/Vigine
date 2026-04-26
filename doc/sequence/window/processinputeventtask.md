@@ -19,7 +19,7 @@ Note over T,M: Signal delivery path for mouse
 Run->>Emitter: emit(make_unique<MouseButtonDownPayload>(button,x,y))
 Emitter->>Bus: post(SignalMessage with M)
 Bus->>T: onMessage(SignalMessage)
-alt payload typeId != kMouseButtonDownPayloadTypeId
+alt payload typeId != idOf(MouseButtonDownPayload::typeName())
   T-->>Bus: DispatchResult::Pass
 else matches mouse filter
   T->>T: downcast payload to MouseButtonDownPayload
@@ -34,7 +34,7 @@ Note over T,K: Signal delivery path for keyboard
 Run->>Emitter: emit(make_unique<KeyDownPayload>(event))
 Emitter->>Bus: post(SignalMessage with K)
 Bus->>T: onMessage(SignalMessage)
-alt payload typeId != kKeyDownPayloadTypeId
+alt payload typeId != idOf(KeyDownPayload::typeName())
   T-->>Bus: DispatchResult::Pass
 else matches key filter
   T->>T: downcast payload to KeyDownPayload

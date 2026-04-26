@@ -13,14 +13,14 @@ participant Proc as ProcessInputEventTask
 participant Render as RenderSystem/VulkanAPI
 
 Main->>TF: setSignalEmitter(emitter)
-Main->>TF: signal(Run, Proc, kMouseButtonDownPayloadTypeId)
-TF->>Emitter: subscribeSignal({Signal, kMouseButtonDownPayloadTypeId}, Proc)
+Main->>TF: signal(Run, Proc, idOf(MouseButtonDownPayload::typeName()))
+TF->>Emitter: subscribeSignal({Signal, idOf(MouseButtonDownPayload::typeName())}, Proc)
 Emitter->>Bus: subscribe(filter, Proc)
 Bus-->>Emitter: ISubscriptionToken
 Emitter-->>TF: ISubscriptionToken
 
-Main->>TF: signal(Run, Proc, kKeyDownPayloadTypeId)
-TF->>Emitter: subscribeSignal({Signal, kKeyDownPayloadTypeId}, Proc)
+Main->>TF: signal(Run, Proc, idOf(KeyDownPayload::typeName()))
+TF->>Emitter: subscribeSignal({Signal, idOf(KeyDownPayload::typeName())}, Proc)
 Emitter->>Bus: subscribe(filter, Proc)
 Bus-->>Emitter: ISubscriptionToken
 Emitter-->>TF: ISubscriptionToken

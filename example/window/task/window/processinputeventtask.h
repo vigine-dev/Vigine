@@ -20,11 +20,13 @@ class IMessage;
  *        @ref vigine::messaging::ISubscriber.
  *
  * The task implements @ref vigine::messaging::ISubscriber so an
- * @ref vigine::messaging::ISignalEmitter can register it against
- * @ref kMouseButtonDownPayloadTypeId and @ref kKeyDownPayloadTypeId
- * directly. Subscription tokens are owned here through @ref
- * takeSubscriptionToken so the caller that performs the registrations
- * (for example @c main) does not need to keep a parallel vector alive.
+ * @ref vigine::messaging::ISignalEmitter can register it against the
+ * @c PayloadTypeId allocated for @ref MouseButtonDownPayload and
+ * @ref KeyDownPayload (resolved through @ref example::payloads::idOf
+ * at registration time). Subscription tokens are owned here through
+ * @ref takeSubscriptionToken so the caller that performs the
+ * registrations (for example @c main) does not need to keep a
+ * parallel vector alive.
  *
  * Destruction-order rule: @c _tokens is declared LAST among the data
  * members so that the reverse-declaration-order destruction contract
@@ -51,9 +53,10 @@ class ProcessInputEventTask final : public vigine::AbstractTask,
      * @brief Delivers an incoming message from the bus to the matching
      *        private helper based on @ref vigine::messaging::IMessage::payloadTypeId.
      *
-     * Dispatches on payload type id:
-     *   - @ref kMouseButtonDownPayloadTypeId -> @c onMouseButtonDown.
-     *   - @ref kKeyDownPayloadTypeId          -> @c onKeyDown.
+     * Dispatches on payload type id (each id resolved per-class
+     * through @ref example::payloads::idOf):
+     *   - @ref MouseButtonDownPayload -> @c onMouseButtonDown.
+     *   - @ref KeyDownPayload         -> @c onKeyDown.
      *
      * Both helper paths downcast the payload with @c dynamic_cast and
      * report @c DispatchResult::Handled on a successful match.
