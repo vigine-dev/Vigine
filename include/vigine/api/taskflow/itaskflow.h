@@ -142,45 +142,33 @@ class ITaskFlow
 
     /**
      * @brief Registers a transition: when @p source completes with
-     *        @p code the flow advances to @p next.
+     *        @p code the flow advances to @p next under @p mode.
      *
-     * Shorthand for @ref route with @ref RouteMode::FirstMatch —
-     * the UD-3 default. Multiple calls with the same
-     * @c (source, code) pair stack up in registration order; the
-     * default @c FirstMatch mode routes to the first registered
-     * target and ignores the rest.
-     *
-     * Both @p source and @p next must have been registered via
-     * @ref addTask beforehand. Reports @ref Result::Code::Error when
-     * either id is stale or when the source id is the same as the
-     * next id (a task cannot transition directly to itself through
-     * a zero-length transition — callers that need a loop wire it
-     * through an explicit intermediate task).
-     */
-    virtual Result route(TaskId source, ResultCode code, TaskId next) = 0;
-
-    /**
-     * @brief Registers a transition with an explicit routing mode.
-     *
-     * Use this overload to opt into @ref RouteMode::FanOut (every
+     * @p code defaults to @ref ResultCode::Success and @p mode to
+     * @ref RouteMode::FirstMatch — the UD-3 defaults — so the common
+     * "Success leads to next" wiring reads as a two-argument call.
+     * Callers that need to opt into @ref RouteMode::FanOut (every
      * target registered against the pair runs independently) or
      * @ref RouteMode::Chain (registered targets run sequentially as
-     * a pipeline). Multiple registrations with the same
-     * @c (source, code) pair must agree on the @ref RouteMode; the
-     * wrapper reports @ref Result::Code::Error on a conflicting
-     * re-registration so the routing contract stays unambiguous.
+     * a pipeline) supply the @p mode argument explicitly. Multiple
+     * registrations with the same @c (source, code) pair must agree
+     * on the @ref RouteMode; the wrapper reports
+     * @ref Result::Code::Error on a conflicting re-registration so
+     * the routing contract stays unambiguous.
      *
      * Both @p source and @p next must have been registered via
      * @ref addTask beforehand. Reports @ref Result::Code::Error when
      * either id is stale, when the source id is the same as the next
-     * id, or when the re-registration conflicts with the already-
-     * stored @ref RouteMode for that pair.
+     * id (a task cannot transition directly to itself through a
+     * zero-length transition — callers that need a loop wire it
+     * through an explicit intermediate task), or when the
+     * re-registration conflicts with the already-stored
+     * @ref RouteMode for that pair.
      */
-    virtual Result route(
-        TaskId    source,
-        ResultCode code,
-        TaskId    next,
-        RouteMode mode) = 0;
+    virtual Result route(TaskId     source,
+                         TaskId     next,
+                         ResultCode code = ResultCode::Success,
+                         RouteMode  mode = RouteMode::FirstMatch) = 0;
 
     // ------ Runnable attachment ------
 

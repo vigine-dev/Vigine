@@ -90,10 +90,10 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildInitFlow(
     static_cast<void>(flow->attachTaskRun(toWorkId, std::move(toWork)));
     static_cast<void>(flow->attachTaskRun(toErrorId, std::move(toError)));
 
-    static_cast<void>(flow->route(initBdId,      ResultCode::Success, checkSchemaId));
-    static_cast<void>(flow->route(initBdId,      ResultCode::Error,   toErrorId));
-    static_cast<void>(flow->route(checkSchemaId, ResultCode::Success, toWorkId));
-    static_cast<void>(flow->route(checkSchemaId, ResultCode::Error,   toErrorId));
+    static_cast<void>(flow->route(initBdId,      checkSchemaId));
+    static_cast<void>(flow->route(initBdId,      toErrorId, ResultCode::Error));
+    static_cast<void>(flow->route(checkSchemaId, toWorkId));
+    static_cast<void>(flow->route(checkSchemaId, toErrorId, ResultCode::Error));
 
     static_cast<void>(flow->setRoot(initBdId));
     return flow;
@@ -131,12 +131,12 @@ std::unique_ptr<vigine::taskflow::ITaskFlow> buildWorkFlow(
     static_cast<void>(flow->attachTaskRun(closeId,  std::move(toClose)));
     static_cast<void>(flow->attachTaskRun(errorId,  std::move(toError)));
 
-    static_cast<void>(flow->route(addId,    ResultCode::Success, readId));
-    static_cast<void>(flow->route(addId,    ResultCode::Error,   errorId));
-    static_cast<void>(flow->route(readId,   ResultCode::Success, removeId));
-    static_cast<void>(flow->route(readId,   ResultCode::Error,   errorId));
-    static_cast<void>(flow->route(removeId, ResultCode::Success, closeId));
-    static_cast<void>(flow->route(removeId, ResultCode::Error,   errorId));
+    static_cast<void>(flow->route(addId,    readId));
+    static_cast<void>(flow->route(addId,    errorId,  ResultCode::Error));
+    static_cast<void>(flow->route(readId,   removeId));
+    static_cast<void>(flow->route(readId,   errorId,  ResultCode::Error));
+    static_cast<void>(flow->route(removeId, closeId));
+    static_cast<void>(flow->route(removeId, errorId,  ResultCode::Error));
 
     static_cast<void>(flow->setRoot(addId));
     return flow;

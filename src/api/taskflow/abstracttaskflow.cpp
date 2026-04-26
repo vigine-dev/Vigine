@@ -82,16 +82,7 @@ bool AbstractTaskFlow::hasTask(TaskId task) const noexcept
 // enforces the "one @ref RouteMode per pair" invariant.
 // ---------------------------------------------------------------------------
 
-Result AbstractTaskFlow::route(TaskId source, ResultCode code, TaskId next)
-{
-    return route(source, code, next, RouteMode::FirstMatch);
-}
-
-Result AbstractTaskFlow::route(
-    TaskId    source,
-    ResultCode code,
-    TaskId    next,
-    RouteMode mode)
+Result AbstractTaskFlow::route(TaskId source, TaskId next, ResultCode code, RouteMode mode)
 {
     return _orchestrator->addTransition(source, code, next, mode);
 }
