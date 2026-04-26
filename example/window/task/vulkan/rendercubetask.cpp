@@ -13,8 +13,8 @@ vigine::Result RenderCubeTask::run()
         // The bound state has been invalidated since the last tick. Stop
         // further work and return an error so the FSM transition table
         // can route the WorkState onto its error follow-on -- the
-        // engine-token contract guarantees @ref api()->service /
-        // @ref api()->ecs return @ref vigine::engine::Result::Code::Expired
+        // engine-token contract guarantees @ref apiToken()->service /
+        // @ref apiToken()->ecs return @ref vigine::engine::Result::Code::Expired
         // here too (note: that is vigine::engine::Result<T>::Code, distinct
         // from the vigine::Result::Code returned by run()), but the
         // explicit short-circuit makes the intent obvious.
@@ -26,7 +26,7 @@ vigine::Result RenderCubeTask::run()
 
     if (!_expirationSubscription)
     {
-        if (auto *token = api())
+        if (auto *token = apiToken())
         {
             _expirationSubscription =
                 token->subscribeExpiration([this]() {

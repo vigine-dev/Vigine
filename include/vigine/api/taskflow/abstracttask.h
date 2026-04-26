@@ -23,13 +23,13 @@ namespace vigine
  * @ref AbstractTask wires the task-side half of the
  * @ref vigine::engine::IEngineToken contract documented in
  * @c architecture.md § R-StateScope: it stores the non-owning token
- * pointer bound by the engine via @ref setApi and exposes it through
- * @ref api. Concrete tasks override @ref run and reach engine
+ * pointer bound by the engine via @ref setApiToken and exposes it through
+ * @ref apiToken. Concrete tasks override @ref run and reach engine
  * subsystems exclusively through the bound token returned by
- * @ref api.
+ * @ref apiToken.
  *
  * Strict encapsulation: the @c _api token pointer is @c private. The
- * @ref setApi and @ref api overrides are marked @c final so concrete
+ * @ref setApiToken and @ref apiToken overrides are marked @c final so concrete
  * tasks cannot bypass the binding contract.
  */
 class AbstractTask : public ITask
@@ -37,9 +37,9 @@ class AbstractTask : public ITask
   public:
     ~AbstractTask() override;
 
-    void setApi(engine::IEngineToken *api) noexcept override final;
+    void setApiToken(engine::IEngineToken *api) noexcept override final;
 
-    [[nodiscard]] engine::IEngineToken *api() noexcept override final;
+    [[nodiscard]] engine::IEngineToken *apiToken() noexcept override final;
 
   protected:
     AbstractTask();
@@ -54,7 +54,7 @@ class AbstractTask : public ITask
      * task flow (or the state machine that issued the token) keeps
      * the concrete object alive while it is in scope.
      */
-    engine::IEngineToken *_api{nullptr};
+    engine::IEngineToken *_apiToken{nullptr};
 };
 
 } // namespace vigine

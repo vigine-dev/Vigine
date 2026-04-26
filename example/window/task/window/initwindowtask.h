@@ -27,7 +27,7 @@ class PlatformService;
  * Constructed before @c IEngine::run with the legacy @c EntityManager
  * pointer and the @ref vigine::service::ServiceId stamped for the
  * platform service at registration time. @ref run resolves the
- * platform service through @ref api()->service so the lookup honours
+ * platform service through @ref apiToken()->service so the lookup honours
  * the engine-token gate; on a token-expired return path the task
  * surfaces the error to the FSM transition table without touching the
  * service.

@@ -168,7 +168,7 @@ Result AbstractEngine::run()
     //   tick by calling runCurrentTask(). That call asks IContext for
     //   a fresh engine token (when a context has been wired into the
     //   flow via TaskFlow::setContext), binds it on the task via
-    //   setApi, runs the task once, clears the binding, and lets the
+    //   setApiToken, runs the task once, clears the binding, and lets the
     //   token go out of scope so any subscribeExpiration callbacks
     //   that fired during run() can finish their bookkeeping. When
     //   the lookup misses (no TaskFlow registered for the current
@@ -244,8 +244,8 @@ Result AbstractEngine::run()
                 boundFlow->setActiveState(currentState);
 
                 /*
-                 * runCurrentTask handles the per-task setApi /
-                 * setApi(nullptr) lifecycle on its own through its
+                 * runCurrentTask handles the per-task setApiToken /
+                 * setApiToken(nullptr) lifecycle on its own through its
                  * RAII guard; the engine just tells it to advance
                  * once. Any FSM transition requested by the task
                  * during run() lands on the FSM's request queue and

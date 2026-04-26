@@ -7,14 +7,14 @@ AbstractTask::AbstractTask() = default;
 
 AbstractTask::~AbstractTask() = default;
 
-void AbstractTask::setApi(engine::IEngineToken *api) noexcept
+void AbstractTask::setApiToken(engine::IEngineToken *apiToken) noexcept
 {
-    _api = api;
+    _apiToken = apiToken;
 }
 
-engine::IEngineToken *AbstractTask::api() noexcept
+engine::IEngineToken *AbstractTask::apiToken() noexcept
 {
-    return _api;
+    return _apiToken;
 }
 
 } // namespace vigine

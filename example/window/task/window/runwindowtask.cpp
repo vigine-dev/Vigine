@@ -108,7 +108,7 @@ void RunWindowTask::setEngine(vigine::engine::IEngine *engine) noexcept
 
 bool RunWindowTask::resolveServices()
 {
-    auto *token = api();
+    auto *token = apiToken();
     if (!token)
         return false;
 
@@ -164,7 +164,7 @@ vigine::Result RunWindowTask::run()
     // unwinds and run() returns.
     if (!_expirationSubscription)
     {
-        if (auto *token = api())
+        if (auto *token = apiToken())
         {
             _expirationSubscription = token->subscribeExpiration(
                 [this]() { _shutdownRequested.store(true, std::memory_order_release); });

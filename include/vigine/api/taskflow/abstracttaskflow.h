@@ -242,7 +242,7 @@ class AbstractTaskFlow : public ITaskFlow
      * Installed by the @ref vigine::engine::AbstractEngine pump via
      * @ref setContext before each tick of the bound flow. @c nullptr until
      * the first @ref setContext call lands; in that case @ref runCurrentTask
-     * falls back to the no-token shape (the api() pointer the task observes
+     * falls back to the no-token shape (the apiToken() pointer the task observes
      * is @c nullptr).
      */
     vigine::IContext *_context{nullptr};
@@ -271,10 +271,10 @@ class AbstractTaskFlow : public ITaskFlow
      * "FSM has transitioned out of my state".
      *
      * @ref runCurrentTask reads the raw pointer through @c _activeToken.get()
-     * and binds it on the runnable through @ref vigine::ITask::setApi
+     * and binds it on the runnable through @ref vigine::ITask::setApiToken
      * for the duration of @c run(); the binding is cleared back to
      * @c nullptr by an RAII guard so a throwing @c run still leaves the
-     * task with a null api() pointer once the call returns.
+     * task with a null apiToken() pointer once the call returns.
      */
     std::unique_ptr<vigine::engine::IEngineToken> _activeToken;
 };

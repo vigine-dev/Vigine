@@ -27,7 +27,7 @@ vigine::Result LoadTexturesTask::run()
     if (!_entityManager)
         return vigine::Result(vigine::Result::Code::Error, "EntityManager is unavailable");
 
-    auto *token = api();
+    auto *token = apiToken();
     if (!token)
         return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 

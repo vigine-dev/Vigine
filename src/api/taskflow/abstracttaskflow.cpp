@@ -96,7 +96,7 @@ Result AbstractTaskFlow::onResult(
 // ITaskFlow: runnable attachment. The runnable registry is a small
 // per-task map populated by @ref attachTaskRun; @ref runCurrentTask
 // looks the runnable for @ref _current up, executes it through the
-// R-StateScope binding shape (setApi -> run -> setApi(nullptr) under an
+// R-StateScope binding shape (setApiToken -> run -> setApiToken(nullptr) under an
 // RAII guard), and advances @c _current through the transition edge
 // matching the runnable's reported outcome.
 // ---------------------------------------------------------------------------
@@ -179,11 +179,11 @@ void AbstractTaskFlow::runCurrentTask()
     /*
      * Execute the runnable through the R-StateScope binding shape.
      * Concrete tasks derive from @ref vigine::AbstractTask which makes
-     * @c setApi / @c api final and stores the bound token; the flow
+     * @c setApiToken / @c api final and stores the bound token; the flow
      * binds the long-lived per-state token onto the runnable through
-     * @c setApi before @c run and clears the binding back to nullptr
+     * @c setApiToken before @c run and clears the binding back to nullptr
      * through an RAII guard so a throwing @c run still leaves the task
-     * with a null api() once the call returns.
+     * with a null apiToken() once the call returns.
      *
      * Per-state token lifetime. The token bound on every tick is the
      * one stored in @ref _activeToken — minted in @ref setActiveState
@@ -199,7 +199,7 @@ void AbstractTaskFlow::runCurrentTask()
      * No-context / no-state fallback. When @ref setContext has never
      * been called or @ref setActiveState has not been driven, the
      * @ref _activeToken stays null. @ref runCurrentTask then binds
-     * @c nullptr onto the runnable and tasks observe api() == nullptr
+     * @c nullptr onto the runnable and tasks observe apiToken() == nullptr
      * inside @c run(). Tests that drive the flow directly without the
      * engine pump rely on this shape.
      */
@@ -211,7 +211,7 @@ void AbstractTaskFlow::runCurrentTask()
         {
             if (task != nullptr)
             {
-                task->setApi(nullptr);
+                task->setApiToken(nullptr);
             }
         }
         ApiBindingGuard(const ApiBindingGuard &)            = delete;
@@ -222,12 +222,12 @@ void AbstractTaskFlow::runCurrentTask()
 
     Result outcome;
     {
-        runnable->setApi(_activeToken.get());
+        runnable->setApiToken(_activeToken.get());
         [[maybe_unused]] ApiBindingGuard guard(runnable);
         outcome = runnable->run();
     }
     /*
-     * On scope exit ApiBindingGuard fires setApi(nullptr); the
+     * On scope exit ApiBindingGuard fires setApiToken(nullptr); the
      * per-state @ref _activeToken stays alive for subsequent ticks
      * until the next @ref setActiveState call drops it.
      */
@@ -253,7 +253,7 @@ void AbstractTaskFlow::setContext(vigine::IContext *context) noexcept
      * AbstractEngine::run. A nullptr argument detaches the binding so
      * subsequent setActiveState calls fall back to the no-token shape —
      * useful for tests that drive the flow directly bypassing the
-     * engine pump and that want to observe api() == nullptr inside run().
+     * engine pump and that want to observe apiToken() == nullptr inside run().
      */
     _context = context;
 }
@@ -269,7 +269,7 @@ void AbstractTaskFlow::setActiveState(vigine::statemachine::StateId state) noexc
      * "old state's token expires precisely on transition out" contract.
      * Then mint a fresh token bound to the new state when a context is
      * wired; without one we leave _activeToken null and tasks observe
-     * api() == nullptr until the engine pump installs a context.
+     * apiToken() == nullptr until the engine pump installs a context.
      */
     if (_activeState == state)
     {

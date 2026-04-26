@@ -42,13 +42,13 @@ class IEngine;
  * The task is constructed before @c IEngine::run with non-owning handles
  * to the legacy @c EntityManager and to the platform / graphics service
  * @ref vigine::service::ServiceId values stamped at registration time.
- * Each tick the task resolves the services through @ref api()->service
+ * Each tick the task resolves the services through @ref apiToken()->service
  * (the gated state-scoped accessor on @ref vigine::engine::IEngineToken),
  * shows the platform window, and pumps the per-frame render callback
  * until the window closes.
  *
  * Token-expiration cooperation: on entry @ref run subscribes a one-shot
- * callback through @ref api()->subscribeExpiration. When the FSM
+ * callback through @ref apiToken()->subscribeExpiration. When the FSM
  * transitions away from @c InitState the callback flips
  * @ref _shutdownRequested; the per-frame callback observes the flag,
  * stops issuing new render commands, and asks the platform service to

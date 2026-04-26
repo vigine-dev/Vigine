@@ -228,7 +228,7 @@ class ITaskFlow
      *      alone.
      *
      * The engine wires a state-scoped @c IEngineToken into the
-     * runnable through @ref vigine::ITask::setApi before invoking
+     * runnable through @ref vigine::ITask::setApiToken before invoking
      * @c run and clears the binding through an RAII guard so a
      * throwing @c run still leaves the task with a null token; that
      * sequencing is required by the R-StateScope contract documented
@@ -262,7 +262,7 @@ class ITaskFlow
      *        to mint the per-tick @ref vigine::engine::IEngineToken.
      *
      * The flow stores the context as a non-owning back-pointer so the
-     * R-StateScope binding shape (mint -> setApi -> run -> setApi(nullptr))
+     * R-StateScope binding shape (mint -> setApiToken -> run -> setApiToken(nullptr))
      * inside @ref runCurrentTask reaches the engine-token factory. The
      * @ref vigine::engine::AbstractEngine pump installs this back-pointer
      * once per tick on the bound flow before driving it; the assignment
@@ -278,7 +278,7 @@ class ITaskFlow
      *
      * The flow uses @p state to mint a per-state @ref vigine::engine::IEngineToken
      * via @ref vigine::IContext::makeEngineToken. The token is the one
-     * @ref runCurrentTask binds onto each runnable through @ref vigine::ITask::setApi.
+     * @ref runCurrentTask binds onto each runnable through @ref vigine::ITask::setApiToken.
      *
      * Calling @ref setActiveState with a state that differs from the
      * previously stored one drops the existing token (which fires the
