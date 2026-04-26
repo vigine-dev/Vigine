@@ -79,6 +79,7 @@ vigine::Result SetupTextTask::run()
 
     _entityManager->addAlias(textEntity, "TextEntity");
 
+    renderSystem->createComponents(textEntity);
     renderSystem->bindEntity(textEntity);
 
     auto *renderComponent = graphicsService->renderComponent();

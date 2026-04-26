@@ -52,6 +52,7 @@ vigine::Result SetupHelperGeometryTask::run()
 
     _entityManager->addAlias(pyramidEntity, "PyramidEntity");
 
+    renderSystem->createComponents(pyramidEntity);
     renderSystem->bindEntity(pyramidEntity);
     auto *pyramidRC = graphicsService->renderComponent();
     if (!pyramidRC)
@@ -84,6 +85,7 @@ vigine::Result SetupHelperGeometryTask::run()
 
     _entityManager->addAlias(gridEntity, "GridEntity");
 
+    renderSystem->createComponents(gridEntity);
     renderSystem->bindEntity(gridEntity);
     auto *gridRC = graphicsService->renderComponent();
     if (!gridRC)
@@ -116,6 +118,7 @@ vigine::Result SetupHelperGeometryTask::run()
 
     _entityManager->addAlias(sunEntity, "SunEntity");
 
+    renderSystem->createComponents(sunEntity);
     renderSystem->bindEntity(sunEntity);
     auto *sunRC = graphicsService->renderComponent();
     if (!sunRC)

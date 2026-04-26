@@ -100,6 +100,7 @@ vigine::Result SetupTextEditTask::run()
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditBgEntity");
 
         _entityManager->addAlias(bgEntity, "TextEditBgEntity");
+        renderSystem->createComponents(bgEntity);
         renderSystem->bindEntity(bgEntity);
 
         auto *rc = graphicsService->renderComponent();
@@ -138,6 +139,7 @@ vigine::Result SetupTextEditTask::run()
                                   "Failed to create TextEditScrollbarTrackEntity");
 
         _entityManager->addAlias(trackEntity, "TextEditScrollbarTrackEntity");
+        renderSystem->createComponents(trackEntity);
         renderSystem->bindEntity(trackEntity);
 
         auto *rc = graphicsService->renderComponent();
@@ -169,6 +171,7 @@ vigine::Result SetupTextEditTask::run()
                                   "Failed to create TextEditScrollbarThumbEntity");
 
         _entityManager->addAlias(thumbEntity, "TextEditScrollbarThumbEntity");
+        renderSystem->createComponents(thumbEntity);
         renderSystem->bindEntity(thumbEntity);
 
         rc = graphicsService->renderComponent();
@@ -202,6 +205,7 @@ vigine::Result SetupTextEditTask::run()
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditEntity");
 
         _entityManager->addAlias(textEntity, "TextEditEntity");
+        renderSystem->createComponents(textEntity);
         renderSystem->bindEntity(textEntity);
 
         auto *rc = graphicsService->renderComponent();
@@ -285,6 +289,7 @@ vigine::Result SetupTextEditTask::run()
                                       "Failed to create focus frame entity");
 
             _entityManager->addAlias(e, alias);
+            renderSystem->createComponents(e);
             renderSystem->bindEntity(e);
 
             auto *rc = graphicsService->renderComponent();
