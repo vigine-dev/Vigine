@@ -5,10 +5,10 @@
 
 #include "windoweventpayload.h"
 
-#include <vigine/abstracttask.h>
-#include <vigine/messaging/isubscriber.h>
-#include <vigine/messaging/isubscriptiontoken.h>
-#include <vigine/messaging/routemode.h>
+#include <vigine/api/taskflow/abstracttask.h>
+#include <vigine/api/messaging/isubscriber.h>
+#include <vigine/api/messaging/isubscriptiontoken.h>
+#include <vigine/api/messaging/routemode.h>
 
 namespace vigine::messaging
 {
@@ -20,11 +20,13 @@ class IMessage;
  *        @ref vigine::messaging::ISubscriber.
  *
  * The task implements @ref vigine::messaging::ISubscriber so an
- * @ref vigine::signalemitter::ISignalEmitter can register it against
- * @ref kMouseButtonDownPayloadTypeId and @ref kKeyDownPayloadTypeId
- * directly. Subscription tokens are owned here through @ref
- * takeSubscriptionToken so the caller that performs the registrations
- * (for example @c main) does not need to keep a parallel vector alive.
+ * @ref vigine::messaging::ISignalEmitter can register it against the
+ * @c PayloadTypeId allocated for @ref MouseButtonDownPayload and
+ * @ref KeyDownPayload (resolved through @ref example::payloads::idOf
+ * at registration time). Subscription tokens are owned here through
+ * @ref takeSubscriptionToken so the caller that performs the
+ * registrations (for example @c main) does not need to keep a
+ * parallel vector alive.
  *
  * Destruction-order rule: @c _tokens is declared LAST among the data
  * members so that the reverse-declaration-order destruction contract
@@ -34,7 +36,7 @@ class IMessage;
  * future member is added after @c _tokens, the explicit clear still runs
  * first and drains any in-flight @c onMessage before other fields go away.
  *
- * @c execute remains a no-op returning @c Success; the task participates
+ * @c run remains a no-op returning @c Success; the task participates
  * in the flow only to own its subscription tokens and serve as a
  * subscriber target.
  */
@@ -45,15 +47,16 @@ class ProcessInputEventTask final : public vigine::AbstractTask,
     ProcessInputEventTask();
     ~ProcessInputEventTask() override;
 
-    [[nodiscard]] vigine::Result execute() override;
+    [[nodiscard]] vigine::Result run() override;
 
     /**
      * @brief Delivers an incoming message from the bus to the matching
      *        private helper based on @ref vigine::messaging::IMessage::payloadTypeId.
      *
-     * Dispatches on payload type id:
-     *   - @ref kMouseButtonDownPayloadTypeId -> @c onMouseButtonDown.
-     *   - @ref kKeyDownPayloadTypeId          -> @c onKeyDown.
+     * Dispatches on payload type id (each id resolved per-class
+     * through @ref example::payloads::idOf):
+     *   - @ref MouseButtonDownPayload -> @c onMouseButtonDown.
+     *   - @ref KeyDownPayload         -> @c onKeyDown.
      *
      * Both helper paths downcast the payload with @c dynamic_cast and
      * report @c DispatchResult::Handled on a successful match.
@@ -74,7 +77,7 @@ class ProcessInputEventTask final : public vigine::AbstractTask,
      * other handler state is torn down.
      *
      * A null token is silently ignored so callers can forward the raw
-     * result of @ref vigine::signalemitter::ISignalEmitter::subscribeSignal
+     * result of @ref vigine::messaging::ISignalEmitter::subscribeSignal
      * without a pre-check.
      */
     void takeSubscriptionToken(

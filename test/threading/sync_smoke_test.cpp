@@ -14,13 +14,13 @@
 // ---------------------------------------------------------------------------
 
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ibarrier.h"
-#include "vigine/threading/imessagechannel.h"
-#include "vigine/threading/imutex.h"
-#include "vigine/threading/isemaphore.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ibarrier.h"
+#include "vigine/core/threading/imessagechannel.h"
+#include "vigine/core/threading/imutex.h"
+#include "vigine/core/threading/isemaphore.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -30,14 +30,14 @@
 #include <thread>
 
 using vigine::Result;
-using vigine::threading::createThreadManager;
-using vigine::threading::IBarrier;
-using vigine::threading::IMessageChannel;
-using vigine::threading::IMutex;
-using vigine::threading::ISemaphore;
-using vigine::threading::IThreadManager;
-using vigine::threading::Message;
-using vigine::threading::ThreadManagerConfig;
+using vigine::core::threading::createThreadManager;
+using vigine::core::threading::IBarrier;
+using vigine::core::threading::IMessageChannel;
+using vigine::core::threading::IMutex;
+using vigine::core::threading::ISemaphore;
+using vigine::core::threading::IThreadManager;
+using vigine::core::threading::Message;
+using vigine::core::threading::ThreadManagerConfig;
 
 namespace
 {

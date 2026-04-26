@@ -1,19 +1,19 @@
-#include "vigine/eventscheduler/eventconfig.h"
-#include "vigine/eventscheduler/factory.h"
-#include "vigine/eventscheduler/ieventhandle.h"
-#include "vigine/eventscheduler/ieventscheduler.h"
-#include "vigine/eventscheduler/iossignalsource.h"
-#include "vigine/eventscheduler/itimersource.h"
-#include "vigine/eventscheduler/ossignal.h"
-#include "vigine/messaging/abstractmessagetarget.h"
-#include "vigine/messaging/iconnectiontoken.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/messaging/targetkind.h"
+#include "vigine/api/eventscheduler/eventconfig.h"
+#include "vigine/api/eventscheduler/factory.h"
+#include "vigine/api/eventscheduler/ieventhandle.h"
+#include "vigine/api/eventscheduler/ieventscheduler.h"
+#include "vigine/api/eventscheduler/iossignalsource.h"
+#include "vigine/api/eventscheduler/itimersource.h"
+#include "vigine/api/eventscheduler/ossignal.h"
+#include "vigine/api/messaging/abstractmessagetarget.h"
+#include "vigine/api/messaging/iconnectiontoken.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/targetkind.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -176,11 +176,11 @@ class CountingTarget final : public vigine::messaging::AbstractMessageTarget
 };
 
 // Helper: create a thread manager for tests.
-std::unique_ptr<vigine::threading::IThreadManager> makeThreadManager()
+std::unique_ptr<vigine::core::threading::IThreadManager> makeThreadManager()
 {
-    vigine::threading::ThreadManagerConfig cfg;
+    vigine::core::threading::ThreadManagerConfig cfg;
     cfg.poolSize = 1;
-    return vigine::threading::createThreadManager(cfg);
+    return vigine::core::threading::createThreadManager(cfg);
 }
 
 // ---------------------------------------------------------------------------

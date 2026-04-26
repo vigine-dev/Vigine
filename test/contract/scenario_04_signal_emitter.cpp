@@ -19,21 +19,21 @@
 
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/signalemitter/defaultsignalemitter.h"
-#include "vigine/signalemitter/isignalemitter.h"
-#include "vigine/signalemitter/isignalpayload.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadaffinity.h"
+#include "vigine/impl/messaging/signalemitter.h"
+#include "vigine/api/messaging/isignalemitter.h"
+#include "vigine/api/messaging/payload/isignalpayload.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadaffinity.h"
 
 #include <gtest/gtest.h>
 
@@ -50,7 +50,7 @@ namespace vigine::contract
 namespace
 {
 
-class SignalPayload final : public vigine::signalemitter::ISignalPayload
+class SignalPayload final : public vigine::messaging::ISignalPayload
 {
   public:
     explicit SignalPayload(vigine::payload::PayloadTypeId id) noexcept : _id(id) {}
@@ -60,7 +60,7 @@ class SignalPayload final : public vigine::signalemitter::ISignalPayload
         return _id;
     }
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
         clone() const override
     {
         return std::make_unique<SignalPayload>(_id);
@@ -109,7 +109,7 @@ class ThreadRecordingSubscriber final : public vigine::messaging::ISubscriber
 };
 
 /**
- * @brief Runnable that calls @ref vigine::signalemitter::ISignalEmitter::emit
+ * @brief Runnable that calls @ref vigine::messaging::ISignalEmitter::emit
  *        with a fresh @ref SignalPayload carrying @p typeId.
  *
  * Used to push an emit() onto the thread manager's pool so the dispatch
@@ -117,10 +117,10 @@ class ThreadRecordingSubscriber final : public vigine::messaging::ISubscriber
  * non-owning raw pointer kept stable by the test fixture's stack-local
  * unique_ptr.
  */
-class EmitRunnable final : public vigine::threading::IRunnable
+class EmitRunnable final : public vigine::core::threading::IRunnable
 {
   public:
-    EmitRunnable(vigine::signalemitter::ISignalEmitter *emitter,
+    EmitRunnable(vigine::messaging::ISignalEmitter *emitter,
                  vigine::payload::PayloadTypeId         typeId) noexcept
         : _emitter(emitter)
         , _typeId(typeId)
@@ -138,7 +138,7 @@ class EmitRunnable final : public vigine::threading::IRunnable
     }
 
   private:
-    vigine::signalemitter::ISignalEmitter *_emitter;
+    vigine::messaging::ISignalEmitter *_emitter;
     vigine::payload::PayloadTypeId         _typeId;
 };
 
@@ -147,7 +147,7 @@ using SignalEmitter = EngineFixture;
 TEST_F(SignalEmitter, EmitReturnsSuccessForValidPayload)
 {
     auto emitter =
-        vigine::signalemitter::createSignalEmitter(context().threadManager());
+        vigine::messaging::createSignalEmitter(context().threadManager());
     ASSERT_NE(emitter, nullptr);
 
     auto payload =
@@ -161,7 +161,7 @@ TEST_F(SignalEmitter, EmitReturnsSuccessForValidPayload)
 TEST_F(SignalEmitter, EmitRejectsNullPayload)
 {
     auto emitter =
-        vigine::signalemitter::createSignalEmitter(context().threadManager());
+        vigine::messaging::createSignalEmitter(context().threadManager());
     ASSERT_NE(emitter, nullptr);
 
     const vigine::Result r = emitter->emit(nullptr);
@@ -179,9 +179,9 @@ TEST_F(SignalEmitter, AsyncDeliveryCrossesThreadBoundaries)
     // Shared-pool bus exercises the facade overload plumbed through
     // createSignalEmitter(tm, sharedBusConfig()). A subscriber registered
     // via subscribeSignal() is the surface TaskFlow::signal relies on.
-    auto emitter = vigine::signalemitter::createSignalEmitter(
+    auto emitter = vigine::messaging::createSignalEmitter(
         context().threadManager(),
-        vigine::signalemitter::sharedBusConfig());
+        vigine::messaging::sharedBusConfig());
     ASSERT_NE(emitter, nullptr);
 
     ThreadRecordingSubscriber subscriber{};
@@ -205,7 +205,7 @@ TEST_F(SignalEmitter, AsyncDeliveryCrossesThreadBoundaries)
     // thread throughout the dispatch, and that caller can be a worker.
     auto handle = context().threadManager().schedule(
         std::make_unique<EmitRunnable>(emitter.get(), kTestPayloadTypeId),
-        vigine::threading::ThreadAffinity::Pool);
+        vigine::core::threading::ThreadAffinity::Pool);
     ASSERT_NE(handle, nullptr);
 
     // Bounded wait on the scheduled emit. 1 s is generous; the pool

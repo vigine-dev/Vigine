@@ -1,0 +1,4 @@
+Placeholder so Git keeps this directory.
+Three-layer public API: impl/ holds inline / template implementation
+details exposed to consumers but not part of the stable interface.
+Source files land in follow-up PRs.

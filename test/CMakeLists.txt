@@ -52,6 +52,13 @@ set_target_properties(${GRAPH_CONTRACT_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+# Apply the central warning / strict-mode compile flags to keep the
+# test executables held to the same /WX + -Werror gate as the vigine
+# library. GoogleTest itself is added via add_subdirectory above and
+# does NOT receive these flags -- third-party noise stays out of our
+# error budget.
+vigine_apply_compile_options(${GRAPH_CONTRACT_TARGET})
+
 # Register the contract suite with CTest, tagged so it can be selected
 # with `ctest -L graph-contract`.
 include(GoogleTest)
@@ -90,6 +97,8 @@ set_target_properties(${PAYLOAD_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${PAYLOAD_SMOKE_TARGET})
+
 gtest_discover_tests(${PAYLOAD_SMOKE_TARGET}
     PROPERTIES LABELS "payload-registry-smoke"
     DISCOVERY_TIMEOUT 60
@@ -124,6 +133,8 @@ set_target_properties(${MESSAGING_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${MESSAGING_SMOKE_TARGET})
+
 gtest_discover_tests(${MESSAGING_SMOKE_TARGET}
     PROPERTIES LABELS "messaging-smoke"
     DISCOVERY_TIMEOUT 60
@@ -155,6 +166,8 @@ target_link_libraries(${EVENTSCHEDULER_SMOKE_TARGET}
 set_target_properties(${EVENTSCHEDULER_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${EVENTSCHEDULER_SMOKE_TARGET})
 
 gtest_discover_tests(${EVENTSCHEDULER_SMOKE_TARGET}
     PROPERTIES LABELS "eventscheduler-smoke"
@@ -188,6 +201,8 @@ set_target_properties(${TOPICBUS_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${TOPICBUS_SMOKE_TARGET})
+
 gtest_discover_tests(${TOPICBUS_SMOKE_TARGET}
     PROPERTIES LABELS "topicbus-smoke"
     DISCOVERY_TIMEOUT 60
@@ -219,6 +234,8 @@ target_link_libraries(${CHANNELFACTORY_SMOKE_TARGET}
 set_target_properties(${CHANNELFACTORY_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${CHANNELFACTORY_SMOKE_TARGET})
 
 gtest_discover_tests(${CHANNELFACTORY_SMOKE_TARGET}
     PROPERTIES LABELS "channelfactory-smoke"
@@ -252,6 +269,8 @@ set_target_properties(${REQUESTBUS_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${REQUESTBUS_SMOKE_TARGET})
+
 gtest_discover_tests(${REQUESTBUS_SMOKE_TARGET}
     PROPERTIES LABELS "requestbus-smoke"
     DISCOVERY_TIMEOUT 60
@@ -283,6 +302,8 @@ target_link_libraries(${REACTIVESTREAM_SMOKE_TARGET}
 set_target_properties(${REACTIVESTREAM_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${REACTIVESTREAM_SMOKE_TARGET})
 
 gtest_discover_tests(${REACTIVESTREAM_SMOKE_TARGET}
     PROPERTIES LABELS "reactivestream-smoke"
@@ -316,6 +337,8 @@ set_target_properties(${ACTORHOST_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${ACTORHOST_SMOKE_TARGET})
+
 gtest_discover_tests(${ACTORHOST_SMOKE_TARGET}
     PROPERTIES LABELS "actorhost-smoke"
     DISCOVERY_TIMEOUT 60
@@ -347,6 +370,8 @@ target_link_libraries(${PIPELINEBUILDER_SMOKE_TARGET}
 set_target_properties(${PIPELINEBUILDER_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${PIPELINEBUILDER_SMOKE_TARGET})
 
 gtest_discover_tests(${PIPELINEBUILDER_SMOKE_TARGET}
     PROPERTIES LABELS "pipelinebuilder-smoke"
@@ -384,8 +409,51 @@ set_target_properties(${ENGINE_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${ENGINE_SMOKE_TARGET})
+
 gtest_discover_tests(${ENGINE_SMOKE_TARGET}
     PROPERTIES LABELS "engine-smoke"
+    DISCOVERY_TIMEOUT 60
+    DISCOVERY_MODE PRE_TEST
+)
+
+# ====================== EngineToken Smoke Target =======================
+# Smoke coverage for the concrete @ref vigine::engine::EngineToken: bound-
+# state introspection, hybrid gating (gated accessors flip to Expired on
+# invalidation while ungated accessors stay valid), FSM-driven invalidation
+# via @ref AbstractStateMachine::addInvalidationListener, exactly-once
+# expiration callback firing, defensive same-thread fire when subscribing
+# post-invalidation, no-op-transition-no-fire, multi-subscriber + cancel
+# round trip, and per-state isolation between independent tokens.
+set(ENGINETOKEN_SMOKE_TARGET enginetoken-smoke)
+
+add_executable(${ENGINETOKEN_SMOKE_TARGET}
+    engine_token/smoke_test.cpp
+)
+
+target_include_directories(${ENGINETOKEN_SMOKE_TARGET}
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(${ENGINETOKEN_SMOKE_TARGET}
+    PRIVATE
+    gtest
+    gtest_main
+    vigine
+    ${GLM_LIBRARIES}
+)
+
+set_target_properties(${ENGINETOKEN_SMOKE_TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+vigine_apply_compile_options(${ENGINETOKEN_SMOKE_TARGET})
+
+gtest_discover_tests(${ENGINETOKEN_SMOKE_TARGET}
+    PROPERTIES LABELS "enginetoken-smoke"
     DISCOVERY_TIMEOUT 60
     DISCOVERY_MODE PRE_TEST
 )
@@ -421,6 +489,8 @@ target_link_libraries(${SYNC_SMOKE_TARGET}
 set_target_properties(${SYNC_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${SYNC_SMOKE_TARGET})
 
 gtest_discover_tests(${SYNC_SMOKE_TARGET}
     PROPERTIES LABELS "sync-smoke"
@@ -463,6 +533,8 @@ set_target_properties(${THREADMANAGER_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${THREADMANAGER_SMOKE_TARGET})
+
 gtest_discover_tests(${THREADMANAGER_SMOKE_TARGET}
     PROPERTIES LABELS "threadmanager-smoke"
     DISCOVERY_TIMEOUT 60
@@ -500,6 +572,8 @@ set_target_properties(${SERVICE_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${SERVICE_SMOKE_TARGET})
+
 gtest_discover_tests(${SERVICE_SMOKE_TARGET}
     PROPERTIES LABELS "service-smoke"
     DISCOVERY_TIMEOUT 60
@@ -536,6 +610,8 @@ target_link_libraries(${STATEMACHINE_SMOKE_TARGET}
 set_target_properties(${STATEMACHINE_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${STATEMACHINE_SMOKE_TARGET})
 
 gtest_discover_tests(${STATEMACHINE_SMOKE_TARGET}
     PROPERTIES LABELS "statemachine-smoke"
@@ -576,6 +652,8 @@ set_target_properties(${ECS_SMOKE_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+vigine_apply_compile_options(${ECS_SMOKE_TARGET})
+
 gtest_discover_tests(${ECS_SMOKE_TARGET}
     PROPERTIES LABELS "ecs-smoke"
     DISCOVERY_TIMEOUT 60
@@ -607,6 +685,15 @@ add_executable(${FULL_CONTRACT_TARGET}
     contract/scenario_12_service_lifecycle.cpp
     contract/scenario_13_ecs_entity_lifecycle.cpp
     contract/scenario_14_statemachine_hsm.cpp
+    contract/scenario_15_subscriber_serialization.cpp
+    contract/scenario_16_dtor_blocks_in_flight.cpp
+    contract/scenario_17_fsm_thread_affinity.cpp
+    contract/scenario_18_fsm_async_transition.cpp
+    contract/scenario_19_parallel_for.cpp
+    contract/scenario_21_stale_engine_token.cpp
+    contract/scenario_22_token_expiration_callback.cpp
+    contract/scenario_23_token_expires_on_transition.cpp
+    contract/scenario_24_fresh_token_in_new_state.cpp
 )
 
 target_include_directories(${FULL_CONTRACT_TARGET}
@@ -627,6 +714,8 @@ target_link_libraries(${FULL_CONTRACT_TARGET}
 set_target_properties(${FULL_CONTRACT_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+vigine_apply_compile_options(${FULL_CONTRACT_TARGET})
 
 gtest_discover_tests(${FULL_CONTRACT_TARGET}
     PROPERTIES LABELS "full-contract"
@@ -665,6 +754,8 @@ if(UNIX AND NOT APPLE)
     set_target_properties(${LINUX_PLATFORM_SMOKE_TARGET} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
+
+    vigine_apply_compile_options(${LINUX_PLATFORM_SMOKE_TARGET})
 
     include(GoogleTest)
     gtest_discover_tests(${LINUX_PLATFORM_SMOKE_TARGET}

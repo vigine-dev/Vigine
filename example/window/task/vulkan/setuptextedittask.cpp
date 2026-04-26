@@ -1,14 +1,23 @@
 #include "setuptextedittask.h"
 
-#include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/textcomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
-#include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/api/context/icontext.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/textcomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
+
+#include "../../services/texteditorservice.h"
+#include "../../services/wellknown.h"
+#include "../../system/texteditorsystem.h"
+#include "../../texteditstate.h"
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -46,48 +55,68 @@ std::string resolveFontPath()
 }
 } // namespace
 
-SetupTextEditTask::SetupTextEditTask(std::shared_ptr<TextEditState> state,
-                                     std::shared_ptr<TextEditorSystem> editorSystem)
-    : _state(std::move(state)), _editorSystem(std::move(editorSystem))
+SetupTextEditTask::SetupTextEditTask() = default;
+
+vigine::Result SetupTextEditTask::run()
 {
-}
+    auto *token = apiToken();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-void SetupTextEditTask::contextChanged()
-{
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
-
-    if (_editorSystem)
-        _editorSystem->bind(context(), _graphicsService,
-                            _graphicsService ? _graphicsService->renderSystem() : nullptr);
-}
-
-vigine::Result SetupTextEditTask::execute()
-{
-    if (!_graphicsService)
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
+    if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
 
-    if (!_state)
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
+
+    // Resolve the app-scope TextEditorService and ensure it is wired
+    // (binds the underlying TextEditorSystem to the entity manager and
+    // graphics service / render system on the first call; idempotent).
+    auto editorSvcResult =
+        token->service(example::services::wellknown::textEditor);
+    if (!editorSvcResult.ok())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Text editor service is unavailable");
+    auto *editorService =
+        dynamic_cast<TextEditorService *>(&editorSvcResult.value());
+    if (!editorService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Text editor service has unexpected type");
+
+    editorService->ensureWired(token->engine().context());
+    auto state        = editorService->state();
+    auto editorSystem = editorService->textEditorSystem();
+
+    if (!state)
         return vigine::Result(vigine::Result::Code::Error, "TextEditState is null");
+
+    // Bind the interaction component against the MainWindow entity so
+    // every per-event method on TextEditorSystem (routeMouseButtonDown,
+    // routeKeyDown, routeWindowResized, ...) has a live record to read
+    // and write through. The component carries every piece of UI
+    // state @c RunWindowTask used to keep on its own object — focus,
+    // object drag, mouse-ray helper, modifier keys, debounced resize.
+    if (auto *mainWindow = entityManager->getEntityByAlias("MainWindow"))
+        editorService->bindInteractionEntity(mainWindow);
 
     const auto fontPath = resolveFontPath();
     if (fontPath.empty())
         return vigine::Result(vigine::Result::Code::Error,
                               "Font file not found (assets/fonts/segoeui.ttf)");
-
-    auto *entityManager = context()->entityManager();
 
     // --- Background panel ---
     {
@@ -96,34 +125,35 @@ vigine::Result SetupTextEditTask::execute()
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditBgEntity");
 
         entityManager->addAlias(bgEntity, "TextEditBgEntity");
-        _graphicsService->bindEntity(bgEntity);
+        renderSystem->createComponents(bgEntity);
+        renderSystem->bindEntity(bgEntity);
 
-        auto *rc = _graphicsService->renderComponent();
+        auto *rc = graphicsService->renderComponent();
         if (!rc)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             return vigine::Result(vigine::Result::Code::Error,
                                   "Render component unavailable for TextEditBgEntity");
         }
 
         // Flat dark-blue panel: slightly larger and moved toward camera (in front of cube).
-        auto panelMesh = vigine::graphics::MeshComponent::createPlane(kPanelWidth, kPanelHeight,
+        auto panelMesh = vigine::ecs::graphics::MeshComponent::createPlane(kPanelWidth, kPanelHeight,
                                                                       {0.08f, 0.08f, 0.25f});
         panelMesh.setProceduralInShader(true, 6); // Panel shader generates quad (6 vertices)
         rc->setMesh(panelMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition({0.0f, kPanelCenterY, kPanelZ});
         // Scale to actual panel dimensions so the unit-quad shader renders kPanelWidth x
         // kPanelHeight
         transform.setScale({kPanelWidth, kPanelHeight, 0.02f});
         rc->setTransform(transform);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
     }
 
     // --- Vertical scrollbar track + thumb ---
@@ -134,30 +164,31 @@ vigine::Result SetupTextEditTask::execute()
                                   "Failed to create TextEditScrollbarTrackEntity");
 
         entityManager->addAlias(trackEntity, "TextEditScrollbarTrackEntity");
-        _graphicsService->bindEntity(trackEntity);
+        renderSystem->createComponents(trackEntity);
+        renderSystem->bindEntity(trackEntity);
 
-        auto *rc = _graphicsService->renderComponent();
+        auto *rc = graphicsService->renderComponent();
         if (!rc)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             return vigine::Result(vigine::Result::Code::Error,
                                   "Render component unavailable for TextEditScrollbarTrackEntity");
         }
 
         auto trackMesh =
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f});
+            vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.18f, 0.18f, 0.32f});
         trackMesh.setProceduralInShader(true, 6);
         rc->setMesh(trackMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition({kScrollbarX, kPanelCenterY, kPanelZ + 0.005f});
         transform.setScale({kScrollbarWidth, kScrollbarHeight, 0.01f});
         rc->setTransform(transform);
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         auto *thumbEntity = entityManager->createEntity();
         if (!thumbEntity)
@@ -165,22 +196,23 @@ vigine::Result SetupTextEditTask::execute()
                                   "Failed to create TextEditScrollbarThumbEntity");
 
         entityManager->addAlias(thumbEntity, "TextEditScrollbarThumbEntity");
-        _graphicsService->bindEntity(thumbEntity);
+        renderSystem->createComponents(thumbEntity);
+        renderSystem->bindEntity(thumbEntity);
 
-        rc = _graphicsService->renderComponent();
+        rc = graphicsService->renderComponent();
         if (!rc)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             return vigine::Result(vigine::Result::Code::Error,
                                   "Render component unavailable for TextEditScrollbarThumbEntity");
         }
 
         auto thumbMesh =
-            vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f});
+            vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {0.78f, 0.82f, 0.95f});
         thumbMesh.setProceduralInShader(true, 6);
         rc->setMesh(thumbMesh);
         {
-            vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
             rc->setShader(shader);
         }
 
@@ -188,7 +220,7 @@ vigine::Result SetupTextEditTask::execute()
         transform.setScale({kScrollbarWidth * 0.82f, kScrollbarThumbHeight, 0.012f});
         rc->setTransform(transform);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
     }
 
     // --- Editable text (bitmap-style with individual character planes) ---
@@ -198,22 +230,23 @@ vigine::Result SetupTextEditTask::execute()
             return vigine::Result(vigine::Result::Code::Error, "Failed to create TextEditEntity");
 
         entityManager->addAlias(textEntity, "TextEditEntity");
-        _graphicsService->bindEntity(textEntity);
+        renderSystem->createComponents(textEntity);
+        renderSystem->bindEntity(textEntity);
 
-        auto *rc = _graphicsService->renderComponent();
+        auto *rc = graphicsService->renderComponent();
         if (!rc)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             return vigine::Result(vigine::Result::Code::Error,
                                   "Render component unavailable for TextEditEntity");
         }
 
-        vigine::graphics::TextComponent text;
+        vigine::ecs::graphics::TextComponent text;
         text.setEnabled(true);
         text.setDrawBaseInstance(false);
-        text.setText(_state->text);
-        text.setCursorBytePos(_state->cursorPos);
-        text.setCursorVisible(_state->showCursor);
+        text.setText(state->text);
+        text.setCursorBytePos(state->cursorPos);
+        text.setCursorVisible(state->showCursor);
         text.setFontPath(fontPath);
         text.setPixelSize(28);
         text.setVoxelSize(0.0022f);
@@ -224,25 +257,25 @@ vigine::Result SetupTextEditTask::execute()
         text.setMaxLineWorldWidth(4.58f);
 
         // Configure mesh for glyph instanced rendering
-        vigine::graphics::MeshComponent glyphMesh;
+        vigine::ecs::graphics::MeshComponent glyphMesh;
         glyphMesh.setProceduralInShader(true, 6); // 6 vertices per glyph quad instance
         rc->setMesh(glyphMesh);
 
         // Set shader before setText so that RenderComponent knows to build SDF quads.
         {
-            vigine::graphics::ShaderComponent shader("glyph.vert.spv", "glyph.frag.spv");
+            vigine::ecs::graphics::ShaderComponent shader("glyph.vert.spv", "glyph.frag.spv");
             // Glyph shader generates procedural quad per glyph instance (6 vertices)
             shader.setInstancedRendering(true);
             // Instance vertex layout: mat4 as 4 consecutive vec4 attributes.
-            vigine::graphics::VertexBindingDesc instBinding;
+            vigine::ecs::graphics::VertexBindingDesc instBinding;
             instBinding.binding      = 0;
             instBinding.stride       = sizeof(glm::mat4);
             instBinding.instanceRate = true;
             instBinding.attributes   = {
-                {0, vigine::graphics::VertexFormat::Float32x4, 0 },
-                {1, vigine::graphics::VertexFormat::Float32x4, 16},
-                {2, vigine::graphics::VertexFormat::Float32x4, 32},
-                {3, vigine::graphics::VertexFormat::Float32x4, 48},
+                {0, vigine::ecs::graphics::VertexFormat::Float32x4, 0 },
+                {1, vigine::ecs::graphics::VertexFormat::Float32x4, 16},
+                {2, vigine::ecs::graphics::VertexFormat::Float32x4, 32},
+                {3, vigine::ecs::graphics::VertexFormat::Float32x4, 48},
             };
             shader.setVertexLayout({instBinding});
             rc->setShader(shader);
@@ -250,18 +283,18 @@ vigine::Result SetupTextEditTask::execute()
 
         if (!rc->setText(text))
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             return vigine::Result(vigine::Result::Code::Error,
                                   "Failed to build editor text voxels");
         }
 
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         // Entity stays at panel center (proven visible); anchorOffset shifts text to top-left.
         transform.setPosition({0.0f, kPanelCenterY, 1.21f});
         transform.setScale({1.0f, 1.0f, 1.0f});
         rc->setTransform(transform);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
     }
 
     // --- Focus frame (4 thin lines), hidden until editor gets focus ---
@@ -281,37 +314,38 @@ vigine::Result SetupTextEditTask::execute()
                                       "Failed to create focus frame entity");
 
             entityManager->addAlias(e, alias);
-            _graphicsService->bindEntity(e);
+            renderSystem->createComponents(e);
+            renderSystem->bindEntity(e);
 
-            auto *rc = _graphicsService->renderComponent();
+            auto *rc = graphicsService->renderComponent();
             if (!rc)
             {
-                _graphicsService->unbindEntity();
+                renderSystem->unbindEntity();
                 return vigine::Result(vigine::Result::Code::Error,
                                       "Render component unavailable for focus frame entity");
             }
 
             auto frameMesh =
-                vigine::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f});
+                vigine::ecs::graphics::MeshComponent::createPlane(1.0f, 1.0f, {1.0f, 1.0f, 1.0f});
             frameMesh.setProceduralInShader(true, 6);
             rc->setMesh(frameMesh);
             {
-                vigine::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
+                vigine::ecs::graphics::ShaderComponent shader("panel.vert.spv", "panel.frag.spv");
                 rc->setShader(shader);
             }
 
-            vigine::graphics::TransformComponent transform;
+            vigine::ecs::graphics::TransformComponent transform;
             transform.setPosition({0.0f, -100.0f, 0.0f});
             transform.setScale({0.001f, 0.001f, 0.001f});
             rc->setTransform(transform);
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
         }
     }
 
-    if (_editorSystem)
+    if (editorSystem)
     {
-        _editorSystem->setLayout(40, kPanelWidth, kPanelHeight);
-        _editorSystem->setFocused(false);
+        editorSystem->setLayout(40, kPanelWidth, kPanelHeight);
+        editorSystem->setFocused(false);
     }
 
     return vigine::Result();

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#include <vigine/messaging/imessage.h>
+#include <vigine/api/messaging/imessage.h>
 
 ProcessInputEventTask::ProcessInputEventTask() = default;
 
@@ -19,7 +19,7 @@ ProcessInputEventTask::~ProcessInputEventTask()
     _tokens.clear();
 }
 
-vigine::Result ProcessInputEventTask::execute()
+vigine::Result ProcessInputEventTask::run()
 {
     // The task participates in the flow only to own its subscription
     // tokens and serve as a subscriber target; there is no per-tick work
@@ -41,7 +41,7 @@ vigine::messaging::DispatchResult
 {
     const vigine::payload::PayloadTypeId id = message.payloadTypeId();
 
-    if (id == kMouseButtonDownPayloadTypeId)
+    if (id == example::payloads::idOf(MouseButtonDownPayload::typeName()))
     {
         if (const auto *payload =
                 dynamic_cast<const MouseButtonDownPayload *>(message.payload()))
@@ -52,7 +52,7 @@ vigine::messaging::DispatchResult
         return vigine::messaging::DispatchResult::Pass;
     }
 
-    if (id == kKeyDownPayloadTypeId)
+    if (id == example::payloads::idOf(KeyDownPayload::typeName()))
     {
         if (const auto *payload =
                 dynamic_cast<const KeyDownPayload *>(message.payload()))
@@ -79,7 +79,7 @@ void ProcessInputEventTask::onKeyDown(const KeyDownPayload &payload)
 {
     _hasKeyEvent = true;
 
-    const vigine::platform::KeyEvent &event = payload.event();
+    const vigine::ecs::platform::KeyEvent &event = payload.event();
 
     std::cout << "[ProcessInputEventTask::onKeyDown] Key down: code=" << event.keyCode
               << ", scan=" << event.scanCode << ", mods=" << event.modifiers

@@ -1,8 +1,8 @@
 #include "fixtures/graph_fixture_7n10e.h"
 
-#include "vigine/graph/inode.h"
-#include "vigine/graph/kind.h"
-#include "vigine/graph/nodeid.h"
+#include "vigine/core/graph/inode.h"
+#include "vigine/core/graph/kind.h"
+#include "vigine/core/graph/nodeid.h"
 
 #include <gtest/gtest.h>
 
@@ -15,7 +15,7 @@
 // IGraph, plus the type-level pinning guarantee (copy / move deleted).
 // =============================================================================
 
-namespace vigine::graph::contract
+namespace vigine::core::graph::contract
 {
 
 using NodeContract = ContractFixture;
@@ -85,4 +85,4 @@ INSTANTIATE_TEST_SUITE_P(contract_inode,
                          ::testing::Values(defaultGraphFactory()),
                          GraphFactoryNamer{});
 
-} // namespace vigine::graph::contract
+} // namespace vigine::core::graph::contract

@@ -1,22 +1,21 @@
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/factory.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/payload/payloadtypeid.h"
-#include "vigine/requestbus/defaultrequestbus.h"
-#include "vigine/requestbus/factory.h"
-#include "vigine/requestbus/ifuture.h"
-#include "vigine/requestbus/irequestbus.h"
-#include "vigine/requestbus/requestconfig.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/factory.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
+#include "vigine/api/requestbus/factory.h"
+#include "vigine/api/requestbus/ifuture.h"
+#include "vigine/api/requestbus/irequestbus.h"
+#include "vigine/api/requestbus/requestconfig.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
-#include "vigine/topicbus/topicid.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
+#include "vigine/api/topicbus/topicid.h"
 
 #include <gtest/gtest.h>
 
@@ -81,7 +80,7 @@ class RequestBusSmoke : public ::testing::Test
   protected:
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         BusConfig cfg;
         cfg.threading    = ThreadingPolicy::InlineOnly;
@@ -107,7 +106,7 @@ class RequestBusSmoke : public ::testing::Test
         }
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<IMessageBus>                       _bus;
     std::unique_ptr<IRequestBus>                       _rb;
 };

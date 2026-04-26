@@ -1,26 +1,14 @@
 #include "initwindowtask.h"
 
-#include "vigine/ecs/entitymanager.h"
-#include <vigine/context.h>
-#include <vigine/property.h>
-#include <vigine/service/platformservice.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
+#include <vigine/impl/ecs/platform/platformservice.h>
 
 #include "../../handler/windoweventhandler.h"
 
-InitWindowTask::InitWindowTask() {}
-
-void InitWindowTask::contextChanged()
-{
-    if (!context())
-    {
-        _platformService = nullptr;
-
-        return;
-    }
-
-    _platformService = dynamic_cast<vigine::platform::PlatformService *>(
-        context()->service("Platform", vigine::Name("MainPlatform"), vigine::Property::New));
-}
+InitWindowTask::InitWindowTask() = default;
 
 void InitWindowTask::createEventHandlers()
 {
@@ -28,33 +16,43 @@ void InitWindowTask::createEventHandlers()
     _eventHandlers.push_back(std::make_unique<WindowEventHandler>("MainWindowHandler"));
 }
 
-vigine::Result InitWindowTask::execute()
+vigine::Result InitWindowTask::run()
 {
-    if (!_platformService)
+    auto *token = apiToken();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
+
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto platformResult = token->service(vigine::service::wellknown::platformService);
+    if (!platformResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Platform service is unavailable");
 
-    auto *entityManager = context()->entityManager();
-    auto *entity        = entityManager->createEntity();
+    auto *platformService =
+        dynamic_cast<vigine::ecs::platform::PlatformService *>(&platformResult.value());
+    if (!platformService)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Platform service has unexpected type");
+
+    auto *entity = entityManager->createEntity();
 
     createEventHandlers();
 
-    _platformService->bindEntity(entity);
-    {
-        auto *window = _platformService->createWindow();
-        if (!window)
-        {
-            _platformService->unbindEntity();
-            return vigine::Result(vigine::Result::Code::Error, "No window component created");
-        }
+    auto *window = platformService->createWindow();
+    if (!window)
+        return vigine::Result(vigine::Result::Code::Error, "No window component created");
 
-        auto bindResult = _platformService->bindWindowEventHandler(window, _eventHandlers[0].get());
-        if (bindResult.isError())
-        {
-            _platformService->unbindEntity();
-            return bindResult;
-        }
-    }
-    _platformService->unbindEntity();
+    auto bindResult =
+        platformService->bindWindowEventHandler(entity, window, _eventHandlers[0].get());
+    if (bindResult.isError())
+        return bindResult;
 
     entityManager->addAlias(entity, "MainWindow");
 

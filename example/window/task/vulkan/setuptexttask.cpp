@@ -1,13 +1,15 @@
 #include "setuptexttask.h"
 
-#include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/textcomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
-#include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/textcomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -36,90 +38,88 @@ std::string resolveFontPath()
 
 } // namespace
 
-SetupTextTask::SetupTextTask() {}
+SetupTextTask::SetupTextTask() = default;
 
-void SetupTextTask::contextChanged()
+vigine::Result SetupTextTask::run()
 {
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
+    auto *token = apiToken();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
 
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
-}
-
-vigine::Result SetupTextTask::execute()
-{
-    if (!_graphicsService)
-    {
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
+    if (!graphicsResult.ok())
         return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     const auto fontPath = resolveFontPath();
     if (fontPath.empty())
-    {
         return vigine::Result(vigine::Result::Code::Error,
                               "Font file not found (assets/fonts/segoeui.ttf)");
-    }
 
-    auto *entityManager = context()->entityManager();
-    auto *textEntity    = entityManager->createEntity();
+    auto *textEntity = entityManager->createEntity();
     if (!textEntity)
-    {
         return vigine::Result(vigine::Result::Code::Error, "Failed to create text entity");
-    }
 
     entityManager->addAlias(textEntity, "TextEntity");
 
-    _graphicsService->bindEntity(textEntity);
+    renderSystem->createComponents(textEntity);
+    renderSystem->bindEntity(textEntity);
 
-    auto *renderComponent = _graphicsService->renderComponent();
+    auto *renderComponent = graphicsService->renderComponent();
     if (!renderComponent)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for TextEntity");
     }
 
-    vigine::graphics::TransformComponent transform;
+    vigine::ecs::graphics::TransformComponent transform;
     transform.setPosition({0.0f, 2.1f, 0.6f});
     transform.setScale({1.0f, 1.0f, 1.0f});
     renderComponent->setTransform(transform);
 
     // Configure mesh for voxel text instanced rendering
-    vigine::graphics::MeshComponent voxelMesh;
+    vigine::ecs::graphics::MeshComponent voxelMesh;
     voxelMesh.setProceduralInShader(true, 36); // 36 vertices per voxel cube instance
     renderComponent->setMesh(voxelMesh);
 
     {
-        vigine::graphics::ShaderComponent shader("textvoxel.vert.spv", "textvoxel.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("textvoxel.vert.spv", "textvoxel.frag.spv");
         // Voxel text shader generates cube per character instance (36 vertices)
         shader.setUseVoxelTextLayout(true);
         shader.setInstancedRendering(true);
         // Instance vertex layout: mat4 as 4 consecutive vec4 attributes at binding 0.
-        vigine::graphics::VertexBindingDesc instBinding;
+        vigine::ecs::graphics::VertexBindingDesc instBinding;
         instBinding.binding      = 0;
         instBinding.stride       = sizeof(glm::mat4);
         instBinding.instanceRate = true;
         instBinding.attributes   = {
-            {0, vigine::graphics::VertexFormat::Float32x4, 0 },
-            {1, vigine::graphics::VertexFormat::Float32x4, 16},
-            {2, vigine::graphics::VertexFormat::Float32x4, 32},
-            {3, vigine::graphics::VertexFormat::Float32x4, 48},
+            {0, vigine::ecs::graphics::VertexFormat::Float32x4, 0 },
+            {1, vigine::ecs::graphics::VertexFormat::Float32x4, 16},
+            {2, vigine::ecs::graphics::VertexFormat::Float32x4, 32},
+            {3, vigine::ecs::graphics::VertexFormat::Float32x4, 48},
         };
         shader.setVertexLayout({instBinding});
         renderComponent->setShader(shader);
     }
 
-    vigine::graphics::TextComponent text;
+    vigine::ecs::graphics::TextComponent text;
     text.setEnabled(true);
     text.setDrawBaseInstance(false);
     constexpr char8_t kTextUtf8[] = u8"Привіт, vigine!";
@@ -130,12 +130,12 @@ vigine::Result SetupTextTask::execute()
 
     if (!renderComponent->setText(text))
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Failed to build voxel text via FreeType");
     }
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     return vigine::Result();
 }

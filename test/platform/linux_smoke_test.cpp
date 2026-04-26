@@ -7,12 +7,12 @@
 
 #include <gtest/gtest.h>
 
-#include "vigine/eventscheduler/iossignalsource.h"
-#include "vigine/eventscheduler/ossignal.h"
+#include "vigine/api/eventscheduler/iossignalsource.h"
+#include "vigine/api/eventscheduler/ossignal.h"
 
 // Include the concrete Linux POSIX source directly (it lives in src/).
-#include "platform/linux/iossignalsource_posix.h"
-#include "platform/linux/xcbwindowbackend.h"
+#include "impl/platform/linux/iossignalsource_posix.h"
+#include "impl/platform/linux/xcbwindowbackend.h"
 
 using namespace vigine::eventscheduler;
 using namespace vigine::platform::linux_;

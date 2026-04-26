@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
 // Scenario 5 -- event scheduler fires then cancels.
 //
-// DefaultEventScheduler needs an ITimerSource + IOsSignalSource pair in
+// EventScheduler needs an ITimerSource + IOsSignalSource pair in
 // addition to an IThreadManager. Mirrors the mock sources used by the
 // eventscheduler smoke test: fires happen synchronously on triggerAll().
 //
 // Ownership:
-//   - The mocks are stack-local; DefaultEventScheduler holds a
+//   - The mocks are stack-local; EventScheduler holds a
 //     reference to them, so they must outlive the scheduler object.
 //     The order is enforced by placing them above the scheduler in the
 //     test body.
@@ -22,16 +22,16 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
-#include "vigine/eventscheduler/eventconfig.h"
-#include "vigine/eventscheduler/factory.h"
-#include "vigine/eventscheduler/ieventhandle.h"
-#include "vigine/eventscheduler/ieventscheduler.h"
-#include "vigine/eventscheduler/iossignalsource.h"
-#include "vigine/eventscheduler/itimersource.h"
-#include "vigine/eventscheduler/ossignal.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/eventscheduler/eventconfig.h"
+#include "vigine/api/eventscheduler/factory.h"
+#include "vigine/api/eventscheduler/ieventhandle.h"
+#include "vigine/api/eventscheduler/ieventscheduler.h"
+#include "vigine/api/eventscheduler/iossignalsource.h"
+#include "vigine/api/eventscheduler/itimersource.h"
+#include "vigine/api/eventscheduler/ossignal.h"
 #include "vigine/result.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 

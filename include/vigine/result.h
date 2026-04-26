@@ -1,12 +1,22 @@
 #pragma once
 
-#include "vigine/base/macros.h"
+/**
+ * @file result.h
+ * @brief Status / error return type used across the engine API surface.
+ */
 
 #include <memory>
 #include <string>
 
 namespace vigine
 {
+/**
+ * @brief Carries a status Code and an optional human-readable message.
+ *
+ * Produced by task / state / service / context operations that can
+ * fail. Code values are append-only so callers that persist or
+ * serialise a Result remain compatible across engine versions.
+ */
 class Result
 {
   public:
@@ -63,6 +73,7 @@ class Result
     std::string _message;
 };
 
-BUILD_SMART_PTR(Result);
+using ResultUPtr = std::unique_ptr<Result>;
+using ResultSPtr = std::shared_ptr<Result>;
 
 } // namespace vigine

@@ -1,21 +1,21 @@
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/factory.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/messaging/routemode.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/factory.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/routemode.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
-#include "vigine/topicbus/defaulttopicbus.h"
-#include "vigine/topicbus/itopicbus.h"
-#include "vigine/topicbus/topicid.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
+#include "vigine/api/topicbus/factory.h"
+#include "vigine/api/topicbus/itopicbus.h"
+#include "vigine/api/topicbus/topicid.h"
 
 #include <gtest/gtest.h>
 
@@ -48,7 +48,7 @@
 //   Two subscribers, each on a different topic. Publishing a single payload
 //   to topic A must deliver only to the A-subscriber, and leave the
 //   B-subscriber untouched. This case exercises the topic-filter path on
-//   subscribe; the current DefaultTopicBus::subscribe ignores the TopicId
+//   subscribe; the current TopicBus::subscribe ignores the TopicId
 //   argument, so the isolation assertion is expected to fail today. The
 //   test is gated with GTEST_SKIP so the smoke target stays green on CI;
 //   remove the skip once the subscribe topic-filter fix lands.
@@ -99,7 +99,7 @@ class TopicBusSmoke : public ::testing::Test
   protected:
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         BusConfig cfg;
         cfg.threading    = ThreadingPolicy::InlineOnly;
@@ -125,7 +125,7 @@ class TopicBusSmoke : public ::testing::Test
         }
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<IMessageBus>                       _bus;
     std::unique_ptr<ITopicBus>                         _topic;
 };
@@ -211,7 +211,7 @@ TEST_F(TopicBusSmoke, PublishInvalidTopicReturnsError)
 // a single payload on topic alpha and assert that the alpha subscriber
 // fires exactly once while the beta subscriber stays at zero.
 //
-// Skipped today because DefaultTopicBus::subscribe currently ignores the
+// Skipped today because TopicBus::subscribe currently ignores the
 // TopicId argument and every subscriber is dispatched for every publish.
 // Un-skip this case (delete the GTEST_SKIP line) once the subscribe
 // topic-filter fix lands.

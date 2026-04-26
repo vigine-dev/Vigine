@@ -1,0 +1,6 @@
+# Linux platform-implementation folder (R-PlatformPortability).
+#
+# Placeholder marker. Concrete classes (vigine::platform::FileSystem,
+# vigine::platform::WindowSystem, vigine::platform::GraphicsBackend)
+# implementing the api/platform/I*.h interfaces land here in follow-
+# up leaves. Compiled only when CMAKE_SYSTEM_NAME == "Linux".

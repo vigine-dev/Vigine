@@ -1,20 +1,19 @@
-#include "vigine/channelfactory/channelkind.h"
-#include "vigine/channelfactory/factory.h"
-#include "vigine/channelfactory/ichannel.h"
-#include "vigine/channelfactory/ichannelfactory.h"
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/factory.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/payload/payloadtypeid.h"
-#include "vigine/pipelinebuilder/defaultpipelinebuilder.h"
-#include "vigine/pipelinebuilder/factory.h"
-#include "vigine/pipelinebuilder/ipipeline.h"
-#include "vigine/pipelinebuilder/ipipelinebuilder.h"
-#include "vigine/pipelinebuilder/ipipelinestage.h"
+#include "vigine/api/channelfactory/channelkind.h"
+#include "vigine/api/channelfactory/factory.h"
+#include "vigine/api/channelfactory/ichannel.h"
+#include "vigine/api/channelfactory/ichannelfactory.h"
+#include "vigine/api/pipelinebuilder/factory.h"
+#include "vigine/api/pipelinebuilder/ipipeline.h"
+#include "vigine/api/pipelinebuilder/ipipelinebuilder.h"
+#include "vigine/api/pipelinebuilder/ipipelinestage.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/factory.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -124,7 +123,7 @@ class PipelineBuilderSmoke : public ::testing::Test
 
     void SetUp() override
     {
-        _tm = vigine::threading::createThreadManager({});
+        _tm = vigine::core::threading::createThreadManager({});
 
         vigine::messaging::BusConfig cfg;
         cfg.threading    = vigine::messaging::ThreadingPolicy::InlineOnly;
@@ -158,7 +157,7 @@ class PipelineBuilderSmoke : public ::testing::Test
         return createPipelineBuilder(*_bus, *_tm, *_channelFactory);
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager>     _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager>     _tm;
     std::unique_ptr<vigine::messaging::IMessageBus>        _bus;
     std::unique_ptr<vigine::channelfactory::IChannelFactory> _channelFactory;
 };

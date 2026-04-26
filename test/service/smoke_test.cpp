@@ -14,10 +14,12 @@
 //     semantics) does not flip the flag back to false.
 // ---------------------------------------------------------------------------
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/iengine_token.h"
+#include "vigine/api/service/factory.h"
+#include "vigine/api/service/iservice.h"
 #include "vigine/result.h"
-#include "vigine/service/factory.h"
-#include "vigine/service/iservice.h"
+#include "vigine/api/statemachine/stateid.h"
 
 #include <gtest/gtest.h>
 
@@ -66,7 +68,7 @@ class ThrowingContext final : public vigine::IContext
         throw std::runtime_error{"smoke ThrowingContext: taskFlow called"};
     }
 
-    [[nodiscard]] vigine::threading::IThreadManager &threadManager() override
+    [[nodiscard]] vigine::core::threading::IThreadManager &threadManager() override
     {
         throw std::runtime_error{"smoke ThrowingContext: threadManager called"};
     }
@@ -81,6 +83,12 @@ class ThrowingContext final : public vigine::IContext
         registerService(std::shared_ptr<vigine::service::IService>) override
     {
         throw std::runtime_error{"smoke ThrowingContext: registerService called"};
+    }
+
+    [[nodiscard]] std::unique_ptr<vigine::engine::IEngineToken>
+        makeEngineToken(vigine::statemachine::StateId) override
+    {
+        throw std::runtime_error{"smoke ThrowingContext: makeEngineToken called"};
     }
 
     void freeze() noexcept override {}

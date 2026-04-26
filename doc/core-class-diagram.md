@@ -4,19 +4,19 @@
 classDiagram
 direction LR
 
-class Engine
-class StateMachine
-class Context
+class IEngine
+class IStateMachine
+class IContext
+class IECS
+class ITaskFlow
 class EntityManager
 class Entity
 
 class Result
-class AbstractState
-class TaskFlow
+class ITask
 class AbstractTask
-class ContextHolder
-class EntityBindingHost
 
+class IService
 class AbstractService
 class AbstractSystem
 
@@ -38,7 +38,7 @@ class IMessagePayload
 class ISubscriber
 class IMessageBus
 
-class GraphicsBackend
+class IGraphicsBackend
 class VulkanAPI
 class VulkanDevice
 class VulkanSwapchain
@@ -46,27 +46,19 @@ class VulkanTextureStore
 class VulkanPipelineStore
 class VulkanFrameRenderer
 
-Engine *-- StateMachine
-Engine *-- Context
-Engine *-- EntityManager
+IEngine --> IContext
+IContext --> IStateMachine
+IContext --> ITaskFlow
+IContext --> IECS
 
-StateMachine o-- AbstractState : stores
-AbstractState *-- TaskFlow : owns
-TaskFlow o-- AbstractTask : stores
-TaskFlow ..> ISignalEmitter : subscribes handlers by PayloadTypeId
-
-AbstractTask --|> ContextHolder
-AbstractService --|> ContextHolder
-AbstractService --|> EntityBindingHost
-AbstractSystem --|> EntityBindingHost
-
-Context --> EntityManager
-Context --> AbstractService : creates or returns
-Context --> AbstractSystem : creates or returns
+ITaskFlow o-- ITask : stores
+AbstractTask ..|> ITask
+AbstractTask --> ISignalEmitter : subscribes handlers by PayloadTypeId
 
 PlatformService --|> AbstractService
 GraphicsService --|> AbstractService
 DatabaseService --|> AbstractService
+AbstractService ..|> IService
 
 WindowSystem --|> AbstractSystem
 WinAPIComponent --|> WindowComponent
@@ -85,16 +77,14 @@ ISignalEmitter ..> ISignalPayload : emits
 ISignalEmitter ..> ISubscriber : routes by MessageFilter
 ISignalPayload --|> IMessagePayload
 
-VulkanAPI --|> GraphicsBackend
+VulkanAPI --|> IGraphicsBackend
 VulkanAPI *-- VulkanDevice
 VulkanAPI *-- VulkanSwapchain
 VulkanAPI *-- VulkanTextureStore
 VulkanAPI *-- VulkanPipelineStore
 VulkanAPI *-- VulkanFrameRenderer
 
-EntityBindingHost --> Entity : binds
-AbstractState --> Result
 AbstractTask --> Result
-StateMachine --> Result
-TaskFlow --> Result
+ITaskFlow --> Result
+IStateMachine --> Result
 ```

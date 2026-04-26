@@ -95,7 +95,7 @@ void WindowEventHandler::onMouseHorizontalWheel(int delta, int x, int y)
               << std::endl;
 }
 
-void WindowEventHandler::onMouseButtonDown(vigine::platform::MouseButton button, int x, int y)
+void WindowEventHandler::onMouseButtonDown(vigine::ecs::platform::MouseButton button, int x, int y)
 {
     std::cout << "[" << _handlerId << "] WindowEventHandler::onMouseButtonDown: Mouse button down: "
               << static_cast<int>(button) << " at " << x << ", " << y << std::endl;
@@ -104,7 +104,7 @@ void WindowEventHandler::onMouseButtonDown(vigine::platform::MouseButton button,
         _onMouseButtonDown(button, x, y);
 }
 
-void WindowEventHandler::onMouseButtonUp(vigine::platform::MouseButton button, int x, int y)
+void WindowEventHandler::onMouseButtonUp(vigine::ecs::platform::MouseButton button, int x, int y)
 {
     std::cout << "[" << _handlerId << "] WindowEventHandler::onMouseButtonUp: Mouse button up: "
               << static_cast<int>(button) << " at " << x << ", " << y << std::endl;
@@ -113,7 +113,7 @@ void WindowEventHandler::onMouseButtonUp(vigine::platform::MouseButton button, i
         _onMouseButtonUp(button, x, y);
 }
 
-void WindowEventHandler::onMouseButtonDoubleClick(vigine::platform::MouseButton button, int x,
+void WindowEventHandler::onMouseButtonDoubleClick(vigine::ecs::platform::MouseButton button, int x,
                                                   int y)
 {
     std::cout << "[" << _handlerId
@@ -121,7 +121,7 @@ void WindowEventHandler::onMouseButtonDoubleClick(vigine::platform::MouseButton 
               << static_cast<int>(button) << " at " << x << ", " << y << std::endl;
 }
 
-void WindowEventHandler::onKeyDown(const vigine::platform::KeyEvent &event)
+void WindowEventHandler::onKeyDown(const vigine::ecs::platform::KeyEvent &event)
 {
     std::cout << "[" << _handlerId
               << "] WindowEventHandler::onKeyDown: Key down: code=" << event.keyCode
@@ -133,7 +133,7 @@ void WindowEventHandler::onKeyDown(const vigine::platform::KeyEvent &event)
         _onKeyDown(event);
 }
 
-void WindowEventHandler::onKeyUp(const vigine::platform::KeyEvent &event)
+void WindowEventHandler::onKeyUp(const vigine::ecs::platform::KeyEvent &event)
 {
     std::cout << "[" << _handlerId
               << "] WindowEventHandler::onKeyUp: Key up: code=" << event.keyCode
@@ -145,7 +145,7 @@ void WindowEventHandler::onKeyUp(const vigine::platform::KeyEvent &event)
         _onKeyUp(event);
 }
 
-void WindowEventHandler::onChar(const vigine::platform::TextEvent &event)
+void WindowEventHandler::onChar(const vigine::ecs::platform::TextEvent &event)
 {
     if (_onChar)
     {
@@ -158,7 +158,7 @@ void WindowEventHandler::onChar(const vigine::platform::TextEvent &event)
 
 // COPILOT_TODO: Обробка dead-char зараз теж зводиться до логування; якщо потрібен IME/input
 // pipeline, тут бракує реального dispatch.
-void WindowEventHandler::onDeadChar(const vigine::platform::TextEvent &event)
+void WindowEventHandler::onDeadChar(const vigine::ecs::platform::TextEvent &event)
 {
     std::cout << "[" << _handlerId
               << "] WindowEventHandler::onDeadChar: Dead char: cp=" << event.codePoint

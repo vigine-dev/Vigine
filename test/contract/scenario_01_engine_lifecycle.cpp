@@ -11,13 +11,12 @@
 
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
-#include "vigine/ecs/iecs.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/statemachine/istatemachine.h"
-#include "vigine/taskflow/itaskflow.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/vigine.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/ecs/iecs.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/taskflow/itaskflow.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 
@@ -74,24 +73,6 @@ TEST_F(EngineLifecycle, FreezeTogglesTopologyFlag)
     // Second freeze must be idempotent.
     ctx.freeze();
     EXPECT_TRUE(ctx.isFrozen());
-}
-
-// Legacy vigine::Engine front door: confirms the engine ctor plumbs a
-// real IThreadManager into its Context. Before the wiring change,
-// Context::threadManager threw std::logic_error, which silently broke
-// TaskFlow::signal's non-default-affinity path for every caller that
-// instantiated Engine directly.
-TEST(LegacyEngineLifecycle, ConstructionPlumbsThreadManagerIntoContext)
-{
-    vigine::Engine engine;
-
-    auto &ctx = engine.context();
-    ASSERT_NO_THROW({
-        auto &tm = ctx.threadManager();
-        EXPECT_GE(tm.poolSize(), 1u)
-            << "legacy engine must plumb a thread manager whose pool "
-            << "carries at least one worker";
-    });
 }
 
 } // namespace

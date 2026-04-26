@@ -4,7 +4,7 @@
 // Two topics on the same facade, two distinct subscribers. Publishing on
 // topic A must reach only the A-subscriber; the B-subscriber must stay
 // at zero hits. This is exactly the regression the scope references as
-// FF-95: early DefaultTopicBus implementations leaked the publish to
+// FF-95: early TopicBus implementations leaked the publish to
 // every subscriber regardless of topic id.
 //
 // Skips under GTEST_SKIP() if the leak is still present at test time
@@ -17,13 +17,13 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/topicbus/defaulttopicbus.h"
-#include "vigine/topicbus/itopicbus.h"
-#include "vigine/topicbus/topicid.h"
+#include "vigine/api/topicbus/factory.h"
+#include "vigine/api/topicbus/itopicbus.h"
+#include "vigine/api/topicbus/topicid.h"
 
 #include <gtest/gtest.h>
 

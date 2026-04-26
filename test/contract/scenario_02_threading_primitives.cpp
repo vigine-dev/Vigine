@@ -12,15 +12,15 @@
 
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/context/icontext.h"
+#include "vigine/api/context/icontext.h"
 #include "vigine/result.h"
-#include "vigine/threading/ibarrier.h"
-#include "vigine/threading/imessagechannel.h"
-#include "vigine/threading/imutex.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/isemaphore.h"
-#include "vigine/threading/itaskhandle.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/ibarrier.h"
+#include "vigine/core/threading/imessagechannel.h"
+#include "vigine/core/threading/imutex.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/isemaphore.h"
+#include "vigine/core/threading/itaskhandle.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 
@@ -39,7 +39,7 @@ namespace
 using ThreadingRoundTrip = EngineFixture;
 
 // Minimal IRunnable that flips a flag and returns Success.
-class FlagRunnable final : public vigine::threading::IRunnable
+class FlagRunnable final : public vigine::core::threading::IRunnable
 {
   public:
     explicit FlagRunnable(std::atomic<bool> *flag) noexcept : _flag(flag) {}
@@ -144,7 +144,7 @@ TEST_F(ThreadingRoundTrip, MessageChannelSendReceive)
     // Single-value round-trip: payload-less Message carrying only a
     // type id tag. The buffer stays empty on purpose -- the contract
     // tests the ownership transfer, not the encoding path.
-    vigine::threading::Message outbound{};
+    vigine::core::threading::Message outbound{};
     outbound.typeId = vigine::payload::PayloadTypeId{0xBEEF};
 
     const vigine::Result sent =
@@ -152,7 +152,7 @@ TEST_F(ThreadingRoundTrip, MessageChannelSendReceive)
     EXPECT_TRUE(sent.isSuccess())
         << "empty slot send must succeed; got: " << sent.message();
 
-    vigine::threading::Message inbound{};
+    vigine::core::threading::Message inbound{};
     const vigine::Result received =
         channel->receive(inbound, std::chrono::milliseconds{100});
     EXPECT_TRUE(received.isSuccess());

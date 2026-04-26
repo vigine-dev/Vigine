@@ -1,45 +1,47 @@
 #include "setuptexturedplanestask.h"
 
-#include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/texturecomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
-#include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/texturecomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <cmath>
 #include <iostream>
 
-void SetupTexturedPlanesTask::contextChanged()
-{
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
-
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
-}
-vigine::Result SetupTexturedPlanesTask::execute()
+vigine::Result SetupTexturedPlanesTask::run()
 {
     std::cout << "Setting up textured planes..." << std::endl;
 
-    if (!_graphicsService)
-    {
-        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+    auto *token = apiToken();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto *entityManager = context()->entityManager();
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
+    if (!graphicsResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     struct PlaneConfig
     {
@@ -57,7 +59,7 @@ vigine::Result SetupTexturedPlanesTask::execute()
 
     if (textureCount == 0)
     {
-        std::cerr << "No texture entities found — skipping plane setup." << std::endl;
+        std::cerr << "No texture entities found - skipping plane setup." << std::endl;
         return vigine::Result();
     }
 
@@ -104,31 +106,32 @@ vigine::Result SetupTexturedPlanesTask::execute()
         }
 
         entityManager->addAlias(planeEntity, config.entityName);
-        _graphicsService->bindEntity(planeEntity);
+        renderSystem->createComponents(planeEntity);
+        renderSystem->bindEntity(planeEntity);
 
-        auto *renderComponent = _graphicsService->renderComponent();
+        auto *renderComponent = graphicsService->renderComponent();
         if (!renderComponent)
         {
-            _graphicsService->unbindEntity();
+            renderSystem->unbindEntity();
             std::cerr << "Render component is unavailable for " << config.entityName << std::endl;
             continue;
         }
 
         // Create plane mesh (procedural in shader - 6 vertices for 2 triangles)
-        auto planeMesh = vigine::graphics::MeshComponent();
+        auto planeMesh = vigine::ecs::graphics::MeshComponent();
         planeMesh.setProceduralInShader(true, 6);
 
         renderComponent->setMesh(planeMesh);
 
         // Set textured plane shader
-        vigine::graphics::ShaderComponent shader("textured_plane.vert.spv",
+        vigine::ecs::graphics::ShaderComponent shader("textured_plane.vert.spv",
                                                  "textured_plane.frag.spv");
         shader.setHasTextureBinding(true);
         renderComponent->setShader(shader);
 
         // Link texture to render component; read dimensions for aspect-correct scale.
-        _graphicsService->bindEntity(textureEntity);
-        auto *textureComponent = _graphicsService->textureComponent();
+        renderSystem->bindEntity(textureEntity);
+        auto *textureComponent = graphicsService->textureComponent();
         glm::vec2 planeScale{2.0f, 2.0f};
         if (textureComponent && textureComponent->hasGpuTexture())
         {
@@ -150,20 +153,20 @@ vigine::Result SetupTexturedPlanesTask::execute()
         {
             std::cerr << "Texture not ready for " << config.entityName << std::endl;
         }
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         // Set back to plane entity
-        _graphicsService->bindEntity(planeEntity);
+        renderSystem->bindEntity(planeEntity);
 
         // Set transform
-        vigine::graphics::TransformComponent transform;
+        vigine::ecs::graphics::TransformComponent transform;
         transform.setPosition(config.position);
         transform.setScale({planeScale.x, planeScale.y, 1.0f});
         transform.setBillboard(true);
 
         renderComponent->setTransform(transform);
 
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
 
         std::cout << "Created textured plane: " << config.entityName << " at position ("
                   << config.position.x << ", " << config.position.y << ", " << config.position.z

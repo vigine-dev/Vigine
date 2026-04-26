@@ -1,46 +1,48 @@
 #include "setuphelpergeometrytask.h"
 
-#include <vigine/context.h>
-#include <vigine/ecs/entitymanager.h>
-#include <vigine/ecs/render/meshcomponent.h>
-#include <vigine/ecs/render/rendercomponent.h>
-#include <vigine/ecs/render/shadercomponent.h>
-#include <vigine/ecs/render/transformcomponent.h>
-#include <vigine/property.h>
-#include <vigine/service/graphicsservice.h>
+#include <vigine/api/ecs/ientitymanager.h>
+#include <vigine/api/engine/iengine_token.h>
+#include <vigine/api/service/wellknown.h>
+#include <vigine/impl/ecs/entitymanager.h>
+#include <vigine/impl/ecs/graphics/meshcomponent.h>
+#include <vigine/impl/ecs/graphics/rendercomponent.h>
+#include <vigine/impl/ecs/graphics/rendersystem.h>
+#include <vigine/impl/ecs/graphics/shadercomponent.h>
+#include <vigine/impl/ecs/graphics/transformcomponent.h>
+#include <vigine/impl/ecs/graphics/graphicsservice.h>
 
 #include <iostream>
 
-SetupHelperGeometryTask::SetupHelperGeometryTask() {}
+SetupHelperGeometryTask::SetupHelperGeometryTask() = default;
 
-void SetupHelperGeometryTask::contextChanged()
-{
-    if (!context())
-    {
-        _graphicsService = nullptr;
-        return;
-    }
-
-    _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-        context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::Exist));
-
-    if (!_graphicsService)
-    {
-        _graphicsService = dynamic_cast<vigine::graphics::GraphicsService *>(
-            context()->service("Graphics", vigine::Name("MainGraphics"), vigine::Property::New));
-    }
-}
-
-vigine::Result SetupHelperGeometryTask::execute()
+vigine::Result SetupHelperGeometryTask::run()
 {
     std::cout << "Setting up helper geometry (pyramid, grid, sun)..." << std::endl;
 
-    if (!_graphicsService)
-    {
-        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
-    }
+    auto *token = apiToken();
+    if (!token)
+        return vigine::Result(vigine::Result::Code::Error, "Engine token is unavailable");
 
-    auto *entityManager = context()->entityManager();
+    auto entityManagerResult = token->entityManager();
+    if (!entityManagerResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Entity manager is unavailable");
+    auto *entityManager =
+        dynamic_cast<vigine::EntityManager *>(&entityManagerResult.value());
+    if (!entityManager)
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Entity manager has unexpected type");
+
+    auto graphicsResult = token->service(vigine::service::wellknown::graphicsService);
+    if (!graphicsResult.ok())
+        return vigine::Result(vigine::Result::Code::Error, "Graphics service is unavailable");
+
+    auto *graphicsService =
+        dynamic_cast<vigine::ecs::graphics::GraphicsService *>(&graphicsResult.value());
+    if (!graphicsService || !graphicsService->renderSystem())
+        return vigine::Result(vigine::Result::Code::Error,
+                              "Graphics service is unavailable");
+
+    auto *renderSystem = graphicsService->renderSystem();
 
     // --- Pyramid Entity ---
     auto *pyramidEntity = entityManager->createEntity();
@@ -49,30 +51,31 @@ vigine::Result SetupHelperGeometryTask::execute()
 
     entityManager->addAlias(pyramidEntity, "PyramidEntity");
 
-    _graphicsService->bindEntity(pyramidEntity);
-    auto *pyramidRC = _graphicsService->renderComponent();
+    renderSystem->createComponents(pyramidEntity);
+    renderSystem->bindEntity(pyramidEntity);
+    auto *pyramidRC = graphicsService->renderComponent();
     if (!pyramidRC)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for PyramidEntity");
     }
 
-    auto pyramidMesh = vigine::graphics::MeshComponent::createCube();
+    auto pyramidMesh = vigine::ecs::graphics::MeshComponent::createCube();
     pyramidMesh.setProceduralInShader(true, 18); // Pyramid shader generates 18 vertices
     pyramidRC->setMesh(pyramidMesh);
     {
-        vigine::graphics::ShaderComponent shader("pyramid.vert.spv", "pyramid.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("pyramid.vert.spv", "pyramid.frag.spv");
         pyramidRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent pyramidTransform;
+    vigine::ecs::graphics::TransformComponent pyramidTransform;
     pyramidTransform.setPosition({0.0f, 0.0f, 0.0f});
     pyramidTransform.setScale({1.0f, 1.0f, 1.0f});
     pyramidRC->setTransform(pyramidTransform);
     pyramidRC->setPickable(false);
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     // --- Grid Entity ---
     auto *gridEntity = entityManager->createEntity();
@@ -81,30 +84,31 @@ vigine::Result SetupHelperGeometryTask::execute()
 
     entityManager->addAlias(gridEntity, "GridEntity");
 
-    _graphicsService->bindEntity(gridEntity);
-    auto *gridRC = _graphicsService->renderComponent();
+    renderSystem->createComponents(gridEntity);
+    renderSystem->bindEntity(gridEntity);
+    auto *gridRC = graphicsService->renderComponent();
     if (!gridRC)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for GridEntity");
     }
 
-    auto gridMesh = vigine::graphics::MeshComponent::createCube();
+    auto gridMesh = vigine::ecs::graphics::MeshComponent::createCube();
     gridMesh.setProceduralInShader(true, 6); // Grid shader generates 6 vertices
     gridRC->setMesh(gridMesh);
     {
-        vigine::graphics::ShaderComponent shader("grid.vert.spv", "grid.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("grid.vert.spv", "grid.frag.spv");
         gridRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent gridTransform;
+    vigine::ecs::graphics::TransformComponent gridTransform;
     gridTransform.setPosition({0.0f, 0.0f, 0.0f});
     gridTransform.setScale({1.0f, 1.0f, 1.0f});
     gridRC->setTransform(gridTransform);
     gridRC->setPickable(false);
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     // --- Sun Entity ---
     auto *sunEntity = entityManager->createEntity();
@@ -113,30 +117,31 @@ vigine::Result SetupHelperGeometryTask::execute()
 
     entityManager->addAlias(sunEntity, "SunEntity");
 
-    _graphicsService->bindEntity(sunEntity);
-    auto *sunRC = _graphicsService->renderComponent();
+    renderSystem->createComponents(sunEntity);
+    renderSystem->bindEntity(sunEntity);
+    auto *sunRC = graphicsService->renderComponent();
     if (!sunRC)
     {
-        _graphicsService->unbindEntity();
+        renderSystem->unbindEntity();
         return vigine::Result(vigine::Result::Code::Error,
                               "Render component is unavailable for SunEntity");
     }
 
-    auto sunMesh = vigine::graphics::MeshComponent::createCube();
+    auto sunMesh = vigine::ecs::graphics::MeshComponent::createCube();
     sunMesh.setProceduralInShader(true, 768); // UV-sphere: 16 lon x 8 lat x 2 tri x 3 vert
     sunRC->setMesh(sunMesh);
     {
-        vigine::graphics::ShaderComponent shader("sun.vert.spv", "sun.frag.spv");
+        vigine::ecs::graphics::ShaderComponent shader("sun.vert.spv", "sun.frag.spv");
         sunRC->setShader(shader);
     }
 
-    vigine::graphics::TransformComponent sunTransform;
+    vigine::ecs::graphics::TransformComponent sunTransform;
     sunTransform.setPosition({0.0f, 0.0f, 0.0f});
     sunTransform.setScale({1.0f, 1.0f, 1.0f});
     sunRC->setTransform(sunTransform);
     sunRC->setPickable(false);
 
-    _graphicsService->unbindEntity();
+    renderSystem->unbindEntity();
 
     std::cout << "Helper geometry created: Pyramid (18 verts), Grid (6 verts), Sun (768 verts)"
               << std::endl;

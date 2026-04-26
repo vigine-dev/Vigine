@@ -15,12 +15,12 @@
 #include "fixtures/contract_helpers.h"
 #include "fixtures/engine_fixture.h"
 
-#include "vigine/channelfactory/channelkind.h"
-#include "vigine/channelfactory/defaultchannelfactory.h"
-#include "vigine/channelfactory/ichannel.h"
-#include "vigine/channelfactory/ichannelfactory.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/channelfactory/channelkind.h"
+#include "vigine/api/channelfactory/factory.h"
+#include "vigine/api/channelfactory/ichannel.h"
+#include "vigine/api/channelfactory/ichannelfactory.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
 
 #include <gtest/gtest.h>

@@ -1,17 +1,24 @@
-#include "vigine/context/icontext.h"
-#include "vigine/engine/defaultengine.h"
-#include "vigine/engine/engineconfig.h"
-#include "vigine/engine/factory.h"
-#include "vigine/engine/iengine.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/engine/engineconfig.h"
+#include "vigine/api/engine/factory.h"
+#include "vigine/api/engine/iengine.h"
+#include "vigine/api/statemachine/istatemachine.h"
+#include "vigine/api/statemachine/stateid.h"
+#include "vigine/api/taskflow/abstracttask.h"
+#include "vigine/api/taskflow/factory.h"
+#include "vigine/api/taskflow/itaskflow.h"
+#include "vigine/api/taskflow/taskid.h"
+#include "vigine/impl/engine/engine.h"
 #include "vigine/result.h"
-#include "vigine/threading/irunnable.h"
-#include "vigine/threading/ithreadmanager.h"
+#include "vigine/core/threading/irunnable.h"
+#include "vigine/core/threading/ithreadmanager.h"
 
 #include <gtest/gtest.h>
 
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -62,7 +69,7 @@ using namespace vigine::engine;
 // queue without leaking captured state through the IRunnable contract.
 // ---------------------------------------------------------------------------
 
-class CallbackRunnable final : public threading::IRunnable
+class CallbackRunnable final : public core::threading::IRunnable
 {
   public:
     explicit CallbackRunnable(std::function<void()> fn) : _fn(std::move(fn)) {}
@@ -261,4 +268,212 @@ TEST(EngineSmoke, RunFreezesTheContext)
     // -- the important invariant is that the freeze flag was set by
     // run().
     EXPECT_TRUE(engine->context().isFrozen());
+}
+
+// ---------------------------------------------------------------------------
+// FSM-drive scenarios — Engine::run() pumps the per-state TaskFlow
+// (#334).
+//
+// Scenario 7 — no state-bound TaskFlow registered: run() exits cleanly
+//   on shutdown without invoking any task pump path. Existing behaviour
+//   preserved for callers that drive the engine without a flow.
+//
+// Scenario 8 — state-bound TaskFlow registered: run() advances the
+//   flow's tasks. The probe task records its run-count and the test
+//   verifies the FSM-drive pump fired at least once before shutdown.
+//
+// Note on engine-token observation:
+//   The modern @c vigine::taskflow::ITaskFlow::runCurrentTask path runs
+//   the bound runnable without minting an engine token (the wrapper
+//   does not own an aggregator handle in this leaf -- that wiring is a
+//   follow-up). The probe still observes that it ran -- that is enough
+//   to prove the engine pumped the flow each tick. The token-observation
+//   aspect is covered by the existing engine-token contract suite
+//   (@c scenario_21/22) and by the engine-driven scenarios
+//   @c scenario_23 / @c scenario_24 that mint tokens off the engine
+//   context directly.
+// ---------------------------------------------------------------------------
+
+namespace
+{
+
+using vigine::Result;
+
+// Probe task that records every run() invocation. Used by the FSM-drive
+// scenarios to verify the per-tick pump path without needing a full
+// demo wiring.
+class ProbeTask final : public vigine::AbstractTask
+{
+  public:
+    Result run() override
+    {
+        _runCount.fetch_add(1, std::memory_order_acq_rel);
+        return Result{};
+    }
+
+    [[nodiscard]] std::uint32_t runCount() const noexcept
+    {
+        return _runCount.load(std::memory_order_acquire);
+    }
+
+  private:
+    std::atomic<std::uint32_t> _runCount{0};
+};
+
+} // namespace
+
+// ---------------------------------------------------------------------------
+// Scenario 7: Engine::run() with no state-bound TaskFlow exits cleanly.
+//
+// Pre-arm shutdown so run() exits on the first tick. The FSM has no
+// flow registered against its current state; taskFlowFor() returns
+// nullptr and the FSM-drive step falls through to the FSM drain +
+// main-thread pump alone — exactly the pre-#334 behaviour. The test
+// verifies that the new lookup path does not crash or hang when no
+// flow is registered.
+// ---------------------------------------------------------------------------
+
+TEST(EngineSmoke, RunWithoutBoundTaskFlowExitsCleanly)
+{
+    auto engine = createEngine();
+    ASSERT_NE(engine, nullptr);
+
+    // Sanity: the FSM has a default state but no bound flow yet.
+    auto &fsm = engine->context().stateMachine();
+    const vigine::statemachine::StateId currentState = fsm.current();
+    EXPECT_TRUE(currentState.valid());
+    EXPECT_EQ(fsm.taskFlowFor(currentState), nullptr);
+
+    // Pre-arm shutdown so run() exits on the first tick without ever
+    // pumping a task. The point is to confirm the new lookup path
+    // does not regress the bare-engine fast-exit case.
+    engine->shutdown();
+    const Result result = engine->run();
+    EXPECT_TRUE(result.isSuccess());
+    EXPECT_FALSE(engine->isRunning());
+}
+
+// ---------------------------------------------------------------------------
+// Scenario 8: Engine::run() with a state-bound TaskFlow runs the
+//   bound task at least once before shutdown.
+//
+// Build a TaskFlow holding exactly one ProbeTask, bind it to the FSM's
+// current state, then drive run() on a helper thread until the probe
+// has fired and call shutdown(). Verifies that:
+//   - addStateTaskFlow accepts the registration.
+//   - taskFlowFor reports the bound flow back.
+//   - The engine pumped the flow at least once during run() so the
+//     probe's run-count is non-zero.
+//
+// The probe returns Result::Success which has no transition wired, so
+// runCurrentTask clears the flow's _currTask after the first run --
+// subsequent ticks see hasTasksToRun() == false and the FSM-drive
+// step falls through to the FSM drain + main-thread pump alone. That
+// shape is intentional: the engine asks the flow whether it has work
+// each tick and the flow signals completion through hasTasksToRun().
+// ---------------------------------------------------------------------------
+
+TEST(EngineSmoke, RunPumpsBoundTaskFlowEachTick)
+{
+    auto engine = createEngine();
+    ASSERT_NE(engine, nullptr);
+
+    auto &fsm = engine->context().stateMachine();
+
+    // Modern wiring: createTaskFlow -> addTask -> attachTaskRun ->
+    // enqueue. Each step is the wrapper's documented contract for
+    // turning an empty task slot into a runnable target the engine can
+    // pump.
+    auto flow = vigine::taskflow::createTaskFlow();
+    ASSERT_NE(flow, nullptr);
+
+    auto       probeOwned = std::make_unique<ProbeTask>();
+    ProbeTask *probe      = probeOwned.get();
+    const vigine::taskflow::TaskId probeId = flow->addTask();
+    ASSERT_TRUE(probeId.valid());
+    ASSERT_TRUE(flow->attachTaskRun(probeId, std::move(probeOwned)).isSuccess());
+    ASSERT_TRUE(flow->enqueue(probeId).isSuccess());
+
+    const vigine::statemachine::StateId currentState = fsm.current();
+    ASSERT_TRUE(currentState.valid());
+
+    const Result reg = fsm.addStateTaskFlow(currentState, std::move(flow));
+    ASSERT_TRUE(reg.isSuccess());
+    ASSERT_NE(fsm.taskFlowFor(currentState), nullptr);
+
+    // Run the engine on a helper thread so the test thread can poll
+    // for the probe to fire and then shut the engine down.
+    std::thread driver([&engine]() {
+        const Result r = engine->run();
+        EXPECT_TRUE(r.isSuccess());
+    });
+
+    // Wait until the probe has run at least once or a generous
+    // deadline elapses. With a 4 ms pump tick a single iteration
+    // should fire within tens of milliseconds; one second leaves
+    // ample headroom against CI jitter.
+    const auto deadline = std::chrono::steady_clock::now()
+                          + std::chrono::milliseconds{1000};
+    while (probe->runCount() == 0u
+           && std::chrono::steady_clock::now() < deadline)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    }
+
+    EXPECT_GT(probe->runCount(), 0u);
+
+    engine->shutdown();
+    driver.join();
+    EXPECT_FALSE(engine->isRunning());
+}
+
+// ---------------------------------------------------------------------------
+// Scenario 9: addStateTaskFlow rejects null TaskFlow and stale state
+//   ids.
+//
+// Verifies the basic input validation on the new IStateMachine API:
+//   - addStateTaskFlow(any, nullptr) reports error.
+//   - addStateTaskFlow(stale, flow) reports error.
+//   - The valid registration round trip works after the rejections,
+//     and a duplicate registration on the same state errors out.
+// ---------------------------------------------------------------------------
+
+TEST(EngineSmoke, AddStateTaskFlowRejectsBadInput)
+{
+    auto engine = createEngine();
+    ASSERT_NE(engine, nullptr);
+
+    auto &fsm = engine->context().stateMachine();
+
+    // Null TaskFlow rejected.
+    {
+        const vigine::statemachine::StateId valid = fsm.current();
+        const Result nullCase =
+            fsm.addStateTaskFlow(valid, std::unique_ptr<vigine::taskflow::ITaskFlow>{});
+        EXPECT_TRUE(nullCase.isError());
+    }
+
+    // Stale id rejected.
+    {
+        auto         flow = vigine::taskflow::createTaskFlow();
+        const vigine::statemachine::StateId stale{42, 42};
+        const Result staleCase = fsm.addStateTaskFlow(stale, std::move(flow));
+        EXPECT_TRUE(staleCase.isError());
+    }
+
+    // Valid registration succeeds.
+    const vigine::statemachine::StateId valid = fsm.current();
+    {
+        auto         flow = vigine::taskflow::createTaskFlow();
+        const Result okCase = fsm.addStateTaskFlow(valid, std::move(flow));
+        EXPECT_TRUE(okCase.isSuccess());
+        EXPECT_NE(fsm.taskFlowFor(valid), nullptr);
+    }
+
+    // Re-register on the same state errors out (one-shot per state).
+    {
+        auto         flow = vigine::taskflow::createTaskFlow();
+        const Result dupCase = fsm.addStateTaskFlow(valid, std::move(flow));
+        EXPECT_TRUE(dupCase.isError());
+    }
 }

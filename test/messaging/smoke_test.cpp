@@ -1,20 +1,24 @@
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/busid.h"
-#include "vigine/messaging/factory.h"
-#include "vigine/messaging/imessage.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/messaging/imessagepayload.h"
-#include "vigine/messaging/isubscriber.h"
-#include "vigine/messaging/isubscriptiontoken.h"
-#include "vigine/messaging/messagefilter.h"
-#include "vigine/messaging/messagekind.h"
-#include "vigine/messaging/routemode.h"
-#include "vigine/messaging/systemmessagebus.h"
-#include "vigine/payload/payloadtypeid.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/busid.h"
+#include "vigine/api/messaging/connectionid.h"
+#include "vigine/impl/messaging/connectiontoken.h"
+#include "vigine/api/messaging/factory.h"
+#include "vigine/api/messaging/ibuscontrolblock.h"
+#include "vigine/api/messaging/imessage.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/api/messaging/imessagepayload.h"
+#include "vigine/api/messaging/isubscriber.h"
+#include "vigine/api/messaging/isubscriptiontoken.h"
+#include "vigine/api/messaging/messagefilter.h"
+#include "vigine/api/messaging/messagekind.h"
+#include "vigine/api/messaging/routemode.h"
+#include "vigine/api/messaging/subscriptionslot.h"
+#include "vigine/impl/messaging/systemmessagebus.h"
+#include "vigine/api/messaging/payload/payloadtypeid.h"
 #include "vigine/result.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -24,6 +28,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string_view>
 #include <thread>
 #include <utility>
@@ -144,8 +149,8 @@ struct MessagingSmoke : public ::testing::Test
 {
     void SetUp() override
     {
-        _threadManager = vigine::threading::createThreadManager(
-            vigine::threading::ThreadManagerConfig{});
+        _threadManager = vigine::core::threading::createThreadManager(
+            vigine::core::threading::ThreadManagerConfig{});
         ASSERT_TRUE(_threadManager);
     }
 
@@ -165,7 +170,7 @@ struct MessagingSmoke : public ::testing::Test
         return cfg;
     }
 
-    std::unique_ptr<vigine::threading::IThreadManager> _threadManager;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _threadManager;
 };
 
 // ---------------------------------------------------------------------------
@@ -431,7 +436,12 @@ class SlowSubscriber final : public ISubscriber
 
     [[nodiscard]] DispatchResult onMessage(const IMessage & /*message*/) override
     {
-        // Signal that onMessage has started and record the entry time.
+        // Record the timestamp immediately before entering the sleep so the
+        // test can measure cancel()'s wait against the *actual* sleep window
+        // (rather than against waitForEntry()'s notify, which fires before
+        // the sleep starts and is therefore subject to OS scheduling jitter
+        // between notify and sleep_for).
+        _sleepStartedAt = std::chrono::steady_clock::now();
         _entered.store(true, std::memory_order_release);
         _enteredCv.notify_all();
 
@@ -460,10 +470,16 @@ class SlowSubscriber final : public ISubscriber
         return _exitedAt;
     }
 
+    [[nodiscard]] std::chrono::steady_clock::time_point sleepStartedAt() const noexcept
+    {
+        return _sleepStartedAt;
+    }
+
   private:
     std::chrono::milliseconds              _delay;
     std::atomic<bool>                      _entered{false};
     std::atomic<bool>                      _exited{false};
+    std::chrono::steady_clock::time_point  _sleepStartedAt{};
     std::chrono::steady_clock::time_point  _exitedAt{};
     mutable std::mutex                     _cvMutex;
     mutable std::condition_variable        _enteredCv;
@@ -499,7 +515,6 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
     // so we know the dispatch is in-flight when we cancel.
     slow.waitForEntry();
 
-    const auto cancelStart = std::chrono::steady_clock::now();
     token->cancel();
     const auto cancelEnd = std::chrono::steady_clock::now();
 
@@ -514,9 +529,290 @@ TEST_F(MessagingSmoke, TokenCancelBlocksUntilInFlightDispatchDrains)
         // Allow a small margin for OS scheduling jitter.
         EXPECT_GE(cancelEnd, slow.exitedAt())
             << "cancel() returned before onMessage() exited";
+
+        // Measure cancel()'s wait against the *handler-side* sleep start
+        // timestamp (recorded inside onMessage right before sleep_for),
+        // not against waitForEntry()'s release: waitForEntry signals the
+        // moment _entered is stored, which is BEFORE sleep_for begins.
+        // Using cancelStart from the test thread would let scheduling
+        // jitter between waitForEntry's release and the actual cancel()
+        // call eat into the measured window — on a loaded CI runner that
+        // jitter can exceed delay/2 and produce a false failure.
+        //
+        // Asserting against sleepStartedAt() instead pins the lower bound
+        // to the same clock domain as the subscriber's sleep window, so
+        // the test only fails when cancel() truly returned before the
+        // sleep finished (i.e. the dtor-blocks contract was violated).
+        const auto sleepSpan = std::chrono::duration_cast<std::chrono::milliseconds>(
+            cancelEnd - slow.sleepStartedAt());
+        // 5 ms jitter floor: covers timer-resolution slop on Windows
+        // (sleep_for can return slightly early on some configurations)
+        // without masking a non-blocking cancel(), which would return
+        // in microseconds — orders of magnitude below this threshold.
+        const auto minWait = delay - std::chrono::milliseconds{5};
+        EXPECT_GE(sleepSpan, minWait)
+            << "cancel() returned " << sleepSpan.count()
+            << " ms after onMessage entered sleep -- expected at least "
+            << minWait.count() << " ms (subscriber sleep was " << delay.count()
+            << " ms); cancel() likely did not block on the in-flight dispatch";
     }
 
     dispatcher.join();
+}
+
+// ---------------------------------------------------------------------------
+// Case 10 -- ConnectionToken::cancel() is idempotent and flips active() false.
+//
+// Pins the API-symmetry contract L-B2 adds alongside
+// ISubscriptionToken::cancel():
+//
+//   1. active() reports true while the slot is live.
+//   2. The first cancel() unregisters the slot AND trips the shared
+//      SlotState's `cancelled` flag (the registry observes the loss).
+//   3. active() reports false after cancel().
+//   4. A second cancel() is a structural no-op -- the control block
+//      sees exactly one unregisterTarget call across both invocations.
+//
+// Uses an in-test fake IBusControlBlock so the assertion is local: the
+// ConnectionToken is constructed directly and observed directly,
+// without routing through the full AbstractMessageBus register path
+// (which hides the token inside AbstractMessageTarget's private
+// _connections vector).
+// ---------------------------------------------------------------------------
+
+/// @brief Minimal IBusControlBlock that counts unregisterTarget calls
+///        and tracks whether the last unregister saw its slot live.
+///
+/// Everything else is either a pass-through or a no-op; the test only
+/// cares about unregister bookkeeping plus the two contracts the block
+/// must honour for ConnectionToken to behave correctly: @ref isAlive
+/// returns true until @ref markDead runs, and @ref allocateSlot hands
+/// back a valid id paired with a fresh SlotState. Subscription-side
+/// methods are stubbed because ConnectionToken never reaches them.
+class FakeBusControlBlock final : public IBusControlBlock,
+                                  public std::enable_shared_from_this<FakeBusControlBlock>
+{
+  public:
+    [[nodiscard]] bool isAlive() const noexcept override
+    {
+        return _alive.load(std::memory_order_acquire);
+    }
+
+    void markDead() noexcept override
+    {
+        _alive.store(false, std::memory_order_release);
+    }
+
+    [[nodiscard]] SlotAllocation
+        allocateSlot(AbstractMessageTarget * /*target*/) override
+    {
+        if (!_alive.load(std::memory_order_acquire))
+        {
+            return SlotAllocation{};
+        }
+        auto state = std::make_shared<SlotState>();
+        _lastState = state;
+        return SlotAllocation{
+            ConnectionId{_nextIndex++, _nextGeneration++},
+            std::move(state),
+        };
+    }
+
+    void unregisterTarget(ConnectionId id) noexcept override
+    {
+        if (!id.valid())
+        {
+            return;
+        }
+        _unregisterCalls.fetch_add(1, std::memory_order_acq_rel);
+        _lastUnregisteredId = id;
+    }
+
+    [[nodiscard]] std::uint64_t registerSubscription(
+        ISubscriber * /*subscriber*/,
+        MessageFilter /*filter*/,
+        std::shared_ptr<SlotState> /*slotState*/) override
+    {
+        return 0;
+    }
+
+    void unregisterSubscription(std::uint64_t /*serial*/) noexcept override {}
+
+    [[nodiscard]] std::vector<SubscriptionSlot> snapshotSubscriptions() const override
+    {
+        return {};
+    }
+
+    [[nodiscard]] std::uint32_t unregisterCalls() const noexcept
+    {
+        return _unregisterCalls.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] ConnectionId lastUnregisteredId() const noexcept
+    {
+        return _lastUnregisteredId;
+    }
+
+    [[nodiscard]] std::shared_ptr<SlotState> lastState() const noexcept
+    {
+        return _lastState;
+    }
+
+  private:
+    std::atomic<bool>           _alive{true};
+    std::atomic<std::uint32_t>  _unregisterCalls{0};
+    std::uint32_t               _nextIndex{1};
+    std::uint32_t               _nextGeneration{1};
+    ConnectionId                _lastUnregisteredId{};
+    std::shared_ptr<SlotState>  _lastState;
+};
+
+TEST_F(MessagingSmoke, ConnectionTokenCancelIsIdempotent)
+{
+    auto block       = std::make_shared<FakeBusControlBlock>();
+    auto allocation  = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    ConnectionToken token{
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state,
+    };
+
+    // Preconditions: the fresh token is live, no unregister yet.
+    EXPECT_TRUE(token.active());
+    EXPECT_EQ(block->unregisterCalls(), 0u);
+    EXPECT_FALSE(allocation.state->cancelled.load(std::memory_order_acquire));
+
+    // First cancel: runs the full unregister-plus-barrier sequence.
+    token.cancel();
+
+    EXPECT_FALSE(token.active())
+        << "active() must report false after the first cancel()";
+    EXPECT_EQ(block->unregisterCalls(), 1u)
+        << "first cancel() must drive exactly one unregisterTarget";
+    EXPECT_EQ(block->lastUnregisteredId(), allocation.id)
+        << "unregisterTarget must be called with the token's own id";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
+        << "the shared SlotState's cancelled flag must be true after cancel()";
+
+    // Second cancel: idempotent no-op. The control block must not see
+    // a second unregisterTarget and the state must stay cancelled.
+    token.cancel();
+
+    EXPECT_FALSE(token.active());
+    EXPECT_EQ(block->unregisterCalls(), 1u)
+        << "second cancel() must not drive another unregisterTarget";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire));
+
+    // A third cancel: same invariants as the second.
+    token.cancel();
+    EXPECT_EQ(block->unregisterCalls(), 1u);
+}
+
+// ---------------------------------------------------------------------------
+// Case 11 -- ConnectionToken::active() honours an OUT-OF-BAND unregister.
+//
+// Pins the L-B6 contract: once the shared SlotState->cancelled flag
+// has been flipped from outside the token (e.g. the bus driving its
+// own programmatic unregisterTarget without anyone calling cancel()
+// on the token first), active() must report false even though the
+// FakeBusControlBlock is still alive and the token's own _cancelled
+// atomic is still false. This is exactly the path that exercises the
+// new _slotState->cancelled short-circuit inside
+// ConnectionToken::active() — without it, the call would walk
+// straight past the token-side _cancelled check (still false) and
+// down to ctrl->isAlive() and return true.
+//
+// The flip is issued directly on the SlotState shared with the token;
+// we do NOT call token->cancel() here precisely so the token's own
+// _cancelled atomic stays false. The store mirrors what every real
+// writer does (release store under exclusive lifecycleMutex), which
+// is also the synchronisation the new lock-free reader inside
+// active() pairs with via memory_order_acquire.
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, ConnectionTokenActiveHonorsExternalUnregister)
+{
+    auto block      = std::make_shared<FakeBusControlBlock>();
+    auto allocation = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    auto token = std::make_unique<ConnectionToken>(
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state);
+
+    // Pre-flip: the bus is alive, the id is valid, neither the token's
+    // own _cancelled atomic nor the shared SlotState's cancelled flag
+    // is set — active() must say true.
+    EXPECT_TRUE(token->active())
+        << "fresh token over a live bus must report active() == true";
+    EXPECT_TRUE(block->isAlive());
+    EXPECT_FALSE(allocation.state->cancelled.load(std::memory_order_acquire));
+
+    // Out-of-band unregister: simulate the bus driving its own
+    // unregisterTarget (or any other path that flips the shared
+    // SlotState without ever going through this token's cancel()).
+    // We DO NOT call token->cancel() — the token's _cancelled atomic
+    // must stay false so the assertion below proves that active()
+    // returned false because of the SlotState short-circuit, not
+    // because of the token-side gate.
+    {
+        std::unique_lock<std::shared_mutex> ex{allocation.state->lifecycleMutex};
+        allocation.state->cancelled.store(true, std::memory_order_release);
+    }
+
+    EXPECT_TRUE(block->isAlive())
+        << "external unregister must not affect the bus's own alive flag";
+    EXPECT_EQ(block->unregisterCalls(), 0u)
+        << "we did not call cancel(); the control block must not have "
+           "seen any unregisterTarget";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
+        << "external writer must have set the shared SlotState->cancelled "
+           "flag";
+    EXPECT_FALSE(token->active())
+        << "active() must observe the external unregister via the new "
+           "_slotState->cancelled short-circuit and report false";
+}
+
+// ---------------------------------------------------------------------------
+// Case 11b -- ConnectionToken::active() honours its own cancel().
+//
+// Companion to the external-unregister case: covers the path where
+// the user explicitly calls token->cancel() on a still-live bus. The
+// short-circuit that fires here is the token-side _cancelled atomic
+// (the SlotState short-circuit also happens, but the test does not
+// distinguish the two — Case 11 above is what isolates the new
+// SlotState path).
+// ---------------------------------------------------------------------------
+
+TEST_F(MessagingSmoke, ConnectionTokenActiveHonorsCancel)
+{
+    auto block      = std::make_shared<FakeBusControlBlock>();
+    auto allocation = block->allocateSlot(nullptr);
+    ASSERT_TRUE(allocation.id.valid());
+    ASSERT_NE(allocation.state, nullptr);
+
+    auto token = std::make_unique<ConnectionToken>(
+        std::weak_ptr<IBusControlBlock>(block),
+        allocation.id,
+        allocation.state);
+
+    EXPECT_TRUE(token->active())
+        << "fresh token over a live bus must report active() == true";
+    EXPECT_TRUE(block->isAlive());
+
+    token->cancel();
+
+    EXPECT_TRUE(block->isAlive())
+        << "cancel() must not affect the bus's own alive flag";
+    EXPECT_TRUE(allocation.state->cancelled.load(std::memory_order_acquire))
+        << "cancel() must trip the shared SlotState->cancelled flag";
+    EXPECT_FALSE(token->active())
+        << "active() must observe the cancel() and report false";
 }
 
 } // namespace

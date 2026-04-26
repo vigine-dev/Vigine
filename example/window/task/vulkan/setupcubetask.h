@@ -1,23 +1,11 @@
 #pragma once
 
-#include <vigine/abstracttask.h>
+#include <vigine/api/taskflow/abstracttask.h>
 
-namespace vigine
-{
-namespace graphics
-{
-class GraphicsService;
-}
-} // namespace vigine
-
-class SetupCubeTask : public vigine::AbstractTask
+class SetupCubeTask final : public vigine::AbstractTask
 {
   public:
     SetupCubeTask();
 
-    void contextChanged() override;
-    vigine::Result execute() override;
-
-  private:
-    vigine::graphics::GraphicsService *_graphicsService{nullptr};
+    [[nodiscard]] vigine::Result run() override;
 };

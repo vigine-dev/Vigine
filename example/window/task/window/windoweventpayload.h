@@ -1,107 +1,115 @@
 #pragma once
 
 #include <memory>
+#include <string_view>
 
-#include <vigine/ecs/platform/iwindoweventhandler.h>
-#include <vigine/payload/payloadtypeid.h>
-#include <vigine/signalemitter/isignalpayload.h>
+#include <vigine/api/ecs/platform/iwindoweventhandler.h>
+#include <vigine/api/messaging/payload/payloadtypeid.h>
+#include <vigine/api/messaging/payload/isignalpayload.h>
+
+namespace vigine::payload
+{
+class IPayloadRegistry;
+} // namespace vigine::payload
 
 /**
  * @file windoweventpayload.h
- * @brief Application-side payloads that carry Win32 window input events
+ * @brief Application-side payloads carrying Win32 window input events
  *        from the window task to an @ref ISignalPayload subscriber.
  *
- * The identifiers below sit in the user half of the @c PayloadTypeId
- * space (@c [0x10000 .. 0xFFFFFFFF]). They are picked from the first
- * block inside the window-example sub-range so that future example
- * payloads can extend contiguously without colliding with other user
- * code that also registers into the user half.
+ * Each payload class declares @ref typeName — a @c static descriptor
+ * that returns the registry type-name string used both as the
+ * registration key and as the diagnostic label. The @c typeId()
+ * virtual override on @ref ISignalPayload is implemented in the
+ * matching .cpp by a lookup into a TU-local map
+ * (@c payloadIdsByTypeName) populated once by
+ * @ref example::payloads::registerAll. Callers that need class-level
+ * access without an instance (signal-subscription registration in
+ * @c main, dispatch comparison in @ref ProcessInputEventTask) go
+ * through the namespace helper @ref example::payloads::idOf.
  */
-
-/**
- * @brief Payload identifier for @ref MouseButtonDownPayload.
- *
- * User-range value; registered by the application's payload registry
- * before the bus accepts publishes or subscribes that carry it.
- */
-inline constexpr vigine::payload::PayloadTypeId kMouseButtonDownPayloadTypeId{0x20101u};
-
-/**
- * @brief Payload identifier for @ref KeyDownPayload.
- *
- * User-range value; registered by the application's payload registry
- * before the bus accepts publishes or subscribes that carry it.
- */
-inline constexpr vigine::payload::PayloadTypeId kKeyDownPayloadTypeId{0x20102u};
 
 /**
  * @brief Immutable payload describing a mouse-button-down event.
- *
- * Carries the button identifier and the client-area coordinates at the
- * moment the button went down. Fields are @c const and set at
- * construction time; the bus may deliver the same pointer to multiple
- * subscribers, so the observable state never changes after publish.
  */
-class MouseButtonDownPayload final : public vigine::signalemitter::ISignalPayload
+class MouseButtonDownPayload final : public vigine::messaging::ISignalPayload
 {
   public:
-    MouseButtonDownPayload(vigine::platform::MouseButton button, int x, int y) noexcept
+    /**
+     * @brief Class-level type-name string. Definition lives in the .cpp;
+     *        the literal does not appear in this header.
+     */
+    [[nodiscard]] static std::string_view typeName() noexcept;
+
+    MouseButtonDownPayload(vigine::ecs::platform::MouseButton button, int x, int y) noexcept
         : _button(button), _x(x), _y(y)
     {
     }
 
     ~MouseButtonDownPayload() override = default;
 
-    [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override
-    {
-        return kMouseButtonDownPayloadTypeId;
-    }
+    [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override;
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
-        clone() const override
-    {
-        return std::make_unique<MouseButtonDownPayload>(_button, _x, _y);
-    }
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
+        clone() const override;
 
-    [[nodiscard]] vigine::platform::MouseButton button() const noexcept { return _button; }
-    [[nodiscard]] int                           x() const noexcept { return _x; }
-    [[nodiscard]] int                           y() const noexcept { return _y; }
+    [[nodiscard]] vigine::ecs::platform::MouseButton button() const noexcept { return _button; }
+    [[nodiscard]] int                                x() const noexcept { return _x; }
+    [[nodiscard]] int                                y() const noexcept { return _y; }
 
   private:
-    const vigine::platform::MouseButton _button;
-    const int                           _x;
-    const int                           _y;
+    const vigine::ecs::platform::MouseButton _button;
+    const int                                _x;
+    const int                                _y;
 };
 
 /**
  * @brief Immutable payload describing a key-down event.
- *
- * Wraps a copy of the originating @ref vigine::platform::KeyEvent so
- * that subscribers can read @c keyCode, @c scanCode, @c modifiers,
- * @c repeatCount, and @c isRepeat without reaching back into the
- * platform layer. The wrapped struct is held by value; exposing it by
- * @c const reference keeps the contract read-only.
  */
-class KeyDownPayload final : public vigine::signalemitter::ISignalPayload
+class KeyDownPayload final : public vigine::messaging::ISignalPayload
 {
   public:
-    explicit KeyDownPayload(const vigine::platform::KeyEvent &event) noexcept : _event(event) {}
+    [[nodiscard]] static std::string_view typeName() noexcept;
+
+    explicit KeyDownPayload(const vigine::ecs::platform::KeyEvent &event) noexcept : _event(event) {}
 
     ~KeyDownPayload() override = default;
 
-    [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override
-    {
-        return kKeyDownPayloadTypeId;
-    }
+    [[nodiscard]] vigine::payload::PayloadTypeId typeId() const noexcept override;
 
-    [[nodiscard]] std::unique_ptr<vigine::signalemitter::ISignalPayload>
-        clone() const override
-    {
-        return std::make_unique<KeyDownPayload>(_event);
-    }
+    [[nodiscard]] std::unique_ptr<vigine::messaging::ISignalPayload>
+        clone() const override;
 
-    [[nodiscard]] const vigine::platform::KeyEvent &event() const noexcept { return _event; }
+    [[nodiscard]] const vigine::ecs::platform::KeyEvent &event() const noexcept { return _event; }
 
   private:
-    const vigine::platform::KeyEvent _event;
+    const vigine::ecs::platform::KeyEvent _event;
 };
+
+namespace example::payloads
+{
+/**
+ * @brief Allocates a fresh @c PayloadTypeId for every payload class
+ *        defined in this file and stores the result in the TU-local
+ *        lookup map.
+ *
+ * Call once from @c main before any @c signal() subscription that
+ * resolves an id through @ref idOf — the lookup returns the invalid
+ * sentinel for type-names not yet registered, so a missing
+ * @ref registerAll call surfaces immediately as an unmatched
+ * subscription.
+ */
+void registerAll(vigine::payload::IPayloadRegistry &registry);
+
+/**
+ * @brief Class-level access without an instance: returns the
+ *        @c PayloadTypeId allocated for @p typeName, or the invalid
+ *        sentinel when @p typeName has not been registered.
+ *
+ * Used by @c main.cpp / @c createInitTaskFlow for @c signal()
+ * registration and by @c ProcessInputEventTask::onMessage for
+ * dispatch comparison.
+ */
+[[nodiscard]] vigine::payload::PayloadTypeId
+    idOf(std::string_view typeName) noexcept;
+} // namespace example::payloads

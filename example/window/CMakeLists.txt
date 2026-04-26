@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Portability skip-guard: this example needs the Vulkan SDK (glslc) and
+# the Win32 platform service. Linux/macOS CI runs without the Vulkan SDK
+# installed and without the Win32 platform implementation, so opting in
+# only on Windows keeps the cross-platform configure step clean. The
+# guard MUST sit immediately after cmake_minimum_required, BEFORE
+# project() and find_program(GLSLC_EXECUTABLE), so non-Windows hosts
+# never enable the example-window project at all.
+if(NOT WIN32)
+    return()
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -12,7 +23,7 @@ set(EXAMPLE_WINDOW_HANDLER_SOURCES
 set(EXAMPLE_WINDOW_TASK_SOURCES
     task/window/initwindowtask.h task/window/initwindowtask.cpp
     task/window/runwindowtask.h task/window/runwindowtask.cpp
-    task/window/windoweventpayload.h
+    task/window/windoweventpayload.h task/window/windoweventpayload.cpp
     task/window/processinputeventtask.h task/window/processinputeventtask.cpp
     task/vulkan/initvulkantask.h task/vulkan/initvulkantask.cpp
     task/vulkan/setupcubetask.h task/vulkan/setupcubetask.cpp
@@ -27,11 +38,19 @@ set(EXAMPLE_WINDOW_TASK_SOURCES
 set(EXAMPLE_WINDOW_SYSTEM_SOURCES
     system/texteditorsystem.h system/texteditorsystem.cpp)
 
-set(EXAMPLE_WINDOW_STATE_SOURCES
-    state/initstate.h state/initstate.cpp
-    state/workstate.h state/workstate.cpp
-    state/errorstate.h state/errorstate.cpp
-    state/closestate.h state/closestate.cpp)
+set(EXAMPLE_WINDOW_SERVICE_SOURCES
+    services/wellknown.h
+    services/texteditorservice.h services/texteditorservice.cpp)
+
+set(EXAMPLE_WINDOW_COMPONENT_SOURCES
+    component/texteditorcomponent.h)
+
+# The legacy AbstractState-derived classes were retired when the
+# example migrated to the modern FSM-drive surface. State identity is
+# now a value handle (vigine::statemachine::StateId) allocated through
+# IStateMachine; main.cpp registers a TaskFlow per state via
+# addStateTaskFlow without any per-state class scaffolding.
+set(EXAMPLE_WINDOW_STATE_SOURCES "")
 
 set(EXAMPLE_WINDOW_SHADER_DIR ${CMAKE_CURRENT_LIST_DIR}/shader)
 set(EXAMPLE_WINDOW_SHADER_OUT_DIR ${CMAKE_BINARY_DIR}/bin/shaders)
@@ -258,6 +277,8 @@ add_executable(${PROJECT_WINDOW_NAME}
     ${EXAMPLE_WINDOW_HANDLER_SOURCES}
     ${EXAMPLE_WINDOW_TASK_SOURCES}
     ${EXAMPLE_WINDOW_SYSTEM_SOURCES}
+    ${EXAMPLE_WINDOW_SERVICE_SOURCES}
+    ${EXAMPLE_WINDOW_COMPONENT_SOURCES}
     ${EXAMPLE_WINDOW_STATE_SOURCES})
 
 add_dependencies(${PROJECT_WINDOW_NAME} example_window_shaders)
@@ -284,9 +305,34 @@ target_link_libraries(${PROJECT_WINDOW_NAME}
     vigine
 )
 
+# WIN32_LEAN_AND_MEAN trims <windows.h>. Scoped per-target so it stays
+# off the bundled FreeType command line (which redefines the macro
+# internally and would otherwise emit C4005).
+if(WIN32)
+    target_compile_definitions(${PROJECT_WINDOW_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
+
+# vigine target PUBLIC-exports its `include/` directory, so consumers
+# linking against it (PRIVATE here) inherit `vigine/...` headers
+# automatically -- the manual reach into ${CMAKE_SOURCE_DIR}/include is
+# unnecessary and would leak the wrong include root when Vigine is
+# added via add_subdirectory under a parent project. The
+# ${VIGINE_ROOT_DIR} entry below stays in place because
+# task/vulkan/imageloader.cpp resolves the bundled stb header through
+# `external/stb/stb_image.h`, which needs the engine root on the path.
+# Using ${VIGINE_ROOT_DIR} (set in the top-level CMakeLists) instead of
+# ${CMAKE_SOURCE_DIR} keeps the include resolution correct when Vigine
+# is consumed via add_subdirectory under a parent project — in that
+# case ${CMAKE_SOURCE_DIR} would point at the parent's source root,
+# not the engine root.
 target_include_directories(${PROJECT_WINDOW_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}
+    ${VIGINE_ROOT_DIR}
 )
+
+# Apply the central warning / strict-mode compile flags so the example
+# is held to the same /WX + -Werror gate as the vigine library it
+# depends on. Single source of truth for compile flags across the
+# build matrix (vigine + tests + examples).
+vigine_apply_compile_options(${PROJECT_WINDOW_NAME})

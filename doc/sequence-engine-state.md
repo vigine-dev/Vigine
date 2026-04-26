@@ -3,26 +3,26 @@
 ```mermaid
 sequenceDiagram
 participant Main as example/*/main.cpp
-participant Engine
-participant SM as StateMachine
-participant State as AbstractState
-participant TF as TaskFlow
-participant Task as AbstractTask
+participant Engine as vigine::engine::IEngine
+participant Ctx as IContext
+participant FSM as IStateMachine
+participant TF as ITaskFlow
+participant Task as ITask
 
 Main->>Engine: run()
-loop while hasStatesToRun()
-  Engine->>SM: runCurrentState()
-  SM->>State: operator()()
-  State->>State: enter()
-  State->>TF: operator()()
-  loop while hasTasksToRun()
-    TF->>Task: execute()
-    Task-->>TF: Result
-    TF->>TF: select transition by Result::Code
+loop per pump tick
+  Engine->>Ctx: stateMachine() / taskFlow()
+  Engine->>FSM: drain pending transitions
+  Engine->>TF: hasTasksToRun()
+  alt has runnable
+    Engine->>Ctx: makeEngineToken(boundState)
+    Engine->>Task: setApiToken(token)
+    Engine->>Task: run()
+    Task-->>Engine: Result
+    Engine->>Task: setApiToken(nullptr)
+    Engine->>TF: advance cursor by Result::Code
   end
-  State->>State: exit()
-  State-->>SM: Result
-  SM->>SM: select next state by Result::Code
+  Engine->>FSM: select next state by transition outcome
 end
-Engine-->>Main: returns when no current state
+Engine-->>Main: returns on shutdown
 ```

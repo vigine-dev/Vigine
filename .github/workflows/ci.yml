@@ -163,6 +163,12 @@ jobs:
           cmake -S . -B build
           -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           -DENABLE_POSTGRESQL=OFF
+          -DVIGINE_ENABLE_EXPERIMENTAL=OFF
+          -DENABLE_UNITTEST=ON
 
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
+
+      - name: Test
+        working-directory: build
+        run: ctest --output-on-failure --build-config ${{ matrix.config }}

@@ -34,15 +34,15 @@
 //     methods only (project_vigine_strict_encapsulation).
 // ---------------------------------------------------------------------------
 
-#include "vigine/context/contextconfig.h"
-#include "vigine/context/factory.h"
-#include "vigine/context/icontext.h"
-#include "vigine/messaging/busconfig.h"
-#include "vigine/messaging/factory.h"
-#include "vigine/messaging/imessagebus.h"
-#include "vigine/threading/factory.h"
-#include "vigine/threading/ithreadmanager.h"
-#include "vigine/threading/threadmanagerconfig.h"
+#include "vigine/api/context/contextconfig.h"
+#include "vigine/api/context/factory.h"
+#include "vigine/api/context/icontext.h"
+#include "vigine/api/messaging/busconfig.h"
+#include "vigine/api/messaging/factory.h"
+#include "vigine/api/messaging/imessagebus.h"
+#include "vigine/core/threading/factory.h"
+#include "vigine/core/threading/ithreadmanager.h"
+#include "vigine/core/threading/threadmanagerconfig.h"
 
 #include <gtest/gtest.h>
 
@@ -63,7 +63,7 @@ class PrivateStack
   public:
     PrivateStack() = default;
 
-    PrivateStack(std::unique_ptr<vigine::threading::IThreadManager> tm,
+    PrivateStack(std::unique_ptr<vigine::core::threading::IThreadManager> tm,
                  std::unique_ptr<vigine::messaging::IMessageBus>    bus) noexcept
         : _tm(std::move(tm))
         , _bus(std::move(bus))
@@ -83,7 +83,7 @@ class PrivateStack
     PrivateStack(PrivateStack &&) noexcept        = default;
     PrivateStack &operator=(PrivateStack &&) noexcept = default;
 
-    [[nodiscard]] vigine::threading::IThreadManager &threadManager() noexcept
+    [[nodiscard]] vigine::core::threading::IThreadManager &threadManager() noexcept
     {
         return *_tm;
     }
@@ -99,7 +99,7 @@ class PrivateStack
     }
 
   private:
-    std::unique_ptr<vigine::threading::IThreadManager> _tm;
+    std::unique_ptr<vigine::core::threading::IThreadManager> _tm;
     std::unique_ptr<vigine::messaging::IMessageBus>    _bus;
 };
 
@@ -136,8 +136,8 @@ class EngineFixture : public ::testing::Test
      */
     [[nodiscard]] PrivateStack makePrivateStack(bool inlineOnly = true)
     {
-        vigine::threading::ThreadManagerConfig tmCfg{};
-        auto tm = vigine::threading::createThreadManager(tmCfg);
+        vigine::core::threading::ThreadManagerConfig tmCfg{};
+        auto tm = vigine::core::threading::createThreadManager(tmCfg);
         if (!tm)
         {
             return {};
