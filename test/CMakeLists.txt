@@ -692,6 +692,8 @@ add_executable(${FULL_CONTRACT_TARGET}
     contract/scenario_19_parallel_for.cpp
     contract/scenario_21_stale_engine_token.cpp
     contract/scenario_22_token_expiration_callback.cpp
+    contract/scenario_23_token_expires_on_transition.cpp
+    contract/scenario_24_fresh_token_in_new_state.cpp
 )
 
 target_include_directories(${FULL_CONTRACT_TARGET}
