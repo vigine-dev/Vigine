@@ -12,7 +12,8 @@ class AddSomeDataTask : public vigine::AbstractTask
   public:
     AddSomeDataTask();
 
-    void contextChanged() override;
+    void setDatabaseService(vigine::DatabaseService *service);
+
     [[nodiscard]] vigine::Result run() override;
 
   private:

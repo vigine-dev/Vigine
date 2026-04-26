@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vigine/api/taskflow/abstracttask.h"
+#include <vigine/api/taskflow/abstracttask.h>
 
 namespace vigine
 {
@@ -12,7 +12,8 @@ class RemoveSomeDataTask : public vigine::AbstractTask
   public:
     RemoveSomeDataTask();
 
-    void contextChanged() override;
+    void setDatabaseService(vigine::DatabaseService *service);
+
     [[nodiscard]] vigine::Result run() override;
 
   private:
